@@ -2,26 +2,60 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
         x:Class="Aniki.LoginWindow"
-        Title="Aniki"
-		TransparencyLevelHint="AcrylicBlur"
-		Background="Transparent"
-		ExtendClientAreaToDecorationsHint="True">
+        Title="Aniki - Login"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True"
+        WindowStartupLocation="CenterScreen"
+        Width="400" Height="300">
 	<Panel>
 		<ExperimentalAcrylicBorder IsHitTestVisible="False">
 			<ExperimentalAcrylicBorder.Material>
 				<ExperimentalAcrylicMaterial
-					 BackgroundSource="Digger"
-					 TintColor="Black"
-					 TintOpacity="1"
-					 MaterialOpacity="0.65" />
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.05" />
 			</ExperimentalAcrylicBorder.Material>
 		</ExperimentalAcrylicBorder>
+
 		<Panel Margin="15">
-			<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
-				Welcome to Aniki!
-			</TextBlock>
+			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15">
+
+				<TextBlock Text="Welcome to Aniki!"
+                           FontSize="20" FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+
+				<TextBlock Name="StatusText"
+                           Text="Checking login status..."
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap" />
+
+				<Button Name="LoginButton"
+					   Content="Login with MyAnimeList"
+					   HorizontalAlignment="Stretch"
+					   Padding="10,8"
+					   IsVisible="False"/>
+
+				<Button Name="ContinueButton"
+                        Content="Continue"
+                        HorizontalAlignment="Stretch"
+                        Padding="10,8"
+                        IsVisible="False"/>
+
+				<Button Name="LogoutButton"
+                        Content="Log into different account"
+                        HorizontalAlignment="Stretch"
+                        Padding="10,8"
+                        IsVisible="False"/>
+
+				<ProgressBar Name="LoadingIndicator"
+							 IsIndeterminate="True"
+							 HorizontalAlignment="Stretch"
+							 IsVisible="True"/>
+			</StackPanel>
 		</Panel>
 	</Panel>
 </Window>

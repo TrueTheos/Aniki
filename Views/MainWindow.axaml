@@ -2,26 +2,123 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:local="clr-namespace:Aniki"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
         x:Class="Aniki.MainWindow"
-        Title="Aniki"
-		TransparencyLevelHint="AcrylicBlur"
-		Background="Transparent"
-		ExtendClientAreaToDecorationsHint="True">
+        Title="Aniki - MyAnimeList Client"
+        Background="Transparent"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True">
+	<Window.Styles>
+		<Style Selector="ComboBox">
+			<Setter Property="Background" Value="#3E3E3E"/>
+			<Setter Property="Foreground" Value="#E0E0E0"/>
+		</Style>
+		<Style Selector="ListBoxItem">
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Margin" Value="0,2"/>
+		</Style>
+	</Window.Styles>
+
 	<Panel>
+		<!-- Main background with blur effect -->
 		<ExperimentalAcrylicBorder IsHitTestVisible="False">
 			<ExperimentalAcrylicBorder.Material>
 				<ExperimentalAcrylicMaterial
-					 BackgroundSource="Digger"
-					 TintColor="Black"
-					 TintOpacity="1"
-					 MaterialOpacity="0.65" />
+                    BackgroundSource="Digger"
+                    TintColor="#202020"
+                    TintOpacity="0.8"
+                    MaterialOpacity="0.7" />
 			</ExperimentalAcrylicBorder.Material>
 		</ExperimentalAcrylicBorder>
-		<Panel Margin="15">
-			<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
-				Main page!
-			</TextBlock>
-		</Panel>
+
+		<Grid Margin="0,30,0,0">
+			<!-- Add margin to account for title bar -->
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+
+			<!-- Header with profile info - dark gray theme -->
+			<Border Grid.Row="0" Background="#2A2A2A" Margin="0" Padding="10">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+
+					<!-- Profile Image and Username -->
+					<StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5">
+						<Border CornerRadius="25" Width="50" Height="50" ClipToBounds="True" Background="#555555">
+							<Image x:Name="UserProfileImage" Width="50" Height="50" Stretch="UniformToFill"/>
+						</Border>
+						<TextBlock x:Name="UserNameText" VerticalAlignment="Center" Margin="10,0,0,0"
+								   FontSize="18" FontWeight="Bold" Foreground="#E0E0E0"/>
+					</StackPanel>
+
+					<!-- App Title -->
+					<TextBlock Grid.Column="1" Text="Aniki" HorizontalAlignment="Center"
+							   VerticalAlignment="Center" FontSize="24" FontWeight="Bold" Foreground="#E0E0E0"/>
+
+					<!-- Filter by list type -->
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Margin="5" VerticalAlignment="Center">
+						<TextBlock Text="Filter:" VerticalAlignment="Center"
+								   Margin="0,0,5,0" Foreground="#E0E0E0"/>
+						<ComboBox x:Name="ListFilterComboBox" Width="150" />
+					</StackPanel>
+				</Grid>
+			</Border>
+
+			<!-- Anime List with semi-transparent gray theme -->
+			<ListBox x:Name="AnimeListBox" Grid.Row="1" Background="Transparent"
+				 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+				 ScrollViewer.VerticalScrollBarVisibility="Auto">
+				<ListBox.Styles>
+					<!-- Make scrollbar more visible -->
+					<Style Selector="ScrollBar">
+						<Setter Property="Background" Value="#333333"/>
+						<Setter Property="MinWidth" Value="16"/>
+					</Style>
+				</ListBox.Styles>
+				<ListBox.ItemTemplate>
+					<!-- Add this data type directive -->
+					<DataTemplate x:DataType="local:AnimeData">
+						<Border Padding="10" Margin="5" CornerRadius="5" Background="#3A3A3A"
+								BoxShadow="2 2 4 0 #20000000">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="Auto"/>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="Auto"/>
+								</Grid.ColumnDefinitions>
+
+								<!-- Anime Title and Status -->
+								<StackPanel Grid.Column="1" Margin="10,0">
+									<TextBlock Text="{Binding Node.Title}"
+											   FontWeight="Bold" FontSize="16"
+											   TextWrapping="Wrap" Foreground="White"/>
+
+									<StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+										<TextBlock Text="Status: " FontWeight="SemiBold" Foreground="LightGray"/>
+										<TextBlock Text="{Binding ListStatus.Status}" Foreground="LightGray"/>
+									</StackPanel>
+
+									<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+										<TextBlock Text="Episodes: " FontWeight="SemiBold" Foreground="LightGray"/>
+										<TextBlock Text="{Binding ListStatus.Num_Episodes_Watched}" Foreground="LightGray"/>
+									</StackPanel>
+
+									<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+										<TextBlock Text="Score: " FontWeight="SemiBold" Foreground="LightGray"/>
+										<TextBlock Text="{Binding ListStatus.Score}" Foreground="LightGray"/>
+									</StackPanel>
+								</StackPanel>
+							</Grid>
+						</Border>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+			</ListBox>
+		</Grid>
 	</Panel>
 </Window>
