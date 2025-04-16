@@ -73,7 +73,7 @@ namespace Aniki
                 try
                 {
                     // Assuming MalUtils is accessible here or create an instance
-                    var userData = await MalUtils.LoadUserData(_loadedTokens.AccessToken);
+                    var userData = await MalUtils.LoadUserData();
                     if (userData != null && !string.IsNullOrEmpty(userData.Name))
                     {
                         // Valid token, show continue options

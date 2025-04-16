@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,30 +15,27 @@ namespace Aniki
 {
     public static class MalUtils
     {
-        /// <summary>
-        /// Loads user data from MyAnimeList API
-        /// </summary>
-        /// <param name="accessToken">MAL API access token</param>
-        /// <returns>User name</returns>
-        public static async Task<UserData> LoadUserData(string accessToken)
+        private static JsonSerializerOptions _jso = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        private static readonly HttpClient _client = new HttpClient();
+
+        public static void Init(string accessToken)
+        {
+            _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+        }
+
+        public static async Task<UserData> LoadUserData()
         {
             try
             {
-                using (HttpClient client = new HttpClient())
+                HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me?fields=name,id");
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
                 {
-                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-                    HttpResponseMessage response = await client.GetAsync("https://api.myanimelist.net/v2/users/@me?fields=name");
-                    string responseBody = await response.Content.ReadAsStringAsync();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return JsonSerializer.Deserialize<UserData>(responseBody,
-                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    }
-
-                    throw new Exception($"API returned status code: {response.StatusCode}");
+                    return JsonSerializer.Deserialize<UserData>(responseBody, _jso);
                 }
+
+                throw new Exception($"API returned status code: {response.StatusCode}");
             }
             catch (Exception ex)
             {
@@ -45,13 +43,7 @@ namespace Aniki
             }
         }
 
-        /// <summary>
-        /// Loads anime list from MyAnimeList API
-        /// </summary>
-        /// <param name="accessToken">MAL API access token</param>
-        /// <param name="status">Filter by status (optional)</param>
-        /// <returns>Collection of anime data</returns>
-        public static async Task<List<AnimeData>> LoadAnimeList(string accessToken, string status = null)
+        public static async Task<List<AnimeData>> LoadAnimeList(string status = null)
         {
             try
             {
@@ -69,43 +61,37 @@ namespace Aniki
 
                 url += $"fields={fields}&limit=100";
 
-                using (HttpClient client = new HttpClient())
+                bool hasNextPage = true;
+                string nextPageUrl = url;
+
+                while (hasNextPage)
                 {
-                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+                    HttpResponseMessage response = await _client.GetAsync(nextPageUrl);
+                    string responseBody = await response.Content.ReadAsStringAsync();
 
-                    bool hasNextPage = true;
-                    string nextPageUrl = url;
-
-                    while (hasNextPage)
+                    if (response.IsSuccessStatusCode)
                     {
-                        HttpResponseMessage response = await client.GetAsync(nextPageUrl);
-                        string responseBody = await response.Content.ReadAsStringAsync();
+                        var animeListResponse = JsonSerializer.Deserialize<AnimeListResponse>(responseBody, _jso);
 
-                        if (response.IsSuccessStatusCode)
+                        if (animeListResponse.Data != null)
                         {
-                            var animeListResponse = JsonSerializer.Deserialize<AnimeListResponse>(responseBody,
-                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            animeList.AddRange(animeListResponse.Data);
+                        }
 
-                            if (animeListResponse.Data != null)
-                            {
-                                animeList.AddRange(animeListResponse.Data);
-                            }
-
-                            // Check if there's a next page
-                            if (animeListResponse.Paging != null && !string.IsNullOrEmpty(animeListResponse.Paging.Next))
-                            {
-                                nextPageUrl = animeListResponse.Paging.Next;
-                            }
-                            else
-                            {
-                                hasNextPage = false;
-                            }
+                        // Check if there's a next page
+                        if (animeListResponse.Paging != null && !string.IsNullOrEmpty(animeListResponse.Paging.Next))
+                        {
+                            nextPageUrl = animeListResponse.Paging.Next;
                         }
                         else
                         {
                             hasNextPage = false;
-                            throw new Exception($"API returned status code: {response.StatusCode}");
                         }
+                    }
+                    else
+                    {
+                        hasNextPage = false;
+                        throw new Exception($"API returned status code: {response.StatusCode}");
                     }
                 }
 
@@ -117,11 +103,38 @@ namespace Aniki
             }
         }
 
-        /// <summary>
-        /// Converts display status to API parameter
-        /// </summary>
-        /// <param name="displayStatus">Display status from UI</param>
-        /// <returns>API status parameter</returns>
+        public static async Task<Bitmap> GetUserPicture()
+        {
+            try
+            {
+                HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me?fields=picture");
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Parse the JSON response to get the picture URL
+                    using JsonDocument doc = JsonDocument.Parse(responseBody);
+                    JsonElement root = doc.RootElement;
+
+                    if (root.TryGetProperty("picture", out JsonElement pictureElement))
+                    {
+                        string pictureUrl = pictureElement.ToString();
+
+                        byte[] imageData = await _client.GetByteArrayAsync(pictureUrl);
+
+                        using MemoryStream ms = new MemoryStream(imageData);
+                        return new Bitmap(ms);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting profile picture URL: {ex.Message}");
+            }
+
+            return null;
+        }
+
         private static string ConvertStatusToApiParameter(string displayStatus)
         {
             return displayStatus switch
@@ -151,6 +164,7 @@ namespace Aniki
     public class AnimeData
     {
         public AnimeNode Node { get; set; }
+        [JsonPropertyName("list_status")]
         public ListStatus ListStatus { get; set; }
     }
 

@@ -59,6 +59,7 @@ namespace Aniki
 
                 // Save to file
                 string filePath = GetTokenFilePath();
+                MalUtils.Init(tokenResponse.access_token);
                 await File.WriteAllBytesAsync(filePath, encryptedData);
             }
             catch (Exception ex)
@@ -87,14 +88,7 @@ namespace Aniki
                 string json = Encoding.UTF8.GetString(rawData);
                 var storedData = JsonSerializer.Deserialize<StoredTokenData>(json);
 
-                // Optional: Check for expiry here, although MAL API calls will fail anyway
-                // if (storedData != null && storedData.ExpiresAtUtc < DateTime.UtcNow)
-                // {
-                //     Console.WriteLine("Access token loaded but expired.");
-                //     // Ideally, trigger refresh token flow here or return null/specific status
-                //     // For now, we'll return it and let the API call handle failure/refresh later
-                // }
-
+                MalUtils.Init(storedData.AccessToken);
                 return storedData;
             }
             catch (CryptographicException cex)

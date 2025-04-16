@@ -20,6 +20,10 @@ namespace Aniki
         private ListBox _animeListBox;
         private ObservableCollection<AnimeData> _animeList;
 
+        private int _userId;
+
+        public MainWindow() { InitializeComponent(); }
+
         public MainWindow(string accessToken)
         {
             _accessToken = accessToken;
@@ -29,13 +33,10 @@ namespace Aniki
             _userProfileImage = this.FindControl<Image>("UserProfileImage");
             _listFilterComboBox = this.FindControl<ComboBox>("ListFilterComboBox");
             _animeListBox = this.FindControl<ListBox>("AnimeListBox");
-
             _animeList = new ObservableCollection<AnimeData>();
             _animeListBox.ItemsSource = _animeList;
-
             _listFilterComboBox.SelectionChanged += ListFilterComboBox_SelectionChanged;
 
-            // Populate filter options
             _listFilterComboBox.ItemsSource = new List<string>
             {
                 "All",
@@ -47,7 +48,6 @@ namespace Aniki
             };
             _listFilterComboBox.SelectedIndex = 0;
 
-            // Load user data and anime list
             _ = LoadUserDataAsync();
             _ = LoadAnimeListAsync();
         }
@@ -61,16 +61,36 @@ namespace Aniki
         {
             try
             {
-                // Use MalUtils to load user data
-                var userData = await MalUtils.LoadUserData(_accessToken);
+                var userData = await MalUtils.LoadUserData();
+
+                _userId = userData.Id;
 
                 // Set username
                 _userNameText.Text = userData.Name;
+
+                // Load profile image
+                await LoadProfileImageAsync();
             }
             catch (Exception ex)
             {
                 // Handle error
                 _userNameText.Text = $"Error: {ex.Message}";
+            }
+        }
+
+        private async Task LoadProfileImageAsync()
+        {
+            try
+            {
+                var profileImage = await ImageCache.GetUserProfileImage(_userId);
+                if (profileImage != null)
+                {
+                    _userProfileImage.Source = profileImage;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading profile image: {ex.Message}");
             }
         }
 
@@ -81,7 +101,7 @@ namespace Aniki
                 _animeList.Clear();
 
                 // Use MalUtils to load anime list
-                var animeListData = await MalUtils.LoadAnimeList(_accessToken, status);
+                var animeListData = await MalUtils.LoadAnimeList(status);
 
                 // Update the observable collection
                 foreach (var anime in animeListData)
