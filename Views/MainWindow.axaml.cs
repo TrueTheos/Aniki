@@ -65,15 +65,12 @@ namespace Aniki
 
                 _userId = userData.Id;
 
-                // Set username
                 _userNameText.Text = userData.Name;
 
-                // Load profile image
                 await LoadProfileImageAsync();
             }
             catch (Exception ex)
             {
-                // Handle error
                 _userNameText.Text = $"Error: {ex.Message}";
             }
         }
@@ -100,10 +97,8 @@ namespace Aniki
             {
                 _animeList.Clear();
 
-                // Use MalUtils to load anime list
                 var animeListData = await MalUtils.LoadAnimeList(status);
 
-                // Update the observable collection
                 foreach (var anime in animeListData)
                 {
                     _animeList.Add(anime);
@@ -111,7 +106,6 @@ namespace Aniki
             }
             catch (Exception ex)
             {
-                // Handle error - you could show a message to the user
                 Console.WriteLine($"Error loading anime list: {ex.Message}");
             }
         }

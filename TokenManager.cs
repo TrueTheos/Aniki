@@ -37,8 +37,7 @@ namespace Aniki
         {
             if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.access_token) || string.IsNullOrEmpty(tokenResponse.refresh_token))
             {
-                // Don't save incomplete data
-                ClearTokens(); // Clear any old data if the new one is invalid
+                ClearTokens(); 
                 return;
             }
 
@@ -48,7 +47,7 @@ namespace Aniki
                 {
                     AccessToken = tokenResponse.access_token,
                     RefreshToken = tokenResponse.refresh_token,
-                    ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.expires_in > 30 ? tokenResponse.expires_in - 30 : tokenResponse.expires_in) // Store expiry slightly earlier
+                    ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.expires_in > 30 ? tokenResponse.expires_in - 30 : tokenResponse.expires_in)
                 };
 
                 string json = JsonSerializer.Serialize(dataToStore);
@@ -65,8 +64,7 @@ namespace Aniki
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving tokens: {ex.Message}");
-                // Consider more robust error handling/logging
-                ClearTokens(); // Clear potentially corrupted file
+                ClearTokens();
             }
         }
 
