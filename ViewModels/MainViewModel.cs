@@ -1,9 +1,11 @@
 ﻿using Aniki.Models;
 using Aniki.Services;
+using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,34 +15,33 @@ namespace Aniki.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private readonly IMalApiService _malApiService;
 
-        private string _username;
-        private Bitmap _profileImage;
-        private bool _isLoading;
-        private string _selectedFilter;
         private ObservableCollection<AnimeData> _animeList;
         private ICommand _refreshCommand;
         private ICommand _logoutCommand;
 
+        private string _username;
         public string Username
         {
             get => _username;
             set => SetProperty(ref _username, value);
         }
 
+        private Bitmap _profileImage;
         public Bitmap ProfileImage
         {
             get => _profileImage;
             set => SetProperty(ref _profileImage, value);
         }
 
+        private bool _isLoading;
         public bool IsLoading
         {
             get => _isLoading;
             set => SetProperty(ref _isLoading, value);
         }
 
+        private string _selectedFilter;
         public string SelectedFilter
         {
             get => _selectedFilter;
@@ -51,6 +52,13 @@ namespace Aniki.ViewModels
                     _ = LoadAnimeListAsync(value);
                 }
             }
+        }
+
+        private AnimeData _selectedAnime;
+        public AnimeData SelectedAnime
+        {
+            get => _selectedAnime;
+            set => SetProperty(ref _selectedAnime, value);
         }
 
         public ObservableCollection<AnimeData> AnimeList
@@ -74,9 +82,8 @@ namespace Aniki.ViewModels
             "Plan to Watch"
         };
 
-        public MainViewModel(IMalApiService malApiService)
+        public MainViewModel() 
         {
-            _malApiService = malApiService;
             _animeList = new ObservableCollection<AnimeData>();
             _selectedFilter = "All";
         }
@@ -92,9 +99,9 @@ namespace Aniki.ViewModels
             try
             {
                 IsLoading = true;
-                var userData = await _malApiService.GetUserDataAsync();
+                var userData = await MalUtils.GetUserDataAsync();
                 Username = userData.Name;
-                ProfileImage = await _malApiService.GetProfileImageAsync(userData.Id);
+                ProfileImage = await MalUtils.GetUserPicture();
             }
             catch (Exception ex)
             {
@@ -113,7 +120,7 @@ namespace Aniki.ViewModels
                 IsLoading = true;
                 AnimeList.Clear();
 
-                var animeListData = await _malApiService.GetAnimeListAsync(filter);
+                var animeListData = await MalUtils.LoadAnimeList(filter);
 
                 foreach (var anime in animeListData)
                 {

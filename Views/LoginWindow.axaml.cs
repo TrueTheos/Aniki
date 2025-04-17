@@ -28,10 +28,9 @@ namespace Aniki.Views
             this.AttachDevTools();
 #endif
 
-            var malApiService = new MalApiService();
             var oauthService = new OAuthService();
 
-            _viewModel = new LoginViewModel(oauthService, malApiService);
+            _viewModel = new LoginViewModel(oauthService);
             _viewModel.NavigateToMainRequested += OnNavigateToMainRequested;
 
             DataContext = _viewModel;

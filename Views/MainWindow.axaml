@@ -25,6 +25,21 @@
 			<Setter Property="Padding" Value="0"/>
 			<Setter Property="Margin" Value="0,2"/>
 		</Style>
+		<Style Selector="ScrollBar">
+			<Setter Property="Background" Value="#333333"/>
+			<Setter Property="MinWidth" Value="16"/>
+		</Style>
+		<Style Selector="Panel.detailPanel TextBlock">
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		<Style Selector="Panel.detailPanel TextBlock.label">
+			<Setter Property="Foreground" Value="LightGray"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="Margin" Value="0,0,5,0"/>
+		</Style>
+		<Style Selector="Panel.detailPanel TextBlock.value">
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
 	</Window.Styles>
 
 	<Panel>
@@ -91,57 +106,118 @@
                              Width="300" />
 			</Grid>
 
-			<!-- Anime List with semi-transparent gray theme -->
-			<ListBox Grid.Row="1"
-                     ItemsSource="{Binding AnimeList}"
-                     Background="Transparent"
-                     IsVisible="{Binding !IsLoading}"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto">
-				<ListBox.Styles>
-					<!-- Make scrollbar more visible -->
-					<Style Selector="ScrollBar">
-						<Setter Property="Background" Value="#333333"/>
-						<Setter Property="MinWidth" Value="16"/>
-					</Style>
-				</ListBox.Styles>
-				<ListBox.ItemTemplate>
-					<DataTemplate DataType="models:AnimeData">
-						<Border Padding="10" Margin="5" CornerRadius="5" Background="#3A3A3A"
-                                BoxShadow="2 2 4 0 #20000000">
-							<Grid>
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="Auto"/>
-									<ColumnDefinition Width="*"/>
-									<ColumnDefinition Width="Auto"/>
-								</Grid.ColumnDefinitions>
+			<Grid Grid.Row="1" IsVisible="{Binding !IsLoading}">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="1*" />
+					<ColumnDefinition Width="2*" />
+				</Grid.ColumnDefinitions>
 
-								<!-- Anime Title and Status -->
-								<StackPanel Grid.Column="1" Margin="10,0">
-									<TextBlock Text="{Binding Node.Title}"
-                                               FontWeight="Bold" FontSize="16"
-                                               TextWrapping="Wrap" Foreground="White"/>
+				<!-- Anime List with semi-transparent gray theme -->
+				<ListBox Grid.Column="0"
+						 ItemsSource="{Binding AnimeList}"
+						 Background="Transparent"
+						 IsVisible="{Binding !IsLoading}"
+						 SelectedItem="{Binding SelectedAnime, Mode=TwoWay}"
+						 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+						 ScrollViewer.VerticalScrollBarVisibility="Auto">
+					<ListBox.Styles>
+						<!-- Make scrollbar more visible -->
+						<Style Selector="ScrollBar">
+							<Setter Property="Background" Value="#333333"/>
+							<Setter Property="MinWidth" Value="16"/>
+						</Style>
+					</ListBox.Styles>
+					<ListBox.ItemTemplate>
+						<DataTemplate DataType="models:AnimeData">
+							<Border Padding="10" Margin="5" CornerRadius="5" Background="#3A3A3A"
+									BoxShadow="2 2 4 0 #20000000">
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="Auto"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="Auto"/>
+									</Grid.ColumnDefinitions>
 
-									<StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-										<TextBlock Text="Status: " FontWeight="SemiBold" Foreground="LightGray"/>
-										<TextBlock Text="{Binding ListStatus.Status}" Foreground="LightGray"/>
+									<!-- Anime Title and Status -->
+									<StackPanel Grid.Column="1" Margin="10,0">
+										<TextBlock Text="{Binding Node.Title}"
+												   FontWeight="Bold" FontSize="16"
+												   TextWrapping="Wrap" Foreground="White"/>
+
+										<StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+											<TextBlock Text="Status: " FontWeight="SemiBold" Foreground="LightGray"/>
+											<TextBlock Text="{Binding ListStatus.Status}" Foreground="LightGray"/>
+										</StackPanel>
+
+										<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+											<TextBlock Text="Episodes: " FontWeight="SemiBold" Foreground="LightGray"/>
+											<TextBlock Text="{Binding ListStatus.Num_Episodes_Watched}" Foreground="LightGray"/>
+										</StackPanel>
+
+										<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+											<TextBlock Text="Score: " FontWeight="SemiBold" Foreground="LightGray"/>
+											<TextBlock Text="{Binding ListStatus.Score}" Foreground="LightGray"/>
+										</StackPanel>
 									</StackPanel>
+								</Grid>
+							</Border>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
 
-									<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-										<TextBlock Text="Episodes: " FontWeight="SemiBold" Foreground="LightGray"/>
-										<TextBlock Text="{Binding ListStatus.Num_Episodes_Watched}" Foreground="LightGray"/>
-									</StackPanel>
+				<!-- Anime Details-->
+				<Border
+					Grid.Column="1"
+					Padding="16"
+					Background="#2A2A2A"
+					DataContext="{Binding SelectedAnime}"
+					IsVisible="{Binding SelectedAnime, Converter={StaticResource NullToBoolConverter}}">
+					<StackPanel>
+						<TextBlock
+						  Text="{Binding Node.Title}"
+						  FontSize="24"
+						  FontWeight="Bold"
+						  Foreground="White"
+						  Margin="0,0,0,12" />
 
-									<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-										<TextBlock Text="Score: " FontWeight="SemiBold" Foreground="LightGray"/>
-										<TextBlock Text="{Binding ListStatus.Score}" Foreground="LightGray"/>
-									</StackPanel>
-								</StackPanel>
-							</Grid>
-						</Border>
-					</DataTemplate>
-				</ListBox.ItemTemplate>
-			</ListBox>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+
+							<Image
+							  Source="{Binding Node.MainPictureUrl}"
+							  Width="150"
+							  Height="220"
+							  Stretch="UniformToFill"
+							  Grid.Column="0" />
+
+							<StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Top">
+								<TextBlock
+								  Text="{Binding ListStatus.Status}"
+								  FontWeight="SemiBold"
+								  Foreground="LightGray"
+								  Margin="0,0,0,6" />
+
+								<TextBlock>
+									<Run Text="{Binding ListStatus.Num_Episodes_Watched}" />
+									<Run Text=" / " />
+									<Run Text="{Binding Node.TotalEpisodes}" />
+									<Run Text=" episodes" />
+								</TextBlock>
+							</StackPanel>
+						</Grid>
+
+						<ScrollViewer Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+							<TextBlock
+							  Text="{Binding Node.Description}"
+							  TextWrapping="Wrap"
+							  Foreground="#DDD" />
+						</ScrollViewer>
+					</StackPanel>
+				</Border>
+			</Grid>
 		</Grid>
 
 		<!-- Toolbar at the bottom -->

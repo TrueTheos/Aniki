@@ -11,7 +11,6 @@ namespace Aniki.ViewModels
     public class LoginViewModel : ViewModelBase
     {
         private readonly OAuthService _oauthService;
-        private readonly IMalApiService _malApiService;
 
         private bool _isLoading;
         private string _statusMessage;
@@ -51,10 +50,11 @@ namespace Aniki.ViewModels
 
         public event EventHandler<string> NavigateToMainRequested;
 
-        public LoginViewModel(OAuthService oauthService, IMalApiService malApiService)
+        public LoginViewModel() { }
+
+        public LoginViewModel(OAuthService oauthService)
         {
             _oauthService = oauthService;
-            _malApiService = malApiService;
         }
 
         public async Task CheckExistingLoginAsync()
@@ -70,7 +70,7 @@ namespace Aniki.ViewModels
                 {
                     try
                     {
-                        var userData = await _malApiService.GetUserDataAsync();
+                        var userData = await MalUtils.GetUserDataAsync();
                         if (userData != null && !string.IsNullOrEmpty(userData.Name))
                         {
                             Username = userData.Name;

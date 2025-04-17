@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Aniki
+namespace Aniki.Services
 {
     public class ImageCache
     {

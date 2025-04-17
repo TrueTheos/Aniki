@@ -7,12 +7,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Aniki
+namespace Aniki.Services
 {
     public static class MalUtils
     {
@@ -22,6 +23,25 @@ namespace Aniki
         public static void Init(string accessToken)
         {
             _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+        }
+
+        public static async Task<UserData> GetUserDataAsync()
+        {
+            string accessToken = TokenService.GetAccessToken();
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                throw new InvalidOperationException("No access token available");
+            }
+
+            HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to get user data: {response.StatusCode}");
+            }
+
+            string json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<UserData>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
         public static async Task<UserData> LoadUserData()

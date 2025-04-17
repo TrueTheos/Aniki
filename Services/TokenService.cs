@@ -32,6 +32,7 @@ namespace Aniki.Services
         {
             if (_cachedTokens != null)
             {
+                MalUtils.Init(_cachedTokens.AccessToken);
                 return _cachedTokens;
             }
 
@@ -51,6 +52,7 @@ namespace Aniki.Services
                     return null;
                 }
 
+                MalUtils.Init(_cachedTokens.AccessToken);
                 return _cachedTokens;
             }
             catch (Exception ex)

@@ -26,9 +26,7 @@ namespace Aniki.Views
             this.AttachDevTools();
 #endif
 
-            var malApiService = new MalApiService();
-
-            _viewModel = new MainViewModel(malApiService);
+            _viewModel = new MainViewModel();
             _viewModel.LogoutRequested += OnLogoutRequested;
 
             DataContext = _viewModel;
