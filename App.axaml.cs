@@ -1,3 +1,5 @@
+using Aniki.Services;
+using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -8,6 +10,7 @@ namespace Aniki
     {
         public override void Initialize()
         {
+            TokenService.Init();
             AvaloniaXamlLoader.Load(this);
         }
 

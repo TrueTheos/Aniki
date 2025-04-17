@@ -2,14 +2,21 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+		x:DataType="vm:LoginViewModel"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
-        x:Class="Aniki.LoginWindow"
+        x:Class="Aniki.Views.LoginWindow"
         Title="Aniki - Login"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
         Width="400" Height="300">
+
+	<Design.DataContext>
+		<vm:LoginViewModel/>
+	</Design.DataContext>
+
 	<Panel>
 		<ExperimentalAcrylicBorder IsHitTestVisible="False">
 			<ExperimentalAcrylicBorder.Material>
@@ -20,41 +27,32 @@
                     MaterialOpacity="0.05" />
 			</ExperimentalAcrylicBorder.Material>
 		</ExperimentalAcrylicBorder>
-
 		<Panel Margin="15">
 			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15">
-
 				<TextBlock Text="Welcome to Aniki!"
                            FontSize="20" FontWeight="Bold"
                            HorizontalAlignment="Center"/>
-
-				<TextBlock Name="StatusText"
-                           Text="Checking login status..."
+				<TextBlock Text="{Binding StatusMessage}"
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap" />
-
-				<Button Name="LoginButton"
-					   Content="Login with MyAnimeList"
-					   HorizontalAlignment="Stretch"
-					   Padding="10,8"
-					   IsVisible="False"/>
-
-				<Button Name="ContinueButton"
-                        Content="Continue"
+				<Button Content="Login with MyAnimeList"
+                        Command="{Binding LoginCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
-                        IsVisible="False"/>
-
-				<Button Name="LogoutButton"
-                        Content="Log into different account"
+                        IsVisible="{Binding !IsLoggedIn}"/>
+				<Button Content="{Binding Username, StringFormat=Continue as {0}}"
+                        Command="{Binding ContinueCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
-                        IsVisible="False"/>
-
-				<ProgressBar Name="LoadingIndicator"
-							 IsIndeterminate="True"
-							 HorizontalAlignment="Stretch"
-							 IsVisible="True"/>
+                        IsVisible="{Binding IsLoggedIn}"/>
+				<Button Content="Log into different account"
+                        Command="{Binding LogoutCommand}"
+                        HorizontalAlignment="Stretch"
+                        Padding="10,8"
+                        IsVisible="{Binding IsLoggedIn}"/>
+				<ProgressBar IsIndeterminate="True"
+                             HorizontalAlignment="Stretch"
+                             IsVisible="{Binding IsLoading}"/>
 			</StackPanel>
 		</Panel>
 	</Panel>

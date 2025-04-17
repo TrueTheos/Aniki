@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Aniki.Models;
+using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using SkiaSharp;
 using System;
@@ -54,7 +55,6 @@ namespace Aniki
 
                 if (!string.IsNullOrEmpty(status) && status != "All")
                 {
-                    // Convert display name to API parameter
                     string apiStatus = ConvertStatusToApiParameter(status);
                     url += $"status={apiStatus}&";
                 }
@@ -78,7 +78,6 @@ namespace Aniki
                             animeList.AddRange(animeListResponse.Data);
                         }
 
-                        // Check if there's a next page
                         if (animeListResponse.Paging != null && !string.IsNullOrEmpty(animeListResponse.Paging.Next))
                         {
                             nextPageUrl = animeListResponse.Paging.Next;
@@ -112,7 +111,6 @@ namespace Aniki
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Parse the JSON response to get the picture URL
                     using JsonDocument doc = JsonDocument.Parse(responseBody);
                     JsonElement root = doc.RootElement;
 
@@ -149,11 +147,7 @@ namespace Aniki
         }
     }
 
-    public class UserData
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-    }
+   
 
     public class AnimeListResponse
     {
@@ -161,30 +155,7 @@ namespace Aniki
         public Paging Paging { get; set; }
     }
 
-    public class AnimeData
-    {
-        public AnimeNode Node { get; set; }
-        [JsonPropertyName("list_status")]
-        public ListStatus ListStatus { get; set; }
-    }
-
-    public class AnimeNode
-    {
-        public int Id { get; set; }
-        public string Title { get; set; }
-    }
-
-    public class ListStatus
-    {
-        [JsonPropertyName("status")]
-        public string Status { get; set; }
-
-        [JsonPropertyName("score")]
-        public int Score { get; set; }
-
-        [JsonPropertyName("num_episodes_watched")]
-        public int Num_Episodes_Watched { get; set; }
-    }
+   
 
     public class Paging
     {

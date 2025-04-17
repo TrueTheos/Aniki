@@ -8,48 +8,32 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System;
+using Aniki.Services;
+using Aniki.ViewModels;
+using Aniki.Views;
+using Avalonia;
 
-namespace Aniki
+namespace Aniki.Views
 {
     public partial class MainWindow : Window
     {
-        private string _accessToken;
-        private TextBlock _userNameText;
-        private Image _userProfileImage;
-        private ComboBox _listFilterComboBox;
-        private ListBox _animeListBox;
-        private ObservableCollection<AnimeData> _animeList;
+        private MainViewModel _viewModel;
 
-        private int _userId;
-
-        public MainWindow() { InitializeComponent(); }
-
-        public MainWindow(string accessToken)
+        public MainWindow()
         {
-            _accessToken = accessToken;
             InitializeComponent();
+#if DEBUG
+            this.AttachDevTools();
+#endif
 
-            _userNameText = this.FindControl<TextBlock>("UserNameText");
-            _userProfileImage = this.FindControl<Image>("UserProfileImage");
-            _listFilterComboBox = this.FindControl<ComboBox>("ListFilterComboBox");
-            _animeListBox = this.FindControl<ListBox>("AnimeListBox");
-            _animeList = new ObservableCollection<AnimeData>();
-            _animeListBox.ItemsSource = _animeList;
-            _listFilterComboBox.SelectionChanged += ListFilterComboBox_SelectionChanged;
+            var malApiService = new MalApiService();
 
-            _listFilterComboBox.ItemsSource = new List<string>
-            {
-                "All",
-                "Currently Watching",
-                "Completed",
-                "On Hold",
-                "Dropped",
-                "Plan to Watch"
-            };
-            _listFilterComboBox.SelectedIndex = 0;
+            _viewModel = new MainViewModel(malApiService);
+            _viewModel.LogoutRequested += OnLogoutRequested;
 
-            _ = LoadUserDataAsync();
-            _ = LoadAnimeListAsync();
+            DataContext = _viewModel;
+
+            this.Loaded += MainWindow_Loaded;
         }
 
         private void InitializeComponent()
@@ -57,63 +41,16 @@ namespace Aniki
             AvaloniaXamlLoader.Load(this);
         }
 
-        private async Task LoadUserDataAsync()
+        private async void MainWindow_Loaded(object sender, EventArgs e)
         {
-            try
-            {
-                var userData = await MalUtils.LoadUserData();
-
-                _userId = userData.Id;
-
-                _userNameText.Text = userData.Name;
-
-                await LoadProfileImageAsync();
-            }
-            catch (Exception ex)
-            {
-                _userNameText.Text = $"Error: {ex.Message}";
-            }
+            await _viewModel.InitializeAsync();
         }
 
-        private async Task LoadProfileImageAsync()
+        private void OnLogoutRequested(object sender, EventArgs e)
         {
-            try
-            {
-                var profileImage = await ImageCache.GetUserProfileImage(_userId);
-                if (profileImage != null)
-                {
-                    _userProfileImage.Source = profileImage;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading profile image: {ex.Message}");
-            }
-        }
-
-        private async Task LoadAnimeListAsync(string status = null)
-        {
-            try
-            {
-                _animeList.Clear();
-
-                var animeListData = await MalUtils.LoadAnimeList(status);
-
-                foreach (var anime in animeListData)
-                {
-                    _animeList.Add(anime);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading anime list: {ex.Message}");
-            }
-        }
-
-        private async void ListFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            string selectedFilter = _listFilterComboBox.SelectedItem as string;
-            await LoadAnimeListAsync(selectedFilter);
+            var loginWindow = new LoginWindow();
+            loginWindow.Show();
+            this.Close();
         }
     }
 }

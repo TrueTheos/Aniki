@@ -62,8 +62,6 @@ namespace Aniki
 
         private static Bitmap GetDefaultProfileImage()
         {
-            // You might want to include a default profile image with your application
-            // For now, we'll return a small placeholder image
             try
             {
                 string defaultImagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "default_profile.png");
@@ -74,7 +72,6 @@ namespace Aniki
             }
             catch (Exception)
             {
-                // If loading default image fails, we'll return null
             }
 
             return null;
