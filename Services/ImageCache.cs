@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Aniki.Models;
+using Avalonia.Media.Imaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,6 +32,33 @@ namespace Aniki.Services
             {
                 image.Save(stream);
             }
+        }
+
+        public static async Task<Bitmap> GetAnimeImage(AnimeDetails anime)
+        {
+            string cacheFilePath = Path.Combine(CacheDirectory, $"anime_{anime.Id}.jpg");
+
+            if (File.Exists(cacheFilePath))
+            {
+                try
+                {
+                    return new Bitmap(cacheFilePath);
+                }
+                catch (Exception)
+                {
+                    File.Delete(cacheFilePath);
+                }
+            }
+
+            Bitmap animePicture = await MalUtils.GetAnimeImage(anime.Main_Picture);
+
+            if (animePicture != null)
+            {
+                SaveToCache($"anime_{anime.Id}.jpg", animePicture);
+                return animePicture;
+            }
+
+            return null;
         }
 
         public static async Task<Bitmap> GetUserProfileImage(int userId)

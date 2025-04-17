@@ -62,7 +62,7 @@
 			</Grid.RowDefinitions>
 
 			<!-- Header with profile info - dark gray theme -->
-			<Border Grid.Row="0" Background="#2A2A2A" Margin="0" Padding="10">
+			<Border Grid.Row="0" Background="#2A2A2A" Margin="0" Padding="1">
 				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="Auto"/>
@@ -72,8 +72,8 @@
 
 					<!-- Profile Image and Username -->
 					<StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5">
-						<Border CornerRadius="25" Width="50" Height="50" ClipToBounds="True" Background="#555555">
-							<Image Source="{Binding ProfileImage}" Width="50" Height="50" Stretch="UniformToFill"/>
+						<Border CornerRadius="25" Width="30" Height="30" ClipToBounds="True" Background="#555555">
+							<Image Source="{Binding ProfileImage}" Width="30" Height="30" Stretch="UniformToFill"/>
 						</Border>
 						<TextBlock Text="{Binding Username}"
                                    VerticalAlignment="Center"
@@ -170,11 +170,10 @@
 					Grid.Column="1"
 					Padding="16"
 					Background="#2A2A2A"
-					DataContext="{Binding SelectedAnime}"
-					IsVisible="{Binding SelectedAnime, Converter={StaticResource NullToBoolConverter}}">
+					IsVisible="{Binding SelectedAnime, Converter={x:Static ObjectConverters.IsNotNull}}">
 					<StackPanel>
 						<TextBlock
-						  Text="{Binding Node.Title}"
+						  Text="{Binding AnimeDetails.Title}"
 						  FontSize="24"
 						  FontWeight="Bold"
 						  Foreground="White"
@@ -187,7 +186,7 @@
 							</Grid.ColumnDefinitions>
 
 							<Image
-							  Source="{Binding Node.MainPictureUrl}"
+							  Source="{Binding AnimeDetails.Picture}"
 							  Width="150"
 							  Height="220"
 							  Stretch="UniformToFill"
@@ -195,15 +194,15 @@
 
 							<StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Top">
 								<TextBlock
-								  Text="{Binding ListStatus.Status}"
+								  Text="{Binding AnimeDetails.Status}"
 								  FontWeight="SemiBold"
 								  Foreground="LightGray"
 								  Margin="0,0,0,6" />
 
 								<TextBlock>
-									<Run Text="{Binding ListStatus.Num_Episodes_Watched}" />
+									<Run Text="{Binding AnimeDetails.My_List_Status.Num_Episodes_Watched}" />
 									<Run Text=" / " />
-									<Run Text="{Binding Node.TotalEpisodes}" />
+									<Run Text="{Binding AnimeDetails.Num_Episodes}" />
 									<Run Text=" episodes" />
 								</TextBlock>
 							</StackPanel>
@@ -211,7 +210,7 @@
 
 						<ScrollViewer Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
 							<TextBlock
-							  Text="{Binding Node.Description}"
+							  Text="{Binding AnimeDetails.Synopsis}"
 							  TextWrapping="Wrap"
 							  Foreground="#DDD" />
 						</ScrollViewer>

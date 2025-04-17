@@ -2,6 +2,8 @@
 using Aniki.Services;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,36 +12,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Xml.Linq;
 
 namespace Aniki.ViewModels
 {
-    public class MainViewModel : ViewModelBase
+    public partial class MainViewModel : ViewModelBase
     {
-
+        [ObservableProperty]
         private ObservableCollection<AnimeData> _animeList;
-        private ICommand _refreshCommand;
-        private ICommand _logoutCommand;
 
+        [ObservableProperty]
         private string _username;
-        public string Username
-        {
-            get => _username;
-            set => SetProperty(ref _username, value);
-        }
 
+        [ObservableProperty]
         private Bitmap _profileImage;
-        public Bitmap ProfileImage
-        {
-            get => _profileImage;
-            set => SetProperty(ref _profileImage, value);
-        }
 
+        [ObservableProperty]
         private bool _isLoading;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
 
         private string _selectedFilter;
         public string SelectedFilter
@@ -58,17 +47,17 @@ namespace Aniki.ViewModels
         public AnimeData SelectedAnime
         {
             get => _selectedAnime;
-            set => SetProperty(ref _selectedAnime, value);
+            set
+            {
+                if (SetProperty(ref _selectedAnime, value))
+                {
+                    _ = LoadAnimeDetailsAsync(value);
+                }
+            }
         }
 
-        public ObservableCollection<AnimeData> AnimeList
-        {
-            get => _animeList;
-            set => SetProperty(ref _animeList, value);
-        }
-
-        public ICommand RefreshCommand => _refreshCommand ??= new RelayCommand(async () => await RefreshDataAsync());
-        public ICommand LogoutCommand => _logoutCommand ??= new RelayCommand(Logout);
+        [ObservableProperty]
+        private AnimeDetails _animeDetails;
 
         public event EventHandler LogoutRequested;
 
@@ -86,6 +75,14 @@ namespace Aniki.ViewModels
         {
             _animeList = new ObservableCollection<AnimeData>();
             _selectedFilter = "All";
+        }
+
+        private async Task LoadAnimeDetailsAsync(AnimeData animeData)
+        {
+            if (animeData?.Node?.Id != null)
+            {
+                AnimeDetails = await MalUtils.GetAnimeDetails(animeData.Node.Id);
+            }
         }
 
         public async Task InitializeAsync()
@@ -118,13 +115,13 @@ namespace Aniki.ViewModels
             try
             {
                 IsLoading = true;
-                AnimeList.Clear();
+                _animeList.Clear();
 
                 var animeListData = await MalUtils.LoadAnimeList(filter);
 
                 foreach (var anime in animeListData)
                 {
-                    AnimeList.Add(anime);
+                    _animeList.Add(anime);
                 }
             }
             catch (Exception ex)
@@ -137,12 +134,14 @@ namespace Aniki.ViewModels
             }
         }
 
-        private async Task RefreshDataAsync()
+        [RelayCommand]
+        private async Task Refresh()
         {
             await LoadUserDataAsync();
             await LoadAnimeListAsync(_selectedFilter);
         }
 
+        [RelayCommand]
         private void Logout()
         {
             LogoutRequested?.Invoke(this, EventArgs.Empty);

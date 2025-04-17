@@ -71,7 +71,7 @@ namespace Aniki.Services
                 List<AnimeData> animeList = new List<AnimeData>();
 
                 string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
-                string fields = "list_status,num_episodes,synopsis,mean,media_type,status,studios,pictures";
+                string fields = "list_status,num_episodes,status,pictures";
 
                 if (!string.IsNullOrEmpty(status) && status != "All")
                 {
@@ -122,6 +122,32 @@ namespace Aniki.Services
             }
         }
 
+        public static async Task<AnimeDetails> GetAnimeDetails(int id)
+        {
+            try
+            {
+                string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=id,title,main_picture,status,synopsis,my_list_status,num_episodes";
+
+                HttpResponseMessage response = await _client.GetAsync(url);
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                    animeResponse.Picture = await ImageCache.GetAnimeImage(animeResponse);
+                    return animeResponse;
+                }
+                else
+                {
+                    throw new Exception($"API returned status code: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error loading anime details: {ex.Message}", ex);
+            }
+        }
+
         public static async Task<Bitmap> GetUserPicture()
         {
             try
@@ -153,6 +179,23 @@ namespace Aniki.Services
             return null;
         }
 
+        public static async Task<Bitmap> GetAnimeImage(MainPicture animePictureData)
+        {
+            try
+            {
+                byte[] imageData = await _client.GetByteArrayAsync(animePictureData.Medium);
+
+                using MemoryStream ms = new MemoryStream(imageData);
+                return new Bitmap(ms);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting anime picture: {ex.Message}");
+            }
+
+            return null;
+        }
+
         private static string ConvertStatusToApiParameter(string displayStatus)
         {
             return displayStatus switch
@@ -174,8 +217,6 @@ namespace Aniki.Services
         public AnimeData[] Data { get; set; }
         public Paging Paging { get; set; }
     }
-
-   
 
     public class Paging
     {

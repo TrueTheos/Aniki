@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Avalonia.Media.Imaging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,9 +20,25 @@ namespace Aniki.Models
         public int Id { get; set; }
         public string Title { get; set; }
 
-        public string MainPictureUrl { get; set; }
         public int TotalEpisodes { get; set; }
-        public string Description { get; set; }
+    }
+
+    public class AnimeDetails
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public MainPicture Main_Picture { get; set; }
+        public string Status { get; set; }
+        public string Synopsis { get; set; }
+        public ListStatus My_List_Status { get; set; }
+        public int Num_Episodes { get; set; }
+        public Bitmap Picture { get; set; }
+    }
+
+    public class MainPicture
+    {
+        public string Medium { get; set; }
+        public string Large { get; set; }
     }
 
     public class ListStatus
