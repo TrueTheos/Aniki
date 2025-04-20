@@ -23,6 +23,37 @@ namespace Aniki.Models
         public int TotalEpisodes { get; set; }
     }
 
+
+    public class AnimeListResponse
+    {
+        public AnimeData[] Data { get; set; }
+        public Paging Paging { get; set; }
+    }
+
+    public class AnimeSearchListResponse
+    {
+        public SearchEntry[] Data { get; set; }
+        public Paging Paging { get; set; }
+    }
+
+    public class SearchEntry
+    {
+        [JsonPropertyName("node")]
+        public SearchAnimeNode Anime { get; set; }
+    }
+
+    public class SearchAnimeNode
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public MainPicture Main_Picture { get; set; }
+    }
+
+    public class Paging
+    {
+        public string Next { get; set; }
+    }
+
     public class AnimeDetails
     {
         public int Id { get; set; }
@@ -33,12 +64,19 @@ namespace Aniki.Models
         public ListStatus My_List_Status { get; set; }
         public int Num_Episodes { get; set; }
         public Bitmap Picture { get; set; }
+        public Genre[] Genres { get; set; }
     }
 
     public class MainPicture
     {
         public string Medium { get; set; }
         public string Large { get; set; }
+    }
+
+    public class Genre
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 
     public class ListStatus

@@ -196,6 +196,71 @@ namespace Aniki.Services
             return null;
         }
 
+        public static async Task<List<SearchEntry>> SearchAnime(string query)
+        {
+            string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=totalepisodes";
+
+            HttpResponseMessage response = await _client.GetAsync(url);
+            string responseBody = await response.Content.ReadAsStringAsync();
+            var responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
+
+            return responseData?.Data?.ToList() ?? new List<SearchEntry>();
+        }
+
+        public enum AnimeStatusField
+        {
+            STATUS,
+            SCORE,
+            EPISODES_WATCHED
+        }
+
+        public static async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, int value)
+        {
+            string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
+
+            var formData = new Dictionary<string, string>();
+            switch (field)
+            {
+                case AnimeStatusField.STATUS:
+                    formData["status"] = value.ToString();
+                    break;
+                case AnimeStatusField.SCORE:
+                    formData["score"] = value.ToString();
+                    break;
+                case AnimeStatusField.EPISODES_WATCHED:
+                    formData["num_watched_episodes"] = value.ToString();
+                    break;
+            }
+
+            var content = new FormUrlEncodedContent(formData);
+
+            var response = await _client.PutAsync(url, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to update anime status: {response.StatusCode}");
+            }
+        }
+
+        public static async Task UpdateAnimeScore(int animeId, int score)
+        {
+            string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
+
+            var formData = new Dictionary<string, string>
+            {
+                { "score", score.ToString() }
+            };
+
+            var content = new FormUrlEncodedContent(formData);
+
+            var response = await _client.PutAsync(url, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to update anime status: {response.StatusCode}");
+            }
+        }
+
         private static string ConvertStatusToApiParameter(string displayStatus)
         {
             return displayStatus switch
@@ -208,18 +273,5 @@ namespace Aniki.Services
                 _ => ""
             };
         }
-    }
-
-   
-
-    public class AnimeListResponse
-    {
-        public AnimeData[] Data { get; set; }
-        public Paging Paging { get; set; }
-    }
-
-    public class Paging
-    {
-        public string Next { get; set; }
     }
 }

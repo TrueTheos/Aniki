@@ -4,8 +4,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
         xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
-		x:DataType="vm:MainViewModel"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:DataType="vm:MainViewModel"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="Aniki.Views.MainWindow"
         Title="Aniki - MyAnimeList Client"
         Background="Transparent"
@@ -16,18 +16,50 @@
 		<vm:MainViewModel/>
 	</Design.DataContext>
 
+	<Window.Resources>
+		<x:Int32 x:Key="MinusOne">-1</x:Int32>
+		<x:Int32 x:Key="PlusOne">1</x:Int32>
+	</Window.Resources>
+
 	<Window.Styles>
+		<!-- Base Styles -->
+		<Style Selector="Button">
+			<Setter Property="Background" Value="#7E57C2"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Padding" Value="16,8"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+		</Style>
+		<Style Selector="Button:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#9575CD"/>
+		</Style>
 		<Style Selector="ComboBox">
 			<Setter Property="Background" Value="#3E3E3E"/>
 			<Setter Property="Foreground" Value="#E0E0E0"/>
+			<Setter Property="CornerRadius" Value="4"/>
+		</Style>
+		<Style Selector="TextBox">
+			<Setter Property="Background" Value="#3E3E3E"/>
+			<Setter Property="Foreground" Value="#E0E0E0"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Padding" Value="8,6"/>
 		</Style>
 		<Style Selector="ListBoxItem">
 			<Setter Property="Padding" Value="0"/>
-			<Setter Property="Margin" Value="0,2"/>
+			<Setter Property="Margin" Value="0,4"/>
 		</Style>
-		<Style Selector="ScrollBar">
-			<Setter Property="Background" Value="#333333"/>
-			<Setter Property="MinWidth" Value="16"/>
+		<Style Selector="TabItem">
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="Padding" Value="16,8"/>
+			<Setter Property="Foreground" Value="#E0E0E0"/>
+		</Style>
+		<Style Selector="TabItem:selected">
+			<Setter Property="Foreground" Value="#9575CD"/>
+		</Style>
+		<Style Selector="ProgressBar">
+			<Setter Property="Height" Value="6"/>
+			<Setter Property="Foreground" Value="#7E57C2"/>
+			<Setter Property="Background" Value="#444444"/>
 		</Style>
 		<Style Selector="Panel.detailPanel TextBlock">
 			<Setter Property="Foreground" Value="White"/>
@@ -48,21 +80,22 @@
 			<ExperimentalAcrylicBorder.Material>
 				<ExperimentalAcrylicMaterial
                     BackgroundSource="Digger"
-                    TintColor="#202020"
-                    TintOpacity="0.8"
+                    TintColor="#1E1E2E"
+                    TintOpacity="0.85"
                     MaterialOpacity="0.7" />
 			</ExperimentalAcrylicBorder.Material>
 		</ExperimentalAcrylicBorder>
 
-		<Grid Margin="0,30,0,0">
+		<Grid Margin="0,30,0,0" x:Name="Root">
 			<!-- Add margin to account for title bar -->
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
 
-			<!-- Header with profile info - dark gray theme -->
-			<Border Grid.Row="0" Background="#2A2A2A" Margin="0" Padding="1">
+			<!-- Header with profile info - dark theme with accent -->
+			<Border Grid.Row="0" Background="#252535" Padding="16,12" BoxShadow="0 2 10 0 #20000000">
 				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="Auto"/>
@@ -71,166 +104,369 @@
 					</Grid.ColumnDefinitions>
 
 					<!-- Profile Image and Username -->
-					<StackPanel Grid.Column="0" Orientation="Horizontal" Margin="5">
-						<Border CornerRadius="25" Width="30" Height="30" ClipToBounds="True" Background="#555555">
-							<Image Source="{Binding ProfileImage}" Width="30" Height="30" Stretch="UniformToFill"/>
+					<StackPanel Grid.Column="0" Orientation="Horizontal">
+						<Border CornerRadius="24" Width="36" Height="36" ClipToBounds="True" Background="#7E57C2">
+							<Image Source="{Binding ProfileImage}" Width="36" Height="36" Stretch="UniformToFill"/>
 						</Border>
 						<TextBlock Text="{Binding Username}"
                                    VerticalAlignment="Center"
-                                   Margin="10,0,0,0"
+                                   Margin="12,0,0,0"
                                    FontSize="18"
                                    FontWeight="Bold"
                                    Foreground="#E0E0E0"/>
 					</StackPanel>
 
 					<!-- App Title -->
-					<TextBlock Grid.Column="1" Text="Aniki" HorizontalAlignment="Center"
-                               VerticalAlignment="Center" FontSize="24" FontWeight="Bold" Foreground="#E0E0E0"/>
+					<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+						<TextBlock Text="Aniki" FontSize="24" FontWeight="Bold" Foreground="#9575CD"/>
+						<TextBlock Text=" - MyAnimeList Client" FontSize="18" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="#E0E0E0"/>
+					</StackPanel>
 
-					<!-- Filter by list type -->
-					<StackPanel Grid.Column="2" Orientation="Horizontal" Margin="5" VerticalAlignment="Center">
-						<TextBlock Text="Filter:" VerticalAlignment="Center"
-                                   Margin="0,0,5,0" Foreground="#E0E0E0"/>
-						<ComboBox ItemsSource="{Binding FilterOptions}"
-                                  SelectedItem="{Binding SelectedFilter}"
-                                  Width="150" />
+					<!-- Search Box -->
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+						<TextBox Width="250" Watermark="Search anime..." Text="{Binding SearchQuery, Mode=TwoWay}"/>
+						<Button Content="Search" Command="{Binding SearchCommand}"/>
 					</StackPanel>
 				</Grid>
 			</Border>
 
 			<!-- Loading indicator -->
 			<Grid Grid.Row="1" IsVisible="{Binding IsLoading}">
-				<ProgressBar IsIndeterminate="True"
-                             VerticalAlignment="Center"
-                             HorizontalAlignment="Center"
-                             Width="300" />
+				<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+					<ProgressBar IsIndeterminate="True" Width="300" />
+					<TextBlock Text="Loading your anime list..."
+                               HorizontalAlignment="Center"
+                               Margin="0,10,0,0"
+                               Foreground="#E0E0E0"/>
+				</StackPanel>
 			</Grid>
 
 			<Grid Grid.Row="1" IsVisible="{Binding !IsLoading}">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="1*" />
-					<ColumnDefinition Width="2*" />
+					<ColumnDefinition Width="1.2*" MinWidth="320"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="2.5*"/>
 				</Grid.ColumnDefinitions>
 
-				<!-- Anime List with semi-transparent gray theme -->
-				<ListBox Grid.Column="0"
-						 ItemsSource="{Binding AnimeList}"
-						 Background="Transparent"
-						 IsVisible="{Binding !IsLoading}"
-						 SelectedItem="{Binding SelectedAnime, Mode=TwoWay}"
-						 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-						 ScrollViewer.VerticalScrollBarVisibility="Auto">
-					<ListBox.Styles>
-						<!-- Make scrollbar more visible -->
-						<Style Selector="ScrollBar">
-							<Setter Property="Background" Value="#333333"/>
-							<Setter Property="MinWidth" Value="16"/>
-						</Style>
-					</ListBox.Styles>
-					<ListBox.ItemTemplate>
-						<DataTemplate DataType="models:AnimeData">
-							<Border Padding="10" Margin="5" CornerRadius="5" Background="#3A3A3A"
-									BoxShadow="2 2 4 0 #20000000">
-								<Grid>
+				<!-- Anime List Panel -->
+				<Grid Grid.Column="0" Margin="12">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+
+					<!-- Filter Controls -->
+					<Grid Grid.Row="0" Margin="0,0,0,8">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
+
+						<Button Grid.Column="0" Width="36" Height="36" Padding="8" ToolTip.Tip="Filter Options">
+							<!-- Filter Icon -->
+							<Path Data="M10,18V16H14V18H10M3,6V8H21V6H3M6,13H18V11H6V13Z" Fill="White" Stretch="Uniform"/>
+						</Button>
+
+						<ComboBox Grid.Column="1" Margin="8,0,0,0"
+                                  ItemsSource="{Binding FilterOptions}"
+                                  SelectedItem="{Binding SelectedFilter}"
+                                  HorizontalAlignment="Stretch"/>
+					</Grid>
+
+					<!-- Anime List -->
+					<ListBox Grid.Row="1"
+                             ItemsSource="{Binding AnimeList}"
+                             Background="Transparent"
+                             SelectedItem="{Binding SelectedAnime, Mode=TwoWay}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto">
+						<ListBox.Styles>
+							<Style Selector="ScrollBar">
+								<Setter Property="Background" Value="#333333"/>
+								<Setter Property="MinWidth" Value="16"/>
+							</Style>
+						</ListBox.Styles>
+						<ListBox.ItemTemplate>
+							<DataTemplate DataType="models:AnimeData">
+								<Border Padding="12" Margin="2" CornerRadius="6" Background="#2A2A3A"
+                                        BoxShadow="0 3 6 0 #20000000">
+									<Grid>
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="*"/>
+										</Grid.ColumnDefinitions>
+
+										<!-- Anime Title and Status -->
+										<StackPanel Grid.Column="1" Margin="12,0,0,0">
+											<TextBlock Text="{Binding Node.Title}"
+                                                       FontWeight="Bold" FontSize="16"
+                                                       TextWrapping="Wrap" Foreground="White"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxLines="2"/>
+										</StackPanel>
+									</Grid>
+								</Border>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+				</Grid>
+
+				<!-- Splitter -->
+				<GridSplitter Grid.Column="1" Width="1" Background="#444444" ResizeDirection="Columns"/>
+
+				<!-- Anime Details Panel -->
+				<Border Grid.Column="2" Padding="16" IsVisible="{Binding SelectedAnime, Converter={x:Static ObjectConverters.IsNotNull}}">
+					<TabControl Margin="0" Padding="0">
+						<!-- Info Tab -->
+						<TabItem Header="Anime Info">
+							<Grid Margin="0,16,0,0">
+								<Grid.RowDefinitions>
+									<RowDefinition Height="Auto"/>
+									<RowDefinition Height="*"/>
+								</Grid.RowDefinitions>
+
+								<!-- Anime Title and Metadata -->
+								<Grid Grid.Row="0">
+									<Grid.RowDefinitions>
+										<RowDefinition Height="Auto"/>
+										<RowDefinition Height="*"/>
+									</Grid.RowDefinitions>
+
+									<!-- Title and Status -->
+									<Grid Grid.Row="0">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="*"/>
+											<ColumnDefinition Width="Auto"/>
+										</Grid.ColumnDefinitions>
+
+										<TextBlock Grid.Column="0"
+                                                   Text="{Binding AnimeDetails.Title}"
+                                                   FontSize="28"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   TextWrapping="Wrap"/>
+
+										<Border Grid.Column="1"
+                                                Background="#7E57C2"
+                                                CornerRadius="4"
+                                                Padding="10,5"
+                                                VerticalAlignment="Top"
+                                                HorizontalAlignment="Right">
+											<TextBlock Text="{Binding AnimeDetails.Status}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"/>
+										</Border>
+									</Grid>
+
+									<!-- Picture and Rating -->
+									<Grid Grid.Row="1" Margin="0,16,0,0">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="Auto"/>
+											<ColumnDefinition Width="*"/>
+										</Grid.ColumnDefinitions>
+
+										<StackPanel Grid.Column="0" Orientation="Vertical">
+											<Border Width="200" Height="300" CornerRadius="8"
+													ClipToBounds="True"
+													BoxShadow="0 4 12 0 #40000000">
+												<Image Source="{Binding AnimeDetails.Picture}" Stretch="UniformToFill"/>
+											</Border>
+
+											<Grid Margin="0,16,0,0">
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="Auto"/>
+													<ColumnDefinition Width="*"/>
+												</Grid.ColumnDefinitions>
+
+												<TextBlock Grid.Column="0" Text="Your Rating:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
+												<ComboBox Grid.Column="1" Margin="10,0,0,0"
+														  SelectedItem="{Binding AnimeDetails.My_List_Status.Score}"
+														  ItemsSource="{Binding ScoreOptions}"
+														  Width="120"/>
+											</Grid>
+										</StackPanel>
+
+										<!-- Episodes Info -->
+										<StackPanel Grid.Column="1" Margin="20,0,0,0">
+											<StackPanel>
+												<Grid>
+													<Grid.ColumnDefinitions>
+														<ColumnDefinition Width="*"/>
+														<ColumnDefinition Width="Auto"/>
+													</Grid.ColumnDefinitions>
+
+													<StackPanel Grid.Column="0" Orientation="Vertical">
+														<TextBlock FontSize="16" Foreground="#E0E0E0">
+															<Run Text="Episodes: "/>
+															<Run Text="{Binding AnimeDetails.My_List_Status.Num_Episodes_Watched}" FontWeight="SemiBold"/>
+															<Run Text=" / "/>
+															<Run Text="{Binding AnimeDetails.Num_Episodes}"/>
+														</TextBlock>
+
+														<ProgressBar Margin="0,6,0,0" Value="{Binding AnimeDetails.My_List_Status.Num_Episodes_Watched}"
+																	 Maximum="{Binding AnimeDetails.Num_Episodes}"
+																	 Height="8"/>
+													</StackPanel>
+
+													<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+														<Button Content="-" Width="40" Command="{Binding UpdateEpisodeCountCommand}" CommandParameter="{StaticResource MinusOne}" />
+														<Button Content="+" Width="40" Command="{Binding UpdateEpisodeCountCommand}" CommandParameter="{StaticResource PlusOne}" />
+													</StackPanel>
+												</Grid>
+											</StackPanel>
+
+											<ScrollViewer Margin="0,24,0,0" VerticalScrollBarVisibility="Auto">
+												<StackPanel>
+													<TextBlock Text="Synopsis" FontSize="20" FontWeight="SemiBold" Foreground="#9575CD"/>
+													<TextBlock Text="{Binding AnimeDetails.Synopsis}"
+															   Padding="0,10,0,0"
+															   TextWrapping="Wrap"
+															   Margin="0,0,0,0"
+															   Foreground="#E0E0E0"
+															   LineHeight="1.5"
+															   LineSpacing="15"/>
+												</StackPanel>
+											</ScrollViewer>
+										</StackPanel>
+									</Grid>
+								</Grid>	
+							</Grid>
+						</TabItem>
+
+						<!-- Torrents Tab -->
+						<TabItem Header="Torrents">
+							<Grid Margin="0,16,0,0">
+								<Grid.RowDefinitions>
+									<RowDefinition Height="Auto"/>
+									<RowDefinition Height="*"/>
+								</Grid.RowDefinitions>
+
+								<!-- Search Controls -->
+								<Grid Grid.Row="0">
 									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="Auto"/>
 										<ColumnDefinition Width="Auto"/>
 										<ColumnDefinition Width="*"/>
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
 
-									<!-- Anime Title and Status -->
-									<StackPanel Grid.Column="1" Margin="10,0">
-										<TextBlock Text="{Binding Node.Title}"
-												   FontWeight="Bold" FontSize="16"
-												   TextWrapping="Wrap" Foreground="White"/>
-
-										<StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-											<TextBlock Text="Status: " FontWeight="SemiBold" Foreground="LightGray"/>
-											<TextBlock Text="{Binding ListStatus.Status}" Foreground="LightGray"/>
-										</StackPanel>
-
-										<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-											<TextBlock Text="Episodes: " FontWeight="SemiBold" Foreground="LightGray"/>
-											<TextBlock Text="{Binding ListStatus.Num_Episodes_Watched}" Foreground="LightGray"/>
-										</StackPanel>
-
-										<StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-											<TextBlock Text="Score: " FontWeight="SemiBold" Foreground="LightGray"/>
-											<TextBlock Text="{Binding ListStatus.Score}" Foreground="LightGray"/>
-										</StackPanel>
-									</StackPanel>
+									<TextBlock Grid.Column="0" Text="Episode #:" VerticalAlignment="Center" Foreground="#E0E0E0"/>
+									<TextBox Grid.Column="1" Width="60" Text="{Binding EpisodeNumber, Mode=TwoWay}" Margin="8,0"/>
+									<TextBox Grid.Column="2" Watermark="Additional search terms (optional)" Text="{Binding TorrentSearchTerms}"/>
+									<Button Grid.Column="3" Content="Search Torrents" Margin="8,0,0,0"
+                                            Command="{Binding SeachTorrentsCommand}"
+                                            IsEnabled="{Binding EpisodeNumber, Converter={StaticResource GreaterThanZeroConverter}}"/>
 								</Grid>
-							</Border>
-						</DataTemplate>
-					</ListBox.ItemTemplate>
-				</ListBox>
 
-				<!-- Anime Details-->
-				<Border
-					Grid.Column="1"
-					Padding="16"
-					Background="#2A2A2A"
-					IsVisible="{Binding SelectedAnime, Converter={x:Static ObjectConverters.IsNotNull}}">
-					<StackPanel>
-						<TextBlock
-						  Text="{Binding AnimeDetails.Title}"
-						  FontSize="24"
-						  FontWeight="Bold"
-						  Foreground="White"
-						  Margin="0,0,0,12" />
+								<!-- Torrent Results -->
+								<Grid Grid.Row="1" Margin="0,16,0,0">
+									<Grid.RowDefinitions>
+										<RowDefinition Height="Auto"/>
+										<RowDefinition Height="*"/>
+									</Grid.RowDefinitions>
 
-						<Grid>
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="Auto" />
-								<ColumnDefinition Width="*" />
-							</Grid.ColumnDefinitions>
+									<!-- Results Header -->
+									<Grid Grid.Row="0" Margin="0,0,0,8">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="*"/>
+											<ColumnDefinition Width="Auto"/>
+											<ColumnDefinition Width="Auto"/>
+											<ColumnDefinition Width="Auto"/>
+										</Grid.ColumnDefinitions>
 
-							<Image
-							  Source="{Binding AnimeDetails.Picture}"
-							  Width="150"
-							  Height="220"
-							  Stretch="UniformToFill"
-							  Grid.Column="0" />
+										<TextBlock Grid.Column="0" Text="Title" FontWeight="SemiBold" Foreground="#9575CD"/>
+										<TextBlock Grid.Column="1" Text="Size" FontWeight="SemiBold" Foreground="#9575CD" Margin="0,0,16,0"/>
+										<TextBlock Grid.Column="2" Text="Seeders" FontWeight="SemiBold" Foreground="#9575CD" Margin="0,0,16,0"/>
+										<TextBlock Grid.Column="3" Text="Actions" FontWeight="SemiBold" Foreground="#9575CD"/>
+									</Grid>
 
-							<StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Top">
-								<TextBlock
-								  Text="{Binding AnimeDetails.Status}"
-								  FontWeight="SemiBold"
-								  Foreground="LightGray"
-								  Margin="0,0,0,6" />
+									<ListBox Grid.Row="1" ItemsSource="{Binding TorrentsList}" Background="Transparent">
+										<ListBox.ItemTemplate>
+											<DataTemplate DataType="models:NyaaTorrent">
+												<Border Padding="12" CornerRadius="4" Background="#2A2A3A">
+													<Grid>
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition Width="*"/>
+															<ColumnDefinition Width="Auto"/>
+															<ColumnDefinition Width="Auto"/>
+															<ColumnDefinition Width="Auto"/>
+														</Grid.ColumnDefinitions>
 
-								<TextBlock>
-									<Run Text="{Binding AnimeDetails.My_List_Status.Num_Episodes_Watched}" />
-									<Run Text=" / " />
-									<Run Text="{Binding AnimeDetails.Num_Episodes}" />
-									<Run Text=" episodes" />
-								</TextBlock>
-							</StackPanel>
-						</Grid>
+														<TextBlock Grid.Column="0" Text="{Binding Title}" TextWrapping="Wrap" Foreground="#E0E0E0"/>
+														<TextBlock Grid.Column="1" Text="{Binding Size}" Foreground="#E0E0E0" Margin="16,0" HorizontalAlignment="Right"/>
+														<TextBlock Grid.Column="2" Text="{Binding Seeders}" Foreground="{Binding Seeders, Converter={StaticResource SeederColorConverter}}" Margin="16,0" HorizontalAlignment="Right"/>
 
-						<ScrollViewer Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
-							<TextBlock
-							  Text="{Binding AnimeDetails.Synopsis}"
-							  TextWrapping="Wrap"
-							  Foreground="#DDD" />
-						</ScrollViewer>
+														<StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
+															<Button Content="Download"
+                                                                    Command="{Binding #Root.((vm:MainViewModel)DataContext).DownloadTorrentCommand}"
+                                                                    CommandParameter="{Binding MagnetLink}"/>
+															<Button Content="Copy Link"
+                                                                    Command="{Binding #Root.((vm:MainViewModel)DataContext).CopyMagnetLinkCommand}"
+                                                                    CommandParameter="{Binding MagnetLink}"
+                                                                    Background="#3E3E3E"/>
+														</StackPanel>
+													</Grid>
+												</Border>
+											</DataTemplate>
+										</ListBox.ItemTemplate>
+									</ListBox>
+								</Grid>
+							</Grid>
+						</TabItem>
+
+						<!-- Related Anime Tab -->
+						<TabItem Header="Related">
+							<Grid Margin="0,16,0,0">
+								<!-- Content for related anime would go here -->
+								<TextBlock Text="This feature is coming soon!"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="#9575CD"
+                                           FontSize="18"/>
+							</Grid>
+						</TabItem>
+					</TabControl>
+				</Border>
+
+				<!-- Empty state for when no anime is selected -->
+				<Border Grid.Column="2"
+                        IsVisible="{Binding SelectedAnime, Converter={x:Static ObjectConverters.IsNull}}"
+                        Background="#2A2A3A">
+					<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+						<TextBlock Text="No Anime Selected"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="#9575CD"
+                                   HorizontalAlignment="Center"/>
+						<TextBlock Text="Select an anime from your list to view details"
+                                   Foreground="#E0E0E0"
+                                   Margin="0,8,0,0"
+                                   HorizontalAlignment="Center"/>
 					</StackPanel>
 				</Border>
 			</Grid>
-		</Grid>
 
-		<!-- Toolbar at the bottom -->
-		<Border VerticalAlignment="Bottom" Height="40" Background="#2A2A2A">
-			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0">
-				<Button Content="Refresh"
-                        Command="{Binding RefreshCommand}"
-                        Margin="5,0"
-                        Padding="10,5"/>
-				<Button Content="Logout"
-                        Command="{Binding LogoutCommand}"
-                        Margin="5,0"
-                        Padding="10,5"/>
-			</StackPanel>
-		</Border>
+			<!-- Status Bar at the bottom -->
+			<Border Grid.Row="2" Background="#252535" Height="36">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+
+					<!-- Status Information -->
+					<StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,0">
+						<TextBlock Text="Connected to MyAnimeList" VerticalAlignment="Center" Foreground="#9575CD"/>
+						<TextBlock Text=" | " VerticalAlignment="Center" Foreground="#666"/>
+						<TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="#E0E0E0"/>
+					</StackPanel>
+
+					<!-- Action Buttons -->
+					<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0">
+						<Button Content="Refresh" Command="{Binding RefreshCommand}" Padding="12,4" Margin="0,0,8,0"/>
+						<Button Content="Logout" Command="{Binding LogoutCommand}" Padding="12,4" Background="#F44336"/>
+					</StackPanel>
+				</Grid>
+			</Border>
+		</Grid>
 	</Panel>
 </Window>
