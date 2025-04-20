@@ -35,9 +35,6 @@ namespace Aniki.ViewModels
         private string _searchQuery = string.Empty;
 
         [ObservableProperty]
-        private string _torrentSearchTerms = string.Empty;
-
-        [ObservableProperty]
         private string _statusMessage = "Ready";
 
         private string _selectedFilter;
@@ -53,6 +50,9 @@ namespace Aniki.ViewModels
             }
         }
 
+        [ObservableProperty]
+        private AnimeDetailsViewModel _animeDetailsViewModel;
+
         private AnimeData _selectedAnime;
         public AnimeData SelectedAnime
         {
@@ -62,23 +62,12 @@ namespace Aniki.ViewModels
                 if (SetProperty(ref _selectedAnime, value))
                 {
                     _ = LoadAnimeDetailsAsync(value);
-                    EpisodeNumber = value?.ListStatus?.Num_Episodes_Watched + 1 ?? 1;
+                    AnimeDetailsViewModel.EpisodeNumber = value?.ListStatus?.Num_Episodes_Watched + 1 ?? 1;
                 }
             }
         }
 
-        [ObservableProperty]
-        private AnimeDetails _animeDetails;
-
-        [ObservableProperty]
-        private int _episodeNumber;
-
-        [ObservableProperty]
-        private ObservableCollection<NyaaTorrent> _torrentsList = new();
-
         public event EventHandler LogoutRequested;
-
-        private readonly NyaaService _nyaaService = new NyaaService();
 
         public List<string> FilterOptions { get; } = new List<string>
         {
@@ -94,6 +83,7 @@ namespace Aniki.ViewModels
 
         public MainViewModel()
         {
+            AnimeDetailsViewModel = new();
             _animeList = new ObservableCollection<AnimeData>();
             _selectedFilter = "All";
         }
@@ -102,9 +92,12 @@ namespace Aniki.ViewModels
         {
             if (animeData?.Node?.Id != null)
             {
-                StatusMessage = $"Loading details for {animeData.Node.Title}...";
-                AnimeDetails = await MalUtils.GetAnimeDetails(animeData.Node.Id);
-                StatusMessage = "Details loaded";
+                var details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
+                AnimeDetailsViewModel = new AnimeDetailsViewModel(details);
+            }
+            else
+            {
+                AnimeDetailsViewModel = null;
             }
         }
 
@@ -178,38 +171,6 @@ namespace Aniki.ViewModels
         }
 
         [RelayCommand]
-        public async Task SeachTorrents()
-        {
-            if (SelectedAnime == null) return;
-
-            StatusMessage = $"Searching torrents for {SelectedAnime.Node.Title} - Episode {EpisodeNumber}...";
-            TorrentsList.Clear();
-
-            var list = await _nyaaService.SearchAsync(SelectedAnime.Node.Title, EpisodeNumber);
-
-            foreach (var t in list)
-            {
-                TorrentsList.Add(t);
-            }
-
-            StatusMessage = $"Found {TorrentsList.Count} torrents";
-        }
-
-        [RelayCommand]
-        public void DownloadTorrent(string magnet)
-        {
-            Process.Start(new ProcessStartInfo(magnet) { UseShellExecute = true });
-            StatusMessage = "Opening torrent...";
-        }
-
-        [RelayCommand]
-        public void CopyMagnetLink(string magnet)
-        {
-            //todo
-            StatusMessage = "Magnet link copied to clipboard";
-        }
-
-        [RelayCommand]
         public async Task Search()
         {
             if (string.IsNullOrWhiteSpace(SearchQuery))
@@ -252,61 +213,6 @@ namespace Aniki.ViewModels
             {
                 IsLoading = false;
             }
-        }
-
-        [RelayCommand]
-        public async Task UpdateEpisodeCount(int change)
-        {
-            if (AnimeDetails?.My_List_Status == null) return;
-
-            int newCount = AnimeDetails.My_List_Status.Num_Episodes_Watched + change;
-
-            if (newCount < 0) newCount = 0;
-
-            if (AnimeDetails.Num_Episodes > 0 && newCount > AnimeDetails.Num_Episodes)
-            {
-                newCount = AnimeDetails.Num_Episodes;
-            }
-
-            try
-            {
-                StatusMessage = "Updating episode count...";
-                await MalUtils.UpdateAnimeStatus(AnimeDetails.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount);
-                AnimeDetails.My_List_Status.Num_Episodes_Watched = newCount;
-
-                StatusMessage = "Episode count updated";
-
-                EpisodeNumber = newCount + 1;
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Error updating: {ex.Message}";
-            }
-        }
-
-        [RelayCommand]
-        public async Task UpdateAnimeScore(int score)
-        {
-            if (AnimeDetails?.My_List_Status == null) return;
-
-            try
-            {
-                StatusMessage = "Updating score...";
-                await MalUtils.UpdateAnimeStatus(AnimeDetails.Id, MalUtils.AnimeStatusField.SCORE, score);
-                AnimeDetails.My_List_Status.Score = score;
-
-                StatusMessage = "Episode count updated";
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Error updating: {ex.Message}";
-            }
-        }
-
-        [RelayCommand]
-        public async Task UpdateAnimeStatus(string status)
-        {
-            //TODO
         }
     }
 }

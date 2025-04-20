@@ -9,10 +9,10 @@ using Aniki.Models;
 
 namespace Aniki.Services
 {
-    public class NyaaService
+    public static class NyaaService
     {
-        private readonly HttpClient _http = new HttpClient();
-        public async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
+        private static readonly HttpClient _http = new HttpClient();
+        public static async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
         {
             var term = HttpUtility.UrlEncode($"{animeName} {episodeNumber:D2}");
             var url = $"https://nyaa.si/?f=0&c=1_2&q={term}";

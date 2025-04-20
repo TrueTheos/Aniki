@@ -1,0 +1,52 @@
+<UserControl
+  xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
+  xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+  x:Class="Aniki.Views.AnimeDetailsView"
+  x:DataType="vm:AnimeDetailsViewModel">
+	<Border Padding="16" Background="#2A2A2A">
+		<StackPanel>
+			<TextBlock
+			  Text="{Binding Details.Title}"
+			  FontSize="24"
+			  FontWeight="Bold"
+			  Foreground="White"
+			  Margin="0,0,0,12" />
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Image
+				  Source="{Binding Details.Picture}"
+				  Width="150"
+				  Height="220"
+				  Stretch="UniformToFill"
+				  Grid.Column="0" />
+				<StackPanel
+				  Grid.Column="1"
+				  Margin="12,0,0,0"
+				  VerticalAlignment="Top">
+					<TextBlock
+					  Text="{Binding Details.Status}"
+					  FontWeight="SemiBold"
+					  Foreground="LightGray"
+					  Margin="0,0,0,6" />
+					<TextBlock>
+						<Run Text="{Binding Details.My_List_Status.Num_Episodes_Watched}" />
+						<Run Text=" / " />
+						<Run Text="{Binding Details.Num_Episodes}" />
+						<Run Text=" episodes" />
+					</TextBlock>
+				</StackPanel>
+			</Grid>
+			<ScrollViewer Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+				<TextBlock
+				  Text="{Binding Details.Synopsis}"
+				  TextWrapping="Wrap"
+				  Foreground="#DDD" />
+			</ScrollViewer>
+		</StackPanel>
+	</Border>
+</UserControl>
