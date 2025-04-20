@@ -62,7 +62,6 @@ namespace Aniki.ViewModels
                 if (SetProperty(ref _selectedAnime, value))
                 {
                     _ = LoadAnimeDetailsAsync(value);
-                    AnimeDetailsViewModel.EpisodeNumber = value?.ListStatus?.Num_Episodes_Watched + 1 ?? 1;
                 }
             }
         }
@@ -79,7 +78,6 @@ namespace Aniki.ViewModels
             "Plan to Watch"
         };
 
-        public List<int> ScoreOptions { get; } = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
         public MainViewModel()
         {
@@ -175,7 +173,7 @@ namespace Aniki.ViewModels
         {
             if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                await LoadAnimeListAsync(SelectedFilter);
+                await LoadAnimeListAsync("all");
                 return;
             }
 

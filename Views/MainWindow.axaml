@@ -227,8 +227,8 @@
 
 								<views:AnimeDetailsView
 								  Grid.Column="1"
-								  DataContext="{Binding AnimeDetailsViewModel}"
-								  IsVisible="{Binding AnimeDetailsViewModel, Converter={StaticResource IsNotNullConverter}}" />
+								  DataContext="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel}"
+								  IsVisible="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" />
 							</Grid>
 						</TabItem>
 
@@ -250,11 +250,11 @@
 									</Grid.ColumnDefinitions>
 
 									<TextBlock Grid.Column="0" Text="Episode #:" VerticalAlignment="Center" Foreground="#E0E0E0"/>
-									<TextBox Grid.Column="1" Width="60" Text="{Binding EpisodeNumber, Mode=TwoWay}" Margin="8,0"/>
-									<TextBox Grid.Column="2" Watermark="Additional search terms (optional)" Text="{Binding TorrentSearchTerms}"/>
+									<TextBox Grid.Column="1" Width="60" Text="{Binding AnimeDetailsViewModel.EpisodeNumber, Mode=TwoWay}" Margin="8,0"/>
+									<TextBox Grid.Column="2" Watermark="Additional search terms (optional)" Text="{Binding AnimeDetailsViewModel.TorrentSearchTerms}"/>
 									<Button Grid.Column="3" Content="Search Torrents" Margin="8,0,0,0"
-                                            Command="{Binding SearchTorrentsCommand}"
-                                            IsEnabled="{Binding EpisodeNumber, Converter={StaticResource GreaterThanZeroConverter}}"/>
+                                            Command="{Binding AnimeDetailsViewModel.SearchTorrentsCommand}"
+                                            IsEnabled="{Binding AnimeDetailsViewModel.EpisodeNumber, Converter={StaticResource GreaterThanZeroConverter}}"/>
 								</Grid>
 
 								<!-- Torrent Results -->
@@ -279,7 +279,7 @@
 										<TextBlock Grid.Column="3" Text="Actions" FontWeight="SemiBold" Foreground="#9575CD"/>
 									</Grid>
 
-									<ListBox Grid.Row="1" ItemsSource="{Binding TorrentsList}" Background="Transparent">
+									<ListBox Grid.Row="1" ItemsSource="{Binding AnimeDetailsViewModel.TorrentsList}" Background="Transparent">
 										<ListBox.ItemTemplate>
 											<DataTemplate DataType="models:NyaaTorrent">
 												<Border Padding="12" CornerRadius="4" Background="#2A2A3A">
@@ -297,10 +297,10 @@
 
 														<StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
 															<Button Content="Download"
-                                                                    Command="{Binding #Root.((vm:MainViewModel)DataContext).DownloadTorrentCommand}"
+                                                                    Command="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel.DownloadTorrentCommand}"
                                                                     CommandParameter="{Binding MagnetLink}"/>
 															<Button Content="Copy Link"
-                                                                    Command="{Binding #Root.((vm:MainViewModel)DataContext).CopyMagnetLinkCommand}"
+                                                                    Command="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel.CopyMagnetLinkCommand}"
                                                                     CommandParameter="{Binding MagnetLink}"
                                                                     Background="#3E3E3E"/>
 														</StackPanel>

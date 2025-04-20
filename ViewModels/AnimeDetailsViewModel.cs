@@ -25,12 +25,14 @@ namespace Aniki.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<NyaaTorrent> _torrentsList = new();
+        public List<int> ScoreOptions { get; } = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
         public AnimeDetailsViewModel() { }
 
         public AnimeDetailsViewModel(AnimeDetails details)
         {
             Details = details;
+            EpisodeNumber = details.My_List_Status?.Num_Episodes_Watched + 1 ?? 1;
         }
 
         [RelayCommand]
