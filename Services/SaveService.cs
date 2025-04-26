@@ -1,4 +1,5 @@
 ﻿using Aniki.Models;
+using Aniki.ViewModels;
 using Avalonia.Media.Imaging;
 using System;
 using System.Collections.Generic;
@@ -11,23 +12,34 @@ using System.Threading.Tasks;
 
 namespace Aniki.Services
 {
-    public class ImageCache
+    public class SaveService
     {
-        private static readonly string CacheDirectory = Path.Combine(
+        private static readonly string _mainDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Aniki", "ImageCache");
+            "Aniki");
 
-        static ImageCache()
+        private static readonly string _cacheDirectory = Path.Combine(_mainDirectory, "ImageCache");
+
+        public static readonly string DefaultEpisodesFolder = Path.Combine(_mainDirectory, "Episodes");
+
+        private static readonly string _settingsConfigFile = Path.Combine(_mainDirectory, "config.json");
+
+        static SaveService()
         {
-            if (!Directory.Exists(CacheDirectory))
+            if (!Directory.Exists(_cacheDirectory))
             {
-                Directory.CreateDirectory(CacheDirectory);
+                Directory.CreateDirectory(_cacheDirectory);
+            }
+
+            if (!Directory.Exists(DefaultEpisodesFolder))
+            {
+                Directory.CreateDirectory(DefaultEpisodesFolder);
             }
         }
 
-        public static void SaveToCache(string fileName, Bitmap image)
+        public static void SaveImageToCache(string fileName, Bitmap image)
         {
-            string filePath = Path.Combine(CacheDirectory, fileName);
+            string filePath = Path.Combine(_cacheDirectory, fileName);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 image.Save(stream);
@@ -36,7 +48,7 @@ namespace Aniki.Services
 
         public static async Task<Bitmap> GetAnimeImage(AnimeDetails anime)
         {
-            string cacheFilePath = Path.Combine(CacheDirectory, $"anime_{anime.Id}.jpg");
+            string cacheFilePath = Path.Combine(_cacheDirectory, $"anime_{anime.Id}.jpg");
 
             if (File.Exists(cacheFilePath))
             {
@@ -50,11 +62,11 @@ namespace Aniki.Services
                 }
             }
 
-            Bitmap animePicture = await MalUtils.GetAnimeImage(anime.Main_Picture);
+            Bitmap animePicture = await MalUtils.GetAnimeImage(anime.MainPicture);
 
             if (animePicture != null)
             {
-                SaveToCache($"anime_{anime.Id}.jpg", animePicture);
+                SaveImageToCache($"anime_{anime.Id}.jpg", animePicture);
                 return animePicture;
             }
 
@@ -63,7 +75,7 @@ namespace Aniki.Services
 
         public static async Task<Bitmap> GetUserProfileImage(int userId)
         {
-            string cacheFilePath = Path.Combine(CacheDirectory, $"profile_{userId}.jpg");
+            string cacheFilePath = Path.Combine(_cacheDirectory, $"profile_{userId}.jpg");
 
             if (File.Exists(cacheFilePath))
             {
@@ -81,7 +93,7 @@ namespace Aniki.Services
 
             if (profileImage != null)
             {
-                SaveToCache($"profile_{userId}.jpg", profileImage);
+                SaveImageToCache($"profile_{userId}.jpg", profileImage);
                 return profileImage;
             }
 
@@ -100,6 +112,23 @@ namespace Aniki.Services
             }
             catch (Exception)
             {
+            }
+
+            return null;
+        }
+
+        public static void SaveSettings(SettingsConfig config)
+        {
+            File.WriteAllText(_settingsConfigFile, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
+        public static SettingsConfig GetSettingsConfig()
+        {
+            if (File.Exists(_settingsConfigFile))
+            {
+                var json = File.ReadAllText(_settingsConfigFile);
+                var config = JsonSerializer.Deserialize<SettingsConfig>(json);
+                return config;
             }
 
             return null;

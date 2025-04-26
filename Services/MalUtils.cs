@@ -134,7 +134,7 @@ namespace Aniki.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
-                    animeResponse.Picture = await ImageCache.GetAnimeImage(animeResponse);
+                    animeResponse.Picture = await SaveService.GetAnimeImage(animeResponse);
                     return animeResponse;
                 }
                 else
@@ -231,25 +231,6 @@ namespace Aniki.Services
                     formData["num_watched_episodes"] = value.ToString();
                     break;
             }
-
-            var content = new FormUrlEncodedContent(formData);
-
-            var response = await _client.PutAsync(url, content);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Failed to update anime status: {response.StatusCode}");
-            }
-        }
-
-        public static async Task UpdateAnimeScore(int animeId, int score)
-        {
-            string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
-
-            var formData = new Dictionary<string, string>
-            {
-                { "score", score.ToString() }
-            };
 
             var content = new FormUrlEncodedContent(formData);
 

@@ -250,11 +250,12 @@
 									</Grid.ColumnDefinitions>
 
 									<TextBlock Grid.Column="0" Text="Episode #:" VerticalAlignment="Center" Foreground="#E0E0E0"/>
-									<TextBox Grid.Column="1" Width="60" Text="{Binding AnimeDetailsViewModel.EpisodeNumber, Mode=TwoWay}" Margin="8,0"/>
+									<TextBox Grid.Column="1" Width="60" Text="{Binding AnimeDetailsViewModel.NextEpisodeNumber, Mode=TwoWay}" Margin="8,0"/>
 									<TextBox Grid.Column="2" Watermark="Additional search terms (optional)" Text="{Binding AnimeDetailsViewModel.TorrentSearchTerms}"/>
 									<Button Grid.Column="3" Content="Search Torrents" Margin="8,0,0,0"
                                             Command="{Binding AnimeDetailsViewModel.SearchTorrentsCommand}"
-                                            IsEnabled="{Binding AnimeDetailsViewModel.EpisodeNumber, Converter={StaticResource GreaterThanZeroConverter}}"/>
+                                            IsEnabled="{Binding AnimeDetailsViewModel.NextEpisodeNumber, Converter={StaticResource GreaterThanZeroConverter}}"
+											CommandParameter="{Binding SelectedAnime}"/>
 								</Grid>
 
 								<!-- Torrent Results -->
@@ -298,10 +299,10 @@
 														<StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
 															<Button Content="Download"
                                                                     Command="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel.DownloadTorrentCommand}"
-                                                                    CommandParameter="{Binding MagnetLink}"/>
+                                                                    CommandParameter="{Binding TorrentLink}"/>
 															<Button Content="Copy Link"
                                                                     Command="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel.CopyMagnetLinkCommand}"
-                                                                    CommandParameter="{Binding MagnetLink}"
+                                                                    CommandParameter="{Binding TorrentLink}"
                                                                     Background="#3E3E3E"/>
 														</StackPanel>
 													</Grid>
@@ -362,6 +363,7 @@
 
 					<!-- Action Buttons -->
 					<StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0">
+						<Button Content="Settings" Command="{Binding OpenSettingsCommand}" Padding="12,4" Margin="0,0,8,0" />
 						<Button Content="Refresh" Command="{Binding RefreshCommand}" Padding="12,4" Margin="0,0,8,0"/>
 						<Button Content="Logout" Command="{Binding LogoutCommand}" Padding="12,4" Background="#F44336"/>
 					</StackPanel>

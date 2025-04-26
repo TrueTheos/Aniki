@@ -67,7 +67,7 @@
 
 							<TextBlock Grid.Column="0" Text="Your Rating:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
 							<ComboBox Grid.Column="1" Margin="10,0,0,0"
-									  SelectedItem="{Binding Details.My_List_Status.Score}"
+									  SelectedItem="{Binding Details.MyListStatus.Score}"
 									  ItemsSource="{Binding ScoreOptions}"
 									  Width="120"/>
 						</Grid>
@@ -85,13 +85,13 @@
 								<StackPanel Grid.Column="0" Orientation="Vertical">
 									<TextBlock FontSize="16" Foreground="#E0E0E0">
 										<Run Text="Episodes: "/>
-										<Run Text="{Binding Details.My_List_Status.Num_Episodes_Watched}" FontWeight="SemiBold"/>
+										<Run Text="{Binding EpisodesWatched}" FontWeight="SemiBold"/>
 										<Run Text=" / "/>
-										<Run Text="{Binding Details.Num_Episodes}"/>
+										<Run Text="{Binding Details.NumEpisodes}"/>
 									</TextBlock>
 
-									<ProgressBar Margin="0,6,0,0" Value="{Binding Details.My_List_Status.Num_Episodes_Watched}"
-												 Maximum="{Binding Details.Num_Episodes}"
+									<ProgressBar Margin="0,6,6,0" Value="{Binding EpisodesWatched}"
+												 Maximum="{Binding Details.NumEpisodes}"
 												 Height="8"/>
 								</StackPanel>
 

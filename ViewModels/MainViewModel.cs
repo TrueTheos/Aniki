@@ -67,6 +67,7 @@ namespace Aniki.ViewModels
         }
 
         public event EventHandler LogoutRequested;
+        public event EventHandler SettingsRequested;
 
         public List<string> FilterOptions { get; } = new List<string>
         {
@@ -211,6 +212,12 @@ namespace Aniki.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        [RelayCommand]
+        private void OpenSettings()
+        {
+            SettingsRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 }

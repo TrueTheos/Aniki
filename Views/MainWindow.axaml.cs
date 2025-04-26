@@ -28,6 +28,7 @@ namespace Aniki.Views
 
             _viewModel = new MainViewModel();
             _viewModel.LogoutRequested += OnLogoutRequested;
+            _viewModel.SettingsRequested += OnSettingsRequested;
 
             DataContext = _viewModel;
 
@@ -49,6 +50,15 @@ namespace Aniki.Views
             var loginWindow = new LoginWindow();
             loginWindow.Show();
             this.Close();
+        }
+
+        private async void OnSettingsRequested(object sender, EventArgs e)
+        {
+            var settingsWindow = new SettingsWindow
+            {
+                DataContext = new SettingsViewModel()
+            };
+            await settingsWindow.ShowDialog((Window)this);
         }
     }
 }

@@ -46,7 +46,8 @@ namespace Aniki.Models
     {
         public int Id { get; set; }
         public string Title { get; set; }
-        public MainPicture Main_Picture { get; set; }
+        [JsonPropertyName("main_picture")]
+        public MainPicture MainPicture { get; set; }
     }
 
     public class Paging
@@ -58,11 +59,14 @@ namespace Aniki.Models
     {
         public int Id { get; set; }
         public string Title { get; set; }
-        public MainPicture Main_Picture { get; set; }
+        [JsonPropertyName("main_picture")]
+        public MainPicture MainPicture { get; set; }
         public string Status { get; set; }
         public string Synopsis { get; set; }
-        public ListStatus My_List_Status { get; set; }
-        public int Num_Episodes { get; set; }
+        [JsonPropertyName("my_list_status")]
+        public ListStatus MyListStatus { get; set; }
+        [JsonPropertyName("num_episodes")]
+        public int NumEpisodes { get; set; }
         public Bitmap Picture { get; set; }
         public Genre[] Genres { get; set; }
     }
@@ -88,6 +92,6 @@ namespace Aniki.Models
         public int Score { get; set; }
 
         [JsonPropertyName("num_episodes_watched")]
-        public int Num_Episodes_Watched { get; set; }
+        public int NumEpisodesWatched { get; set; }
     }
 }

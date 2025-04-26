@@ -18,7 +18,9 @@ namespace Aniki.ViewModels
         private AnimeDetails _details;
 
         [ObservableProperty]
-        private int _episodeNumber;
+        private int _episodesWatched;
+
+        public int NextEpisodeNumber => EpisodesWatched + 1;
 
         [ObservableProperty]
         private string _torrentSearchTerms = string.Empty;
@@ -32,49 +34,44 @@ namespace Aniki.ViewModels
         public AnimeDetailsViewModel(AnimeDetails details)
         {
             Details = details;
-            EpisodeNumber = details.My_List_Status?.Num_Episodes_Watched + 1 ?? 1;
+            EpisodesWatched = details.MyListStatus?.NumEpisodesWatched ?? 0;
         }
 
         [RelayCommand]
         public async Task UpdateEpisodeCount(int change)
         {
-            if (_details?.My_List_Status == null) return;
+            if (Details?.MyListStatus == null) return;
 
-            int newCount = _details.My_List_Status.Num_Episodes_Watched + change;
+            int newCount = EpisodesWatched + change;
 
             if (newCount < 0) newCount = 0;
 
-            if (_details.Num_Episodes > 0 && newCount > _details.Num_Episodes)
+            if (Details.NumEpisodes > 0 && newCount > Details.NumEpisodes)
             {
-                newCount = _details.Num_Episodes;
+                newCount = Details.NumEpisodes;
             }
 
             try
             {
-                await MalUtils.UpdateAnimeStatus(_details.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount);
-                _details.My_List_Status.Num_Episodes_Watched = newCount;
+                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount);
 
-                EpisodeNumber = newCount + 1;
+                EpisodesWatched = newCount;
             }
-            catch (Exception ex)
-            {
-            }
+            catch (Exception ex) { }
         }
 
         [RelayCommand]
         public async Task UpdateAnimeScore(int score)
         {
-            if (_details?.My_List_Status == null) return;
+            if (Details?.MyListStatus == null) return;
 
             try
             {
-                await MalUtils.UpdateAnimeStatus(_details.Id, MalUtils.AnimeStatusField.SCORE, score);
-                _details.My_List_Status.Score = score;
+                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score);
+                Details.MyListStatus.Score = score;
 
             }
-            catch (Exception ex)
-            {
-            }
+            catch (Exception ex) { }
         }
 
         [RelayCommand]
@@ -90,7 +87,7 @@ namespace Aniki.ViewModels
 
             TorrentsList.Clear();
 
-            var list = await NyaaService.SearchAsync(selectedAnime.Node.Title, EpisodeNumber);
+            var list = await NyaaService.SearchAsync(selectedAnime.Node.Title, EpisodesWatched + 1);
 
             foreach (var t in list)
             {

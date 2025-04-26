@@ -5,6 +5,7 @@ using System.Web;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Aniki.Models;
+using System.Xml;
 
 
 namespace Aniki.Services
@@ -15,34 +16,60 @@ namespace Aniki.Services
         public static async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
         {
             var term = HttpUtility.UrlEncode($"{animeName} {episodeNumber:D2}");
-            var url = $"https://nyaa.si/?f=0&c=1_2&q={term}";
-            var html = await _http.GetStringAsync(url);
+            var url = $"https://nyaa.si/?page=rss&f=0&c=1_2&q={term}";
 
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            var rows = doc.DocumentNode.SelectNodes("//table[contains(@class,'torrent-list')]//tbody//tr");
+            var rssContent = await _http.GetStringAsync(url);
             var results = new List<NyaaTorrent>();
-            if (rows == null) return results;
 
-            foreach (var row in rows)
+            var doc = new XmlDocument();
+            doc.LoadXml(rssContent);
+
+            var itemNodes = doc.SelectNodes("//item");
+            if (itemNodes == null) return results;
+
+            foreach (XmlNode item in itemNodes)
             {
-                var titleNode = row.SelectSingleNode(".//td[2]//a[not(contains(@class,'comments'))]");
-                var magnetNode = row.SelectSingleNode(".//td[3]//a[starts-with(@href,'magnet:')]");
-                var sizeNode = row.SelectSingleNode(".//td[4]");
-                var seedersNode = row.SelectSingleNode(".//td[6]");
+                var title = item.SelectSingleNode("title")?.InnerText;
+                var link = item.SelectSingleNode("link")?.InnerText;
 
-                if (titleNode != null && magnetNode != null)
+                var descriptionNode = item.SelectSingleNode("description");
+                string torrentLink = "";
+
+                var namespaceManager = new XmlNamespaceManager(doc.NameTable);
+                namespaceManager.AddNamespace("nyaa", "https://nyaa.si/xmlns/nyaa");
+                var infoHashNode = item.SelectSingleNode("nyaa:infoHash", namespaceManager);
+                
+                if (infoHashNode != null)
+                {
+                    var infoHash = infoHashNode.InnerText;
+                    var encodedTitle = HttpUtility.UrlEncode(title);
+                    var linkNode = item.SelectSingleNode("link");
+                    torrentLink = linkNode?.InnerText;
+                }
+
+                var sizeNode = item.SelectSingleNode("nyaa:size", namespaceManager);
+                var size = sizeNode?.InnerText ?? "";
+
+                var seedersNode = item.SelectSingleNode("nyaa:seeders", namespaceManager) ??
+                                  item.SelectSingleNode("seeders", namespaceManager);
+                int seeders = 0;
+                if (seedersNode != null)
+                {
+                    int.TryParse(seedersNode.InnerText, out seeders);
+                }
+
+                if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(torrentLink))
                 {
                     results.Add(new NyaaTorrent
                     {
-                        Title = HttpUtility.HtmlDecode(titleNode.InnerText.Trim()),
-                        MagnetLink = magnetNode.Attributes["href"].Value,
-                        Size = sizeNode?.InnerText.Trim() ?? "",
-                        Seeders = int.TryParse(seedersNode?.InnerText.Trim(), out var s) ? s : 0
+                        Title = HttpUtility.HtmlDecode(title),
+                        TorrentLink = torrentLink,
+                        Size = size,
+                        Seeders = seeders
                     });
                 }
             }
+
             return results;
         }
     }

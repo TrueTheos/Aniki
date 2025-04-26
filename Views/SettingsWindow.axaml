@@ -1,0 +1,55 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+        mc:Ignorable="d"
+        x:Class="Aniki.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+
+        Width="400"
+        Height="360"
+        CanResize="False"
+        SystemDecorations="None"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+		WindowStartupLocation="CenterOwner"
+        ExtendClientAreaToDecorationsHint="True">
+
+	<Design.DataContext>
+		<vm:SettingsViewModel/>
+	</Design.DataContext>
+
+	<Border CornerRadius="8" Padding="16">
+		<StackPanel Spacing="12">
+			<ExperimentalAcrylicBorder IsHitTestVisible="False">
+				<ExperimentalAcrylicBorder.Material>
+					<ExperimentalAcrylicMaterial
+						BackgroundSource="Digger"
+						TintColor="Black"
+						TintOpacity="1"
+						MaterialOpacity="1" />
+				</ExperimentalAcrylicBorder.Material>
+			</ExperimentalAcrylicBorder>
+
+			<TextBlock Text="SETTINGS" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+
+			<Grid ColumnDefinitions="*, Auto">
+				<TextBlock Grid.Column="0" Text="Auto Start on Windows Startup" VerticalAlignment="Center"/>
+				<CheckBox Grid.Column="1" IsChecked="{Binding AutoStart}" HorizontalAlignment="Right"/>
+			</Grid>
+
+			<Grid ColumnDefinitions="*, Auto">
+				<TextBlock Grid.Column="0" Text="Download Folder:" VerticalAlignment="Center"/>
+				<Button Grid.Column="1" Command="{Binding BrowseEpisodesFolderCommand}" HorizontalAlignment="Right">
+					<PathIcon Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+				</Button>
+			</Grid>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+				<Button Content="Cancel" Click="OnCancel"/>
+				<Button Content="Save" Command="{Binding SaveCommand}" Background="#7E57C2" Foreground="White"/>
+			</StackPanel>
+		</StackPanel>
+	</Border>
+</Window>
