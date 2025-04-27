@@ -14,7 +14,7 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 
 ### Prerequisites
 
-- [.NET 6.0 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download) or later
 - Git
 
 ### Clone the Repository
