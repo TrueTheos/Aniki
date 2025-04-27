@@ -67,8 +67,21 @@
 
 							<TextBlock Grid.Column="0" Text="Your Rating:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
 							<ComboBox Grid.Column="1" Margin="10,0,0,0"
-									  SelectedItem="{Binding Details.MyListStatus.Score}"
+									  SelectedItem="{Binding SelectedScore, Mode=Default}"
 									  ItemsSource="{Binding ScoreOptions}"
+									  Width="120"/>
+						</Grid>
+
+						<Grid Margin="0,16,0,0">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
+
+							<TextBlock Grid.Column="0" Text="Status:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
+							<ComboBox Grid.Column="1" Margin="10,0,0,0"
+									  SelectedItem="{Binding SelectedStatus, Mode=Default}"
+									  ItemsSource="{Binding StatusOptions}"
 									  Width="120"/>
 						</Grid>
 					</StackPanel>

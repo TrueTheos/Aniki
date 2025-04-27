@@ -300,10 +300,6 @@
 															<Button Content="Download"
                                                                     Command="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel.DownloadTorrentCommand}"
                                                                     CommandParameter="{Binding TorrentLink}"/>
-															<Button Content="Copy Link"
-                                                                    Command="{Binding #Root.((vm:MainViewModel)DataContext).AnimeDetailsViewModel.CopyMagnetLinkCommand}"
-                                                                    CommandParameter="{Binding TorrentLink}"
-                                                                    Background="#3E3E3E"/>
 														</StackPanel>
 													</Grid>
 												</Border>
@@ -314,15 +310,18 @@
 							</Grid>
 						</TabItem>
 
-						<!-- Related Anime Tab -->
-						<TabItem Header="Related">
+						<!-- Watch Anime -->
+						<TabItem Header="Watch!" Foreground="#7E57C2">
 							<Grid Margin="0,16,0,0">
-								<!-- Content for related anime would go here -->
-								<TextBlock Text="This feature is coming soon!"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           Foreground="#9575CD"
-                                           FontSize="18"/>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="Auto"/>
+									<RowDefinition Height="*"/>
+								</Grid.RowDefinitions>
+
+								<views:WatchAnimeView
+								  Grid.Column="1"
+								  DataContext="{Binding #Root.((vm:MainViewModel)DataContext).WatchAnimeViewModel}"
+								  IsVisible="{Binding #Root.((vm:MainViewModel)DataContext).WatchAnimeViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" />
 							</Grid>
 						</TabItem>
 					</TabControl>

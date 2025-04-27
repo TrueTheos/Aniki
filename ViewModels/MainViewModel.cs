@@ -53,6 +53,9 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private AnimeDetailsViewModel _animeDetailsViewModel;
 
+        [ObservableProperty]
+        private WatchAnimeViewModel _watchAnimeViewModel;
+
         private AnimeData _selectedAnime;
         public AnimeData SelectedAnime
         {
@@ -79,10 +82,10 @@ namespace Aniki.ViewModels
             "Plan to Watch"
         };
 
-
         public MainViewModel()
         {
             AnimeDetailsViewModel = new();
+            WatchAnimeViewModel = new();
             _animeList = new ObservableCollection<AnimeData>();
             _selectedFilter = "All";
         }
@@ -93,10 +96,12 @@ namespace Aniki.ViewModels
             {
                 var details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
                 AnimeDetailsViewModel = new AnimeDetailsViewModel(details);
+                WatchAnimeViewModel = new WatchAnimeViewModel(details);
             }
             else
             {
                 AnimeDetailsViewModel = null;
+                WatchAnimeViewModel = null;
             }
         }
 

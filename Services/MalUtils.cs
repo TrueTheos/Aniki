@@ -214,7 +214,7 @@ namespace Aniki.Services
             EPISODES_WATCHED
         }
 
-        public static async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, int value)
+        public static async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, string value)
         {
             string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
 
@@ -222,13 +222,13 @@ namespace Aniki.Services
             switch (field)
             {
                 case AnimeStatusField.STATUS:
-                    formData["status"] = value.ToString();
+                    formData["status"] = value;
                     break;
                 case AnimeStatusField.SCORE:
-                    formData["score"] = value.ToString();
+                    formData["score"] = value;
                     break;
                 case AnimeStatusField.EPISODES_WATCHED:
-                    formData["num_watched_episodes"] = value.ToString();
+                    formData["num_watched_episodes"] = value;
                     break;
             }
 
