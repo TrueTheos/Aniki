@@ -6,8 +6,9 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 
 - **MyAnimeList Integration**: OAuth login to fetch and sync your anime list.
 - **Anime List Management**: View, filter, and search your anime.
-- **Episode Search**: Search for episode torrents on Nyaa, view seeders and sizes, and download or copy magnet links directly from the app.
-- **Notification System**: Be automatically notified whenever a new anime or episode releases. 
+- [WIP] **Automatic Episode Tracking**: automatically detects the anime videos you watch on your computer and synchronizes your progress.
+- **Episode Search**: Search for episode torrents on Nyaa and download directly from the app.
+- [WIP] **Notification System**: Be automatically notified whenever a new anime or episode releases. 
 
 ## Getting Started
 
