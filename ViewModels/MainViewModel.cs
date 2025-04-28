@@ -94,7 +94,7 @@ namespace Aniki.ViewModels
         {
             if (animeData?.Node?.Id != null)
             {
-                var details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
+                AnimeDetails details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
                 AnimeDetailsViewModel = new AnimeDetailsViewModel(details);
                 WatchAnimeViewModel = new WatchAnimeViewModel(details);
             }

@@ -50,7 +50,7 @@
 
 			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
 				<Button Content="Cancel" Click="OnCancel"/>
-				<Button Content="Save" Command="{Binding SaveCommand}" Background="#7E57C2" Foreground="White"/>
+				<Button Content="Save" Command="{Binding SaveCommand}" Background="#7E57C2" Foreground="White" Click="OnSave"/>
 			</StackPanel>
 		</StackPanel>
 	</Border>
