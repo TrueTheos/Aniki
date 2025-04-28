@@ -12,6 +12,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Controls.ApplicationLifetimes;
 using Aniki.Views;
+using System.Collections.ObjectModel;
 
 namespace Aniki.ViewModels
 {
@@ -25,7 +26,7 @@ namespace Aniki.ViewModels
         private bool _isLoading;
 
         [ObservableProperty]
-        private List<Episode> _foundEpisodes = new();
+        private ObservableCollection<Episode> _foundEpisodes = new();
 
         [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
@@ -61,8 +62,6 @@ namespace Aniki.ViewModels
                 ParseResult result = AnimeNameParser.ParseAnimeFilename(fileName);
                 if(result == null || result.EpisodeNumber == null) continue;
 
-                //that check is weird, wont work for - or :
-                //todo fix
                 if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > .9)
                 {
                     FoundEpisodes.Add(new Episode
@@ -86,6 +85,13 @@ namespace Aniki.ViewModels
             _lastPlayedEpisode = ep;
 
             LaunchAndTrack(defaultApp, ep.FilePath);
+        }
+
+        [RelayCommand]
+        private void DeleteEpisode(Episode ep)
+        {
+            File.Delete(ep.FilePath);
+            FoundEpisodes.Remove(ep);
         }
 
         private string GetAssociatedProgram(string extension)

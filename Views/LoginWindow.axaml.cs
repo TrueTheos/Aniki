@@ -14,6 +14,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Aniki.Services;
 using Aniki.ViewModels;
+using Avalonia.Controls.ApplicationLifetimes;
 
 namespace Aniki.Views
 {
@@ -51,6 +52,10 @@ namespace Aniki.Views
         private void OnNavigateToMainRequested(object sender, string accessToken)
         {
             var mainWindow = new MainWindow();
+            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = mainWindow;
+            }
             mainWindow.Show();
             this.Close();
         }

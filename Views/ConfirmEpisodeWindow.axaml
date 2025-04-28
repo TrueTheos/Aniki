@@ -5,8 +5,10 @@
 		x:DataType="vm:ConfirmEpisodeViewModel"
         Width="320" Height="160"
         CanResize="False"
+		SystemDecorations="None"
         WindowStartupLocation="CenterOwner"
         TransparencyLevelHint="AcrylicBlur"
+		ExtendClientAreaToDecorationsHint="True"
         Background="Transparent">
 
 	<Design.DataContext>
@@ -15,6 +17,16 @@
 
 	<Border CornerRadius="8" Padding="16" Background="#2A2A2A">
 		<StackPanel Spacing="12">
+			<ExperimentalAcrylicBorder IsHitTestVisible="False">
+				<ExperimentalAcrylicBorder.Material>
+					<ExperimentalAcrylicMaterial
+						BackgroundSource="Digger"
+						TintColor="Black"
+						TintOpacity="1"
+						MaterialOpacity="1" />
+				</ExperimentalAcrylicBorder.Material>
+			</ExperimentalAcrylicBorder>
+
 			<TextBlock Text="{Binding Message}"
 					   Foreground="White"
 					   FontSize="16"
