@@ -21,5 +21,10 @@ namespace Aniki.Views
         {
             Close();
         }
+
+        private void OnSave(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }

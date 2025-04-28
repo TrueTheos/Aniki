@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+        x:Class="Aniki.Views.ConfirmEpisodeWindow"
+		x:DataType="vm:ConfirmEpisodeViewModel"
+        Width="320" Height="160"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent">
+
+	<Design.DataContext>
+		<vm:ConfirmEpisodeViewModel/>
+	</Design.DataContext>
+
+	<Border CornerRadius="8" Padding="16" Background="#2A2A2A">
+		<StackPanel Spacing="12">
+			<TextBlock Text="{Binding Message}"
+					   Foreground="White"
+					   FontSize="16"
+					   TextWrapping="Wrap"
+					   HorizontalAlignment="Center"/>
+			<StackPanel Orientation="Horizontal"
+						HorizontalAlignment="Center"
+						Spacing="16">
+				<Button Content="Yes"
+						Width="80"
+						Click="OnYes"/>
+				<Button Content="No"
+						Width="80"
+						Click="OnNo"/>
+			</StackPanel>
+		</StackPanel>
+	</Border>
+</Window>
