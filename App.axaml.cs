@@ -22,7 +22,7 @@ namespace Aniki
             {
                 desktop.MainWindow = new LoginWindow();
 
-                CheckForUpdates();
+               //CheckForUpdates();
             }
 
             base.OnFrameworkInitializationCompleted();
