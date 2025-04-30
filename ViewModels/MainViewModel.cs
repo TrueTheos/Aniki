@@ -87,7 +87,7 @@ namespace Aniki.ViewModels
             AnimeDetailsViewModel = new();
             WatchAnimeViewModel = new();
             _animeList = new ObservableCollection<AnimeData>();
-            _selectedFilter = "All";
+            SelectedFilter = "All";
         }
 
         private async Task LoadAnimeDetailsAsync(AnimeData animeData)
@@ -108,7 +108,7 @@ namespace Aniki.ViewModels
         public async Task InitializeAsync()
         {
             await LoadUserDataAsync();
-            await LoadAnimeListAsync(_selectedFilter);
+            await LoadAnimeListAsync(SelectedFilter);
         }
 
         private async Task LoadUserDataAsync()
@@ -139,16 +139,16 @@ namespace Aniki.ViewModels
             {
                 IsLoading = true;
                 StatusMessage = $"Loading anime list (Filter: {filter})...";
-                _animeList.Clear();
+                AnimeList.Clear();
 
                 var animeListData = await MalUtils.LoadAnimeList(filter);
 
                 foreach (var anime in animeListData)
                 {
-                    _animeList.Add(anime);
+                    AnimeList.Add(anime);
                 }
 
-                StatusMessage = $"Loaded {_animeList.Count} anime";
+                StatusMessage = $"Loaded {AnimeList.Count} anime";
             }
             catch (Exception ex)
             {
@@ -165,7 +165,7 @@ namespace Aniki.ViewModels
         private async Task Refresh()
         {
             await LoadUserDataAsync();
-            await LoadAnimeListAsync(_selectedFilter);
+            await LoadAnimeListAsync(SelectedFilter);
         }
 
         [RelayCommand]
@@ -189,7 +189,7 @@ namespace Aniki.ViewModels
             try
             {
                 var results = await MalUtils.SearchAnime(SearchQuery);
-                _animeList.Clear();
+                AnimeList.Clear();
 
                 foreach (var entry in results)
                 {
@@ -203,10 +203,10 @@ namespace Aniki.ViewModels
                             Title = entry.Anime.Title
                         }
                     };
-                    _animeList.Add(newAnimeData);
+                    AnimeList.Add(newAnimeData);
                 }
 
-                StatusMessage = $"Found {_animeList.Count} results for \"{SearchQuery}\"";
+                StatusMessage = $"Found {AnimeList.Count} results for \"{SearchQuery}\"";
             }
             catch (Exception ex)
             {
