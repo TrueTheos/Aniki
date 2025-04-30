@@ -3,6 +3,8 @@ using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using System;
+using Velopack;
 
 namespace Aniki
 {
@@ -19,9 +21,33 @@ namespace Aniki
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new LoginWindow();
+
+                CheckForUpdates();
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private async void CheckForUpdates()
+        {
+            try
+            {
+                var mgr = new UpdateManager("https://github.com/TrueTheos/Aniki");
+
+                var newVersion = await mgr.CheckForUpdatesAsync();
+
+                if (newVersion != null)
+                {
+                    await mgr.DownloadUpdatesAsync(newVersion);
+
+                    mgr.ApplyUpdatesAndRestart(newVersion);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception
+                Console.WriteLine($"Update check failed: {ex.Message}");
+            }
         }
     }
 }
