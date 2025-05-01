@@ -5,6 +5,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using System;
 using Velopack;
+using Velopack.Sources;
 
 namespace Aniki
 {
@@ -22,7 +23,7 @@ namespace Aniki
             {
                 desktop.MainWindow = new LoginWindow();
 
-               //CheckForUpdates();
+               CheckForUpdates();
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -32,7 +33,7 @@ namespace Aniki
         {
             try
             {
-                var mgr = new UpdateManager("https://github.com/TrueTheos/Aniki");
+                var mgr = new UpdateManager(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
 
                 var newVersion = await mgr.CheckForUpdatesAsync();
 
@@ -45,7 +46,6 @@ namespace Aniki
             }
             catch (Exception ex)
             {
-                // Log exception
                 Console.WriteLine($"Update check failed: {ex.Message}");
             }
         }
