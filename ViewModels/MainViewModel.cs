@@ -1,5 +1,6 @@
 ﻿using Aniki.Models;
 using Aniki.Services;
+using Aniki.Views;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -94,9 +95,15 @@ namespace Aniki.ViewModels
         {
             if (animeData?.Node?.Id != null)
             {
+                if(AnimeDetailsViewModel == null)
+                {
+                    AnimeDetailsViewModel = new();
+                }
+                AnimeDetailsViewModel.IsLoading = true;
                 AnimeDetails details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
-                AnimeDetailsViewModel = new AnimeDetailsViewModel(details);
+                AnimeDetailsViewModel.Update(details);
                 WatchAnimeViewModel = new WatchAnimeViewModel(details);
+                IsLoading = false;
             }
             else
             {

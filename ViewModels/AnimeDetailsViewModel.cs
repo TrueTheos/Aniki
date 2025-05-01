@@ -22,6 +22,9 @@ namespace Aniki.ViewModels
 
         private int _nextEpisodeNumber = -1;
 
+        [ObservableProperty]
+        private bool _isLoading;
+
         public int NextEpisodeNumber
         {
             get => _nextEpisodeNumber == -1 ? EpisodesWatched + 1 : _nextEpisodeNumber;
@@ -79,13 +82,14 @@ namespace Aniki.ViewModels
         };
 
         public AnimeDetailsViewModel() { }
-
-        public AnimeDetailsViewModel(AnimeDetails details)
+        public void Update(AnimeDetails details)
         {
+            IsLoading = false;
             Details = details;
             EpisodesWatched = details.MyListStatus?.NumEpisodesWatched ?? 0;
+            OnPropertyChanged(nameof(EpisodesWatched));
             SelectedScore = details.MyListStatus?.Score ?? 1;
-            SelectedStatus = details.MyListStatus?.Status ?? "Plan to watch";        
+            SelectedStatus = details.MyListStatus?.Status ?? "Plan to watch";
         }
 
         [RelayCommand]

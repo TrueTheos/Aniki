@@ -5,133 +5,146 @@
   xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
   x:Class="Aniki.Views.AnimeDetailsView"
   x:DataType="vm:AnimeDetailsViewModel">
-	<Border Padding="16" Background="#2A2A2A">
-		<Grid Margin="0,16,0,0">
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="*"/>
-			</Grid.RowDefinitions>
-
-			<!-- Anime Title and Metadata -->
-			<Grid Grid.Row="0">
+	<Border Padding="16" Background="#2A2A2A" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+		<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+			<Grid Margin="0,0,0,0" IsVisible="{Binding !IsLoading}">
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
 
-				<!-- Title and Status -->
+				<!-- Anime Title and Metadata -->
 				<Grid Grid.Row="0">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
 
-					<TextBlock Grid.Column="0"
-							   Text="{Binding Details.Title}"
-							   FontSize="28"
-							   FontWeight="Bold"
-							   Foreground="White"
-							   TextWrapping="Wrap"/>
+					<!-- Title and Status -->
+					<Grid Grid.Row="0">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
+						</Grid.ColumnDefinitions>
 
-					<Border Grid.Column="1"
-							Background="#7E57C2"
-							CornerRadius="4"
-							Padding="10,5"
-							VerticalAlignment="Top"
-							HorizontalAlignment="Right">
-						<TextBlock Text="{Binding Details.Status}"
-								   FontWeight="SemiBold"
-								   Foreground="White"/>
-					</Border>
-				</Grid>
+						<TextBlock Grid.Column="0"
+								   Text="{Binding Details.Title}"
+								   FontSize="28"
+								   FontWeight="Bold"
+								   Foreground="White"
+								   TextWrapping="Wrap"/>
 
-				<!-- Picture and Rating -->
-				<Grid Grid.Row="1" Margin="0,16,0,0">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="*"/>
-					</Grid.ColumnDefinitions>
-
-					<StackPanel Grid.Column="0" Orientation="Vertical">
-						<Border Width="200" Height="300" CornerRadius="8"
-								ClipToBounds="True"
-								BoxShadow="0 4 12 0 #40000000">
-							<Image Source="{Binding Details.Picture}" Stretch="UniformToFill"/>
+						<Border Grid.Column="1"
+								Background="#7E57C2"
+								CornerRadius="4"
+								Padding="10,5"
+								VerticalAlignment="Center"
+								HorizontalAlignment="Right">
+							<TextBlock Text="{Binding Details.Status}"
+									   FontWeight="SemiBold"
+									   Foreground="White"/>
 						</Border>
+					</Grid>
 
-						<Grid Margin="0,16,0,0">
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="Auto"/>
-								<ColumnDefinition Width="*"/>
-							</Grid.ColumnDefinitions>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="Auto"/>
-								<RowDefinition Height="Auto"/>
-							</Grid.RowDefinitions>
+					<!-- Picture and Rating -->
+					<Grid Grid.Row="1" Margin="0,16,0,0">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
 
-							<!-- Rating -->
-							<TextBlock Grid.Column="0" Grid.Row="0" Text="Your Rating:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
-							<ComboBox Grid.Column="1" Grid.Row="0" Margin="10,0,0,0"
-									  SelectedItem="{Binding SelectedScore, Mode=Default}"
-									  ItemsSource="{Binding ScoreOptions}"
-									  Width="120"/>
+						<StackPanel Grid.Column="0" Orientation="Vertical">
+							<Border Width="200" Height="300" CornerRadius="8"
+									ClipToBounds="True"
+									BoxShadow="0 4 12 0 #40000000">
+								<Image Source="{Binding Details.Picture}" Stretch="UniformToFill"/>
+							</Border>
 
-							<!-- Status -->
-							<TextBlock Grid.Column="0" Grid.Row="1" Text="Status:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
-							<ComboBox Grid.Column="1" Grid.Row="1" Margin="10,0,0,0"
-									  SelectedItem="{Binding SelectedStatus, Mode=Default}"
-									  ItemsSource="{Binding StatusOptions}"
-									  Width="120"/>
-						</Grid>
-					</StackPanel>
-
-					<!-- Episodes Info -->
-					<StackPanel Grid.Column="1" Margin="20,0,0,0">
-						<StackPanel>
-							<Grid>
+							<Grid Margin="0,16,0,0">
 								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="*"/>
 									<ColumnDefinition Width="Auto"/>
+									<ColumnDefinition Width="*"/>
 								</Grid.ColumnDefinitions>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="Auto"/>
+									<RowDefinition Height="Auto"/>
+								</Grid.RowDefinitions>
 
-								<StackPanel Grid.Column="0" Orientation="Vertical">
-									<TextBlock FontSize="16" Foreground="#E0E0E0">
-										<Run Text="Episodes: "/>
-										<Run Text="{Binding EpisodesWatched}" FontWeight="SemiBold"/>
-										<Run Text=" / "/>
-										<Run Text="{Binding Details.NumEpisodes}"/>
-									</TextBlock>
+								<!-- Rating -->
+								<TextBlock Grid.Column="0" Grid.Row="0" Text="Your Rating:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
+								<ComboBox Grid.Column="1" Grid.Row="0" Margin="10,0,0,0"
+										  SelectedItem="{Binding SelectedScore, Mode=Default}"
+										  ItemsSource="{Binding ScoreOptions}"
+										  Width="120"/>
 
-									<ProgressBar Margin="0,6,6,0" Value="{Binding EpisodesWatched}"
-												 Maximum="{Binding Details.NumEpisodes}"
-												 Height="8"/>
-								</StackPanel>
-
-								<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,10,0,0">
-									<Button Width="40" Height="40" Padding="5,5,5,5" Command="{Binding UpdateEpisodeCountCommand}" CommandParameter="{StaticResource MinusOne}">
-										<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="-"/>
-									</Button>
-									<Button Width="40" Height="40" Padding="5,5,5,5" Command="{Binding UpdateEpisodeCountCommand}" CommandParameter="{StaticResource PlusOne}">
-										<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="+"/>
-									</Button>
-								</StackPanel>
+								<!-- Status -->
+								<TextBlock Grid.Column="0" Grid.Row="1" Text="Status:" VerticalAlignment="Center" FontSize="16" Foreground="#E0E0E0"/>
+								<ComboBox Grid.Column="1" Grid.Row="1" Margin="10,0,0,0"
+										  SelectedItem="{Binding SelectedStatus, Mode=Default}"
+										  ItemsSource="{Binding StatusOptions}"
+										  Width="120"/>
 							</Grid>
 						</StackPanel>
 
-						<ScrollViewer Margin="0,24,0,0" VerticalScrollBarVisibility="Auto">
+						<!-- Episodes Info -->
+						<StackPanel Grid.Column="1" Margin="20,0,0,0">
 							<StackPanel>
-								<TextBlock Text="Synopsis" FontSize="20" FontWeight="SemiBold" Foreground="#9575CD"/>
-								<TextBlock Text="{Binding Details.Synopsis}"
-										   Padding="0,10,0,0"
-										   TextWrapping="Wrap"
-										   Margin="0,0,0,0"
-										   Foreground="#E0E0E0"
-										   LineHeight="1.5"
-										   LineSpacing="15"/>
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="Auto"/>
+									</Grid.ColumnDefinitions>
+
+									<StackPanel Grid.Column="0" Orientation="Vertical">
+										<TextBlock FontSize="16" Foreground="#E0E0E0">
+											<Run Text="Episodes: "/>
+											<Run Text="{Binding EpisodesWatched}" FontWeight="SemiBold"/>
+											<Run Text=" / "/>
+											<Run Text="{Binding Details.NumEpisodes}"/>
+										</TextBlock>
+
+										<ProgressBar Margin="0,6,6,0" Value="{Binding EpisodesWatched}"
+													 Maximum="{Binding Details.NumEpisodes}"
+													 Height="8"/>
+									</StackPanel>
+
+									<StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,10,0,0">
+										<Button Width="40" Height="40" Padding="5,5,5,5" Command="{Binding UpdateEpisodeCountCommand}" CommandParameter="{StaticResource MinusOne}">
+											<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="-"/>
+										</Button>
+										<Button Width="40" Height="40" Padding="5,5,5,5" Command="{Binding UpdateEpisodeCountCommand}" CommandParameter="{StaticResource PlusOne}">
+											<TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="+"/>
+										</Button>
+									</StackPanel>
+								</Grid>
 							</StackPanel>
-						</ScrollViewer>
-					</StackPanel>
+
+							<ScrollViewer Margin="0,24,0,0" VerticalScrollBarVisibility="Auto">
+								<StackPanel>
+									<TextBlock Text="Synopsis" FontSize="20" FontWeight="SemiBold" Foreground="#9575CD"/>
+									<TextBlock Text="{Binding Details.Synopsis}"
+											   Padding="0,10,0,0"
+											   TextWrapping="Wrap"
+											   Margin="0,0,0,0"
+											   Foreground="#E0E0E0"
+											   LineHeight="1.5"
+											   LineSpacing="15"/>
+								</StackPanel>
+							</ScrollViewer>
+						</StackPanel>
+					</Grid>
 				</Grid>
+			</Grid>
+			
+			<Grid IsVisible="{Binding IsLoading}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+				<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+					<ProgressBar IsIndeterminate="True" Width="300" />
+					<TextBlock Text="Loading details..."
+							   HorizontalAlignment="Center"
+							   Margin="0,10,0,0"
+							   FontSize="16"
+							   Foreground="#E0E0E0"/>
+				</StackPanel>
 			</Grid>
 		</Grid>
 	</Border>
