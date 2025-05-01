@@ -60,7 +60,24 @@ namespace Aniki.ViewModels
         private string _selectedStatus;
         public string SelectedStatus
         {
-            get => _selectedStatus;
+            get
+            {
+                switch(_selectedStatus)
+                {
+                    case "watching":
+                        return "Watching";
+                    case "completed":
+                        return "Completed";
+                    case "on_hold":
+                        return "On hold";
+                    case "dropped":
+                        return "Dropped";
+                    case "plan_to_watch":
+                        return "Plan to watch";
+                    default:
+                        return _selectedStatus;
+                }
+            }
             set
             {
                 if (SetProperty(ref _selectedStatus, value))

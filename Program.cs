@@ -10,7 +10,7 @@ namespace Aniki
         [STAThread]
         public static void Main(string[] args)
         {
-            //VelopackApp.Build().Run();
+            VelopackApp.Build().Run();
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         public static AppBuilder BuildAvaloniaApp()
