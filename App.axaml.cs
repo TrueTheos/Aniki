@@ -1,7 +1,9 @@
 using Aniki.Services;
+using Aniki.Services.Aniki.Services;
 using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Avalonia.Markup.Xaml;
 using System;
 using Velopack;
@@ -11,9 +13,13 @@ namespace Aniki
 {
     public partial class App : Application
     {
+        private EpisodeNotificationService _notificationService;
+
         public override void Initialize()
         {
             TokenService.Init();
+            SaveService.Init();
+
             AvaloniaXamlLoader.Load(this);
         }
 
@@ -23,7 +29,18 @@ namespace Aniki
             {
                 desktop.MainWindow = new LoginWindow();
 
-               CheckForUpdates();
+                CheckForUpdates();
+
+                var notificationManager = new WindowNotificationManager(desktop.MainWindow)
+                {
+                    Position = NotificationPosition.TopRight,
+                    MaxItems = 3
+                };
+
+                _notificationService = new EpisodeNotificationService(notificationManager);
+                _notificationService.Start();
+
+                desktop.Exit += (sender, args) => _notificationService.Stop();
             }
 
             base.OnFrameworkInitializationCompleted();

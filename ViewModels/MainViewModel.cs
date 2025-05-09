@@ -1,4 +1,5 @@
-﻿using Aniki.Models;
+﻿using Aniki.Misc;
+using Aniki.Models;
 using Aniki.Services;
 using Aniki.Views;
 using Avalonia.Data.Converters;
@@ -15,6 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Xml.Linq;
+using static Aniki.Services.SaveService;
 
 namespace Aniki.ViewModels
 {
@@ -38,8 +40,8 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private string _statusMessage = "Ready";
 
-        private string _selectedFilter;
-        public string SelectedFilter
+        private AnimeStatusTranslated _selectedFilter;
+        public AnimeStatusTranslated SelectedFilter
         {
             get => _selectedFilter;
             set
@@ -73,22 +75,14 @@ namespace Aniki.ViewModels
         public event EventHandler LogoutRequested;
         public event EventHandler SettingsRequested;
 
-        public List<string> FilterOptions { get; } = new List<string>
-        {
-            "All",
-            "Currently Watching",
-            "Completed",
-            "On Hold",
-            "Dropped",
-            "Plan to Watch"
-        };
+        public IEnumerable<AnimeStatusTranslated> FilterOptions => StatusEnum.TranslatedStatusOptions;
 
         public MainViewModel()
         {
             AnimeDetailsViewModel = new();
             WatchAnimeViewModel = new();
             _animeList = new ObservableCollection<AnimeData>();
-            SelectedFilter = "All";
+            SelectedFilter = AnimeStatusTranslated.All;
         }
 
         private async Task LoadAnimeDetailsAsync(AnimeData animeData)
@@ -140,7 +134,7 @@ namespace Aniki.ViewModels
             }
         }
 
-        private async Task LoadAnimeListAsync(string filter)
+        private async Task LoadAnimeListAsync(AnimeStatusTranslated filter)
         {
             try
             {
@@ -148,7 +142,7 @@ namespace Aniki.ViewModels
                 StatusMessage = $"Loading anime list (Filter: {filter})...";
                 AnimeList.Clear();
 
-                var animeListData = await MalUtils.LoadAnimeList(filter);
+                var animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToAPI());
 
                 foreach (var anime in animeListData)
                 {
@@ -186,7 +180,7 @@ namespace Aniki.ViewModels
         {
             if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                await LoadAnimeListAsync("all");
+                await LoadAnimeListAsync(AnimeStatusTranslated.All);
                 return;
             }
 

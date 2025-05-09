@@ -1,4 +1,5 @@
-﻿using Aniki.Models;
+﻿using Aniki.Misc;
+using Aniki.Models;
 using Aniki.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,6 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Aniki.Services.SaveService;
 
 namespace Aniki.ViewModels
 {
@@ -30,7 +32,7 @@ namespace Aniki.ViewModels
             get => _nextEpisodeNumber == -1 ? EpisodesWatched + 1 : _nextEpisodeNumber;
             set
             {
-                if (_nextEpisodeNumber != value)
+                if (_nextEpisodeNumber != value) 
                 {
                     _nextEpisodeNumber = value;
                     OnPropertyChanged(nameof(NextEpisodeNumber));
@@ -57,27 +59,10 @@ namespace Aniki.ViewModels
             }
         }
 
-        private string _selectedStatus;
-        public string SelectedStatus
+        private AnimeStatusTranslated _selectedStatus;
+        public AnimeStatusTranslated SelectedStatus
         {
-            get
-            {
-                switch(_selectedStatus)
-                {
-                    case "watching":
-                        return "Watching";
-                    case "completed":
-                        return "Completed";
-                    case "on_hold":
-                        return "On hold";
-                    case "dropped":
-                        return "Dropped";
-                    case "plan_to_watch":
-                        return "Plan to watch";
-                    default:
-                        return _selectedStatus;
-                }
-            }
+            get => _selectedStatus;
             set
             {
                 if (SetProperty(ref _selectedStatus, value))
@@ -87,16 +72,9 @@ namespace Aniki.ViewModels
             }
         }
 
-        public List<int> ScoreOptions { get; } = new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } = StatusEnum.TranslatedStatusOptions;
 
-        public List<string> StatusOptions { get; } = new List<string>
-        {
-            "Watching",
-            "Completed",
-            "On hold",
-            "Dropped",
-            "Plan to watch",
-        };
+        public List<int> ScoreOptions { get; } = new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
         public AnimeDetailsViewModel() { }
         public void Update(AnimeDetails details)
@@ -106,7 +84,7 @@ namespace Aniki.ViewModels
             EpisodesWatched = details.MyListStatus?.NumEpisodesWatched ?? 0;
             OnPropertyChanged(nameof(EpisodesWatched));
             SelectedScore = details.MyListStatus?.Score ?? 1;
-            SelectedStatus = details.MyListStatus?.Status ?? "Plan to watch";
+            SelectedStatus = details.MyListStatus.Status.APIToTranslated();
         }
 
         [RelayCommand]
@@ -146,24 +124,14 @@ namespace Aniki.ViewModels
             catch (Exception ex) { }
         }
 
-        private async Task UpdateAnimeStatus(string status)
+        private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
         {
             if (Details?.MyListStatus == null) return;
 
             try
             {
-                string translatedStauts = status switch
-                {
-                    "Watching" => "watching",
-                    "Completed" => "completed",
-                    "On hold" => "on_hold",
-                    "Dropped" => "dropped",
-                    "Plan to watch" => "plan_to_watch",
-                    _ => throw new ArgumentException("Invalid status")
-                };
-
-                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, translatedStauts);
-                Details.MyListStatus.Status = status;
+                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToAPI().ToString());
+                Details.MyListStatus.Status = status.TranslatedToAPI();
             }
             catch (Exception ex) { }
         }

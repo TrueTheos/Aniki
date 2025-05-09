@@ -8,16 +8,42 @@ using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Linq;
 using Aniki.Services;
+using Aniki.Models;
+using Microsoft.Win32;
+using System;
 
 namespace Aniki.ViewModels
 {
     public partial class SettingsViewModel : ViewModelBase
     {
-        [ObservableProperty]
         private bool _autoStart;
+        public bool AutoStart
+        {
+            get => _autoStart;
+            set
+            {
+                if (SetProperty(ref _autoStart, value))
+                {
+                    ChangeAutoStart(value);
+                }
+            }
+        }
 
         [ObservableProperty]
         private string _episodesFolder;
+
+        private bool _notifyAboutEpisodes;
+        public bool NotifyAboutEpisodes
+        {
+            get => _notifyAboutEpisodes;
+            set
+            {
+                if (SetProperty(ref _notifyAboutEpisodes, value))
+                {
+                    ChangeNotifyAboutEpisodes(value);
+                }
+            }
+        }
 
         public SettingsViewModel()
         {
@@ -37,6 +63,7 @@ namespace Aniki.ViewModels
             {
                 AutoStart = config.AutoStart;
                 EpisodesFolder = config.EpisodesFolder;
+                NotifyAboutEpisodes = config.NotifyAboutEpisodes;
             }
         }
 
@@ -56,6 +83,30 @@ namespace Aniki.ViewModels
             }
         }
 
+        private void ChangeNotifyAboutEpisodes(bool newValue)
+        {
+
+        }
+
+        private void ChangeAutoStart(bool newValue)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+                {
+                    if (newValue)
+                    {
+                        string exePath = Environment.ProcessPath ?? "";
+                        key?.SetValue("Avalonia", $"{exePath} --background");
+                    }
+                    else
+                    {
+                        key?.DeleteValue("Avalonia", false);
+                    }
+                }
+            }
+        }
+
         [RelayCommand]
         private void Save()
         {
@@ -63,10 +114,10 @@ namespace Aniki.ViewModels
             {
                 AutoStart = AutoStart,
                 EpisodesFolder = EpisodesFolder,
+                NotifyAboutEpisodes = NotifyAboutEpisodes
             };
 
             SaveService.SaveSettings(config);
-            // TODO: Handle Windows registry for AutoStart if necessary
         }
     }
 
@@ -74,5 +125,6 @@ namespace Aniki.ViewModels
     {
         public bool AutoStart { get; set; }
         public string EpisodesFolder { get; set; }
+        public bool NotifyAboutEpisodes { get; set; }
     }
 }

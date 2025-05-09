@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Aniki.Misc;
+using Avalonia.Media.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,7 +87,8 @@ namespace Aniki.Models
     public class ListStatus
     {
         [JsonPropertyName("status")]
-        public string Status { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public AnimeStatusAPI Status { get; set; }
 
         [JsonPropertyName("score")]
         public int Score { get; set; }

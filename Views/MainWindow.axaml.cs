@@ -43,6 +43,7 @@ namespace Aniki.Views
         private async void MainWindow_Loaded(object sender, EventArgs e)
         {
             await _viewModel.InitializeAsync();
+            SaveService.SyncAnimeWithMal();
         }
 
         private void OnLogoutRequested(object sender, EventArgs e)
