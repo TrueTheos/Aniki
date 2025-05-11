@@ -7,11 +7,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using static Aniki.Services.SaveService;
-using System.Xml.Linq;
-using Aniki.Models;
-using System.Reflection.Metadata;
-using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace Aniki.Services
 {
@@ -24,7 +19,6 @@ namespace Aniki.Services
 
             public EpisodeNotificationService(INotificationManager notificationManager)
             {
-                _notificationManager = notificationManager;
                 _httpClient = new HttpClient();
                 _cancellationTokenSource = new CancellationTokenSource();
             }
@@ -58,8 +52,7 @@ namespace Aniki.Services
                             var matchingAnime = airingData?.FirstOrDefault(a => a.Title == anime.Title);
                             if (matchingAnime != null && matchingAnime.NextEpisodeDate <= DateTime.Now)
                             {
-                                var builder = new ToastContentBuilder().AddText("New Episode Available!")
-                                    .AddText($"Episode {matchingAnime.NextEpisodeNumber} of {anime.Title} is now available!");
+                                //Notify
                             }
                         }
                     }

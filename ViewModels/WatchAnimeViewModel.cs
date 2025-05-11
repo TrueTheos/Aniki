@@ -84,6 +84,8 @@ namespace Aniki.ViewModels
 
             _lastPlayedEpisode = ep;
 
+            DiscordService.SetPresenceEpisode(ep);
+
             LaunchAndTrack(defaultApp, ep.FilePath);
         }
 
@@ -141,6 +143,8 @@ namespace Aniki.ViewModels
                     }
                 }
             });
+
+            DiscordService.Reset();
         }
 
         private void MarkEpisodeCompleted(Episode ep)
