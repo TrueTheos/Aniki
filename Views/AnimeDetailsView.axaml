@@ -5,7 +5,7 @@
   xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
   x:Class="Aniki.Views.AnimeDetailsView"
   x:DataType="vm:AnimeDetailsViewModel">
-	<Border Padding="16" Background="#2A2A2A" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+	<Border Padding="16" Background="#2A2A3A" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
 		<Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
 			<Grid Margin="0,0,0,0" IsVisible="{Binding !IsLoading}">
 				<Grid.RowDefinitions>
