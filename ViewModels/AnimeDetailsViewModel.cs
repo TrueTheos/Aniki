@@ -84,7 +84,7 @@ namespace Aniki.ViewModels
             EpisodesWatched = details.MyListStatus?.NumEpisodesWatched ?? 0;
             OnPropertyChanged(nameof(EpisodesWatched));
             SelectedScore = details.MyListStatus?.Score ?? 1;
-            SelectedStatus = details.MyListStatus.Status.APIToTranslated();
+            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.APIToTranslated() : AnimeStatusTranslated.All;
         }
 
         [RelayCommand]

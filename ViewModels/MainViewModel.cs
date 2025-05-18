@@ -3,6 +3,7 @@ using Aniki.Models;
 using Aniki.Services;
 using Aniki.Views;
 using Avalonia.Data.Converters;
+using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

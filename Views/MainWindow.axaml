@@ -89,6 +89,24 @@
 		<Style Selector="Panel.detailPanel TextBlock.value">
 			<Setter Property="Foreground" Value="White"/>
 		</Style>
+		<Style Selector="Button.SearchButton">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.SearchButton:pointerover">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Button.SearchButton:pressed">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Button.SearchButton:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Button.SearchButton:pressed /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
 	</Window.Styles>
 
 	<Panel>
@@ -128,27 +146,38 @@
 					</StackPanel>
 
 					<StackPanel Margin="0,10,0,0" Orientation="Horizontal" Spacing="8">
-						<TextBox Width="145"
-							 Watermark="Search"
-							 CornerRadius="7"
-							 Padding="10,0,0,0">
-							<TextBox.Styles>
-								<Style Selector="TextBox">
-									<Setter Property="VerticalContentAlignment" Value="Center"/>
-									<Setter Property="Background" Value="#FF3E3E3E" />
-									<Setter Property="Foreground" Value="#FFE0E0E0" />
-									<Setter Property="BorderBrush" Value="#FF505050" />
-									<Setter Property="BorderThickness" Value="1" />
-								</Style>
-								<Style Selector="TextBox PathIcon">
-									<Setter Property="Foreground" Value="#FFAAAAAA" />
-								</Style>
-							</TextBox.Styles>
-							<TextBox.InnerRightContent>
-								<PathIcon Width="16" Height="16" Margin="0,0,8,0"
-										  Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
-							</TextBox.InnerRightContent>
-						</TextBox>
+						<Grid>
+							<TextBox Name="SearchBox"
+									 Width="145"
+									 Watermark="Search"
+									 CornerRadius="7"
+									 Padding="10,0,30,0"
+									 VerticalContentAlignment="Center"
+									 Text="{Binding SearchQuery, Mode=TwoWay}"
+									 Background="#FF3E3E3E"
+									 Foreground="#FFE0E0E0"
+									 BorderBrush="#FF505050"
+									 BorderThickness="1" />
+
+							<Button HorizontalAlignment="Right"
+								VerticalAlignment="Center"
+								Margin="0,0,8,0"
+								Background="Transparent"
+								Classes="SearchButton"
+								BorderThickness="0" Padding="0" Cursor="Hand"
+								Command="{Binding SearchCommand}">
+								<PathIcon Name="SearchIcon" Width="16" Height="16" Foreground="#FFAAAAAA"
+									Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
+								<Button.Styles>
+									<Style Selector="Button:pointerover PathIcon">
+										<Setter Property="Foreground" Value="#FFD0D0D0" />
+									</Style>
+									<Style Selector="Button:pressed PathIcon">
+										<Setter Property="Foreground" Value="White" />
+									</Style>
+								</Button.Styles>
+							</Button>
+						</Grid>
 					</StackPanel>
 
 					<Button Margin="0,10,0,0" Name="MainPageButton" Classes="MenuButton">
