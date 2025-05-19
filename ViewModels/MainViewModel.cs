@@ -24,9 +24,6 @@ namespace Aniki.ViewModels
     public partial class MainViewModel : ViewModelBase
     {
         [ObservableProperty]
-        private ObservableCollection<AnimeData> _animeList;
-
-        [ObservableProperty]
         private string _username;
 
         [ObservableProperty]
@@ -41,76 +38,58 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private string _statusMessage = "Ready";
 
-        private AnimeStatusTranslated _selectedFilter;
-        public AnimeStatusTranslated SelectedFilter
-        {
-            get => _selectedFilter;
-            set
-            {
-                if (SetProperty(ref _selectedFilter, value))
-                {
-                    _ = LoadAnimeListAsync(value);
-                }
-            }
-        }
-
-        [ObservableProperty]
-        private AnimeDetailsViewModel _animeDetailsViewModel;
-
-        [ObservableProperty]
-        private WatchAnimeViewModel _watchAnimeViewModel;
-
-        private AnimeData _selectedAnime;
-        public AnimeData SelectedAnime
-        {
-            get => _selectedAnime;
-            set
-            {
-                if (SetProperty(ref _selectedAnime, value))
-                {
-                    _ = LoadAnimeDetailsAsync(value);
-                }
-            }
-        }
-
         public event EventHandler LogoutRequested;
         public event EventHandler SettingsRequested;
 
-        public IEnumerable<AnimeStatusTranslated> FilterOptions => StatusEnum.TranslatedStatusOptions;
+        #region Views
+        [ObservableProperty]
+        private ViewModelBase _currentViewModel;
 
-        public MainViewModel()
+        [ObservableProperty]
+        private AnimeDetailsViewModel _animeDetailsViewModel;
+        [ObservableProperty]
+        private AnimeDetailsViewModel _watchViewModel;
+        [ObservableProperty]
+        private CalendarViewModel _calendarViewModel;
+        [ObservableProperty]
+        private StatsViewModel _statsViewModel;
+        #endregion
+
+        public MainViewModel() 
         {
-            AnimeDetailsViewModel = new();
-            WatchAnimeViewModel = new();
-            _animeList = new ObservableCollection<AnimeData>();
-            SelectedFilter = AnimeStatusTranslated.All;
+            AnimeDetailsViewModel = new AnimeDetailsViewModel();
+            WatchViewModel = new AnimeDetailsViewModel();
+            CalendarViewModel = new CalendarViewModel();
+            StatsViewModel = new StatsViewModel();
         }
 
-        private async Task LoadAnimeDetailsAsync(AnimeData animeData)
+        [RelayCommand]
+        public void ShowMainPage()
         {
-            if (animeData?.Node?.Id != null)
-            {
-                if(AnimeDetailsViewModel == null)
-                {
-                    AnimeDetailsViewModel = new();
-                }
-                AnimeDetailsViewModel.IsLoading = true;
-                AnimeDetails details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
-                AnimeDetailsViewModel.Update(details);
-                WatchAnimeViewModel = new WatchAnimeViewModel(details);
-                IsLoading = false;
-            }
-            else
-            {
-                AnimeDetailsViewModel = null;
-                WatchAnimeViewModel = null;
-            }
+            CurrentViewModel = AnimeDetailsViewModel; _ = CurrentViewModel.Enter();
+        }
+
+        [RelayCommand]
+        public void ShowWatchPage()
+        {
+            CurrentViewModel = AnimeDetailsViewModel; _ = CurrentViewModel.Enter();
+        }
+
+        [RelayCommand]
+        public void ShowCalendarPage()
+        {
+            CurrentViewModel = CalendarViewModel; _ = CurrentViewModel.Enter();
+        }
+
+        [RelayCommand]
+        public void ShowStatsPage()
+        {
+            CurrentViewModel = StatsViewModel; _ = CurrentViewModel.Enter();
         }
 
         public async Task InitializeAsync()
         {
             await LoadUserDataAsync();
-            await LoadAnimeListAsync(SelectedFilter);
         }
 
         private async Task LoadUserDataAsync()
@@ -134,42 +113,7 @@ namespace Aniki.ViewModels
                 IsLoading = false;
             }
         }
-
-        private async Task LoadAnimeListAsync(AnimeStatusTranslated filter)
-        {
-            try
-            {
-                IsLoading = true;
-                StatusMessage = $"Loading anime list (Filter: {filter})...";
-                AnimeList.Clear();
-
-                var animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToAPI());
-
-                foreach (var anime in animeListData)
-                {
-                    AnimeList.Add(anime);
-                }
-
-                StatusMessage = $"Loaded {AnimeList.Count} anime";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading anime list: {ex.Message}");
-                StatusMessage = $"Error: {ex.Message}";
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        [RelayCommand]
-        private async Task Refresh()
-        {
-            await LoadUserDataAsync();
-            await LoadAnimeListAsync(SelectedFilter);
-        }
-
+        
         [RelayCommand]
         private void Logout()
         {
@@ -181,7 +125,7 @@ namespace Aniki.ViewModels
         {
             if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                await LoadAnimeListAsync(AnimeStatusTranslated.All);
+                await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
                 return;
             }
 
@@ -190,25 +134,7 @@ namespace Aniki.ViewModels
 
             try
             {
-                var results = await MalUtils.SearchAnime(SearchQuery);
-                AnimeList.Clear();
-
-                foreach (var entry in results)
-                {
-                    if (entry == null) continue;
-
-                    var newAnimeData = new AnimeData()
-                    {
-                        Node = new AnimeNode
-                        {
-                            Id = entry.Anime.Id,
-                            Title = entry.Anime.Title
-                        }
-                    };
-                    AnimeList.Add(newAnimeData);
-                }
-
-                StatusMessage = $"Found {AnimeList.Count} results for \"{SearchQuery}\"";
+                await AnimeDetailsViewModel.SearchAnime(SearchQuery);
             }
             catch (Exception ex)
             {

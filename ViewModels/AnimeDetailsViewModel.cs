@@ -16,8 +16,24 @@ namespace Aniki.ViewModels
 {
     public partial class AnimeDetailsViewModel : ViewModelBase
     {
+        private AnimeData _selectedAnime;
+        public AnimeData SelectedAnime
+        {
+            get => _selectedAnime;
+            set
+            {
+                if (SetProperty(ref _selectedAnime, value))
+                {
+                    _ = LoadAnimeDetailsAsync(value);
+                }
+            }
+        }
+
         [ObservableProperty]
         private AnimeDetails _details;
+
+        [ObservableProperty]
+        private ObservableCollection<AnimeData> _animeList;
 
         [ObservableProperty]
         private int _episodesWatched;
@@ -72,11 +88,40 @@ namespace Aniki.ViewModels
             }
         }
 
+        private AnimeStatusTranslated _selectedFilter;
+        public AnimeStatusTranslated SelectedFilter
+        {
+            get => _selectedFilter;
+            set
+            {
+                if (SetProperty(ref _selectedFilter, value))
+                {
+                    _ = LoadAnimeListAsync(value);
+                }
+            }
+        }
+
         public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } = StatusEnum.TranslatedStatusOptions;
+
+        public IEnumerable<AnimeStatusTranslated> FilterOptions => StatusEnum.TranslatedStatusOptions;
 
         public List<int> ScoreOptions { get; } = new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-        public AnimeDetailsViewModel() { }
+        [ObservableProperty]
+        private WatchAnimeViewModel _watchAnimeViewModel;
+
+        public AnimeDetailsViewModel() 
+        { 
+            WatchAnimeViewModel = new();
+            _animeList = new ObservableCollection<AnimeData>();
+            SelectedFilter = AnimeStatusTranslated.All;
+        }
+
+        public override async Task Enter()
+        {
+            await LoadAnimeListAsync(AnimeStatusTranslated.All);
+        }
+
         public void Update(AnimeDetails details)
         {
             IsLoading = false;
@@ -85,6 +130,71 @@ namespace Aniki.ViewModels
             OnPropertyChanged(nameof(EpisodesWatched));
             SelectedScore = details.MyListStatus?.Score ?? 1;
             SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.APIToTranslated() : AnimeStatusTranslated.All;
+            WatchAnimeViewModel = new WatchAnimeViewModel(details);
+        }
+
+        private async Task LoadAnimeDetailsAsync(AnimeData animeData)
+        {
+            if (animeData?.Node?.Id != null)
+            {
+                IsLoading = true;
+                AnimeDetails details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
+                Update(details);
+
+                IsLoading = false;
+            }
+        }
+
+        public async Task LoadAnimeListAsync(AnimeStatusTranslated filter)
+        {
+            try
+            {
+                IsLoading = true;
+                AnimeList.Clear();
+
+                var animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToAPI());
+
+                foreach (var anime in animeListData)
+                {
+                    AnimeList.Add(anime);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading anime list: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        public async Task SearchAnime(string searchQuery)
+        {
+            try
+            {
+                var results = await MalUtils.SearchAnime(searchQuery);
+                AnimeList.Clear();
+
+                foreach (var entry in results)
+                {
+                    if (entry == null) continue;
+
+                    var newAnimeData = new AnimeData()
+                    {
+                        Node = new AnimeNode
+                        {
+                            Id = entry.Anime.Id,
+                            Title = entry.Anime.Title
+                        }
+                    };
+                    AnimeList.Add(newAnimeData);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error searching anime: {ex.Message}");
+            }
         }
 
         [RelayCommand]
@@ -137,13 +247,13 @@ namespace Aniki.ViewModels
         }
 
         [RelayCommand]
-        public async Task SearchTorrents(AnimeData selectedAnime)
+        public async Task SearchTorrents()
         {
-            if (selectedAnime == null) return;
+            if (Details == null) return;
 
             TorrentsList.Clear();
 
-            var list = await NyaaService.SearchAsync(selectedAnime.Node.Title, NextEpisodeNumber);
+            var list = await NyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
 
             foreach (var t in list)
             {
