@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Aniki.Models;
 using System.Xml;
+using System.Linq;
 
 
 namespace Aniki.Services
@@ -69,6 +70,9 @@ namespace Aniki.Services
                     });
                 }
             }
+
+            results = results.OrderByDescending(x => FuzzySharp.Fuzz.Ratio(x.Title.ToLower(), animeName.ToLower()))
+                .ThenByDescending(x => x.Seeders).ToList();
 
             return results;
         }

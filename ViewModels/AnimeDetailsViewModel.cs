@@ -108,6 +108,9 @@ namespace Aniki.ViewModels
         public List<int> ScoreOptions { get; } = new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
         [ObservableProperty]
+        public ObservableCollection<int> _watchEpisodesOptions = new();
+
+        [ObservableProperty]
         private WatchAnimeViewModel _watchAnimeViewModel;
 
         public AnimeDetailsViewModel() 
@@ -127,7 +130,14 @@ namespace Aniki.ViewModels
             IsLoading = false;
             Details = details;
             EpisodesWatched = details.MyListStatus?.NumEpisodesWatched ?? 0;
+
+            WatchEpisodesOptions = new();
+            for (int i = 0; i < details.NumEpisodes; i++)
+            {
+                WatchEpisodesOptions.Add(i + 1);
+            }
             OnPropertyChanged(nameof(EpisodesWatched));
+            OnPropertyChanged(nameof(NextEpisodeNumber));
             SelectedScore = details.MyListStatus?.Score ?? 1;
             SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.APIToTranslated() : AnimeStatusTranslated.All;
             WatchAnimeViewModel = new WatchAnimeViewModel(details);

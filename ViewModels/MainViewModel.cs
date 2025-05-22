@@ -35,9 +35,6 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private string _searchQuery = string.Empty;
 
-        [ObservableProperty]
-        private string _statusMessage = "Ready";
-
         public event EventHandler LogoutRequested;
         public event EventHandler SettingsRequested;
 
@@ -97,19 +94,17 @@ namespace Aniki.ViewModels
             try
             {
                 IsLoading = true;
-                StatusMessage = "Loading user data...";
                 var userData = await MalUtils.GetUserDataAsync();
                 Username = userData.Name;
                 ProfileImage = await MalUtils.GetUserPicture();
-                StatusMessage = "User data loaded";
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error loading user data: {ex.Message}");
-                StatusMessage = $"Error: {ex.Message}";
             }
             finally
             {
+                ShowMainPage();
                 IsLoading = false;
             }
         }
@@ -130,7 +125,8 @@ namespace Aniki.ViewModels
             }
 
             IsLoading = true;
-            StatusMessage = $"Searching for \"{SearchQuery}\"...";
+
+            ShowMainPage();
 
             try
             {
@@ -139,7 +135,6 @@ namespace Aniki.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"Error searching: {ex.Message}");
-                StatusMessage = $"Search error: {ex.Message}";
             }
             finally
             {

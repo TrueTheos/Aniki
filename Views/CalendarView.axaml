@@ -1,12 +1,343 @@
 <UserControl
-	    xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
-        xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
-        xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
-        x:Class="Aniki.Views.CalendarView"
-        x:DataType="vm:CalendarViewModel">
-	<Border Padding="16" Background="#252535" x:Name="Root">
-		<TextBlock>Placeholder Calendar</TextBlock>
-	</Border>
+    x:Class="Aniki.Views.CalendarView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
+    xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
+    xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    x:DataType="vm:CalendarViewModel">
+    <UserControl.Styles>
+        <!--  Styles  -->
+        <Style Selector="Button.nav-button">
+            <Setter Property="Background" Value="#1A1A1A" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#333333" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="4,0" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="MinWidth" Value="40" />
+            <Setter Property="Height" Value="32" />
+        </Style>
+
+        <Style Selector="Button.nav-button:pointerover">
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="BorderBrush" Value="#555555" />
+        </Style>
+
+        <Style Selector="Button.nav-button:pressed">
+            <Setter Property="Background" Value="#333333" />
+        </Style>
+
+        <!--  Today button special styling  -->
+        <Style Selector="Button.today-button">
+            <Setter Property="Background" Value="#0078D4" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#106EBE" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="4,0" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Height" Value="32" />
+        </Style>
+
+        <Style Selector="Button.today-button:pointerover">
+            <Setter Property="Background" Value="#106EBE" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel x:Name="Root">
+        <!--  Header with navigation  -->
+        <Border
+            Padding="16,12"
+            Background="#1A1A1A"
+            BorderBrush="#333333"
+            BorderThickness="0,0,0,1"
+            DockPanel.Dock="Top">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!--  Left side - Title  -->
+                <StackPanel
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        Foreground="#FFFFFF"
+                        Text="Anime Schedule" />
+                </StackPanel>
+
+                <!--  Center - Navigation  -->
+                <StackPanel
+                    Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Button
+                        Classes="nav-button"
+                        Command="{Binding GoToStartCommand}"
+                        ToolTip.Tip="Go to start">
+                        <PathIcon
+                            Width="16"
+                            Height="16"
+                            Data="{StaticResource double_chevron_left_regular}" />
+                    </Button>
+                    <Button
+                        Classes="nav-button"
+                        Command="{Binding GoBackDayCommand}"
+                        ToolTip.Tip="Previous day">
+                        <PathIcon
+                            Width="16"
+                            Height="16"
+                            Data="{StaticResource chevron_left_regular}" />
+                    </Button>
+
+                    <Button
+                        Classes="today-button"
+                        Command="{Binding GoToTodayCommand}"
+                        Content="Today"
+                        ToolTip.Tip="Go to today" />
+                    <Button
+                        Classes="nav-button"
+                        Command="{Binding GoForwardDayCommand}"
+                        ToolTip.Tip="Next day">
+                        <PathIcon
+                            Width="16"
+                            Height="16"
+                            Data="{StaticResource chevron_right_regular}" />
+                    </Button>
+                    <Button
+                        Classes="nav-button"
+                        Command="{Binding GoToEndCommand}"
+                        ToolTip.Tip="Go to end">
+                        <PathIcon
+                            Width="16"
+                            Height="16"
+                            Data="{StaticResource double_chevron_right_regular}" />
+                    </Button>
+                </StackPanel>
+
+                <!--  Right side - View options  -->
+                <StackPanel
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <!--  Add view toggle buttons here if needed  -->
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  Loading indicator  -->
+        <Border
+            Height="4"
+            Background="#0F0F0F"
+            DockPanel.Dock="Top"
+            IsVisible="{Binding IsLoading}">
+            <ProgressBar
+                Height="4"
+                Background="Transparent"
+                Foreground="#0078D4"
+                IsIndeterminate="True" />
+        </Border>
+
+        <!--  Main calendar grid  -->
+        <ScrollViewer
+            Background="#0F0F0F"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto">
+
+            <ItemsControl Margin="8,0" ItemsSource="{Binding Days}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="7" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border
+                            Margin="0,0,0,0"
+                            Background="#0F0F0F"
+                            BorderBrush="#2A2A2A"
+                            BorderThickness="0,0,1,0">
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!--  Day header  -->
+                                <Border
+                                    Grid.Row="0"
+                                    Padding="12,8"
+                                    Background="#1A1A1A"
+                                    BorderBrush="#333333"
+                                    BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Foreground="#FFFFFF"
+                                            Text="{Binding DayName}" />
+
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="#AAAAAA"
+                                            Text="{Binding Date, StringFormat='MMM dd'}" />
+                                    </Grid>
+                                </Border>
+
+                                <!--  Timeline area  -->
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    Background="#0F0F0F"
+                                    HorizontalScrollBarVisibility="Disabled"
+                                    VerticalScrollBarVisibility="Hidden">
+                                    <ListBox ItemsSource="{Binding Items}">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel>
+                                                    <!--  Air time  -->
+                                                    <TextBlock
+                                                        Margin="8,0,0,0"
+                                                        FontSize="11"
+                                                        Foreground="#666666"
+                                                        Text="{Binding AiringAt, StringFormat='h:mm tt'}" />
+
+                                                    <Border
+                                                        Canvas.Top="{Binding AiringAt, Converter={StaticResource TimeToOffsetConverter}}"
+                                                        Width="180"
+                                                        Margin="8,2"
+                                                        Padding="0"
+                                                        Background="#1A1A1A"
+                                                        BorderBrush="{Binding Type, Converter={StaticResource AnimeTypeToColorConverter}}"
+                                                        BorderThickness="0,0,3,0"
+                                                        ClipToBounds="True"
+                                                        CornerRadius="8">
+
+                                                        <Border.Effect>
+                                                            <DropShadowEffect
+                                                                BlurRadius="8"
+                                                                OffsetX="0"
+                                                                OffsetY="2"
+                                                                Opacity="0.3"
+                                                                Color="#000000" />
+                                                        </Border.Effect>
+
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <!--  Anime cover image  -->
+                                                            <Border
+                                                                Grid.Column="0"
+                                                                Width="48"
+                                                                Height="64"
+                                                                Margin="0"
+                                                                ClipToBounds="True"
+                                                                CornerRadius="6,0,0,6">
+                                                                <Image
+                                                                    VerticalAlignment="Center"
+                                                                    asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}"
+                                                                    Stretch="UniformToFill" />
+                                                            </Border>
+
+                                                            <!--  Content area  -->
+                                                            <StackPanel
+                                                                Grid.Column="1"
+                                                                Margin="12,6"
+                                                                VerticalAlignment="Center">
+
+                                                                <!--  Title  -->
+                                                                <TextBlock
+                                                                    FontSize="13"
+                                                                    FontWeight="Medium"
+                                                                    Foreground="#FFFFFF"
+                                                                    LineHeight="16"
+                                                                    MaxLines="2"
+                                                                    Text="{Binding Title}"
+                                                                    TextWrapping="Wrap" />
+
+                                                                <!--  Episode info  -->
+                                                                <TextBlock
+                                                                    Margin="0,2,0,0"
+                                                                    FontSize="11"
+                                                                    Foreground="#AAAAAA"
+                                                                    Text="{Binding EpisodeInfo}" />
+                                                            </StackPanel>
+
+                                                            <!--  Status indicators  -->
+                                                            <StackPanel
+                                                                Grid.Column="2"
+                                                                Margin="0,6,8,6"
+                                                                VerticalAlignment="Top">
+
+                                                                <!--  Bookmark/Favorite icon  -->
+                                                                <Border
+                                                                    Width="20"
+                                                                    Height="20"
+                                                                    Margin="0,0,0,4"
+                                                                    Background="#333333"
+                                                                    CornerRadius="10"
+                                                                    IsVisible="{Binding IsBookmarked}">
+                                                                    <Path
+                                                                        Width="10"
+                                                                        Height="10"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"
+                                                                        Data="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.46,13.97L5.82,21L12,17.27Z"
+                                                                        Fill="#FFD700" />
+                                                                </Border>
+
+                                                                <!--  Live indicator  -->
+                                                                <Border
+                                                                    Width="8"
+                                                                    Height="8"
+                                                                    Background="#FF4444"
+                                                                    CornerRadius="4"
+                                                                    IsVisible="{Binding IsAiringNow}">
+                                                                    <Border.Effect>
+                                                                        <DropShadowEffect
+                                                                            BlurRadius="6"
+                                                                            Opacity="0.8"
+                                                                            Color="#FF4444" />
+                                                                    </Border.Effect>
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
 </UserControl>
