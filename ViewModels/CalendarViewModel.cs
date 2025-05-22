@@ -27,7 +27,6 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private string _currentWeekRange = "";
 
-        // Current time offset for timeline indicator
         public double CurrentTimeOffset
         {
             get
@@ -57,13 +56,12 @@ namespace Aniki.ViewModels
             {
                 IsLoading = true;
                 _allDays = await CalendarService.GetWeeklyScheduleAsync(_watchingList);
-                _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek); // Start of current week
+                _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
                 await ShowWindowAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error loading schedule: {ex.Message}");
-                // Consider showing user-friendly error message
             }
             finally
             {
@@ -108,23 +106,21 @@ namespace Aniki.ViewModels
             if (_allDays.Any())
             {
                 var latestDate = GetLatestDate();
-                _windowStartDate = latestDate.AddDays(-6); // Show last week
+                _windowStartDate = latestDate.AddDays(-6);
                 await ShowWindowAsync();
             }
         }
 
         private async Task ShowWindowAsync()
         {
-            await Task.Run(() => ShowWindow());
+            ShowWindow();
             UpdateCurrentWeekRange();
 
-            // Notify UI of current time changes for live updates
             OnPropertyChanged(nameof(CurrentTimeOffset));
         }
 
         private void ShowWindow()
         {
-            // Create 7 days starting from _windowStartDate
             var newDays = new List<DaySchedule>();
 
             for (int i = 0; i < 7; i++)
@@ -132,13 +128,11 @@ namespace Aniki.ViewModels
                 var currentDate = _windowStartDate.AddDays(i);
                 var dayName = currentDate.DayOfWeek.ToString();
 
-                // Find existing day data or create empty day
                 var existingDay = _allDays.FirstOrDefault(d =>
                     string.Equals(d.Name, dayName, StringComparison.OrdinalIgnoreCase));
 
                 if (existingDay != null)
                 {
-                    // Clone the existing day with updated date info
                     var daySchedule = new DaySchedule
                     {
                         Name = dayName,
@@ -152,7 +146,6 @@ namespace Aniki.ViewModels
                 }
                 else
                 {
-                    // Create empty day
                     newDays.Add(new DaySchedule
                     {
                         Name = dayName,
@@ -164,7 +157,6 @@ namespace Aniki.ViewModels
                 }
             }
 
-            // Update the observable collection
             Days.Clear();
             foreach (var day in newDays)
             {
@@ -174,7 +166,6 @@ namespace Aniki.ViewModels
 
         private AnimeScheduleItem EnhanceAnimeItem(AnimeScheduleItem original, DateTime dayDate)
         {
-            // Create enhanced item with additional properties
             return new AnimeScheduleItem
             {
                 Title = original.Title,
@@ -183,7 +174,7 @@ namespace Aniki.ViewModels
                 EpisodeInfo = original.EpisodeInfo ?? $"EP{original.Episode} • {original.Type}",
                 Type = original.Type,
                 Episode = original.Episode,
-                IsBookmarked = _watchingList.Contains(original.Title), // Check if in watching list
+                IsBookmarked = _watchingList.Contains(original.Title),
                 IsAiringNow = IsCurrentlyAiring(original.AiringAt, dayDate)
             };
         }
@@ -195,7 +186,6 @@ namespace Aniki.ViewModels
             var now = DateTime.Now;
             var airingDateTime = dayDate.Date.Add(airingTime.TimeOfDay);
 
-            // Consider as "airing now" if within 30 minutes of air time
             return Math.Abs((now - airingDateTime).TotalMinutes) <= 30;
         }
 
@@ -232,17 +222,15 @@ namespace Aniki.ViewModels
             CurrentWeekRange = $"{_windowStartDate:MMM d} - {endDate:MMM d, yyyy}";
         }
 
-        // Start a timer for live updates
         private System.Timers.Timer _updateTimer;
 
         public void StartLiveUpdates()
         {
-            _updateTimer = new System.Timers.Timer(60000); // Update every minute
+            _updateTimer = new System.Timers.Timer(60000);
             _updateTimer.Elapsed += (s, e) =>
             {
                 OnPropertyChanged(nameof(CurrentTimeOffset));
 
-                // Update "IsAiringNow" status for items
                 foreach (var day in Days.Where(d => d.IsToday))
                 {
                     foreach (var item in day.Items)
@@ -252,7 +240,7 @@ namespace Aniki.ViewModels
 
                         if (wasAiring != item.IsAiringNow)
                         {
-                            // Trigger property change notification if needed
+                            //todo
                         }
                     }
                 }

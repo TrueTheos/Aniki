@@ -15,15 +15,7 @@
                     <conv:SeederColorConverter x:Key="SeederColorConverter" />
                     <conv:StringToIntConverter x:Key="StringToIntConverter" />
                     <conv:TimeToOffsetConverter x:Key="TimeToOffsetConverter" />
-                    <conv:TimeUntilConverter x:Key="TimeUntilConverter" />
                     <conv:AnimeTypeToColorConverter x:Key="AnimeTypeToColorConverter" />
-                    <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-                    <conv:RatingToStarsConverter x:Key="RatingToStarsConverter" />
-                    <conv:GenresToStringConverter x:Key="GenresToStringConverter" />
-                    <conv:DurationConverter x:Key="DurationConverter" />
-                    <conv:CurrentTimeToOffsetConverter x:Key="CurrentTimeToOffsetConverter" />
-                    <conv:IsTodayToVisibilityConverter x:Key="IsTodayToVisibilityConverter" />
-                    <conv:EpisodeDisplayConverter x:Key="EpisodeDisplayConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
