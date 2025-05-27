@@ -10,8 +10,8 @@
     <UserControl.Styles>
         <!--  Styles  -->
         <Style Selector="Button.nav-button">
-            <Setter Property="Background" Value="#1A1A1A" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="{StaticResource Background0}" />
+            <Setter Property="Foreground" Value="{StaticResource White}" />
             <Setter Property="BorderBrush" Value="#333333" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
@@ -23,7 +23,7 @@
         </Style>
 
         <Style Selector="Button.nav-button:pointerover">
-            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="Background" Value="{StaticResource Background1}" />
             <Setter Property="BorderBrush" Value="#555555" />
         </Style>
 
@@ -33,8 +33,8 @@
 
         <!--  Today button special styling  -->
         <Style Selector="Button.today-button">
-            <Setter Property="Background" Value="#0078D4" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Background" Value="{StaticResource Primary}" />
+            <Setter Property="Foreground" Value="{StaticResource White}" />
             <Setter Property="BorderBrush" Value="#106EBE" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
@@ -45,7 +45,7 @@
         </Style>
 
         <Style Selector="Button.today-button:pointerover">
-            <Setter Property="Background" Value="#106EBE" />
+            <Setter Property="Background" Value="{StaticResource PrimaryDarker}" />
         </Style>
     </UserControl.Styles>
 
@@ -53,7 +53,7 @@
         <!--  Header with navigation  -->
         <Border
             Padding="16,12"
-            Background="#1A1A1A"
+            Background="{StaticResource Background0}"
             BorderBrush="#333333"
             BorderThickness="0,0,0,1"
             DockPanel.Dock="Top">
@@ -73,7 +73,7 @@
                         VerticalAlignment="Center"
                         FontSize="18"
                         FontWeight="Bold"
-                        Foreground="#FFFFFF"
+                        Foreground="{StaticResource White}"
                         Text="Anime Schedule" />
                 </StackPanel>
 
@@ -132,7 +132,7 @@
                     Grid.Column="2"
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
-                    <!--  Add view toggle buttons here if needed  -->
+                    <!--  Add view toggle buttons here  -->
                 </StackPanel>
             </Grid>
         </Border>
@@ -140,19 +140,19 @@
         <!--  Loading indicator  -->
         <Border
             Height="4"
-            Background="#0F0F0F"
+            Background="{StaticResource Background0}"
             DockPanel.Dock="Top"
             IsVisible="{Binding IsLoading}">
             <ProgressBar
                 Height="4"
                 Background="Transparent"
-                Foreground="#0078D4"
+                Foreground="{StaticResource Primary}"
                 IsIndeterminate="True" />
         </Border>
 
         <!--  Main calendar grid  -->
         <ScrollViewer
-            Background="#0F0F0F"
+            Background="{StaticResource Background0}"
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto">
 
@@ -167,7 +167,6 @@
                     <DataTemplate>
                         <Border
                             Margin="0,0,0,0"
-                            Background="#0F0F0F"
                             BorderBrush="#2A2A2A"
                             BorderThickness="0,0,1,0">
 
@@ -181,7 +180,7 @@
                                 <Border
                                     Grid.Row="0"
                                     Padding="12,8"
-                                    Background="#1A1A1A"
+                                    Background="{StaticResource Background1}"
                                     BorderBrush="#333333"
                                     BorderThickness="0,0,0,1">
                                     <Grid>
@@ -195,7 +194,7 @@
                                             VerticalAlignment="Center"
                                             FontSize="14"
                                             FontWeight="SemiBold"
-                                            Foreground="#FFFFFF"
+                                            Foreground="{StaticResource White}"
                                             Text="{Binding DayName}" />
 
                                         <TextBlock
@@ -210,7 +209,6 @@
                                 <!--  Timeline area  -->
                                 <ScrollViewer
                                     Grid.Row="1"
-                                    Background="#0F0F0F"
                                     HorizontalScrollBarVisibility="Disabled"
                                     VerticalScrollBarVisibility="Hidden">
                                     <ListBox ItemsSource="{Binding Items}">
@@ -229,7 +227,7 @@
                                                         Width="180"
                                                         Margin="8,2"
                                                         Padding="0"
-                                                        Background="#1A1A1A"
+                                                        Background="{StaticResource Background1}"
                                                         BorderBrush="{Binding Type, Converter={StaticResource AnimeTypeToColorConverter}}"
                                                         BorderThickness="0,0,3,0"
                                                         ClipToBounds="True"
@@ -274,7 +272,7 @@
                                                                 <TextBlock
                                                                     FontSize="13"
                                                                     FontWeight="Medium"
-                                                                    Foreground="#FFFFFF"
+                                                                    Foreground="{StaticResource White}"
                                                                     LineHeight="16"
                                                                     MaxLines="2"
                                                                     Text="{Binding Title}"

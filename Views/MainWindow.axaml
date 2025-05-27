@@ -31,28 +31,36 @@
             <Setter Property="CornerRadius" Value="5" />
         </Style>
 
-        <Style Selector="Button.MenuButton.Selected">
-            <Setter Property="Background" Value="#4b9eda" />
-        </Style>
-
-        <Style Selector="Button">
-            <Setter Property="Background" Value="#7E57C2" />
-            <Setter Property="Foreground" Value="White" />
+        <Style Selector="Button.Default">
             <Setter Property="Padding" Value="16,8" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="{StaticResource Background1}" />
+            <Setter Property="Cursor" Value="Hand" />
         </Style>
-        <Style Selector="Button:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#9575CD" />
+        <Style Selector="Button.Default:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Background0}" />
         </Style>
+
+        <Style Selector="Button.Purple">
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="{StaticResource PrimaryDarker}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.Purple:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Primary}" />
+        </Style>
+
         <Style Selector="ComboBox">
             <Setter Property="Background" Value="#3E3E3E" />
-            <Setter Property="Foreground" Value="#E0E0E0" />
+            <Setter Property="Foreground" Value="{StaticResource White}" />
             <Setter Property="CornerRadius" Value="4" />
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#3E3E3E" />
-            <Setter Property="Foreground" Value="#E0E0E0" />
+            <Setter Property="Background" Value="{StaticResource Background0}" />
+            <Setter Property="Foreground" Value="{StaticResource White}" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="8,6" />
         </Style>
@@ -63,22 +71,15 @@
         <Style Selector="TabItem">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Padding" Value="16,8" />
-            <Setter Property="Foreground" Value="#E0E0E0" />
+            <Setter Property="Foreground" Value="{StaticResource White}" />
         </Style>
         <Style Selector="TabItem:selected">
             <Setter Property="Foreground" Value="#9575CD" />
-        </Style>
-        <Style Selector="ProgressBar">
-            <Setter Property="Height" Value="6" />
-            <Setter Property="Foreground" Value="#7E57C2" />
-            <Setter Property="Background" Value="#444444" />
         </Style>
         <Style Selector="Panel.detailPanel TextBlock">
             <Setter Property="Foreground" Value="White" />
         </Style>
         <Style Selector="Panel.detailPanel TextBlock.label">
-            <Setter Property="Foreground" Value="LightGray" />
-            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,0,5,0" />
         </Style>
         <Style Selector="Panel.detailPanel TextBlock.value">
@@ -109,9 +110,9 @@
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial
                     BackgroundSource="Digger"
-                    MaterialOpacity="0.2"
-                    TintColor="#2A2A3A"
-                    TintOpacity="0.5" />
+                    MaterialOpacity="0.4"
+                    TintColor="#282424"
+                    TintOpacity="0.9" />
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
 
@@ -133,11 +134,12 @@
                     VerticalAlignment="Top"
                     Orientation="Vertical"
                     Spacing="5">
+                    <!--  Profile picture and nickname  -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Border
                             Width="30"
                             Height="30"
-                            Background="#7E57C2"
+                            Background="{StaticResource Primary}"
                             ClipToBounds="True"
                             CornerRadius="24">
                             <Image
@@ -151,10 +153,11 @@
                             VerticalAlignment="Center"
                             FontSize="18"
                             FontWeight="Bold"
-                            Foreground="#E0E0E0"
+                            Foreground="{StaticResource White}"
                             Text="{Binding Username}" />
                     </StackPanel>
 
+                    <!--  Search box  -->
                     <StackPanel
                         Margin="0,10,0,0"
                         Orientation="Horizontal"
@@ -200,6 +203,8 @@
                             </Button>
                         </Grid>
                     </StackPanel>
+
+                    <!--  Navigation buttons  -->
 
                     <Button
                         Name="MainPageButton"
@@ -273,6 +278,7 @@
                 </StackPanel>
             </Grid>
 
+            <!--  Content  -->
             <Border
                 Grid.Column="1"
                 Margin="0,30,0,0"
@@ -290,7 +296,7 @@
                     <Border
                         Grid.Row="0"
                         Padding="10,5"
-                        Background="#2A2A3A"
+                        Background="{StaticResource Background0}"
                         BorderBrush="#1a545353"
                         BorderThickness="0,0,0,2"
                         BoxShadow="0 2 10 0 #20000000">
@@ -308,13 +314,13 @@
                                 <TextBlock
                                     FontSize="24"
                                     FontWeight="Bold"
-                                    Foreground="#9575CD"
+                                    Foreground="{StaticResource Primary}"
                                     Text="Aniki" />
                                 <TextBlock
                                     Margin="5,0,0,0"
                                     VerticalAlignment="Center"
                                     FontSize="18"
-                                    Foreground="#E0E0E0"
+                                    Foreground="{StaticResource White}"
                                     Text=" - MyAnimeList Client" />
                             </StackPanel>
                         </Grid>
@@ -323,11 +329,16 @@
                     <!--  Loading indicator  -->
                     <Grid Grid.Row="1" IsVisible="{Binding IsLoading}">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <ProgressBar Width="300" IsIndeterminate="True" />
+                            <ProgressBar
+                                Width="300"
+                                Height="6"
+                                Background="{StaticResource Background0}"
+                                Foreground="{StaticResource Primary}"
+                                IsIndeterminate="True" />
                             <TextBlock
                                 Margin="0,10,0,0"
                                 HorizontalAlignment="Center"
-                                Foreground="#E0E0E0"
+                                Foreground="{StaticResource White}"
                                 Text="Loading your anime list..." />
                         </StackPanel>
                     </Grid>
