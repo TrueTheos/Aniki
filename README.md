@@ -1,4 +1,6 @@
-# Aniki
+<h1 align="center">ANIKI</h1>
+
+<p align="center"><i>Streamline your anime experience, effortlessly and beautifully.</i></p>
 
 Aniki is a cross-platform desktop application built with Avalonia UI and .NET for managing and watching your favorite anime. Featuring MyAnimeList integration, torrent search via Nyaa, and a clean, lightweight design, Aniki helps you keep track of and explore anime with ease.
 
