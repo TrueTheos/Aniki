@@ -437,7 +437,6 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-
                             <views:WatchAnimeView Grid.Column="1" IsVisible="{Binding WatchAnimeViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" />
                         </Grid>
                     </TabItem>

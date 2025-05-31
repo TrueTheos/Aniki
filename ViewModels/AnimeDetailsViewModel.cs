@@ -38,10 +38,10 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private int _episodesWatched;
 
-        private int _nextEpisodeNumber = -1;
-
         [ObservableProperty]
         private bool _isLoading;
+
+        private int _nextEpisodeNumber = -1;
 
         public int NextEpisodeNumber
         {
@@ -140,7 +140,7 @@ namespace Aniki.ViewModels
             OnPropertyChanged(nameof(NextEpisodeNumber));
             SelectedScore = details.MyListStatus?.Score ?? 1;
             SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.APIToTranslated() : AnimeStatusTranslated.All;
-            WatchAnimeViewModel = new WatchAnimeViewModel(details);
+            WatchAnimeViewModel.Update(details);
         }
 
         private async Task LoadAnimeDetailsAsync(AnimeData animeData)

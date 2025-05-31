@@ -8,20 +8,11 @@
     <Border
         x:Name="Root"
         Padding="16"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
         Background="#2A2A3A">
         <Grid>
-            <Grid Grid.Row="1" IsVisible="{Binding IsLoading}">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <ProgressBar Width="300" IsIndeterminate="True" />
-                    <TextBlock
-                        Margin="0,10,0,0"
-                        HorizontalAlignment="Center"
-                        Foreground="#E0E0E0"
-                        Text="Searching for episodes..." />
-                </StackPanel>
-            </Grid>
-
-            <ListBox ItemsSource="{Binding FoundEpisodes}">
+            <ListBox IsVisible="{Binding IsEpisodesViewVisible}" ItemsSource="{Binding Episodes}">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="vm:Episode">
                         <Border
@@ -96,6 +87,9 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            <StackPanel IsVisible="{Binding IsNoEpisodesViewVisible}">
+                <TextBox>Nothing to see watch!</TextBox>
+            </StackPanel>
         </Grid>
     </Border>
 </UserControl>
