@@ -31,6 +31,8 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private ObservableCollection<Episode> _episodes = new();
 
+        public string EpisodesFolderMessage { get; } = $"Episodes folder is empty - {SaveService.DefaultEpisodesFolder}";
+
         [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
 

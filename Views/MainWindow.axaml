@@ -73,9 +73,6 @@
             <Setter Property="Padding" Value="16,8" />
             <Setter Property="Foreground" Value="{StaticResource White}" />
         </Style>
-        <Style Selector="TabItem:selected">
-            <Setter Property="Foreground" Value="#9575CD" />
-        </Style>
         <Style Selector="Panel.detailPanel TextBlock">
             <Setter Property="Foreground" Value="White" />
         </Style>

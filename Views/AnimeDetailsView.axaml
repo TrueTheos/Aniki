@@ -193,7 +193,7 @@
                                                             Grid.Row="0"
                                                             Grid.Column="1"
                                                             Width="120"
-                                                            Margin="10,0,0,0"
+                                                            Margin="10,5,0,5"
                                                             ItemsSource="{Binding ScoreOptions}"
                                                             SelectedItem="{Binding SelectedScore, Mode=Default}" />
 
@@ -209,7 +209,7 @@
                                                             Grid.Row="1"
                                                             Grid.Column="1"
                                                             Width="120"
-                                                            Margin="10,0,0,0"
+                                                            Margin="10,5,0,5"
                                                             ItemsSource="{Binding StatusOptions}"
                                                             SelectedItem="{Binding SelectedStatus, Mode=Default}" />
                                                     </Grid>
@@ -317,7 +317,7 @@
 
                     <!--  Torrents Tab  -->
                     <TabItem Header="Torrents">
-                        <Grid Margin="0,16,0,0">
+                        <Grid Margin="0,16,0,0" Background="{StaticResource Background1}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -326,7 +326,7 @@
                             <!--  Search Controls  -->
                             <StackPanel
                                 Grid.Row="0"
-                                Margin="0,0,0,0"
+                                Margin="16,16,16,16"
                                 Orientation="Horizontal"
                                 Spacing="8">
                                 <TextBlock
@@ -365,10 +365,7 @@
                             </StackPanel>
 
                             <!--  Torrent Results  -->
-                            <Grid
-                                Grid.Row="1"
-                                Margin="0,16,0,0"
-                                Background="{StaticResource Background0}">
+                            <Grid Grid.Row="1" Margin="0,16,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
@@ -433,11 +430,7 @@
                     <!--  Watch Anime  -->
                     <TabItem Foreground="{StaticResource Complementary}" Header="Watch!">
                         <Grid Margin="0,16,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-                            <views:WatchAnimeView Grid.Column="1" IsVisible="{Binding WatchAnimeViewModel, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                            <views:WatchAnimeView Grid.Column="1" DataContext="{Binding WatchAnimeViewModel}" />
                         </Grid>
                     </TabItem>
                 </TabControl>

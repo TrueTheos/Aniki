@@ -10,22 +10,22 @@
         Padding="16"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
-        Background="#2A2A3A">
-        <Grid>
+        Background="{StaticResource Background1}">
+        <Grid VerticalAlignment="Stretch">
             <ListBox IsVisible="{Binding IsEpisodesViewVisible}" ItemsSource="{Binding Episodes}">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="vm:Episode">
                         <Border
                             Margin="2"
                             Padding="12"
-                            Background="#2A2A3A"
+                            Background="{StaticResource Background0}"
                             CornerRadius="6">
                             <Grid VerticalAlignment="Center" ColumnDefinitions="*,Auto,Auto">
                                 <StackPanel Margin="0,0,12,0">
                                     <TextBlock
                                         FontSize="16"
                                         FontWeight="Bold"
-                                        Foreground="White"
+                                        Foreground="{StaticResource White}"
                                         MaxLines="2"
                                         Text="{Binding Title}"
                                         TextTrimming="CharacterEllipsis"
@@ -87,8 +87,19 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <StackPanel IsVisible="{Binding IsNoEpisodesViewVisible}">
-                <TextBox>Nothing to see watch!</TextBox>
+            <StackPanel VerticalAlignment="Center" IsVisible="{Binding IsNoEpisodesViewVisible}">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Foreground="{StaticResource White}">
+                    Nothing to see here!
+                </TextBlock>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    Foreground="{StaticResource White}"
+                    Text="{Binding EpisodesFolderMessage}" />
             </StackPanel>
         </Grid>
     </Border>
