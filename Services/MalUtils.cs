@@ -1,4 +1,5 @@
-﻿using Aniki.Models;
+﻿using Aniki.Misc;
+using Aniki.Models;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using SkiaSharp;
@@ -12,6 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using static Aniki.Services.SaveService;
 
 namespace Aniki.Services
 {
@@ -64,7 +66,7 @@ namespace Aniki.Services
             }
         }
 
-        public static async Task<List<AnimeData>> LoadAnimeList(string status = null)
+        public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusAPI status = AnimeStatusAPI.all)
         {
             try
             {
@@ -73,10 +75,9 @@ namespace Aniki.Services
                 string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
                 string fields = "list_status,num_episodes,status,pictures";
 
-                if (!string.IsNullOrEmpty(status) && status != "All")
+                if (status != AnimeStatusAPI.all)
                 {
-                    string apiStatus = ConvertStatusToApiParameter(status);
-                    url += $"status={apiStatus}&";
+                    url += $"status={status}&";
                 }
 
                 url += $"fields={fields}&limit=100";
@@ -146,6 +147,28 @@ namespace Aniki.Services
             {
                 throw new Exception($"Error loading anime details: {ex.Message}", ex);
             }
+        }
+
+        public static async Task<string> GetAnimeNameById(int id)
+        {
+            try
+            {
+                string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=title";
+                HttpResponseMessage response = await _client.GetAsync(url);
+                string responseBody = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    var animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                    return animeResponse.Title;
+                }
+                else
+                {
+                    throw new Exception($"API returned status code: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex) { }
+
+            return "";
         }
 
         public static async Task<Bitmap> GetUserPicture()
@@ -223,12 +246,14 @@ namespace Aniki.Services
             {
                 case AnimeStatusField.STATUS:
                     formData["status"] = value;
+                    OnStatusChanged(animeId, value);
                     break;
                 case AnimeStatusField.SCORE:
                     formData["score"] = value;
                     break;
                 case AnimeStatusField.EPISODES_WATCHED:
                     formData["num_watched_episodes"] = value;
+                    OnEpisodesWatchedChanged(animeId, value);
                     break;
             }
 
@@ -242,17 +267,16 @@ namespace Aniki.Services
             }
         }
 
-        private static string ConvertStatusToApiParameter(string displayStatus)
+        private static async void OnEpisodesWatchedChanged(int animeId, string value)
         {
-            return displayStatus switch
-            {
-                "Currently Watching" => "watching",
-                "Completed" => "completed",
-                "On Hold" => "on_hold",
-                "Dropped" => "dropped",
-                "Plan to Watch" => "plan_to_watch",
-                _ => ""
-            };
+            var animeTitle = await GetAnimeNameById(animeId);
+            SaveService.ChangeWatchingAnimeEpisode(animeTitle, int.Parse(value));
+        }
+
+        private static async void OnStatusChanged(int animeId, string value)
+        {
+            var animeTitle = await GetAnimeNameById(animeId);
+            SaveService.ChangeWatchingAnimeStatus(animeTitle, StatusEnum.StringToAPI(value));
         }
     }
 }

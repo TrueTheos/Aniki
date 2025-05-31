@@ -1,4 +1,5 @@
-﻿using Aniki.Models;
+﻿using Aniki.Misc;
+using Aniki.Models;
 using Aniki.ViewModels;
 using Avalonia.Media.Imaging;
 using System;
@@ -8,7 +9,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Aniki.Services
 {
@@ -24,7 +27,10 @@ namespace Aniki.Services
 
         private static readonly string _settingsConfigFile = Path.Combine(_mainDirectory, "config.json");
 
-        static SaveService()
+        private static readonly string _animeStatusesFile = Path.Combine(_mainDirectory, "animeStatuses.json");
+        public static List<AnimeStatus> AnimeStatuses { get; private set; } = new();
+
+        public static void Init()
         {
             if (!Directory.Exists(_cacheDirectory))
             {
@@ -35,6 +41,8 @@ namespace Aniki.Services
             {
                 Directory.CreateDirectory(DefaultEpisodesFolder);
             }
+
+            LoadAnimeStatuses();
         }
 
         public static void SaveImageToCache(string fileName, Bitmap image)
@@ -45,6 +53,77 @@ namespace Aniki.Services
                 image.Save(stream);
             }
         }
+
+        public static async Task SyncAnimeWithMal()
+        {
+            try
+            {
+                var animeList = await MalUtils.LoadAnimeList();
+
+                if (animeList != null)
+                {
+                    AnimeStatuses.Clear();
+
+                    foreach (var anime in animeList)
+                    {
+                        if (anime.Node != null)
+                        {
+                            AnimeStatuses.Add(new AnimeStatus
+                            {
+                                Title = anime.Node.Title,
+                                WatchedEpisodes = anime.ListStatus.NumEpisodesWatched,
+                                Status = anime.ListStatus.Status
+                            });
+                        }
+                    }
+
+                    SaveWatchingAnime();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error propagating watching anime from MAL: {ex.Message}");
+            }
+        }
+
+        public static void LoadAnimeStatuses()
+        {
+            if (File.Exists(_animeStatusesFile))
+            {
+                var json = File.ReadAllText(_animeStatusesFile);
+                AnimeStatuses = JsonSerializer.Deserialize<List<AnimeStatus>>(json) ?? new List<AnimeStatus>();
+                return;
+            }
+
+            AnimeStatuses = new List<AnimeStatus>();
+        }
+
+        public static void SaveWatchingAnime()
+        {
+            var json = JsonSerializer.Serialize(AnimeStatuses, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(_animeStatusesFile, json);
+        }
+
+        public static void ChangeWatchingAnimeStatus(string animeName, AnimeStatusAPI status)
+        {
+            var existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
+            if (existingAnime != null)
+            {
+                existingAnime.Status = status;
+            }
+            SaveWatchingAnime();
+        }
+
+        public static void ChangeWatchingAnimeEpisode(string animeName, int watchedEpisodes)
+        {
+            var existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
+            if (existingAnime != null)
+            {
+                existingAnime.WatchedEpisodes = watchedEpisodes;
+            }
+            SaveWatchingAnime();
+        }
+
 
         public static async Task<Bitmap> GetAnimeImage(AnimeDetails anime)
         {
@@ -120,6 +199,7 @@ namespace Aniki.Services
         public static void SaveSettings(SettingsConfig config)
         {
             File.WriteAllText(_settingsConfigFile, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+            LoadAnimeStatuses();
         }
 
         public static SettingsConfig GetSettingsConfig()
@@ -132,6 +212,14 @@ namespace Aniki.Services
             }
 
             return null;
+        }
+
+        public class AnimeStatus
+        {
+            public string Title { get; set; }
+            public int WatchedEpisodes { get; set; }
+            [JsonConverter(typeof(JsonStringEnumConverter))]
+            public AnimeStatusAPI Status { get; set; }
         }
     }
 }

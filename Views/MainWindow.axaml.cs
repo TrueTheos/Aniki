@@ -43,6 +43,7 @@ namespace Aniki.Views
         private async void MainWindow_Loaded(object sender, EventArgs e)
         {
             await _viewModel.InitializeAsync();
+            SaveService.SyncAnimeWithMal();
         }
 
         private void OnLogoutRequested(object sender, EventArgs e)
@@ -59,6 +60,10 @@ namespace Aniki.Views
                 DataContext = new SettingsViewModel()
             };
             await settingsWindow.ShowDialog((Window)this);
+        }
+
+        private void SearchCommand(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
         }
     }
 }

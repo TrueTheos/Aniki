@@ -23,10 +23,15 @@ namespace Aniki.ViewModels
         private Episode? _lastPlayedEpisode;
 
         [ObservableProperty]
-        private bool _isLoading;
+        private bool _isEpisodesViewVisible;
 
         [ObservableProperty]
-        private ObservableCollection<Episode> _foundEpisodes = new();
+        private bool _isNoEpisodesViewVisible;
+
+        [ObservableProperty]
+        private ObservableCollection<Episode> _episodes = new();
+
+        public string EpisodesFolderMessage { get; } = $"Episodes folder is empty - {SaveService.DefaultEpisodesFolder}";
 
         [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
@@ -43,28 +48,24 @@ namespace Aniki.ViewModels
 
         public WatchAnimeViewModel() { }
 
-        public WatchAnimeViewModel(AnimeDetails details)
+        public void Update(AnimeDetails details)
         {
             _details = details;
-            _ = LoadAnimeEpisodes();
-        }
+            if (_details == null) return;
 
-        private async Task LoadAnimeEpisodes()
-        {
-            if(_details == null) return;    
-
-            IsLoading = true;
-            FoundEpisodes = new();
+            IsEpisodesViewVisible = false;
+            IsNoEpisodesViewVisible = false;
+            Episodes.Clear();
 
             foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder))
             {
                 string fileName = Path.GetFileName(filePath);
                 ParseResult result = AnimeNameParser.ParseAnimeFilename(fileName);
-                if(result == null || result.EpisodeNumber == null) continue;
+                if (result == null || result.EpisodeNumber == null) continue;
 
-                if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > .9)
+                if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > 90)
                 {
-                    FoundEpisodes.Add(new Episode
+                    Episodes.Add(new Episode
                     {
                         FilePath = filePath,
                         EpisodeNumber = (int)result.EpisodeNumber,
@@ -74,7 +75,16 @@ namespace Aniki.ViewModels
                 }
             }
 
-            IsLoading = false;
+            if (Episodes.Count > 0)
+            {
+                IsEpisodesViewVisible = true;
+                IsNoEpisodesViewVisible = false;
+            }
+            else
+            {
+                IsNoEpisodesViewVisible = true;
+                IsEpisodesViewVisible = false;
+            }
         }
 
         [RelayCommand]
@@ -84,6 +94,8 @@ namespace Aniki.ViewModels
 
             _lastPlayedEpisode = ep;
 
+            DiscordService.SetPresenceEpisode(ep);
+
             LaunchAndTrack(defaultApp, ep.FilePath);
         }
 
@@ -91,7 +103,7 @@ namespace Aniki.ViewModels
         private void DeleteEpisode(Episode ep)
         {
             File.Delete(ep.FilePath);
-            FoundEpisodes.Remove(ep);
+            Episodes.Remove(ep);
         }
 
         private string GetAssociatedProgram(string extension)
@@ -141,6 +153,8 @@ namespace Aniki.ViewModels
                     }
                 }
             });
+
+            DiscordService.Reset();
         }
 
         private void MarkEpisodeCompleted(Episode ep)

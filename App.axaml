@@ -1,13 +1,23 @@
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-			 xmlns:conv="clr-namespace:Aniki.Converters"
-             x:Class="Aniki.App">
+<Application
+    x:Class="Aniki.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:Aniki.Converters">
     <Application.Styles>
-        <FluentTheme/>
+        <FluentTheme />
     </Application.Styles>
-	<Application.Resources>
-		<conv:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
-		<conv:SeederColorConverter x:Key="SeederColorConverter"/>
-		<conv:StringToIntConverter x:Key="StringToIntConverter"/>
-	</Application.Resources>
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Resources/MainResources.axaml" />
+                <ResourceDictionary>
+                    <conv:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
+                    <conv:SeederColorConverter x:Key="SeederColorConverter" />
+                    <conv:StringToIntConverter x:Key="StringToIntConverter" />
+                    <conv:TimeToOffsetConverter x:Key="TimeToOffsetConverter" />
+                    <conv:AnimeTypeToColorConverter x:Key="AnimeTypeToColorConverter" />
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

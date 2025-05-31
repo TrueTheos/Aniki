@@ -38,7 +38,12 @@
 
 			<Grid ColumnDefinitions="*, Auto">
 				<TextBlock Grid.Column="0" Text="Auto Start on Windows Startup" VerticalAlignment="Center"/>
-				<CheckBox Grid.Column="1" IsChecked="{Binding AutoStart}" HorizontalAlignment="Right"/>
+				<CheckBox Grid.Column="1" IsChecked="{Binding AutoStart, Mode=TwoWay}" HorizontalAlignment="Right"/>
+			</Grid>
+
+			<Grid ColumnDefinitions="*, Auto">
+				<TextBlock Grid.Column="0" Text="Notify about new episodes" VerticalAlignment="Center"/>
+				<CheckBox Grid.Column="1" IsChecked="{Binding NotifyAboutEpisodes, Mode=TwoWay}" HorizontalAlignment="Right"/>
 			</Grid>
 
 			<Grid ColumnDefinitions="*, Auto">
