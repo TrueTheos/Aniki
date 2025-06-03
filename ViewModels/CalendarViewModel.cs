@@ -1,5 +1,8 @@
 ﻿using Aniki.Models;
 using Aniki.Services;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -27,6 +30,8 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private string _currentWeekRange = "";
 
+        private MainViewModel _mainViewModel;
+
         public double CurrentTimeOffset
         {
             get
@@ -38,8 +43,9 @@ namespace Aniki.ViewModels
             }
         }
 
-        public CalendarViewModel()
+        public CalendarViewModel(MainViewModel mainVM)
         {
+            _mainViewModel = mainVM;
             Days = new ObservableCollection<DaySchedule>();
             UpdateCurrentWeekRange();
         }
@@ -77,6 +83,11 @@ namespace Aniki.ViewModels
                 _windowStartDate = GetEarliestDate();
                 await ShowWindowAsync();
             }
+        }
+
+        public void GoToClickedAnime(AnimeScheduleItem anime)
+        {
+            _mainViewModel.GoToAnime(anime.Title);
         }
 
         [RelayCommand]

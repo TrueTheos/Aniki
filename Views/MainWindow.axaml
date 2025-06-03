@@ -8,13 +8,13 @@
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     Title="Aniki - Anime Client"
-    d:DesignHeight="900"
-    d:DesignWidth="1400"
+    d:DesignHeight="720"
+    d:DesignWidth="1080"
     x:DataType="vm:MainViewModel"
-    Background="Transparent"
+    Background="#000000"
     ExtendClientAreaTitleBarHeightHint="30"
     ExtendClientAreaToDecorationsHint="True"
-    TransparencyLevelHint="AcrylicBlur"
+    TransparencyLevelHint="Blur"
     mc:Ignorable="d">
 
     <Design.DataContext>
@@ -107,9 +107,9 @@
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial
                     BackgroundSource="Digger"
-                    MaterialOpacity="0.4"
-                    TintColor="#282424"
-                    TintOpacity="0.9" />
+                    MaterialOpacity="0.5"
+                    TintColor="#000000"
+                    TintOpacity=".99" />
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
 
@@ -345,6 +345,9 @@
                             <UserControl.DataTemplates>
                                 <DataTemplate DataType="vm:AnimeDetailsViewModel">
                                     <views:AnimeDetailsView DataContext="{Binding}" />
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:WatchAnimeViewModel">
+                                    <views:WatchAnimeView DataContext="{Binding}" />
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:CalendarViewModel">
                                     <views:CalendarView />

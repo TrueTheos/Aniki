@@ -211,7 +211,12 @@
                                     Grid.Row="1"
                                     HorizontalScrollBarVisibility="Disabled"
                                     VerticalScrollBarVisibility="Hidden">
-                                    <ListBox ItemsSource="{Binding Items}">
+                                    <ListBox DoubleTapped="DoubleClickAnime" ItemsSource="{Binding Items}">
+                                        <ListBox.Styles>
+                                            <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                                                <Setter Property="Background" Value="Transparent" />
+                                            </Style>
+                                        </ListBox.Styles>
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
                                                 <StackPanel>

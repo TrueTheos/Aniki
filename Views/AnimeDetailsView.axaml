@@ -219,58 +219,62 @@
                                                 <StackPanel Grid.Column="1" Margin="20,0,0,0">
                                                     <StackPanel>
                                                         <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                            </Grid.ColumnDefinitions>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto" />
+                                                                <RowDefinition Height="Auto" />
+                                                            </Grid.RowDefinitions>
 
-                                                            <StackPanel Grid.Column="0" Orientation="Vertical">
-                                                                <TextBlock FontSize="16" Foreground="{StaticResource White}">
+                                                            <!--  Top Row: Text and Buttons side by side  -->
+                                                            <StackPanel
+                                                                Grid.Row="0"
+                                                                VerticalAlignment="Center"
+                                                                Orientation="Horizontal"
+                                                                Spacing="10">
+                                                                <TextBlock
+                                                                    VerticalAlignment="Center"
+                                                                    FontSize="16"
+                                                                    Foreground="{StaticResource White}">
                                                                     <Run Text="Episodes: " />
                                                                     <Run FontWeight="SemiBold" Text="{Binding EpisodesWatched}" />
                                                                     <Run Text=" / " />
                                                                     <Run Text="{Binding Details.NumEpisodes}" />
                                                                 </TextBlock>
 
-                                                                <ProgressBar
-                                                                    Height="8"
-                                                                    Margin="0,6,6,0"
-                                                                    Background="{StaticResource Background0}"
-                                                                    Foreground="{StaticResource Primary}"
-                                                                    Maximum="{Binding Details.NumEpisodes}"
-                                                                    Value="{Binding EpisodesWatched}" />
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <Button
+                                                                        Width="24"
+                                                                        Height="24"
+                                                                        Padding="5"
+                                                                        Classes="Purple"
+                                                                        Command="{Binding DecreaseEpisodeCount}">
+                                                                        <TextBlock
+                                                                            HorizontalAlignment="Center"
+                                                                            VerticalAlignment="Center"
+                                                                            Text="-" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        Width="24"
+                                                                        Height="24"
+                                                                        Padding="5"
+                                                                        Classes="Purple"
+                                                                        Command="{Binding IncreaseEpisodeCount}">
+                                                                        <TextBlock
+                                                                            HorizontalAlignment="Center"
+                                                                            VerticalAlignment="Center"
+                                                                            Text="+" />
+                                                                    </Button>
+                                                                </StackPanel>
                                                             </StackPanel>
 
-                                                            <StackPanel
-                                                                Grid.Column="1"
-                                                                Margin="0,10,0,0"
-                                                                Orientation="Horizontal"
-                                                                Spacing="8">
-                                                                <Button
-                                                                    Width="40"
-                                                                    Height="40"
-                                                                    Padding="5,5,5,5"
-                                                                    Classes="Purple"
-                                                                    Command="{Binding UpdateEpisodeCountCommand}"
-                                                                    CommandParameter="{StaticResource MinusOne}">
-                                                                    <TextBlock
-                                                                        HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"
-                                                                        Text="-" />
-                                                                </Button>
-                                                                <Button
-                                                                    Width="40"
-                                                                    Height="40"
-                                                                    Padding="5,5,5,5"
-                                                                    Classes="Purple"
-                                                                    Command="{Binding UpdateEpisodeCountCommand}"
-                                                                    CommandParameter="{StaticResource PlusOne}">
-                                                                    <TextBlock
-                                                                        HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"
-                                                                        Text="+" />
-                                                                </Button>
-                                                            </StackPanel>
+                                                            <!--  Bottom Row: Progress Bar  -->
+                                                            <ProgressBar
+                                                                Grid.Row="1"
+                                                                Height="8"
+                                                                Margin="0,6,6,0"
+                                                                Background="{StaticResource Background0}"
+                                                                Foreground="{StaticResource Primary}"
+                                                                Maximum="{Binding Details.NumEpisodes}"
+                                                                Value="{Binding EpisodesWatched}" />
                                                         </Grid>
                                                     </StackPanel>
 
@@ -365,7 +369,7 @@
                             </StackPanel>
 
                             <!--  Torrent Results  -->
-                            <Grid Grid.Row="1" Margin="0,16,0,0">
+                            <Grid Grid.Row="1" Margin="16,0,16,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
@@ -378,7 +382,7 @@
                                         <DataTemplate DataType="models:NyaaTorrent">
                                             <Border
                                                 Padding="12"
-                                                Background="{StaticResource Background1}"
+                                                Background="{StaticResource Background0}"
                                                 BorderThickness="1"
                                                 CornerRadius="4">
                                                 <Grid>

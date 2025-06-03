@@ -36,6 +36,8 @@ namespace Aniki.ViewModels
         private ObservableCollection<AnimeData> _animeList;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(IncreaseEpisodeCountCommand))]
+        [NotifyCanExecuteChangedFor(nameof(DecreaseEpisodeCountCommand))]
         private int _episodesWatched;
 
         [ObservableProperty]
@@ -55,6 +57,9 @@ namespace Aniki.ViewModels
                 }
             }
         }
+
+        public bool CanIncreaseEpisodeCount() => EpisodesWatched < (Details?.NumEpisodes ?? 0);
+        public bool CanDecreaseEpisodeCount() => EpisodesWatched > 0;
 
         [ObservableProperty]
         private string _torrentSearchTerms = string.Empty;
@@ -207,8 +212,19 @@ namespace Aniki.ViewModels
             }
         }
 
-        [RelayCommand]
-        public async Task UpdateEpisodeCount(int change)
+        [RelayCommand(CanExecute = nameof(CanIncreaseEpisodeCount))]
+        public void IncreaseEpisodeCount()
+        {
+            _ = UpdateEpisodeCount(1);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanDecreaseEpisodeCount))]
+        public void DecreaseEpisodeCount()
+        {
+            _ = UpdateEpisodeCount(-1);
+        }
+
+        private async Task UpdateEpisodeCount(int change)
         {
             if (Details?.MyListStatus == null) return;
 
@@ -221,13 +237,8 @@ namespace Aniki.ViewModels
                 newCount = Details.NumEpisodes;
             }
 
-            try
-            {
-                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
-
-                EpisodesWatched = newCount;
-            }
-            catch (Exception ex) { }
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
+            EpisodesWatched = newCount;
         }
 
         private async Task UpdateAnimeScore(string score)
@@ -235,25 +246,16 @@ namespace Aniki.ViewModels
             if (Details?.MyListStatus == null) return;
             if (score == null) return;
 
-            try
-            {
-                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score.ToString());
-                Details.MyListStatus.Score = int.Parse(score);
-
-            }
-            catch (Exception ex) { }
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score.ToString());
+            Details.MyListStatus.Score = int.Parse(score);
         }
 
         private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
         {
             if (Details?.MyListStatus == null) return;
 
-            try
-            {
-                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToAPI().ToString());
-                Details.MyListStatus.Status = status.TranslatedToAPI();
-            }
-            catch (Exception ex) { }
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToAPI().ToString());
+            Details.MyListStatus.Status = status.TranslatedToAPI();
         }
 
         [RelayCommand]

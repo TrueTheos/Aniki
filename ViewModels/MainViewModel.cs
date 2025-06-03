@@ -45,7 +45,7 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private AnimeDetailsViewModel _animeDetailsViewModel;
         [ObservableProperty]
-        private AnimeDetailsViewModel _watchViewModel;
+        private WatchAnimeViewModel _watchViewModel;
         [ObservableProperty]
         private CalendarViewModel _calendarViewModel;
         [ObservableProperty]
@@ -55,8 +55,8 @@ namespace Aniki.ViewModels
         public MainViewModel() 
         {
             AnimeDetailsViewModel = new AnimeDetailsViewModel();
-            WatchViewModel = new AnimeDetailsViewModel();
-            CalendarViewModel = new CalendarViewModel();
+            WatchViewModel = new WatchAnimeViewModel();
+            CalendarViewModel = new CalendarViewModel(this);
             StatsViewModel = new StatsViewModel();
         }
 
@@ -69,7 +69,7 @@ namespace Aniki.ViewModels
         [RelayCommand]
         public void ShowWatchPage()
         {
-            CurrentViewModel = AnimeDetailsViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = WatchViewModel; _ = CurrentViewModel.Enter();
         }
 
         [RelayCommand]
@@ -82,6 +82,11 @@ namespace Aniki.ViewModels
         public void ShowStatsPage()
         {
             CurrentViewModel = StatsViewModel; _ = CurrentViewModel.Enter();
+        }
+
+        public void GoToAnime(string title)
+        {
+            SearchForAnime(title);
         }
 
         public async Task InitializeAsync()
@@ -118,7 +123,12 @@ namespace Aniki.ViewModels
         [RelayCommand]
         public async Task Search()
         {
-            if (string.IsNullOrWhiteSpace(SearchQuery))
+            await SearchForAnime(SearchQuery);
+        }
+
+        private async Task SearchForAnime(string searchQuery)
+        {
+            if (string.IsNullOrWhiteSpace(searchQuery))
             {
                 await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
                 return;
@@ -130,7 +140,7 @@ namespace Aniki.ViewModels
 
             try
             {
-                await AnimeDetailsViewModel.SearchAnime(SearchQuery);
+                await AnimeDetailsViewModel.SearchAnime(searchQuery);
             }
             catch (Exception ex)
             {

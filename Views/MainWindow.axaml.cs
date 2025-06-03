@@ -61,9 +61,5 @@ namespace Aniki.Views
             };
             await settingsWindow.ShowDialog((Window)this);
         }
-
-        private void SearchCommand(object? sender, Avalonia.Input.PointerPressedEventArgs e)
-        {
-        }
     }
 }

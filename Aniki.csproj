@@ -35,6 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="MAL\" />
+  <EmbeddedResource Include="Resources\CLIENTID.txt" />
   </ItemGroup>
 </Project>

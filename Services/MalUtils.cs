@@ -20,10 +20,11 @@ namespace Aniki.Services
     public static class MalUtils
     {
         private static JsonSerializerOptions _jso = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        private static readonly HttpClient _client = new HttpClient();
+        private static HttpClient _client = new HttpClient();
 
         public static void Init(string accessToken)
         {
+            _client = new();
             _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
         }
 

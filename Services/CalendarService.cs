@@ -28,7 +28,7 @@ namespace Aniki.Services
         {
             // Calculate the start and end of specified week or current week
             var referenceDate = specificWeek ?? DateTime.Now;
-            var startOfWeek = referenceDate.Date.AddDays(-(int)referenceDate.DayOfWeek + (int)DayOfWeek.Monday);
+            var startOfWeek = referenceDate;
             var endOfWeek = startOfWeek.AddDays(7);
 
             var startUnix = ((DateTimeOffset)startOfWeek).ToUnixTimeSeconds();

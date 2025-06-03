@@ -46,30 +46,45 @@ namespace Aniki.ViewModels
             Executable = 2,
         }
 
-        public WatchAnimeViewModel() { }
+        public WatchAnimeViewModel()
+        {
+            Update(null);
+        }
 
         public void Update(AnimeDetails details)
         {
             _details = details;
-            if (_details == null) return;
 
             IsEpisodesViewVisible = false;
             IsNoEpisodesViewVisible = false;
             Episodes.Clear();
 
-            foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder))
+            foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder, "*.*", SearchOption.AllDirectories))
             {
                 string fileName = Path.GetFileName(filePath);
                 ParseResult result = AnimeNameParser.ParseAnimeFilename(fileName);
                 if (result == null || result.EpisodeNumber == null) continue;
 
-                if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > 90)
+                if(_details != null)
+                {
+                    if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > 90)
+                    {
+                        Episodes.Add(new Episode
+                        {
+                            FilePath = filePath,
+                            EpisodeNumber = (int)result.EpisodeNumber,
+                            Title = _details.Title,
+                            Id = _details.Id
+                        });
+                    }
+                }
+                else
                 {
                     Episodes.Add(new Episode
                     {
                         FilePath = filePath,
                         EpisodeNumber = (int)result.EpisodeNumber,
-                        Title = _details.Title,
+                        Title = result.AnimeName,
                         Id = _details.Id
                     });
                 }
