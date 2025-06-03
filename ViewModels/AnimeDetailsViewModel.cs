@@ -36,8 +36,8 @@ namespace Aniki.ViewModels
         private ObservableCollection<AnimeData> _animeList;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(IncreaseEpisodeCountCommand))]
-        [NotifyCanExecuteChangedFor(nameof(DecreaseEpisodeCountCommand))]
+        [NotifyPropertyChangedFor(nameof(CanIncreaseEpisodeCount))]
+        [NotifyPropertyChangedFor(nameof(CanDecreaseEpisodeCount))]
         private int _episodesWatched;
 
         [ObservableProperty]
@@ -58,8 +58,8 @@ namespace Aniki.ViewModels
             }
         }
 
-        public bool CanIncreaseEpisodeCount() => EpisodesWatched < (Details?.NumEpisodes ?? 0);
-        public bool CanDecreaseEpisodeCount() => EpisodesWatched > 0;
+        public bool CanIncreaseEpisodeCount => EpisodesWatched < (Details?.NumEpisodes ?? 0);
+        public bool CanDecreaseEpisodeCount => EpisodesWatched > 0;
 
         [ObservableProperty]
         private string _torrentSearchTerms = string.Empty;
@@ -212,13 +212,13 @@ namespace Aniki.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanIncreaseEpisodeCount))]
+        [RelayCommand]
         public void IncreaseEpisodeCount()
         {
             _ = UpdateEpisodeCount(1);
         }
 
-        [RelayCommand(CanExecute = nameof(CanDecreaseEpisodeCount))]
+        [RelayCommand]
         public void DecreaseEpisodeCount()
         {
             _ = UpdateEpisodeCount(-1);

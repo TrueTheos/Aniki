@@ -22,4 +22,5 @@
     <SolidColorBrush x:Key="Background0" Color="#202324" />
     <SolidColorBrush x:Key="Background1" Color="#2C2F31" />
     <SolidColorBrush x:Key="White" Color="#E0E0E0" />
+    <SolidColorBrush x:Key="Red" Color="#ED2939" />
 </ResourceDictionary>
