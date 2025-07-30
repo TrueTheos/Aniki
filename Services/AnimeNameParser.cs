@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Aniki.Services
 {
@@ -46,7 +42,7 @@ namespace Aniki.Services
 
                     animeName = Regex.Replace(animeName, @"[._]", " ").Trim();
 
-                    return new ParseResult
+                    return new()
                     {
                         AnimeName = animeName,
                         EpisodeNumber = episodeNumber
@@ -64,17 +60,17 @@ namespace Aniki.Services
                 var namePart = Regex.Replace(filename, @"(?:E|Ep|Episode|#)\d+|\d+|\[.*?\]|\(.*?\)", "");
                 namePart = Regex.Replace(namePart, @"[._]", " ").Trim();
 
-                return new ParseResult
+                return new()
                 {
                     AnimeName = string.IsNullOrWhiteSpace(namePart) ? "Unknown" : namePart,
                     EpisodeNumber = int.Parse(episode)
                 };
             }
 
-            return new ParseResult
+            return new()
             {
                 AnimeName = "Unknown",
-                EpisodeNumber = null
+                EpisodeNumber = -1
             };
         }
     }
@@ -82,7 +78,7 @@ namespace Aniki.Services
     public class ParseResult
     {
         public string AnimeName { get; set; }
-        public int? EpisodeNumber { get; set; }
+        public int EpisodeNumber { get; set; }
 
         public override string ToString()
         {

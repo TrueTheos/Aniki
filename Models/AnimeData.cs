@@ -1,35 +1,26 @@
 ﻿using Aniki.Misc;
 using Avalonia.Media.Imaging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Aniki.Models
 {
     public class AnimeData
     {
         public AnimeNode Node { get; set; }
-        [JsonPropertyName("list_status")]
-        public ListStatus ListStatus { get; set; }
+        [JsonPropertyName("list_status")] public ListStatus ListStatus { get; set; }
         [JsonIgnore]
-        public bool IsOnList => ListStatus != null && ListStatus.Status != AnimeStatusAPI.all;
+        public bool IsOnList => ListStatus.Status != AnimeStatusApi.all;
     }
 
     public class AnimeNode
     {
-        public int Id { get; set; }
-        public string Title { get; set; }
-
-        public int TotalEpisodes { get; set; }
+        public int Id { get; init; }
+        public string Title { get; init; }
     }
-
 
     public class AnimeListResponse
     {
-        public AnimeData[] Data { get; set; }
+        public AnimeData[] Data {get; set;}
         public Paging Paging { get; set; }
     }
 
@@ -90,7 +81,7 @@ namespace Aniki.Models
     {
         [JsonPropertyName("status")]
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public AnimeStatusAPI Status { get; set; }
+        public AnimeStatusApi Status { get; set; }
 
         [JsonPropertyName("score")]
         public int Score { get; set; }

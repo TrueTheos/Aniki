@@ -1,10 +1,6 @@
 ﻿using Aniki.ViewModels;
 using DiscordRPC;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Aniki.Services
 {
@@ -17,7 +13,7 @@ namespace Aniki.Services
 
         static DiscordService()
         {
-            _client = new DiscordRpcClient(ClientId);
+            _client = new(ClientId);
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => Reset();
         }
 
@@ -25,25 +21,25 @@ namespace Aniki.Services
         {
             if (_isDisposed)
             {
-                _client = new DiscordRpcClient(ClientId);
+                _client = new(ClientId);
                 _isDisposed = false;
             }
 
             if (!_client.IsInitialized)
                 _client.Initialize();
 
-            _client.SetPresence(new RichPresence()
+            _client.SetPresence(new()
             {
                 Details = $"Watching: {ep.Title}",
                 State = $"Episode {ep.EpisodeNumber}",
-                Assets = new Assets()
+                Assets = new()
                 {
                     LargeImageKey = "default",
                     LargeImageText = "Use Aniki"
                 },
                 Buttons = new DiscordRPC.Button[]
                 {
-                    new DiscordRPC.Button() { Label = "Use Aniki", Url = "https://github.com/TrueTheos/Aniki" }
+                    new() { Label = "Use Aniki", Url = "https://github.com/TrueTheos/Aniki" }
                 }
             });
             Console.WriteLine("Presence set. Press any key to exit...");

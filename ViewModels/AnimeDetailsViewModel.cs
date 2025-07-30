@@ -8,9 +8,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static Aniki.Services.SaveService;
 
 namespace Aniki.ViewModels
 {
@@ -110,7 +108,7 @@ namespace Aniki.ViewModels
 
         public IEnumerable<AnimeStatusTranslated> FilterOptions => StatusEnum.TranslatedStatusOptions;
 
-        public List<int> ScoreOptions { get; } = new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        public List<int> ScoreOptions { get; } = new() {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
         [ObservableProperty]
         public ObservableCollection<int> _watchEpisodesOptions = new();
@@ -121,7 +119,7 @@ namespace Aniki.ViewModels
         public AnimeDetailsViewModel() 
         { 
             WatchAnimeViewModel = new();
-            _animeList = new ObservableCollection<AnimeData>();
+            _animeList = new();
             SelectedFilter = AnimeStatusTranslated.All;
         }
 
@@ -144,7 +142,7 @@ namespace Aniki.ViewModels
             OnPropertyChanged(nameof(EpisodesWatched));
             OnPropertyChanged(nameof(NextEpisodeNumber));
             SelectedScore = details.MyListStatus?.Score ?? 1;
-            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.APIToTranslated() : AnimeStatusTranslated.All;
+            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.All;
             WatchAnimeViewModel.Update(details);
         }
 
@@ -167,7 +165,7 @@ namespace Aniki.ViewModels
                 IsLoading = true;
                 AnimeList.Clear();
 
-                var animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToAPI());
+                var animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToApi());
 
                 foreach (var anime in animeListData)
                 {
@@ -184,27 +182,58 @@ namespace Aniki.ViewModels
             }
         }
 
-        public async Task SearchAnime(string searchQuery)
+        public async Task<List<SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
         {
-            try
-            {
-                var results = await MalUtils.SearchAnime(searchQuery);
-                AnimeList.Clear();
+            var results = await MalUtils.SearchAnime(searchQuery);
+            AnimeList.Clear();
 
+            // we are using TokenSortRatio instead of Ratio because there was a weird case:
+            // Fuzz.Ratio("Shingeki no Kyojin Season 2", "DAN DA DAN Season 2") was greater than
+            // Fuzz.Ratio("Dandadan 2nd Season", "DAN DA DAN Season 2")
+            // why? I have no clue. If someone smarter than me sees this please let me know!
+            
+            results = results.OrderByDescending(x => FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, searchQuery)).ToList();
+            if (fillList)
+            {
+                AnimeList.Clear();
                 foreach (var entry in results)
                 {
-                    if (entry == null) continue;
-
-                    var newAnimeData = new AnimeData()
+                    var newAnimeData = new AnimeData
                     {
-                        Node = new AnimeNode
+                        Node = new()
                         {
                             Id = entry.Anime.Id,
                             Title = entry.Anime.Title
-                        }
+                        },
+                        ListStatus = null
                     };
                     AnimeList.Add(newAnimeData);
                 }
+            }
+
+            if (showFirstBest) SelectedAnime = AnimeList[0];
+            
+            return results;
+        }
+        
+        public async Task SearchAnimeById(int malId, bool showDetails = true)
+        {
+            try
+            {
+                var details = await MalUtils.GetAnimeDetails(malId);
+                AnimeList.Clear();
+
+                var newAnimeData = new AnimeData
+                {
+                    Node = new()
+                    {
+                        Id = details.Id,
+                        Title = details.Title
+                    },
+                    ListStatus = null
+                };
+                AnimeList.Add(newAnimeData);
+                SelectedAnime = newAnimeData;
             }
             catch (Exception ex)
             {
@@ -254,8 +283,8 @@ namespace Aniki.ViewModels
         {
             if (Details?.MyListStatus == null) return;
 
-            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToAPI().ToString());
-            Details.MyListStatus.Status = status.TranslatedToAPI();
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
+            Details.MyListStatus.Status = status.TranslatedToApi();
         }
 
         [RelayCommand]

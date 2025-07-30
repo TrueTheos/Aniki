@@ -1,22 +1,18 @@
 ﻿using Aniki.Models;
 using Aniki.Services;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Interactivity;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Aniki.ViewModels
 {
     public partial class CalendarViewModel : ViewModelBase
     {
-        private List<DaySchedule> _allDays = new();
+        private List<DaySchedule> _allDays = [];
         private DateTime _windowStartDate;
 
         [ObservableProperty]
@@ -43,10 +39,10 @@ namespace Aniki.ViewModels
             }
         }
 
-        public CalendarViewModel(MainViewModel mainVM)
+        public CalendarViewModel(MainViewModel mainVm)
         {
-            _mainViewModel = mainVM;
-            Days = new ObservableCollection<DaySchedule>();
+            _mainViewModel = mainVm;
+            Days = new();
             UpdateCurrentWeekRange();
         }
 
@@ -75,19 +71,16 @@ namespace Aniki.ViewModels
             }
         }
 
-        [RelayCommand]
-        public async Task GoToStart()
-        {
-            if (_allDays.Any())
-            {
-                _windowStartDate = GetEarliestDate();
-                await ShowWindowAsync();
-            }
-        }
-
         public void GoToClickedAnime(AnimeScheduleItem anime)
         {
-            _mainViewModel.GoToAnime(anime.Title);
+            if (anime.MalId.HasValue && anime.MalId.Value > 0)
+            {
+                _mainViewModel.GoToAnime(anime.MalId.Value);
+            }
+            else
+            {
+                _mainViewModel.GoToAnime(anime.Title);
+            }
         }
 
         [RelayCommand]
@@ -95,6 +88,16 @@ namespace Aniki.ViewModels
         {
             _windowStartDate = _windowStartDate.AddDays(-1);
             await ShowWindowAsync();
+        }
+        
+        [RelayCommand]
+        public async Task GoBackWeek()
+        {
+            if (_allDays.Any())
+            {
+                _windowStartDate = _windowStartDate.AddDays(-7);
+                await ShowWindowAsync();
+            }
         }
 
         [RelayCommand]
@@ -112,12 +115,11 @@ namespace Aniki.ViewModels
         }
 
         [RelayCommand]
-        private async Task GoToEnd()
+        private async Task GoForwardWeek()
         {
             if (_allDays.Any())
             {
-                var latestDate = GetLatestDate();
-                _windowStartDate = latestDate.AddDays(-6);
+                _windowStartDate = _windowStartDate.AddDays(7);
                 await ShowWindowAsync();
             }
         }
@@ -150,20 +152,20 @@ namespace Aniki.ViewModels
                         DayName = currentDate.ToString("dddd"),
                         Date = currentDate,
                         IsToday = currentDate.Date == DateTime.Today,
-                        Items = new ObservableCollection<AnimeScheduleItem>(
+                        Items = new(
                             existingDay.Items.Select(item => EnhanceAnimeItem(item, currentDate)))
                     };
                     newDays.Add(daySchedule);
                 }
                 else
                 {
-                    newDays.Add(new DaySchedule
+                    newDays.Add(new()
                     {
                         Name = dayName,
                         DayName = currentDate.ToString("dddd"),
                         Date = currentDate,
                         IsToday = currentDate.Date == DateTime.Today,
-                        Items = new ObservableCollection<AnimeScheduleItem>()
+                        Items = new()
                     });
                 }
             }
@@ -177,7 +179,7 @@ namespace Aniki.ViewModels
 
         private AnimeScheduleItem EnhanceAnimeItem(AnimeScheduleItem original, DateTime dayDate)
         {
-            return new AnimeScheduleItem
+            return new()
             {
                 Title = original.Title,
                 ImageUrl = original.ImageUrl,
@@ -200,33 +202,6 @@ namespace Aniki.ViewModels
             return Math.Abs((now - airingDateTime).TotalMinutes) <= 30;
         }
 
-        private DateTime GetEarliestDate()
-        {
-            return _allDays
-                .Select(d => ParseDayName(d.Name))
-                .DefaultIfEmpty(DateTime.Today)
-                .Min();
-        }
-
-        private DateTime GetLatestDate()
-        {
-            return _allDays
-                .Select(d => ParseDayName(d.Name))
-                .DefaultIfEmpty(DateTime.Today)
-                .Max();
-        }
-
-        private DateTime ParseDayName(string dayName)
-        {
-            if (Enum.TryParse<DayOfWeek>(dayName, true, out var dayOfWeek))
-            {
-                var today = DateTime.Today;
-                var daysUntilTarget = ((int)dayOfWeek - (int)today.DayOfWeek + 7) % 7;
-                return today.AddDays(daysUntilTarget);
-            }
-            return DateTime.Today;
-        }
-
         private void UpdateCurrentWeekRange()
         {
             var endDate = _windowStartDate.AddDays(6);
@@ -237,7 +212,7 @@ namespace Aniki.ViewModels
 
         public void StartLiveUpdates()
         {
-            _updateTimer = new System.Timers.Timer(60000);
+            _updateTimer = new(60000);
             _updateTimer.Elapsed += (s, e) =>
             {
                 OnPropertyChanged(nameof(CurrentTimeOffset));

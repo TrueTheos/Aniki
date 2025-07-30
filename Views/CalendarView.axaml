@@ -3,8 +3,6 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-    xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
-    xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     x:DataType="vm:CalendarViewModel">
     <UserControl.Styles>
@@ -85,8 +83,8 @@
                     Orientation="Horizontal">
                     <Button
                         Classes="nav-button"
-                        Command="{Binding GoToStartCommand}"
-                        ToolTip.Tip="Go to start">
+                        Command="{Binding GoBackWeekCommand}"
+                        ToolTip.Tip="Go by back one week">
                         <PathIcon
                             Width="16"
                             Height="16"
@@ -118,8 +116,8 @@
                     </Button>
                     <Button
                         Classes="nav-button"
-                        Command="{Binding GoToEndCommand}"
-                        ToolTip.Tip="Go to end">
+                        Command="{Binding GoForwardWeekCommand}"
+                        ToolTip.Tip="Go forward by one week">
                         <PathIcon
                             Width="16"
                             Height="16"
@@ -228,7 +226,6 @@
                                                         Text="{Binding AiringAt, StringFormat='h:mm tt'}" />
 
                                                     <Border
-                                                        Canvas.Top="{Binding AiringAt, Converter={StaticResource TimeToOffsetConverter}}"
                                                         Width="180"
                                                         Margin="8,2"
                                                         Padding="0"

@@ -1,26 +1,20 @@
 ﻿using Aniki.Misc;
 using Aniki.Models;
-using Avalonia.Controls;
 using Avalonia.Media.Imaging;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using static Aniki.Services.SaveService;
 
 namespace Aniki.Services
 {
     public static class MalUtils
     {
-        private static JsonSerializerOptions _jso = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        private static HttpClient _client = new HttpClient();
+        private static JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
+        private static HttpClient _client = new();
 
         public static void Init(string accessToken)
         {
@@ -59,30 +53,30 @@ namespace Aniki.Services
                     return JsonSerializer.Deserialize<UserData>(responseBody, _jso);
                 }
 
-                throw new Exception($"API returned status code: {response.StatusCode}");
+                throw new($"API returned status code: {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading user data: {ex.Message}", ex);
+                throw new($"Error loading user data: {ex.Message}", ex);
             }
         }
 
-        public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusAPI status = AnimeStatusAPI.all)
+        public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusApi status = AnimeStatusApi.all)
         {
             try
             {
-                List<AnimeData> animeList = new List<AnimeData>();
+                List<AnimeData> animeList = new();
 
                 string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
-                string fields = "list_status,num_episodes,status,pictures";
-
-                if (status != AnimeStatusAPI.all)
-                {
-                    url += $"status={status}&";
-                }
-
+                string fields = $"list_status,num_episodes,pictures,status";
+                
                 url += $"fields={fields}&limit=100";
 
+                if (status != AnimeStatusApi.all)
+                {
+                    url += $"&status={status}";
+                }
+                
                 bool hasNextPage = true;
                 string nextPageUrl = url;
 
@@ -112,7 +106,7 @@ namespace Aniki.Services
                     else
                     {
                         hasNextPage = false;
-                        throw new Exception($"API returned status code: {response.StatusCode}");
+                        throw new($"API returned status code: {response.StatusCode}");
                     }
                 }
 
@@ -120,7 +114,7 @@ namespace Aniki.Services
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading anime list: {ex.Message}", ex);
+                throw new($"Error loading anime list: {ex.Message}", ex);
             }
         }
 
@@ -141,12 +135,12 @@ namespace Aniki.Services
                 }
                 else
                 {
-                    throw new Exception($"API returned status code: {response.StatusCode}");
+                    throw new($"API returned status code: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading anime details: {ex.Message}", ex);
+                throw new($"Error loading anime details: {ex.Message}", ex);
             }
         }
 
@@ -164,7 +158,7 @@ namespace Aniki.Services
                 }
                 else
                 {
-                    throw new Exception($"API returned status code: {response.StatusCode}");
+                    throw new($"API returned status code: {response.StatusCode}");
                 }
             }
             catch (Exception ex) { }
@@ -190,8 +184,8 @@ namespace Aniki.Services
 
                         byte[] imageData = await _client.GetByteArrayAsync(pictureUrl);
 
-                        using MemoryStream ms = new MemoryStream(imageData);
-                        return new Bitmap(ms);
+                        using MemoryStream ms = new(imageData);
+                        return new(ms);
                     }
                 }
             }
@@ -209,8 +203,8 @@ namespace Aniki.Services
             {
                 byte[] imageData = await _client.GetByteArrayAsync(animePictureData.Medium);
 
-                using MemoryStream ms = new MemoryStream(imageData);
-                return new Bitmap(ms);
+                using MemoryStream ms = new(imageData);
+                return new(ms);
             }
             catch (Exception ex)
             {
@@ -264,7 +258,7 @@ namespace Aniki.Services
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception($"Failed to update anime status: {response.StatusCode}");
+                throw new($"Failed to update anime status: {response.StatusCode}");
             }
         }
 
@@ -277,7 +271,7 @@ namespace Aniki.Services
         private static async void OnStatusChanged(int animeId, string value)
         {
             var animeTitle = await GetAnimeNameById(animeId);
-            SaveService.ChangeWatchingAnimeStatus(animeTitle, StatusEnum.StringToAPI(value));
+            SaveService.ChangeWatchingAnimeStatus(animeTitle, StatusEnum.StringToApi(value));
         }
     }
 }

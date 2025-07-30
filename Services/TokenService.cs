@@ -1,8 +1,6 @@
 ﻿using Aniki.Models;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -64,7 +62,7 @@ namespace Aniki.Services
 
         public static async Task SaveTokensAsync(TokenResponse tokenResponse)
         {
-            StoredTokenData tokens = new StoredTokenData
+            StoredTokenData tokens = new()
             {
                 AccessToken = tokenResponse.access_token,
                 RefreshToken = tokenResponse.refresh_token,

@@ -2,7 +2,6 @@
     x:Class="Aniki.Views.WatchAnimeView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     x:DataType="vm:WatchAnimeViewModel">
     <Border

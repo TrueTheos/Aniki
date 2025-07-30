@@ -2,23 +2,19 @@
 using Aniki.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Controls.ApplicationLifetimes;
-using Aniki.Views;
 using System.Collections.ObjectModel;
 
 namespace Aniki.ViewModels
 {
     public partial class WatchAnimeViewModel : ViewModelBase
     {
-        private AnimeDetails _details;
+        private AnimeDetails? _details;
 
         private Episode? _lastPlayedEpisode;
 
@@ -34,7 +30,7 @@ namespace Aniki.ViewModels
         public string EpisodesFolderMessage { get; } = $"Episodes folder is empty - {SaveService.DefaultEpisodesFolder}";
 
         [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
+        static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string? pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
 
         enum AssocF
         {
@@ -51,7 +47,7 @@ namespace Aniki.ViewModels
             Update(null);
         }
 
-        public void Update(AnimeDetails details)
+        public void Update(AnimeDetails? details)
         {
             _details = details;
 
@@ -65,28 +61,11 @@ namespace Aniki.ViewModels
                 ParseResult result = AnimeNameParser.ParseAnimeFilename(fileName);
                 if (result == null || result.EpisodeNumber == null) continue;
 
-                if(_details != null)
+                if (_details == null) continue;
+                if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > 90)
                 {
-                    if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > 90)
-                    {
-                        Episodes.Add(new Episode
-                        {
-                            FilePath = filePath,
-                            EpisodeNumber = (int)result.EpisodeNumber,
-                            Title = _details.Title,
-                            Id = _details.Id
-                        });
-                    }
-                }
-                else
-                {
-                    Episodes.Add(new Episode
-                    {
-                        FilePath = filePath,
-                        EpisodeNumber = (int)result.EpisodeNumber,
-                        Title = result.AnimeName,
-                        Id = _details.Id
-                    });
+                    Episodes.Add(new(filePath, result.EpisodeNumber,
+                        title: _details.Title, id: _details.Id));
                 }
             }
 
@@ -126,7 +105,7 @@ namespace Aniki.ViewModels
             uint length = 0;
             AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, null, ref length);
 
-            StringBuilder sb = new StringBuilder((int)length);
+            StringBuilder sb = new((int)length);
             AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, sb, ref length);
 
             return sb.ToString();
@@ -134,14 +113,16 @@ namespace Aniki.ViewModels
 
         private void LaunchAndTrack(string appPath, string filePath)
         {
-            Process process = new Process();
-            process.StartInfo.FileName = appPath;
-            process.StartInfo.Arguments = $"\"{filePath}\"";
-            process.EnableRaisingEvents = true;
-            process.Exited += (sender, e) =>
+            Process process = new()
             {
-                OnVideoPlayerClosed();
+                StartInfo =
+                {
+                    FileName = appPath,
+                    Arguments = $"\"{filePath}\""
+                },
+                EnableRaisingEvents = true
             };
+            process.Exited += (_, _) => { OnVideoPlayerClosed(); };
 
             process.Start();
         }
@@ -153,14 +134,14 @@ namespace Aniki.ViewModels
             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 if (_lastPlayedEpisode == null) return;
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    var dialog = new Aniki.Views.ConfirmEpisodeWindow
+                    var dialog = new Views.ConfirmEpisodeWindow
                     {
                         DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber)
                     };
 
-                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow);
+                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
 
                     if (result)
                     {
@@ -178,11 +159,11 @@ namespace Aniki.ViewModels
         }
     }
 
-    public class Episode
+    public class Episode(string filePath, int episodeNumber, string title, int id)
     {
-        public string FilePath { get; set; }
-        public int EpisodeNumber { get; set; }
-        public string Title { get; set; }
-        public int Id { get; set; }
+        public string FilePath { get; init; } = filePath;
+        public int EpisodeNumber { get; init; } = episodeNumber;
+        public string Title { get; init; } = title;
+        public int Id { get; init; } = id;
     }
 }

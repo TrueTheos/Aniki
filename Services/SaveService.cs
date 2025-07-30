@@ -6,12 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace Aniki.Services
 {
@@ -68,7 +65,7 @@ namespace Aniki.Services
                     {
                         if (anime.Node != null)
                         {
-                            AnimeStatuses.Add(new AnimeStatus
+                            AnimeStatuses.Add(new()
                             {
                                 Title = anime.Node.Title,
                                 WatchedEpisodes = anime.ListStatus.NumEpisodesWatched,
@@ -95,7 +92,7 @@ namespace Aniki.Services
                 return;
             }
 
-            AnimeStatuses = new List<AnimeStatus>();
+            AnimeStatuses = new();
         }
 
         public static void SaveWatchingAnime()
@@ -104,7 +101,7 @@ namespace Aniki.Services
             File.WriteAllText(_animeStatusesFile, json);
         }
 
-        public static void ChangeWatchingAnimeStatus(string animeName, AnimeStatusAPI status)
+        public static void ChangeWatchingAnimeStatus(string animeName, AnimeStatusApi status)
         {
             var existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
             if (existingAnime != null)
@@ -133,7 +130,7 @@ namespace Aniki.Services
             {
                 try
                 {
-                    return new Bitmap(cacheFilePath);
+                    return new(cacheFilePath);
                 }
                 catch (Exception)
                 {
@@ -160,7 +157,7 @@ namespace Aniki.Services
             {
                 try
                 {
-                    return new Bitmap(cacheFilePath);
+                    return new(cacheFilePath);
                 }
                 catch (Exception)
                 {
@@ -186,7 +183,7 @@ namespace Aniki.Services
                 string defaultImagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "default_profile.png");
                 if (File.Exists(defaultImagePath))
                 {
-                    return new Bitmap(defaultImagePath);
+                    return new(defaultImagePath);
                 }
             }
             catch (Exception)
@@ -219,7 +216,7 @@ namespace Aniki.Services
             public string Title { get; set; }
             public int WatchedEpisodes { get; set; }
             [JsonConverter(typeof(JsonStringEnumConverter))]
-            public AnimeStatusAPI Status { get; set; }
+            public AnimeStatusApi Status { get; set; }
         }
     }
 }

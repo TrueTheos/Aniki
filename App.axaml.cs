@@ -37,10 +37,10 @@ namespace Aniki
                     MaxItems = 3
                 };
 
-                _notificationService = new EpisodeNotificationService(notificationManager);
+                _notificationService = new(notificationManager);
                 _notificationService.Start();
 
-                desktop.Exit += (sender, args) => _notificationService.Stop();
+                desktop.Exit += (_, _) => _notificationService.Stop();
             }
 
             base.OnFrameworkInitializationCompleted();

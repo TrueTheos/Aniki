@@ -1,3 +1,4 @@
+<!-- ReSharper disable Xaml.StyleClassNotFound -->
 <UserControl
     x:Class="Aniki.Views.AnimeDetailsView"
     xmlns="https://github.com/avaloniaui"
@@ -82,12 +83,8 @@
                                         BoxShadow="0 3 6 0 #20000000"
                                         CornerRadius="6">
                                         <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-
                                             <!--  Anime Title  -->
-                                            <StackPanel Grid.Column="1" Margin="0,0,0,0">
+                                            <StackPanel Margin="0,0,0,0">
                                                 <TextBlock
                                                     FontSize="16"
                                                     FontWeight="Bold"

@@ -2,10 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net.Http;
 using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -38,7 +36,7 @@ namespace Aniki.Services
             {
                 _codeVerifier = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-                _httpListener = new HttpListener();
+                _httpListener = new();
                 _httpListener.Prefixes.Clear();
                 _httpListener.Prefixes.Add(RedirectUri.EndsWith("/") ? RedirectUri : RedirectUri + "/");
                 _httpListener.Start();
@@ -97,7 +95,7 @@ namespace Aniki.Services
         {
             try
             {
-                using HttpClient client = new HttpClient();
+                using HttpClient client = new();
                 var content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("client_id", ClientId),

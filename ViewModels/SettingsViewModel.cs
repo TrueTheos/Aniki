@@ -2,13 +2,10 @@
 using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Linq;
 using Aniki.Services;
-using Aniki.Models;
 using Microsoft.Win32;
 using System;
 

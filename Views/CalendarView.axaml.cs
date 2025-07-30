@@ -1,9 +1,7 @@
 using Aniki.Models;
 using Aniki.ViewModels;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using System;
 
 namespace Aniki.Views;
 

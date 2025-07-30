@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Web;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 using Aniki.Models;
 using System.Xml;
 using System.Linq;
@@ -13,7 +11,7 @@ namespace Aniki.Services
 {
     public static class NyaaService
     {
-        private static readonly HttpClient _http = new HttpClient();
+        private static readonly HttpClient _http = new();
         public static async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
         {
             var term = HttpUtility.UrlEncode($"{animeName} {episodeNumber:D2}");
@@ -61,7 +59,7 @@ namespace Aniki.Services
 
                 if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(torrentLink))
                 {
-                    results.Add(new NyaaTorrent
+                    results.Add(new()
                     {
                         Title = HttpUtility.HtmlDecode(title),
                         TorrentLink = torrentLink,

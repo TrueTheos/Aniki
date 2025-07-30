@@ -1,23 +1,10 @@
 ﻿using Aniki.Misc;
-using Aniki.Models;
 using Aniki.Services;
-using Aniki.Views;
-using Avalonia.Data.Converters;
-using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using System.Xml.Linq;
-using static Aniki.Services.SaveService;
 
 namespace Aniki.ViewModels
 {
@@ -54,10 +41,10 @@ namespace Aniki.ViewModels
 
         public MainViewModel() 
         {
-            AnimeDetailsViewModel = new AnimeDetailsViewModel();
-            WatchViewModel = new WatchAnimeViewModel();
-            CalendarViewModel = new CalendarViewModel(this);
-            StatsViewModel = new StatsViewModel();
+            AnimeDetailsViewModel = new();
+            WatchViewModel = new();
+            CalendarViewModel = new(this);
+            StatsViewModel = new();
         }
 
         [RelayCommand]
@@ -86,7 +73,12 @@ namespace Aniki.ViewModels
 
         public void GoToAnime(string title)
         {
-            SearchForAnime(title);
+            SearchForAnime(title.Replace('-', ' '), true);
+        }
+
+        public void GoToAnime(int malId)
+        {
+            SearchForAnime(malId);
         }
 
         public async Task InitializeAsync()
@@ -126,7 +118,7 @@ namespace Aniki.ViewModels
             await SearchForAnime(SearchQuery);
         }
 
-        private async Task SearchForAnime(string searchQuery)
+        private async Task SearchForAnime(string searchQuery, bool showFirstBest = false)
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
             {
@@ -140,7 +132,27 @@ namespace Aniki.ViewModels
 
             try
             {
-                await AnimeDetailsViewModel.SearchAnime(searchQuery);
+                await AnimeDetailsViewModel.SearchAnimeByTitle(searchQuery, true, showFirstBest);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error searching: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task SearchForAnime(int malId)
+        {
+            IsLoading = true;
+
+            ShowMainPage();
+
+            try
+            {
+                await AnimeDetailsViewModel.SearchAnimeById(malId);
             }
             catch (Exception ex)
             {
