@@ -243,7 +243,7 @@
 
                                                 <!--  Episodes Info  -->
                                                 <StackPanel Grid.Column="1" Margin="20,0,0,0">
-                                                    <StackPanel>
+                                                    <StackPanel IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                         <Grid>
                                                             <Grid.RowDefinitions>
                                                                 <RowDefinition Height="Auto" />

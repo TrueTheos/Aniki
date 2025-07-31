@@ -31,6 +31,7 @@ namespace Aniki.Misc
                 "on_hold" => AnimeStatusApi.on_hold,
                 "dropped" => AnimeStatusApi.dropped,
                 "plan_to_watch" => AnimeStatusApi.plan_to_watch,
+                _ => throw new ArgumentOutOfRangeException(nameof(text), text, null)
             };
         }
 
@@ -44,6 +45,7 @@ namespace Aniki.Misc
                 AnimeStatusTranslated.Dropped => AnimeStatusApi.dropped,
                 AnimeStatusTranslated.PlanToWatch => AnimeStatusApi.plan_to_watch,
                 AnimeStatusTranslated.None => AnimeStatusApi.none,
+                _ => throw new ArgumentOutOfRangeException(nameof(translated), translated, null)
             };
         }
 
@@ -56,7 +58,8 @@ namespace Aniki.Misc
                 AnimeStatusApi.on_hold => AnimeStatusTranslated.OnHold,
                 AnimeStatusApi.dropped => AnimeStatusTranslated.Dropped,
                 AnimeStatusApi.plan_to_watch => AnimeStatusTranslated.PlanToWatch,
-                AnimeStatusApi.none => AnimeStatusTranslated.None
+                AnimeStatusApi.none => AnimeStatusTranslated.None,
+                _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
             };
         }
     }
