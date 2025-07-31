@@ -76,13 +76,13 @@ public static class CalendarService
         long startUnix = ((DateTimeOffset)startOfWeek).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)endOfWeek).ToUnixTimeSeconds();
 
-        var schedules = new JArray();
-        var currentPage = 1;
+        JArray schedules = new JArray();
+        int currentPage = 1;
         bool hasNextPage;
 
         do
         {
-            var payload = new JObject
+            JObject payload = new JObject
             {
                 ["query"] = Query,
                 ["variables"] = new JObject
@@ -106,7 +106,7 @@ public static class CalendarService
 
             if (pageNode["airingSchedules"] is JArray pageSchedules)
             {
-                foreach (var schedule in pageSchedules)
+                foreach (JToken schedule in pageSchedules)
                 {
                     schedules.Add(schedule);
                 }
@@ -122,7 +122,7 @@ public static class CalendarService
         List<DaySchedule> daySchedules = [];
         for (int i = 0; i < 7; i++)
         {
-            var currentDate = startOfWeek.AddDays(i);
+            DateTime currentDate = startOfWeek.AddDays(i);
             daySchedules.Add(new()
             {
                 Name = currentDate.DayOfWeek.ToString(),
@@ -133,19 +133,19 @@ public static class CalendarService
             });
         }
 
-        var byDay = daySchedules.ToDictionary(ds => ds.Name, StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, DaySchedule> byDay = daySchedules.ToDictionary(ds => ds.Name, StringComparer.OrdinalIgnoreCase);
 
-        foreach (var schedule in schedules)
+        foreach (JToken schedule in schedules)
         {
             try
             {
-                var animeItem = ParseAnimeScheduleItem(schedule, watchSet);
+                AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
                 if (animeItem == null) continue;
-                var weekday = animeItem.AiringAt.ToString("dddd", CultureInfo.InvariantCulture);
+                string weekday = animeItem.AiringAt.ToString("dddd", CultureInfo.InvariantCulture);
 
-                if (!byDay.TryGetValue(weekday, out var daySchedule)) continue;
+                if (!byDay.TryGetValue(weekday, out DaySchedule? daySchedule)) continue;
                 
-                var isDuplicate = daySchedule.Items.Any(existing =>
+                bool isDuplicate = daySchedule.Items.Any(existing =>
                     string.Equals(existing.Title, animeItem.Title, StringComparison.OrdinalIgnoreCase) &&
                     existing.Episode == animeItem.Episode &&
                     Math.Abs((existing.AiringAt - animeItem.AiringAt).TotalMinutes) < 5);
@@ -161,11 +161,11 @@ public static class CalendarService
             }
         }
 
-        foreach (var day in daySchedules)
+        foreach (DaySchedule day in daySchedules)
         {
-            var sortedItems = day.Items.OrderBy(item => item.AiringAt).ToList();
+            List<AnimeScheduleItem> sortedItems = day.Items.OrderBy(item => item.AiringAt).ToList();
             day.Items.Clear();
-            foreach (var item in sortedItems)
+            foreach (AnimeScheduleItem item in sortedItems)
             {
                 day.Items.Add(item);
             }
@@ -176,32 +176,32 @@ public static class CalendarService
 
     private static AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
     {
-        var media = schedule["media"];
+        JToken? media = schedule["media"];
         if (media == null) return null;
 
-        var title = GetBestTitle(media["title"]);
+        string title = GetBestTitle(media["title"]);
         if (string.IsNullOrEmpty(title)) return null;
 
-        if (!long.TryParse(schedule["airingAt"]?.ToString(), out var airingAtUnix))
+        if (!long.TryParse(schedule["airingAt"]?.ToString(), out long airingAtUnix))
             return null;
 
-        var airingAt = DateTimeOffset.FromUnixTimeSeconds(airingAtUnix).LocalDateTime;
-        var episode = schedule["episode"]?.ToObject<int>() ?? 0;
+        DateTime airingAt = DateTimeOffset.FromUnixTimeSeconds(airingAtUnix).LocalDateTime;
+        int episode = schedule["episode"]?.ToObject<int>() ?? 0;
 
-        var coverImage = media["coverImage"];
-        var imageUrl = coverImage?["large"]?.ToString() ??
-                       coverImage?["medium"]?.ToString() ??
-                       "/api/placeholder/300/400";
+        JToken? coverImage = media["coverImage"];
+        string imageUrl = coverImage?["large"]?.ToString() ??
+                          coverImage?["medium"]?.ToString() ??
+                          "/api/placeholder/300/400";
 
-        var format = media["format"]?.ToString() ?? "TV";
-        var duration = media["duration"]?.ToObject<int>() ?? 24;
-        var genres = media["genres"]?.ToObject<List<string>>() ?? new List<string>();
-        var studio = media["studios"]?["nodes"]?.FirstOrDefault()?["name"]?.ToString() ?? "";
-        var averageScore = media["averageScore"]?.ToObject<double>() ?? 0;
-        var description = media["description"]?.ToString() ?? "";
-        var status = media["status"]?.ToString() ?? "";
+        string format = media["format"]?.ToString() ?? "TV";
+        int duration = media["duration"]?.ToObject<int>() ?? 24;
+        List<string> genres = media["genres"]?.ToObject<List<string>>() ?? new List<string>();
+        string studio = media["studios"]?["nodes"]?.FirstOrDefault()?["name"]?.ToString() ?? "";
+        double averageScore = media["averageScore"]?.ToObject<double>() ?? 0;
+        string description = media["description"]?.ToString() ?? "";
+        string status = media["status"]?.ToString() ?? "";
 
-        var malId = media["idMal"]?.ToObject<int?>();
+        int? malId = media["idMal"]?.ToObject<int?>();
 
         if (!string.IsNullOrEmpty(description))
         {

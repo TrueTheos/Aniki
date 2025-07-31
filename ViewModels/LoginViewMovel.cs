@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Aniki.Models;
 
 namespace Aniki.ViewModels
 {
@@ -61,13 +62,13 @@ namespace Aniki.ViewModels
 
             try
             {
-                var tokenData = await TokenService.LoadTokensAsync();
+                StoredTokenData? tokenData = await TokenService.LoadTokensAsync();
 
                 if (tokenData != null && !string.IsNullOrEmpty(tokenData.AccessToken))
                 {
                     try
                     {
-                        var userData = await MalUtils.GetUserDataAsync();
+                        UserData? userData = await MalUtils.GetUserDataAsync();
                         if (userData != null && !string.IsNullOrEmpty(userData.Name))
                         {
                             Username = userData.Name;
@@ -95,7 +96,7 @@ namespace Aniki.ViewModels
         {
             IsLoading = true;
 
-            var progress = new Progress<string>(message => StatusMessage = message);
+            Progress<string> progress = new Progress<string>(message => StatusMessage = message);
             bool success = await _oauthService.StartOAuthFlowAsync(progress);
 
             if (success)

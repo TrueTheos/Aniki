@@ -11,7 +11,7 @@ namespace Aniki.Converters
             if (value is int i)
                 return i > 0;
 
-            if (value is string s && int.TryParse(s, out var x))
+            if (value is string s && int.TryParse(s, out int x))
                 return x > 0;
 
             return false;

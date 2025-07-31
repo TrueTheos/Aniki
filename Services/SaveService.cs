@@ -45,7 +45,7 @@ namespace Aniki.Services
         public static void SaveImageToCache(string fileName, Bitmap image)
         {
             string filePath = Path.Combine(_cacheDirectory, fileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using (FileStream stream = new FileStream(filePath, FileMode.Create))
             {
                 image.Save(stream);
             }
@@ -55,13 +55,13 @@ namespace Aniki.Services
         {
             try
             {
-                var animeList = await MalUtils.LoadAnimeList();
+                List<AnimeData>? animeList = await MalUtils.LoadAnimeList();
 
                 if (animeList != null)
                 {
                     AnimeStatuses.Clear();
 
-                    foreach (var anime in animeList)
+                    foreach (AnimeData anime in animeList)
                     {
                         if (anime.Node != null)
                         {
@@ -87,7 +87,7 @@ namespace Aniki.Services
         {
             if (File.Exists(_animeStatusesFile))
             {
-                var json = File.ReadAllText(_animeStatusesFile);
+                string json = File.ReadAllText(_animeStatusesFile);
                 AnimeStatuses = JsonSerializer.Deserialize<List<AnimeStatus>>(json) ?? new List<AnimeStatus>();
                 return;
             }
@@ -97,13 +97,13 @@ namespace Aniki.Services
 
         public static void SaveWatchingAnime()
         {
-            var json = JsonSerializer.Serialize(AnimeStatuses, new JsonSerializerOptions { WriteIndented = true });
+            string json = JsonSerializer.Serialize(AnimeStatuses, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_animeStatusesFile, json);
         }
 
         public static void ChangeWatchingAnimeStatus(string animeName, AnimeStatusApi status)
         {
-            var existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
+            AnimeStatus? existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
             if (existingAnime != null)
             {
                 existingAnime.Status = status;
@@ -113,7 +113,7 @@ namespace Aniki.Services
 
         public static void ChangeWatchingAnimeEpisode(string animeName, int watchedEpisodes)
         {
-            var existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
+            AnimeStatus? existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
             if (existingAnime != null)
             {
                 existingAnime.WatchedEpisodes = watchedEpisodes;
@@ -203,8 +203,8 @@ namespace Aniki.Services
         {
             if (File.Exists(_settingsConfigFile))
             {
-                var json = File.ReadAllText(_settingsConfigFile);
-                var config = JsonSerializer.Deserialize<SettingsConfig>(json);
+                string json = File.ReadAllText(_settingsConfigFile);
+                SettingsConfig? config = JsonSerializer.Deserialize<SettingsConfig>(json);
                 return config;
             }
 

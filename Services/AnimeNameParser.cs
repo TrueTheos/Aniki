@@ -11,7 +11,7 @@ namespace Aniki.Services
             filename = Regex.Replace(filename, @"\.(mkv|mp4|avi|mov)$", "");
 
             // Common patterns for anime filenames
-            var patterns = new List<string>
+            List<string> patterns = new List<string>
             {
                 // Pattern 1: [Group] Anime Name - 01 [attributes]
                 @"\[(?:[^\]]+)\]\s*(.+?)\s*-\s*(\d+)(?:v\d)?(?:\s*\[.+?\])*",
@@ -32,13 +32,13 @@ namespace Aniki.Services
                 @"(.+?)_(\d+)"
             };
 
-            foreach (var pattern in patterns)
+            foreach (string pattern in patterns)
             {
-                var match = Regex.Match(filename, pattern);
+                Match match = Regex.Match(filename, pattern);
                 if (match.Success)
                 {
-                    var animeName = match.Groups[1].Value.Trim();
-                    var episodeNumber = int.Parse(match.Groups[2].Value);
+                    string animeName = match.Groups[1].Value.Trim();
+                    int episodeNumber = int.Parse(match.Groups[2].Value);
 
                     animeName = Regex.Replace(animeName, @"[._]", " ").Trim();
 
@@ -52,12 +52,12 @@ namespace Aniki.Services
 
             // If no pattern matched, return a basic guess
             // Look for any number that might be an episode
-            var episodeMatch = Regex.Match(filename, @"(?:E|Ep|Episode|#)(\d+)|(\d+)");
+            Match episodeMatch = Regex.Match(filename, @"(?:E|Ep|Episode|#)(\d+)|(\d+)");
             if (episodeMatch.Success)
             {
-                var episode = episodeMatch.Groups[1].Success ? episodeMatch.Groups[1].Value : episodeMatch.Groups[2].Value;
+                string episode = episodeMatch.Groups[1].Success ? episodeMatch.Groups[1].Value : episodeMatch.Groups[2].Value;
                 // Try to extract name by removing episode part and common decorators
-                var namePart = Regex.Replace(filename, @"(?:E|Ep|Episode|#)\d+|\d+|\[.*?\]|\(.*?\)", "");
+                string namePart = Regex.Replace(filename, @"(?:E|Ep|Episode|#)\d+|\d+|\[.*?\]|\(.*?\)", "");
                 namePart = Regex.Replace(namePart, @"[._]", " ").Trim();
 
                 return new()

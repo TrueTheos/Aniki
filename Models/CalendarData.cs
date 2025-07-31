@@ -82,8 +82,8 @@ namespace Aniki.Models
         {
             get
             {
-                var now = DateTime.Now;
-                var airTime = AiringAt;
+                DateTime now = DateTime.Now;
+                DateTime airTime = AiringAt;
 
                 // If it's today and hasn't aired yet
                 if (airTime.Date == now.Date && airTime > now)
@@ -106,7 +106,7 @@ namespace Aniki.Models
         {
             get
             {
-                var timeUntil = TimeUntilAiring;
+                TimeSpan timeUntil = TimeUntilAiring;
 
                 if (timeUntil <= TimeSpan.Zero)
                 {

@@ -32,8 +32,8 @@ namespace Aniki.ViewModels
         {
             get
             {
-                var now = DateTime.Now;
-                var minutesFromMidnight = now.Hour * 60 + now.Minute;
+                DateTime now = DateTime.Now;
+                int minutesFromMidnight = now.Hour * 60 + now.Minute;
                 const double pxPerMinute = 1440.0 / (24 * 60);
                 return minutesFromMidnight * pxPerMinute;
             }
@@ -134,19 +134,19 @@ namespace Aniki.ViewModels
 
         private void ShowWindow()
         {
-            var newDays = new List<DaySchedule>();
+            List<DaySchedule> newDays = new List<DaySchedule>();
 
             for (int i = 0; i < 7; i++)
             {
-                var currentDate = _windowStartDate.AddDays(i);
-                var dayName = currentDate.DayOfWeek.ToString();
+                DateTime currentDate = _windowStartDate.AddDays(i);
+                string dayName = currentDate.DayOfWeek.ToString();
 
-                var existingDay = _allDays.FirstOrDefault(d =>
+                DaySchedule? existingDay = _allDays.FirstOrDefault(d =>
                     string.Equals(d.Name, dayName, StringComparison.OrdinalIgnoreCase));
 
                 if (existingDay != null)
                 {
-                    var daySchedule = new DaySchedule
+                    DaySchedule daySchedule = new DaySchedule
                     {
                         Name = dayName,
                         DayName = currentDate.ToString("dddd"),
@@ -171,7 +171,7 @@ namespace Aniki.ViewModels
             }
 
             Days.Clear();
-            foreach (var day in newDays)
+            foreach (DaySchedule day in newDays)
             {
                 Days.Add(day);
             }
@@ -196,15 +196,15 @@ namespace Aniki.ViewModels
         {
             if (dayDate.Date != DateTime.Today) return false;
 
-            var now = DateTime.Now;
-            var airingDateTime = dayDate.Date.Add(airingTime.TimeOfDay);
+            DateTime now = DateTime.Now;
+            DateTime airingDateTime = dayDate.Date.Add(airingTime.TimeOfDay);
 
             return Math.Abs((now - airingDateTime).TotalMinutes) <= 30;
         }
 
         private void UpdateCurrentWeekRange()
         {
-            var endDate = _windowStartDate.AddDays(6);
+            DateTime endDate = _windowStartDate.AddDays(6);
             CurrentWeekRange = $"{_windowStartDate:MMM d} - {endDate:MMM d, yyyy}";
         }
 
@@ -217,11 +217,11 @@ namespace Aniki.ViewModels
             {
                 OnPropertyChanged(nameof(CurrentTimeOffset));
 
-                foreach (var day in Days.Where(d => d.IsToday))
+                foreach (DaySchedule day in Days.Where(d => d.IsToday))
                 {
-                    foreach (var item in day.Items)
+                    foreach (AnimeScheduleItem item in day.Items)
                     {
-                        var wasAiring = item.IsAiringNow;
+                        bool wasAiring = item.IsAiringNow;
                         item.IsAiringNow = IsCurrentlyAiring(item.AiringAt, day.Date);
 
                         if (wasAiring != item.IsAiringNow)

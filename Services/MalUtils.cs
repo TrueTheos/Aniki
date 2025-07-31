@@ -87,7 +87,7 @@ namespace Aniki.Services
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var animeListResponse = JsonSerializer.Deserialize<AnimeListResponse>(responseBody, _jso);
+                        AnimeListResponse? animeListResponse = JsonSerializer.Deserialize<AnimeListResponse>(responseBody, _jso);
 
                         if (animeListResponse.Data != null)
                         {
@@ -129,7 +129,7 @@ namespace Aniki.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                    AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
                     animeResponse.Picture = await SaveService.GetAnimeImage(animeResponse);
                     return animeResponse;
                 }
@@ -153,7 +153,7 @@ namespace Aniki.Services
                 string responseBody = await response.Content.ReadAsStringAsync();
                 if (response.IsSuccessStatusCode)
                 {
-                    var animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                    AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
                     return animeResponse.Title;
                 }
                 else
@@ -220,7 +220,7 @@ namespace Aniki.Services
 
             HttpResponseMessage response = await _client.GetAsync(url);
             string responseBody = await response.Content.ReadAsStringAsync();
-            var responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
+            AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
 
             return responseData?.Data?.ToList() ?? new List<SearchEntry>();
         }
@@ -236,7 +236,7 @@ namespace Aniki.Services
         {
             string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
 
-            var formData = new Dictionary<string, string>();
+            Dictionary<string, string> formData = new Dictionary<string, string>();
             switch (field)
             {
                 case AnimeStatusField.STATUS:
@@ -252,9 +252,9 @@ namespace Aniki.Services
                     break;
             }
 
-            var content = new FormUrlEncodedContent(formData);
+            FormUrlEncodedContent content = new FormUrlEncodedContent(formData);
 
-            var response = await _client.PutAsync(url, content);
+            HttpResponseMessage response = await _client.PutAsync(url, content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -264,13 +264,13 @@ namespace Aniki.Services
 
         private static async void OnEpisodesWatchedChanged(int animeId, string value)
         {
-            var animeTitle = await GetAnimeNameById(animeId);
+            string animeTitle = await GetAnimeNameById(animeId);
             SaveService.ChangeWatchingAnimeEpisode(animeTitle, int.Parse(value));
         }
 
         private static async void OnStatusChanged(int animeId, string value)
         {
-            var animeTitle = await GetAnimeNameById(animeId);
+            string animeTitle = await GetAnimeNameById(animeId);
             SaveService.ChangeWatchingAnimeStatus(animeTitle, StatusEnum.StringToApi(value));
         }
     }

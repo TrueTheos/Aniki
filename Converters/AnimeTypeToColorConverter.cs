@@ -21,7 +21,7 @@ namespace Aniki.Converters
 
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is string animeType && TypeColors.TryGetValue(animeType.ToUpper(), out var color))
+            if (value is string animeType && TypeColors.TryGetValue(animeType.ToUpper(), out string? color))
             {
                 return Brush.Parse(color);
             }

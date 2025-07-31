@@ -40,14 +40,14 @@ namespace Aniki.Views
 
         private void OnLogoutRequested(object sender, EventArgs e)
         {
-            var loginWindow = new LoginWindow();
+            LoginWindow loginWindow = new LoginWindow();
             loginWindow.Show();
             Close();
         }
 
         private async void OnSettingsRequested(object sender, EventArgs e)
         {
-            var settingsWindow = new SettingsWindow
+            SettingsWindow settingsWindow = new SettingsWindow
             {
                 DataContext = new SettingsViewModel()
             };

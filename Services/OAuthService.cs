@@ -24,12 +24,12 @@ namespace Aniki.Services
 
         public async Task<bool> StartOAuthFlowAsync(IProgress<string> progressReporter)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            using var stream = assembly.GetManifestResourceStream("Aniki.Resources.CLIENTID.txt");
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            using Stream? stream = assembly.GetManifestResourceStream("Aniki.Resources.CLIENTID.txt");
             if (stream == null)
                 throw new FileNotFoundException("CLIENTID not found.");
 
-            using var reader = new StreamReader(stream);
+            using StreamReader reader = new StreamReader(stream);
             ClientId = reader.ReadToEnd();
 
             try
@@ -96,7 +96,7 @@ namespace Aniki.Services
             try
             {
                 using HttpClient client = new();
-                var content = new FormUrlEncodedContent(new[]
+                FormUrlEncodedContent content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("client_id", ClientId),
                     new KeyValuePair<string, string>("code", code),
@@ -110,7 +110,7 @@ namespace Aniki.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseBody,
+                    TokenResponse? tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseBody,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                     if (tokenResponse != null)

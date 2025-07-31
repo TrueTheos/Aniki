@@ -11,7 +11,7 @@ namespace Aniki.Converters
             if (value is DateTime dateTime)
             {
                 // Calculate minutes from midnight
-                var minutesFromMidnight = dateTime.Hour * 60 + dateTime.Minute;
+                int minutesFromMidnight = dateTime.Hour * 60 + dateTime.Minute;
 
                 // Convert to pixel offset (1440px = 24 hours, so 1px = 1 minute)
                 const double pixelsPerMinute = 1440.0 / (24 * 60);

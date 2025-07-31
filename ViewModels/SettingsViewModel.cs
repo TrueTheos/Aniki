@@ -67,14 +67,14 @@ namespace Aniki.ViewModels
         [RelayCommand]
         private async Task BrowseEpisodesFolder()
         {
-            var dlg = new OpenFolderDialog { Title = "Select Download Folder", Directory = _episodesFolder };
-            var window = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows
-                .FirstOrDefault(w => w.DataContext == this) ??
-                (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+            OpenFolderDialog dlg = new OpenFolderDialog { Title = "Select Download Folder", Directory = _episodesFolder };
+            Window? window = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows
+                             .FirstOrDefault(w => w.DataContext == this) ??
+                             (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
 
             if (window != null)
             {
-                var result = await dlg.ShowAsync(window);
+                string? result = await dlg.ShowAsync(window);
                 if (!string.IsNullOrEmpty(result))
                     EpisodesFolder = result;
             }
@@ -89,7 +89,7 @@ namespace Aniki.ViewModels
         {
             if (OperatingSystem.IsWindows())
             {
-                using (var key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+                using (RegistryKey? key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
                 {
                     if (newValue)
                     {
@@ -107,7 +107,7 @@ namespace Aniki.ViewModels
         [RelayCommand]
         private void Save()
         {
-            var config = new SettingsConfig
+            SettingsConfig config = new SettingsConfig
             {
                 AutoStart = AutoStart,
                 EpisodesFolder = EpisodesFolder,

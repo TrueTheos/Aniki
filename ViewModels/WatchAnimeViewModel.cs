@@ -9,6 +9,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using Aniki.Views;
 
 namespace Aniki.ViewModels
 {
@@ -136,7 +137,7 @@ namespace Aniki.ViewModels
                 if (_lastPlayedEpisode == null) return;
                 if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    var dialog = new Views.ConfirmEpisodeWindow
+                    ConfirmEpisodeWindow dialog = new Views.ConfirmEpisodeWindow
                     {
                         DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber)
                     };

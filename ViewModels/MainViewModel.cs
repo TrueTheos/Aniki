@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Threading.Tasks;
+using Aniki.Models;
 
 namespace Aniki.ViewModels
 {
@@ -91,7 +92,7 @@ namespace Aniki.ViewModels
             try
             {
                 IsLoading = true;
-                var userData = await MalUtils.GetUserDataAsync();
+                UserData userData = await MalUtils.GetUserDataAsync();
                 Username = userData.Name;
                 ProfileImage = await MalUtils.GetUserPicture();
             }

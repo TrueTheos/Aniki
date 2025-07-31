@@ -165,9 +165,9 @@ namespace Aniki.ViewModels
                 IsLoading = true;
                 AnimeList.Clear();
 
-                var animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToApi());
+                List<AnimeData> animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToApi());
 
-                foreach (var anime in animeListData)
+                foreach (AnimeData anime in animeListData)
                 {
                     AnimeList.Add(anime);
                 }
@@ -184,7 +184,7 @@ namespace Aniki.ViewModels
 
         public async Task<List<SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
         {
-            var results = await MalUtils.SearchAnime(searchQuery);
+            List<SearchEntry> results = await MalUtils.SearchAnime(searchQuery);
             AnimeList.Clear();
 
             // we are using TokenSortRatio instead of Ratio because there was a weird case:
@@ -196,9 +196,9 @@ namespace Aniki.ViewModels
             if (fillList)
             {
                 AnimeList.Clear();
-                foreach (var entry in results)
+                foreach (SearchEntry entry in results)
                 {
-                    var newAnimeData = new AnimeData
+                    AnimeData newAnimeData = new AnimeData
                     {
                         Node = new()
                         {
@@ -220,10 +220,10 @@ namespace Aniki.ViewModels
         {
             try
             {
-                var details = await MalUtils.GetAnimeDetails(malId);
+                AnimeDetails details = await MalUtils.GetAnimeDetails(malId);
                 AnimeList.Clear();
 
-                var newAnimeData = new AnimeData
+                AnimeData newAnimeData = new AnimeData
                 {
                     Node = new()
                     {
@@ -294,9 +294,9 @@ namespace Aniki.ViewModels
 
             TorrentsList.Clear();
 
-            var list = await NyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
+            List<NyaaTorrent> list = await NyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
 
-            foreach (var t in list)
+            foreach (NyaaTorrent t in list)
             {
                 TorrentsList.Add(t);
             }

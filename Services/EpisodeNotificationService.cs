@@ -43,14 +43,14 @@ namespace Aniki.Services
                     {
                         System.Diagnostics.Debug.WriteLine("Fetching currently watching anime...");
                         SaveService.LoadAnimeStatuses();
-                        var watching = SaveService.AnimeStatuses.Where(a => a.Status == Misc.AnimeStatusApi.watching).ToList();
+                        List<SaveService.AnimeStatus> watching = SaveService.AnimeStatuses.Where(a => a.Status == Misc.AnimeStatusApi.watching).ToList();
                         System.Diagnostics.Debug.WriteLine($"Found {watching.Count} anime(s) currently being watched.");
 
-                        var airingData = await FetchAiringScheduleFromAniList();
+                        List<AiringSchedule>? airingData = await FetchAiringScheduleFromAniList();
 
-                        foreach (var anime in watching)
+                        foreach (SaveService.AnimeStatus anime in watching)
                         {
-                            var matchingAnime = airingData?.FirstOrDefault(a => a.Title == anime.Title);
+                            AiringSchedule? matchingAnime = airingData?.FirstOrDefault(a => a.Title == anime.Title);
                             if (matchingAnime != null && matchingAnime.NextEpisodeDate <= DateTime.Now)
                             {
                                 //Notify
@@ -84,13 +84,13 @@ namespace Aniki.Services
                     }";
                 
                 var requestBody = new { query };
-                var requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                StringContent requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("https://graphql.anilist.co", requestContent);
+                HttpResponseMessage response = await _httpClient.PostAsync("https://graphql.anilist.co", requestContent);
                 response.EnsureSuccessStatusCode();
 
-                var responseString = await response.Content.ReadAsStringAsync();
-                var schedules = JsonNode.Parse(responseString)?["data"]?["Page"]?["airingSchedules"]?.AsArray();
+                string responseString = await response.Content.ReadAsStringAsync();
+                JsonArray? schedules = JsonNode.Parse(responseString)?["data"]?["Page"]?["airingSchedules"]?.AsArray();
    
                 return schedules?.Select(s => new AiringSchedule
                 {
