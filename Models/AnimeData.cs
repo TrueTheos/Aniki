@@ -9,7 +9,7 @@ namespace Aniki.Models
         public AnimeNode Node { get; set; }
         [JsonPropertyName("list_status")] public ListStatus ListStatus { get; set; }
         [JsonIgnore]
-        public bool IsOnList => ListStatus.Status != AnimeStatusApi.all;
+        public bool IsOnList => ListStatus != null;
     }
 
     public class AnimeNode

@@ -188,48 +188,57 @@
                                                         <Image Source="{Binding Details.Picture}" Stretch="UniformToFill" />
                                                     </Border>
 
-                                                    <Grid Margin="0,16,0,0">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="Auto" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto" />
-                                                            <RowDefinition Height="Auto" />
-                                                        </Grid.RowDefinitions>
-
-                                                        <!--  Rating  -->
-                                                        <TextBlock
-                                                            Grid.Row="0"
-                                                            Grid.Column="0"
+                                                    <Panel Margin="0,16,0,0">
+                                                        <Button
+                                                            HorizontalAlignment="Center"
                                                             VerticalAlignment="Center"
-                                                            FontSize="16"
-                                                            Foreground="{StaticResource White}"
-                                                            Text="Your Rating:" />
-                                                        <ComboBox
-                                                            Grid.Row="0"
-                                                            Grid.Column="1"
-                                                            Width="120"
-                                                            Margin="10,5,0,5"
-                                                            ItemsSource="{Binding ScoreOptions}"
-                                                            SelectedItem="{Binding SelectedScore, Mode=Default}" />
+                                                            Classes="Purple"
+                                                            Command="{Binding AddToListCommand}"
+                                                            Content="Add to list"
+                                                            IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNull}}" />
+                                                        <Grid IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto" />
+                                                                <RowDefinition Height="Auto" />
+                                                            </Grid.RowDefinitions>
 
-                                                        <!--  Status  -->
-                                                        <TextBlock
-                                                            Grid.Row="1"
-                                                            Grid.Column="0"
-                                                            VerticalAlignment="Center"
-                                                            FontSize="16"
-                                                            Foreground="{StaticResource White}"
-                                                            Text="Status:" />
-                                                        <ComboBox
-                                                            Grid.Row="1"
-                                                            Grid.Column="1"
-                                                            Width="120"
-                                                            Margin="10,5,0,5"
-                                                            ItemsSource="{Binding StatusOptions}"
-                                                            SelectedItem="{Binding SelectedStatus, Mode=Default}" />
-                                                    </Grid>
+                                                            <!--  Rating  -->
+                                                            <TextBlock
+                                                                Grid.Row="0"
+                                                                Grid.Column="0"
+                                                                VerticalAlignment="Center"
+                                                                FontSize="16"
+                                                                Foreground="{StaticResource White}"
+                                                                Text="Your Rating:" />
+                                                            <ComboBox
+                                                                Grid.Row="0"
+                                                                Grid.Column="1"
+                                                                Width="120"
+                                                                Margin="10,5,0,5"
+                                                                ItemsSource="{Binding ScoreOptions}"
+                                                                SelectedItem="{Binding SelectedScore, Mode=Default}" />
+
+                                                            <!--  Status  -->
+                                                            <TextBlock
+                                                                Grid.Row="1"
+                                                                Grid.Column="0"
+                                                                VerticalAlignment="Center"
+                                                                FontSize="16"
+                                                                Foreground="{StaticResource White}"
+                                                                Text="Status:" />
+                                                            <ComboBox
+                                                                Grid.Row="1"
+                                                                Grid.Column="1"
+                                                                Width="120"
+                                                                Margin="10,5,0,5"
+                                                                ItemsSource="{Binding StatusOptions}"
+                                                                SelectedItem="{Binding SelectedStatus, Mode=Default}" />
+                                                        </Grid>
+                                                    </Panel>
                                                 </StackPanel>
 
                                                 <!--  Episodes Info  -->

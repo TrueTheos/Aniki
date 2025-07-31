@@ -61,7 +61,7 @@ namespace Aniki.Services
             }
         }
 
-        public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusApi status = AnimeStatusApi.all)
+        public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
         {
             try
             {
@@ -72,7 +72,7 @@ namespace Aniki.Services
                 
                 url += $"fields={fields}&limit=100";
 
-                if (status != AnimeStatusApi.all)
+                if (status != AnimeStatusApi.none)
                 {
                     url += $"&status={status}";
                 }

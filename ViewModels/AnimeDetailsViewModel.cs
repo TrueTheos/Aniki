@@ -120,12 +120,12 @@ namespace Aniki.ViewModels
         { 
             WatchAnimeViewModel = new();
             _animeList = new();
-            SelectedFilter = AnimeStatusTranslated.All;
+            SelectedFilter = AnimeStatusTranslated.None;
         }
 
         public override async Task Enter()
         {
-            await LoadAnimeListAsync(AnimeStatusTranslated.All);
+            await LoadAnimeListAsync(AnimeStatusTranslated.None);
         }
 
         public void Update(AnimeDetails details)
@@ -142,7 +142,7 @@ namespace Aniki.ViewModels
             OnPropertyChanged(nameof(EpisodesWatched));
             OnPropertyChanged(nameof(NextEpisodeNumber));
             SelectedScore = details.MyListStatus?.Score ?? 1;
-            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.All;
+            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.None;
             WatchAnimeViewModel.Update(details);
         }
 
@@ -253,6 +253,16 @@ namespace Aniki.ViewModels
             _ = UpdateEpisodeCount(-1);
         }
 
+        [RelayCommand]
+        private async Task AddToList()
+        {
+            if (Details == null) return;
+
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, "watching");
+            
+            await LoadAnimeDetailsAsync(SelectedAnime);
+        }
+
         private async Task UpdateEpisodeCount(int change)
         {
             if (Details?.MyListStatus == null) return;
@@ -281,10 +291,9 @@ namespace Aniki.ViewModels
 
         private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
         {
-            if (Details?.MyListStatus == null) return;
 
             await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
-            Details.MyListStatus.Status = status.TranslatedToApi();
+            if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
         }
 
         [RelayCommand]

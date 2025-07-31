@@ -123,7 +123,7 @@ namespace Aniki.ViewModels
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
             {
-                await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
+                await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.None);
                 return;
             }
 

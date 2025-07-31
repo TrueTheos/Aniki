@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Aniki.Misc
 {
-    public enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, all }
-    public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } //todo to wyjebac i uzywac tylko API enumow
+    public enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
+    public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, None } //todo to wyjebac i uzywac tylko API enumow
 
     public static class StatusEnum
     {
@@ -19,7 +19,6 @@ namespace Aniki.Misc
                 "On Hold" => AnimeStatusTranslated.OnHold,
                 "Dropped" => AnimeStatusTranslated.Dropped,
                 "Plan to Watch" => AnimeStatusTranslated.PlanToWatch,
-                _ => throw new ArgumentOutOfRangeException(nameof(text), text, null)
             };
         }
 
@@ -32,7 +31,6 @@ namespace Aniki.Misc
                 "on_hold" => AnimeStatusApi.on_hold,
                 "dropped" => AnimeStatusApi.dropped,
                 "plan_to_watch" => AnimeStatusApi.plan_to_watch,
-                _ => throw new ArgumentOutOfRangeException(nameof(text), text, null)
             };
         }
 
@@ -45,8 +43,7 @@ namespace Aniki.Misc
                 AnimeStatusTranslated.OnHold => AnimeStatusApi.on_hold,
                 AnimeStatusTranslated.Dropped => AnimeStatusApi.dropped,
                 AnimeStatusTranslated.PlanToWatch => AnimeStatusApi.plan_to_watch,
-                AnimeStatusTranslated.All => AnimeStatusApi.all,
-                _ => throw new ArgumentOutOfRangeException(nameof(translated), translated, null)
+                AnimeStatusTranslated.None => AnimeStatusApi.none,
             };
         }
 
@@ -59,8 +56,7 @@ namespace Aniki.Misc
                 AnimeStatusApi.on_hold => AnimeStatusTranslated.OnHold,
                 AnimeStatusApi.dropped => AnimeStatusTranslated.Dropped,
                 AnimeStatusApi.plan_to_watch => AnimeStatusTranslated.PlanToWatch,
-                AnimeStatusApi.all => AnimeStatusTranslated.All,
-                _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
+                AnimeStatusApi.none => AnimeStatusTranslated.None
             };
         }
     }
