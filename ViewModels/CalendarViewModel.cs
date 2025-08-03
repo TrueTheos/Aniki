@@ -46,29 +46,19 @@ namespace Aniki.ViewModels
             UpdateCurrentWeekRange();
         }
 
-        public override Task Enter()
+        public override async Task Enter()
         {
-            _ = LoadScheduleAsync();
-            return Task.CompletedTask;
+            await LoadScheduleAsync();
         }
 
         private async Task LoadScheduleAsync()
         {
-            try
-            {
-                IsLoading = true;
-                _allDays = await CalendarService.GetWeeklyScheduleAsync(_watchingList);
-                _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
-                await ShowWindowAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading schedule: {ex.Message}");
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            IsLoading = true;
+            _allDays = await CalendarService.GetWeeklyScheduleAsync(_watchingList);
+            _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+            await ShowWindowAsync();
+                
+            IsLoading = false;
         }
 
         public void GoToClickedAnime(AnimeScheduleItem anime)

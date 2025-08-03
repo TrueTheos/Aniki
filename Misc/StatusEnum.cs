@@ -31,7 +31,7 @@ namespace Aniki.Misc
                 "on_hold" => AnimeStatusApi.on_hold,
                 "dropped" => AnimeStatusApi.dropped,
                 "plan_to_watch" => AnimeStatusApi.plan_to_watch,
-                _ => throw new ArgumentOutOfRangeException(nameof(text), text, null)
+                "none" => AnimeStatusApi.none
             };
         }
 

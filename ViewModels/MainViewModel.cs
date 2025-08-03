@@ -1,9 +1,12 @@
 ﻿using Aniki.Misc;
+using Aniki.Models;
 using Aniki.Services;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Aniki.Models;
 
@@ -40,6 +43,9 @@ namespace Aniki.ViewModels
         private StatsViewModel _statsViewModel;
         #endregion
 
+        [ObservableProperty]
+        private ObservableCollection<AnimeScheduleItem> _todayAnime = new();
+
         public MainViewModel() 
         {
             AnimeDetailsViewModel = new();
@@ -49,27 +55,31 @@ namespace Aniki.ViewModels
         }
 
         [RelayCommand]
-        public void ShowMainPage()
+        public async Task ShowMainPage()
         {
-            CurrentViewModel = AnimeDetailsViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = AnimeDetailsViewModel;
+            await CurrentViewModel.Enter();
         }
 
         [RelayCommand]
-        public void ShowWatchPage()
+        public async Task ShowWatchPage()
         {
-            CurrentViewModel = WatchViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = WatchViewModel;
+            await CurrentViewModel.Enter();
         }
 
         [RelayCommand]
-        public void ShowCalendarPage()
+        public async Task ShowCalendarPage()
         {
-            CurrentViewModel = CalendarViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = CalendarViewModel; 
+            await CurrentViewModel.Enter();
         }
 
         [RelayCommand]
-        public void ShowStatsPage()
+        public async Task ShowStatsPage()
         {
-            CurrentViewModel = StatsViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = StatsViewModel; 
+            await CurrentViewModel.Enter();
         }
 
         public void GoToAnime(string title)
@@ -85,6 +95,23 @@ namespace Aniki.ViewModels
         public async Task InitializeAsync()
         {
             await LoadUserDataAsync();
+            await LoadTodayAnimeAsync();
+        }
+
+        private async Task LoadTodayAnimeAsync()
+        {
+            var watchingList = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
+            var today = await CalendarService.GetWeeklyScheduleAsync(watchingList.Select(x => x.Node.Title).ToList(), 50, DateTime.Now);
+
+            var todaySchedule = today.FirstOrDefault(x => x.IsToday);
+            if (todaySchedule == null) return;
+
+            TodayAnime.Clear();
+            foreach (var anime in todaySchedule.Items)
+            {
+                if(watchingList.Any(x => x.Node.Title == anime.Title))
+                    TodayAnime.Add(anime);
+            }
         }
 
         private async Task LoadUserDataAsync()

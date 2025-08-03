@@ -10,7 +10,7 @@ using Aniki.Models;
 
 namespace Aniki.Services;
 
-public static class CalendarService
+public static partial class CalendarService
 {
     private const string GraphQlEndpoint = "https://graphql.anilist.co";
 
@@ -70,19 +70,19 @@ public static class CalendarService
         DateTime? specificWeek = null)
     {
         DateTime referenceDate = specificWeek ?? DateTime.Now;
-        DateTime startOfWeek = referenceDate;
+        DateTime startOfWeek = referenceDate.Date;
         DateTime endOfWeek = startOfWeek.AddDays(7);
 
         long startUnix = ((DateTimeOffset)startOfWeek).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)endOfWeek).ToUnixTimeSeconds();
 
-        JArray schedules = new JArray();
+        JArray schedules = new();
         int currentPage = 1;
         bool hasNextPage;
 
         do
         {
-            JObject payload = new JObject
+            JObject payload = new()
             {
                 ["query"] = Query,
                 ["variables"] = new JObject
@@ -137,27 +137,20 @@ public static class CalendarService
 
         foreach (JToken schedule in schedules)
         {
-            try
-            {
-                AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
-                if (animeItem == null) continue;
-                string weekday = animeItem.AiringAt.ToString("dddd", CultureInfo.InvariantCulture);
+            AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
+            if (animeItem == null) continue;
+            string weekday = animeItem.AiringAt.ToString("dddd", CultureInfo.InvariantCulture);
 
-                if (!byDay.TryGetValue(weekday, out DaySchedule? daySchedule)) continue;
+            if (!byDay.TryGetValue(weekday, out DaySchedule? daySchedule)) continue;
                 
-                bool isDuplicate = daySchedule.Items.Any(existing =>
-                    string.Equals(existing.Title, animeItem.Title, StringComparison.OrdinalIgnoreCase) &&
-                    existing.Episode == animeItem.Episode &&
-                    Math.Abs((existing.AiringAt - animeItem.AiringAt).TotalMinutes) < 5);
+            bool isDuplicate = daySchedule.Items.Any(existing =>
+                string.Equals(existing.Title, animeItem.Title, StringComparison.OrdinalIgnoreCase) &&
+                existing.Episode == animeItem.Episode &&
+                Math.Abs((existing.AiringAt - animeItem.AiringAt).TotalMinutes) < 5);
 
-                if (!isDuplicate)
-                {
-                    daySchedule.Items.Add(animeItem);
-                }
-            }
-            catch (Exception ex)
+            if (!isDuplicate)
             {
-                Console.WriteLine($"Error parsing schedule item: {ex.Message}");
+                daySchedule.Items.Add(animeItem);
             }
         }
 
@@ -194,10 +187,10 @@ public static class CalendarService
                           "/api/placeholder/300/400";
 
         string format = media["format"]?.ToString() ?? "TV";
-        int duration = media["duration"]?.ToObject<int>() ?? 24;
-        List<string> genres = media["genres"]?.ToObject<List<string>>() ?? new List<string>();
+        int duration = media["duration"]?.ToObject<int?>() ?? -1;
+        List<string> genres = media["genres"]?.ToObject<List<string>>() ?? [];
         string studio = media["studios"]?["nodes"]?.FirstOrDefault()?["name"]?.ToString() ?? "";
-        double averageScore = media["averageScore"]?.ToObject<double>() ?? 0;
+        double averageScore = media["averageScore"]?.ToObject<double?>() ?? 0;
         string description = media["description"]?.ToString() ?? "";
         string status = media["status"]?.ToString() ?? "";
 
@@ -205,10 +198,10 @@ public static class CalendarService
 
         if (!string.IsNullOrEmpty(description))
         {
-            description = System.Text.RegularExpressions.Regex.Replace(description, "<.*?>", "");
+            description = MyRegex().Replace(description, "");
             if (description.Length > 200)
             {
-                description = description.Substring(0, 200) + "...";
+                description = string.Concat(description.AsSpan(0, 200), "...");
             }
         }
 
@@ -235,9 +228,12 @@ public static class CalendarService
     {
         if (titleObject == null) return "";
 
-        return titleObject["english"]?.ToString() ??
-               titleObject["romaji"]?.ToString() ??
+        return titleObject["romaji"]?.ToString() ??
+               titleObject["english"]?.ToString() ??
                titleObject["native"]?.ToString() ??
                "";
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex("<.*?>")]
+    private static partial System.Text.RegularExpressions.Regex MyRegex();
 }

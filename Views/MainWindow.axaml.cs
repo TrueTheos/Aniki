@@ -3,6 +3,7 @@ using Avalonia.Markup.Xaml;
 using System;
 using Aniki.Services;
 using Aniki.ViewModels;
+using Aniki.Models;
 using Avalonia;
 
 namespace Aniki.Views
@@ -52,6 +53,14 @@ namespace Aniki.Views
                 DataContext = new SettingsViewModel()
             };
             await settingsWindow.ShowDialog(this);
+        }
+
+        private void TodayAnime_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count <= 0) return;
+            
+            var anime = (AnimeScheduleItem)e.AddedItems[0];
+            _viewModel.GoToAnime(anime.MalId ?? 0);
         }
     }
 }
