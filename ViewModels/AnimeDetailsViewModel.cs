@@ -104,9 +104,13 @@ namespace Aniki.ViewModels
             }
         }
 
-        public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } = StatusEnum.TranslatedStatusOptions;
+        public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } =
+        [
+            AnimeStatusTranslated.Watching, AnimeStatusTranslated.Completed, AnimeStatusTranslated.OnHold,
+            AnimeStatusTranslated.Dropped, AnimeStatusTranslated.PlanToWatch
+        ];
 
-        public IEnumerable<AnimeStatusTranslated> FilterOptions => StatusEnum.TranslatedStatusOptions;
+        public IEnumerable<AnimeStatusTranslated> FilterOptions => [.. Enum.GetValues<AnimeStatusTranslated>()];
 
         public List<int> ScoreOptions { get; } = new() {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
@@ -139,8 +143,11 @@ namespace Aniki.ViewModels
             {
                 WatchEpisodesOptions.Add(i + 1);
             }
+            
             OnPropertyChanged(nameof(EpisodesWatched));
             OnPropertyChanged(nameof(NextEpisodeNumber));
+            OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
+            OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
             SelectedScore = details.MyListStatus?.Score ?? 1;
             SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.None;
             WatchAnimeViewModel.Update(details);
@@ -230,7 +237,7 @@ namespace Aniki.ViewModels
                         Id = details.Id,
                         Title = details.Title
                     },
-                    ListStatus = null
+                    ListStatus = details.MyListStatus
                 };
                 AnimeList.Add(newAnimeData);
                 SelectedAnime = newAnimeData;
@@ -315,6 +322,14 @@ namespace Aniki.ViewModels
         public void DownloadTorrent(string magnet)
         {
             Process.Start(new ProcessStartInfo(magnet) { UseShellExecute = true });
+        }
+
+        [RelayCommand]
+        private void OpenMalPage()
+        {
+            if (Details == null) return;
+            var url = $"https://myanimelist.net/anime/{Details.Id}";
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
     }
 }

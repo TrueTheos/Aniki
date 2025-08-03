@@ -8,8 +8,6 @@ namespace Aniki.Misc
 
     public static class StatusEnum
     {
-        public static IReadOnlyList<AnimeStatusTranslated> TranslatedStatusOptions { get; } = [.. Enum.GetValues<AnimeStatusTranslated>()];
-
         public static AnimeStatusTranslated StringToTranslated(string text)
         {
             return text switch

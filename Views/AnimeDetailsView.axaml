@@ -164,11 +164,16 @@
 
                                                 <TextBlock
                                                     Grid.Column="0"
+                                                    VerticalAlignment="Center"
                                                     FontSize="28"
                                                     FontWeight="Bold"
                                                     Foreground="White"
                                                     Text="{Binding Details.Title}"
                                                     TextWrapping="Wrap" />
+
+                                                <Button Grid.Column="1" Classes="SearchButton" Command="{Binding OpenMalPageCommand}" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Open MAL page">
+                                                    <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+                                                </Button>
                                             </Grid>
 
                                             <!--  Picture and Rating  -->
