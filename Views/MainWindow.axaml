@@ -251,17 +251,16 @@
                             <TextBlock VerticalAlignment="Center" Text="Stats" />
                         </StackPanel>
                     </Button>
-                </StackPanel>
-
-                <StackPanel Margin="0,10,0,0" IsVisible="{Binding TodayAnime.Count}">
-                    <TextBlock Text="Airing Today" FontWeight="Bold" Foreground="White" Margin="0,0,0,5"/>
-                    <ListBox ItemsSource="{Binding TodayAnime}" Background="Transparent" BorderThickness="0" SelectionChanged="TodayAnime_OnSelectionChanged">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="12"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <StackPanel Margin="0,10,0,0" IsVisible="{Binding TodayAnime.Count}">
+                        <TextBlock Text="Airing Today" FontWeight="Bold" Foreground="White" Margin="0,0,0,5"/>
+                        <ListBox ItemsSource="{Binding TodayAnime}" Background="Transparent" BorderThickness="0" SelectionChanged="TodayAnime_OnSelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Title}" Foreground="White" FontSize="12"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel

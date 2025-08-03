@@ -64,18 +64,8 @@ public static partial class CalendarService
 
     private static readonly HttpClient Http = new();
 
-    public static async Task<List<DaySchedule>> GetWeeklyScheduleAsync(
-        IEnumerable<string> watchingList,
-        int perPage = 150,
-        DateTime? specificWeek = null)
+    private static async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
     {
-        DateTime referenceDate = specificWeek ?? DateTime.Now;
-        DateTime startOfWeek = referenceDate.Date;
-        DateTime endOfWeek = startOfWeek.AddDays(7);
-
-        long startUnix = ((DateTimeOffset)startOfWeek).ToUnixTimeSeconds();
-        long endUnix = ((DateTimeOffset)endOfWeek).ToUnixTimeSeconds();
-
         JArray schedules = new();
         int currentPage = 1;
         bool hasNextPage;
@@ -117,18 +107,31 @@ public static partial class CalendarService
 
         } while (hasNextPage);
 
+        return schedules;
+    }
+
+    public static async Task<List<DaySchedule>> GetScheduleAsync(
+        IEnumerable<string> watchingList,
+        DateTime startDate,
+        DateTime endDate,
+        int perPage = 150)
+    {
+        long startUnix = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
+        long endUnix = ((DateTimeOffset)endDate).ToUnixTimeSeconds();
+
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix, perPage);
+
         HashSet<string> watchSet = new(watchingList, StringComparer.OrdinalIgnoreCase);
 
         List<DaySchedule> daySchedules = [];
-        for (int i = 0; i < 7; i++)
+        for (DateTime date = startDate.Date; date < endDate.Date; date = date.AddDays(1))
         {
-            DateTime currentDate = startOfWeek.AddDays(i);
             daySchedules.Add(new()
             {
-                Name = currentDate.DayOfWeek.ToString(),
-                DayName = currentDate.ToString("dddd"),
-                Date = currentDate,
-                IsToday = currentDate.Date == DateTime.Today,
+                Name = date.DayOfWeek.ToString(),
+                DayName = date.ToString("dddd"),
+                Date = date,
+                IsToday = date.Date == DateTime.Today,
                 Items = []
             });
         }
@@ -165,6 +168,28 @@ public static partial class CalendarService
         }
 
         return daySchedules;
+    }
+
+    public static async Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date, IEnumerable<string> watchingList)
+    {
+        long startUnix = ((DateTimeOffset)date.Date).ToUnixTimeSeconds();
+        long endUnix = ((DateTimeOffset)date.Date.AddDays(1)).ToUnixTimeSeconds();
+
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix);
+
+        HashSet<string> watchSet = new(watchingList, StringComparer.OrdinalIgnoreCase);
+        List<AnimeScheduleItem> animeItems = new();
+
+        foreach (JToken schedule in schedules)
+        {
+            AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
+            if (animeItem != null)
+            {
+                animeItems.Add(animeItem);
+            }
+        }
+
+        return animeItems;
     }
 
     private static AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)

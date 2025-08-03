@@ -101,13 +101,10 @@ namespace Aniki.ViewModels
         private async Task LoadTodayAnimeAsync()
         {
             var watchingList = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
-            var today = await CalendarService.GetWeeklyScheduleAsync(watchingList.Select(x => x.Node.Title).ToList(), 50, DateTime.Now);
-
-            var todaySchedule = today.FirstOrDefault(x => x.IsToday);
-            if (todaySchedule == null) return;
+            var animes = await CalendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
 
             TodayAnime.Clear();
-            foreach (var anime in todaySchedule.Items)
+            foreach (var anime in animes)
             {
                 if(watchingList.Any(x => x.Node.Title == anime.Title))
                     TodayAnime.Add(anime);

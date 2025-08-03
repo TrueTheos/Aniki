@@ -61,6 +61,11 @@ namespace Aniki.Views
             
             var anime = (AnimeScheduleItem)e.AddedItems[0];
             _viewModel.GoToAnime(anime.MalId ?? 0);
+
+            if (sender is ListBox listBox)
+            {
+                listBox.SelectedItem = null;
+            }
         }
     }
 }

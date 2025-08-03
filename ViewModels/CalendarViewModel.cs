@@ -12,7 +12,7 @@ namespace Aniki.ViewModels
 {
     public partial class CalendarViewModel : ViewModelBase
     {
-        private List<DaySchedule> _allDays = [];
+        private Dictionary<DateTime, DaySchedule> _cachedDays = new();
         private DateTime _windowStartDate;
 
         [ObservableProperty]
@@ -48,14 +48,35 @@ namespace Aniki.ViewModels
 
         public override async Task Enter()
         {
+            _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
             await LoadScheduleAsync();
         }
 
-        private async Task LoadScheduleAsync()
+        private async Task LoadScheduleAsync(bool forceRefresh = false)
         {
             IsLoading = true;
-            _allDays = await CalendarService.GetWeeklyScheduleAsync(_watchingList);
-            _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+
+            DateTime startDate = _windowStartDate;
+            DateTime endDate = _windowStartDate.AddDays(7);
+
+            List<DateTime> daysToFetch = new();
+            for (DateTime date = startDate; date < endDate; date = date.AddDays(1))
+            {
+                if (forceRefresh || !_cachedDays.ContainsKey(date.Date))
+                {
+                    daysToFetch.Add(date.Date);
+                }
+            }
+
+            if (daysToFetch.Any())
+            {
+                var schedule = await CalendarService.GetScheduleAsync(_watchingList, daysToFetch.First(), daysToFetch.Last().AddDays(1));
+                foreach (var day in schedule)
+                {
+                    _cachedDays[day.Date] = day;
+                }
+            }
+
             await ShowWindowAsync();
                 
             IsLoading = false;
@@ -77,41 +98,35 @@ namespace Aniki.ViewModels
         private async Task GoBackDay()
         {
             _windowStartDate = _windowStartDate.AddDays(-1);
-            await ShowWindowAsync();
+            await LoadScheduleAsync();
         }
         
         [RelayCommand]
         public async Task GoBackWeek()
         {
-            if (_allDays.Any())
-            {
-                _windowStartDate = _windowStartDate.AddDays(-7);
-                await ShowWindowAsync();
-            }
+            _windowStartDate = _windowStartDate.AddDays(-7);
+            await LoadScheduleAsync();
         }
 
         [RelayCommand]
         private async Task GoToToday()
         {
             _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
-            await ShowWindowAsync();
+            await LoadScheduleAsync(true);
         }
 
         [RelayCommand]
         private async Task GoForwardDay()
         {
             _windowStartDate = _windowStartDate.AddDays(1);
-            await ShowWindowAsync();
+            await LoadScheduleAsync();
         }
 
         [RelayCommand]
         private async Task GoForwardWeek()
         {
-            if (_allDays.Any())
-            {
-                _windowStartDate = _windowStartDate.AddDays(7);
-                await ShowWindowAsync();
-            }
+            _windowStartDate = _windowStartDate.AddDays(7);
+            await LoadScheduleAsync();
         }
 
         private async Task ShowWindowAsync()
@@ -129,29 +144,15 @@ namespace Aniki.ViewModels
             for (int i = 0; i < 7; i++)
             {
                 DateTime currentDate = _windowStartDate.AddDays(i);
-                string dayName = currentDate.DayOfWeek.ToString();
-
-                DaySchedule? existingDay = _allDays.FirstOrDefault(d =>
-                    string.Equals(d.Name, dayName, StringComparison.OrdinalIgnoreCase));
-
-                if (existingDay != null)
+                if (_cachedDays.TryGetValue(currentDate.Date, out var daySchedule))
                 {
-                    DaySchedule daySchedule = new DaySchedule
-                    {
-                        Name = dayName,
-                        DayName = currentDate.ToString("dddd"),
-                        Date = currentDate,
-                        IsToday = currentDate.Date == DateTime.Today,
-                        Items = new(
-                            existingDay.Items.Select(item => EnhanceAnimeItem(item, currentDate)))
-                    };
                     newDays.Add(daySchedule);
                 }
                 else
                 {
                     newDays.Add(new()
                     {
-                        Name = dayName,
+                        Name = currentDate.DayOfWeek.ToString(),
                         DayName = currentDate.ToString("dddd"),
                         Date = currentDate,
                         IsToday = currentDate.Date == DateTime.Today,
