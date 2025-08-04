@@ -15,9 +15,8 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 ## Usage
 
 - Download it from [Releases](https://github.com/TrueTheos/Aniki/releases)
-- or compile it yourself
 
-## Getting Started
+## Self-Hosting
 
 ### Prerequisites
 
@@ -30,6 +29,15 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 git clone https://github.com/TrueTheos/Aniki.git
 cd Aniki
 ```
+
+### Setup Client ID
+
+1. Go https://myanimelist.net/apiconfig
+2. Create ID
+3. Select `App Type` `other`
+4. Inside `App Redirect URL` type `http://localhost:8000/callback` (you can later change it)
+5. Copy the generated ClientID.
+6. Create `CLIENTID.txt` inside `Resources` folder and paste in the ClientID
 
 ### Build and Run
 
@@ -45,18 +53,7 @@ cd Aniki
    ```bash
    dotnet run --project Aniki/Aniki.csproj
    ```
-
-## Project Structure
-
-```
-Aniki/
-├── Converters/        # Value converters for UI bindings
-├── Models/            # Data models
-├── Services/          # External logic and API integrations (MAL, Nyaa, OAuth)
-├── ViewModels/        # MVVM ViewModels connecting Views and Models
-├── Views/             # Avalonia XAML views
-```
-
+   
 ## Contributing
 
 Contributions are welcome! Please fork the repository and create a pull request with your improvements.
