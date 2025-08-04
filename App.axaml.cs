@@ -31,7 +31,7 @@ namespace Aniki
 
                 CheckForUpdates();
 
-                WindowNotificationManager notificationManager = new WindowNotificationManager(desktop.MainWindow)
+                WindowNotificationManager notificationManager = new(desktop.MainWindow)
                 {
                     Position = NotificationPosition.TopRight,
                     MaxItems = 3
@@ -50,7 +50,7 @@ namespace Aniki
         {
             try
             {
-                UpdateManager mgr = new UpdateManager(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
+                UpdateManager mgr = new(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
 
                 UpdateInfo? newVersion = await mgr.CheckForUpdatesAsync();
 

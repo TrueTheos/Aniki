@@ -257,7 +257,7 @@ namespace Aniki.Services
                     break;
             }
 
-            FormUrlEncodedContent content = new FormUrlEncodedContent(formData);
+            FormUrlEncodedContent content = new(formData);
 
             HttpResponseMessage response = await _client.PutAsync(url, content);
 

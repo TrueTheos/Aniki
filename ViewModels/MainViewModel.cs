@@ -8,7 +8,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Aniki.Models;
 
 namespace Aniki.ViewModels
 {
@@ -49,7 +48,7 @@ namespace Aniki.ViewModels
         public MainViewModel() 
         {
             AnimeDetailsViewModel = new();
-            WatchViewModel = new(AnimeDetailsViewModel);
+            WatchViewModel = new();
             CalendarViewModel = new(this);
             StatsViewModel = new();
         }
@@ -104,7 +103,7 @@ namespace Aniki.ViewModels
             var animes = await CalendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
 
             TodayAnime.Clear();
-            foreach (var anime in animes)
+            foreach (AnimeScheduleItem anime in animes)
             {
                 if(watchingList.Any(x => x.Node.Id == anime.MalId))
                     TodayAnime.Add(anime);

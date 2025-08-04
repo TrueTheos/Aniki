@@ -49,7 +49,7 @@ namespace Aniki.ViewModels
 
         private void LoadSettings()
         {
-            SettingsConfig config = SaveService.GetSettingsConfig();
+            SettingsConfig? config = SaveService.GetSettingsConfig();
 
             if(config == null)
             {
@@ -67,7 +67,7 @@ namespace Aniki.ViewModels
         [RelayCommand]
         private async Task BrowseEpisodesFolder()
         {
-            OpenFolderDialog dlg = new OpenFolderDialog { Title = "Select Download Folder", Directory = _episodesFolder };
+            OpenFolderDialog dlg = new() { Title = "Select Download Folder", Directory = EpisodesFolder };
             Window? window = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows
                              .FirstOrDefault(w => w.DataContext == this) ??
                              (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
@@ -107,7 +107,7 @@ namespace Aniki.ViewModels
         [RelayCommand]
         private void Save()
         {
-            SettingsConfig config = new SettingsConfig
+            SettingsConfig config = new()
             {
                 AutoStart = AutoStart,
                 EpisodesFolder = EpisodesFolder,

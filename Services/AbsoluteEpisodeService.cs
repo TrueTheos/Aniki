@@ -1,8 +1,8 @@
-using Aniki.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Aniki.Models;
 
 namespace Aniki.Services
 {
@@ -46,7 +46,7 @@ namespace Aniki.Services
         public async Task<int?> GetMalIdForSeason(string animeTitle, int seasonNumber)
         {
             var seasonMap = await GetOrCreateSeasonMap(animeTitle);
-            if (seasonMap != null && seasonMap.TryGetValue(seasonNumber, out var seasonData))
+            if (seasonMap != null && seasonMap.TryGetValue(seasonNumber, out SeasonData seasonData))
             {
                 return seasonData.MalId;
             }
@@ -63,7 +63,7 @@ namespace Aniki.Services
             var searchResult = await MalUtils.SearchAnimeOrdered(animeTitle);
             if (searchResult.Count == 0) return null;
             
-            var animeId = searchResult.First().Anime.Id;
+            int animeId = searchResult.First().Anime.Id;
 
             var newMap = await BuildSeasonMap(animeId);
             if (newMap != null && newMap.Count > 0)
@@ -79,19 +79,19 @@ namespace Aniki.Services
         {
             try
             {
-                var firstSeasonId = await GetFirstSeasonId(animeId);
+                int firstSeasonId = await GetFirstSeasonId(animeId);
 
                 var seasonMap = new Dictionary<int, SeasonData>();
-                var currentSeasonNum = 1;
-                var currentSeasonId = firstSeasonId;
+                int currentSeasonNum = 1;
+                int currentSeasonId = firstSeasonId;
 
                 while (true)
                 {
-                    var details = await MalUtils.GetAnimeDetails(currentSeasonId);
+                    AnimeDetails details = await MalUtils.GetAnimeDetails(currentSeasonId);
                     seasonMap[currentSeasonNum] = new SeasonData { Episodes = details.NumEpisodes, MalId = currentSeasonId };
 
                     var related = await MalUtils.GetRelatedAnime(currentSeasonId);
-                    var sequel = related.FirstOrDefault(r => r.RelationType == "sequel");
+                    RelatedAnime? sequel = related.FirstOrDefault(r => r.RelationType == "sequel");
 
                     if (sequel != null)
                     {
@@ -114,11 +114,11 @@ namespace Aniki.Services
 
         private async Task<int> GetFirstSeasonId(int animeId)
         {
-            var currentId = animeId;
+            int currentId = animeId;
             while (true)
             {
                 var related = await MalUtils.GetRelatedAnime(currentId);
-                var prequel = related.FirstOrDefault(r => r.RelationType == "prequel");
+                RelatedAnime? prequel = related.FirstOrDefault(r => r.RelationType == "prequel");
                 if (prequel != null)
                 {
                     currentId = prequel.Node.Id;

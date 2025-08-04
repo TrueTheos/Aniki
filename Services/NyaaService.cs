@@ -21,7 +21,7 @@ namespace Aniki.Services
             string rssContent = await _http.GetStringAsync(url);
             List<NyaaTorrent> results = new List<NyaaTorrent>();
 
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new();
             doc.LoadXml(rssContent);
 
             XmlNodeList? itemNodes = doc.SelectNodes("//item");
@@ -30,12 +30,12 @@ namespace Aniki.Services
             foreach (XmlNode item in itemNodes)
             {
                 string? title = item.SelectSingleNode("title")?.InnerText;
-                var parsed = await _animeNameParser.ParseAnimeFilename(title);
+                ParseResult parsed = await _animeNameParser.ParseAnimeFilename(title);
                 string? episode = parsed.EpisodeNumber;
                 
                 string torrentLink = "";
 
-                XmlNamespaceManager namespaceManager = new XmlNamespaceManager(doc.NameTable);
+                XmlNamespaceManager namespaceManager = new(doc.NameTable);
                 namespaceManager.AddNamespace("nyaa", "https://nyaa.si/xmlns/nyaa");
                 XmlNode? infoHashNode = item.SelectSingleNode("nyaa:infoHash", namespaceManager);
                 

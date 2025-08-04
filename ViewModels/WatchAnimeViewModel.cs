@@ -16,10 +16,8 @@ namespace Aniki.ViewModels
 {
     public partial class WatchAnimeViewModel : ViewModelBase
     {
-        private readonly AnimeDetailsViewModel _animeDetailsViewModel;
         private readonly AnimeNameParser _animeNameParser = new();
         private readonly AbsoluteEpisodeService _absoluteEpisodeService = new();
-        private AnimeDetails? _details;
 
         private Episode? _lastPlayedEpisode;
 
@@ -50,9 +48,8 @@ namespace Aniki.ViewModels
             Executable = 2,
         }
 
-        public WatchAnimeViewModel(AnimeDetailsViewModel animeDetails)
+        public WatchAnimeViewModel()
         {
-            _animeDetailsViewModel = animeDetails;
             IsEpisodesViewVisible = false;
             IsNoEpisodesViewVisible = true;
         }
@@ -70,7 +67,7 @@ namespace Aniki.ViewModels
             {
                 string fileName = Path.GetFileName(filePath);
                 ParseResult result = await _animeNameParser.ParseAnimeFilename(fileName);
-                if (result == null || result.EpisodeNumber == null) continue;
+                if (result.EpisodeNumber == null) continue;
 
                 int? malId = await _absoluteEpisodeService.GetMalIdForSeason(result.AnimeName, result.Season);
                 if (malId.HasValue)
@@ -86,8 +83,6 @@ namespace Aniki.ViewModels
 
         public void Update(AnimeDetails? details)
         {
-            _details = details;
-
             IsEpisodesViewVisible = false;
             IsNoEpisodesViewVisible = false;
             Episodes.Clear();
@@ -164,7 +159,7 @@ namespace Aniki.ViewModels
                 if (_lastPlayedEpisode == null) return;
                 if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    ConfirmEpisodeWindow dialog = new Views.ConfirmEpisodeWindow
+                    ConfirmEpisodeWindow dialog = new()
                     {
                         DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber)
                     };

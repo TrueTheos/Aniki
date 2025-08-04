@@ -200,7 +200,7 @@ namespace Aniki.ViewModels
                 AnimeList.Clear();
                 foreach (SearchEntry entry in results)
                 {
-                    AnimeData newAnimeData = new AnimeData
+                    AnimeData newAnimeData = new()
                     {
                         Node = new()
                         {
@@ -225,7 +225,7 @@ namespace Aniki.ViewModels
                 AnimeDetails details = await MalUtils.GetAnimeDetails(malId);
                 AnimeList.Clear();
 
-                AnimeData newAnimeData = new AnimeData
+                AnimeData newAnimeData = new()
                 {
                     Node = new()
                     {
@@ -333,7 +333,7 @@ namespace Aniki.ViewModels
         private void OpenMalPage()
         {
             if (Details == null) return;
-            var url = $"https://myanimelist.net/anime/{Details.Id}";
+            string url = $"https://myanimelist.net/anime/{Details.Id}";
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
     }

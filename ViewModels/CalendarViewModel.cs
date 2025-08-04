@@ -71,7 +71,7 @@ namespace Aniki.ViewModels
             if (daysToFetch.Any())
             {
                 var schedule = await CalendarService.GetScheduleAsync(_watchingList, daysToFetch.First(), daysToFetch.Last().AddDays(1));
-                foreach (var day in schedule)
+                foreach (DaySchedule day in schedule)
                 {
                     _cachedDays[day.Date] = day;
                 }
@@ -82,7 +82,7 @@ namespace Aniki.ViewModels
             IsLoading = false;
         }
 
-        public void GoToClickedAnime(AnimeScheduleItem anime)
+        public void GoToClickedAnime(AnimeScheduleItem? anime)
         {
             if (anime.MalId.HasValue && anime.MalId.Value > 0)
             {
@@ -144,7 +144,7 @@ namespace Aniki.ViewModels
             for (int i = 0; i < 7; i++)
             {
                 DateTime currentDate = _windowStartDate.AddDays(i);
-                if (_cachedDays.TryGetValue(currentDate.Date, out var daySchedule))
+                if (_cachedDays.TryGetValue(currentDate.Date, out DaySchedule? daySchedule))
                 {
                     newDays.Add(daySchedule);
                 }

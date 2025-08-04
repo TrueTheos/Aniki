@@ -29,7 +29,7 @@ namespace Aniki.Services
             if (stream == null)
                 throw new FileNotFoundException("CLIENTID not found.");
 
-            using StreamReader reader = new StreamReader(stream);
+            using StreamReader reader = new(stream);
             ClientId = reader.ReadToEnd();
 
             try
@@ -96,7 +96,7 @@ namespace Aniki.Services
             try
             {
                 using HttpClient client = new();
-                FormUrlEncodedContent content = new FormUrlEncodedContent(new[]
+                FormUrlEncodedContent content = new(new[]
                 {
                     new KeyValuePair<string, string>("client_id", ClientId),
                     new KeyValuePair<string, string>("code", code),

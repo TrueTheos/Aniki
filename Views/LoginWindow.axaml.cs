@@ -19,7 +19,7 @@ namespace Aniki.Views
             this.AttachDevTools();
 #endif
 
-            OAuthService oauthService = new OAuthService();
+            OAuthService oauthService = new();
 
             _viewModel = new(oauthService);
             _viewModel.NavigateToMainRequested += OnNavigateToMainRequested;
@@ -41,7 +41,7 @@ namespace Aniki.Views
 
         private void OnNavigateToMainRequested(object sender, string accessToken)
         {
-            MainWindow mainWindow = new MainWindow();
+            MainWindow mainWindow = new();
             if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = mainWindow;

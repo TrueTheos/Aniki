@@ -84,7 +84,7 @@ namespace Aniki.Services
                     }";
                 
                 var requestBody = new { query };
-                StringContent requestContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                StringContent requestContent = new(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
                 HttpResponseMessage response = await _httpClient.PostAsync("https://graphql.anilist.co", requestContent);
                 response.EnsureSuccessStatusCode();

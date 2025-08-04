@@ -54,7 +54,7 @@ namespace Aniki.Services
             {
                 try
                 {
-                    var json = File.ReadAllText(_seasonCacheFile);
+                    string json = File.ReadAllText(_seasonCacheFile);
                     return JsonSerializer.Deserialize<SeasonCache>(json) ?? new SeasonCache();
                 }
                 catch (JsonException)
@@ -68,15 +68,15 @@ namespace Aniki.Services
 
         public static void SaveSeasonCache(SeasonCache cache)
         {
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            var json = JsonSerializer.Serialize(cache, options);
+            JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
+            string json = JsonSerializer.Serialize(cache, options);
             File.WriteAllText(_seasonCacheFile, json);
         }
 
         public static void SaveImageToCache(string fileName, Bitmap image)
         {
             string filePath = Path.Combine(_cacheDirectory, fileName);
-            using (FileStream stream = new FileStream(filePath, FileMode.Create))
+            using (FileStream stream = new(filePath, FileMode.Create))
             {
                 image.Save(stream);
             }
@@ -230,16 +230,13 @@ namespace Aniki.Services
             LoadAnimeStatuses();
         }
 
-        public static SettingsConfig GetSettingsConfig()
+        public static SettingsConfig? GetSettingsConfig()
         {
-            if (File.Exists(_settingsConfigFile))
-            {
-                string json = File.ReadAllText(_settingsConfigFile);
-                SettingsConfig? config = JsonSerializer.Deserialize<SettingsConfig>(json);
-                return config;
-            }
-
-            return null;
+            if (!File.Exists(_settingsConfigFile)) return null;
+            
+            string json = File.ReadAllText(_settingsConfigFile);
+            SettingsConfig? config = JsonSerializer.Deserialize<SettingsConfig>(json);
+            return config;
         }
 
         public class AnimeStatus

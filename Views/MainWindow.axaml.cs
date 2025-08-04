@@ -41,14 +41,14 @@ namespace Aniki.Views
 
         private void OnLogoutRequested(object sender, EventArgs e)
         {
-            LoginWindow loginWindow = new LoginWindow();
+            LoginWindow loginWindow = new();
             loginWindow.Show();
             Close();
         }
 
         private async void OnSettingsRequested(object sender, EventArgs e)
         {
-            SettingsWindow settingsWindow = new SettingsWindow
+            SettingsWindow settingsWindow = new()
             {
                 DataContext = new SettingsViewModel()
             };
@@ -59,7 +59,7 @@ namespace Aniki.Views
         {
             if (e.AddedItems.Count <= 0) return;
             
-            var anime = (AnimeScheduleItem)e.AddedItems[0];
+            AnimeScheduleItem? anime = e.AddedItems[0] as AnimeScheduleItem;
             _viewModel.GoToAnime(anime.MalId ?? 0);
 
             if (sender is ListBox listBox)

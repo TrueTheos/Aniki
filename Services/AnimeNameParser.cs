@@ -47,7 +47,7 @@ namespace Aniki.Services
                     animeName = Regex.Replace(animeName, @"\sS\d+$", "").Trim(); //Remove season suffixes like " S2"
 
                     //Check for absolute episode numbering
-                    var (season, relativeEpisode) = await _absoluteEpisodeService.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
+                    (int season, int relativeEpisode) = await _absoluteEpisodeService.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
 
                     return new ParseResult
                     {
