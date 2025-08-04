@@ -123,7 +123,7 @@ namespace Aniki.ViewModels
 
         public AnimeDetailsViewModel() 
         { 
-            WatchAnimeViewModel = new(this);
+            WatchAnimeViewModel = new();
             _animeList = new();
             SelectedFilter = AnimeStatusTranslated.All;
         }
