@@ -39,19 +39,6 @@ public static partial class CalendarService
                         color
                       }
                       format
-                      status
-                      episodes
-                      duration
-                      genres
-                      studios(isMain: true) {
-                        nodes {
-                          name
-                        }
-                      }
-                      averageScore
-                      description(asHtml: false)
-                      season
-                      seasonYear
                       type
                     }
                     episode
@@ -212,23 +199,7 @@ public static partial class CalendarService
                           "/api/placeholder/300/400";
 
         string format = media["format"]?.ToString() ?? "TV";
-        int duration = media["duration"]?.ToObject<int?>() ?? -1;
-        List<string> genres = media["genres"]?.ToObject<List<string>>() ?? [];
-        string studio = media["studios"]?["nodes"]?.FirstOrDefault()?["name"]?.ToString() ?? "";
-        double averageScore = media["averageScore"]?.ToObject<double?>() ?? 0;
-        string description = media["description"]?.ToString() ?? "";
-        string status = media["status"]?.ToString() ?? "";
-
         int? malId = media["idMal"]?.ToObject<int?>();
-
-        if (!string.IsNullOrEmpty(description))
-        {
-            description = MyRegex().Replace(description, "");
-            if (description.Length > 200)
-            {
-                description = string.Concat(description.AsSpan(0, 200), "...");
-            }
-        }
 
         return new()
         {
@@ -238,12 +209,6 @@ public static partial class CalendarService
             Episode = episode,
             EpisodeInfo = episode > 0 ? $"EP{episode} • {format}" : format,
             Type = format,
-            Duration = duration,
-            Genre = string.Join(", ", genres.Take(2)),
-            Studio = studio,
-            Rating = averageScore / 10.0,
-            Description = description,
-            Status = status,
             MalId = malId,
             IsBookmarked = watchSet.Contains(title)
         };

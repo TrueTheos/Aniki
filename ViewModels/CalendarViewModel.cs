@@ -144,9 +144,11 @@ namespace Aniki.ViewModels
             for (int i = 0; i < 7; i++)
             {
                 DateTime currentDate = _windowStartDate.AddDays(i);
-                if (_cachedDays.TryGetValue(currentDate.Date, out DaySchedule? daySchedule))
+                if (_cachedDays.TryGetValue(currentDate.Date, out DaySchedule? cachedDaySchedule))
                 {
-                    newDays.Add(daySchedule);
+                    cachedDaySchedule.Items = new ObservableCollection<AnimeScheduleItem>(
+                        cachedDaySchedule.Items.Select(item => EnhanceAnimeItem(item, currentDate)));
+                    newDays.Add(cachedDaySchedule);
                 }
                 else
                 {
@@ -204,7 +206,7 @@ namespace Aniki.ViewModels
         public void StartLiveUpdates()
         {
             _updateTimer = new(60000);
-            _updateTimer.Elapsed += (s, e) =>
+            _updateTimer.Elapsed += (_, _) =>
             {
                 OnPropertyChanged(nameof(CurrentTimeOffset));
 

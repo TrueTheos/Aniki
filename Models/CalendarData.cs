@@ -27,8 +27,8 @@ namespace Aniki.Models
     {
         public int? MalId { get; set; }
 
-    [ObservableProperty]
-    private string? title;
+        [ObservableProperty]
+        private string? title;
 
         [ObservableProperty]
         private string _imageUrl = "";
@@ -51,32 +51,7 @@ namespace Aniki.Models
         [ObservableProperty]
         private bool _isAiringNow;
 
-        [ObservableProperty]
-        private string _status = "";
-
-        [ObservableProperty]
-        private double _rating;
-
-        [ObservableProperty]
-        private string _genre = "";
-
-        [ObservableProperty]
-        private string _studio = "";
-
-        [ObservableProperty]
-        private int _duration = 24; // Duration in minutes
-
-        [ObservableProperty]
-        private string _description = "";
-
-        // Computed properties
-        public string AirTimeFormatted => AiringAt.ToString("h:mm tt");
-
         public string EpisodeText => Episode > 0 ? $"EP{Episode}" : "";
-
-        public string TypeAndEpisode => !string.IsNullOrEmpty(EpisodeText)
-            ? $"{EpisodeText} • {Type}"
-            : Type;
 
         public TimeSpan TimeUntilAiring
         {
@@ -85,19 +60,16 @@ namespace Aniki.Models
                 DateTime now = DateTime.Now;
                 DateTime airTime = AiringAt;
 
-                // If it's today and hasn't aired yet
                 if (airTime.Date == now.Date && airTime > now)
                 {
                     return airTime - now;
                 }
 
-                // If it's a future date
                 if (airTime.Date > now.Date)
                 {
                     return airTime - now;
                 }
 
-                // Already aired
                 return TimeSpan.Zero;
             }
         }
@@ -128,7 +100,6 @@ namespace Aniki.Models
         }
     }
 
-    // Enum for anime types with colors
     public enum AnimeType
     {
         TV,
@@ -139,7 +110,6 @@ namespace Aniki.Models
         Music
     }
 
-    // Additional helper classes
     public class AnimeGenre
     {
         public string Name { get; set; } = "";
@@ -152,7 +122,6 @@ namespace Aniki.Models
         public string Logo { get; set; } = "";
     }
 
-    // For grouping and filtering
     public class CalendarFilter
     {
         public List<string> Genres { get; set; } = new();

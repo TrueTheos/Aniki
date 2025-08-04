@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Aniki.ViewModels
@@ -297,7 +296,7 @@ namespace Aniki.ViewModels
             if (Details?.MyListStatus == null) return;
             if (score == null) return;
 
-            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score.ToString());
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score);
             Details.MyListStatus.Score = int.Parse(score);
         }
 
