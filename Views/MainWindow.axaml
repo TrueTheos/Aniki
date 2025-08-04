@@ -4,17 +4,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     Title="Aniki - Anime Client"
-    d:DesignHeight="900"
-    d:DesignWidth="1400"
+    d:DesignHeight="720"
+    d:DesignWidth="1080"
     x:DataType="vm:MainViewModel"
-    Background="Transparent"
+    Background="#000000"
     ExtendClientAreaTitleBarHeightHint="30"
     ExtendClientAreaToDecorationsHint="True"
-    TransparencyLevelHint="AcrylicBlur"
+    TransparencyLevelHint="Blur"
     mc:Ignorable="d">
 
     <Design.DataContext>
@@ -107,9 +106,9 @@
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial
                     BackgroundSource="Digger"
-                    MaterialOpacity="0.4"
-                    TintColor="#282424"
-                    TintOpacity="0.9" />
+                    MaterialOpacity="0.5"
+                    TintColor="#000000"
+                    TintOpacity=".99" />
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
 
@@ -132,7 +131,7 @@
                     Orientation="Vertical"
                     Spacing="5">
                     <!--  Profile picture and nickname  -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal">
                         <Border
                             Width="30"
                             Height="30"
@@ -252,6 +251,20 @@
                             <TextBlock VerticalAlignment="Center" Text="Stats" />
                         </StackPanel>
                     </Button>
+                    <StackPanel Margin="0,10,0,0" IsVisible="{Binding TodayAnime.Count}">
+                        <TextBlock Text="Airing Today" FontWeight="Bold" FontSize="16" Foreground="White" Margin="0,0,0,5"/>
+                        <ListBox ItemsSource="{Binding TodayAnime}" Background="Transparent" BorderThickness="0" SelectionChanged="TodayAnime_OnSelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock VerticalAlignment="Center" Text="•"/>
+                                        <TextBlock VerticalAlignment="Center" Text="{Binding Title}" Foreground="White" FontSize="15" Padding="10,0,0,0"
+                                                   ToolTip.Tip="{Binding Title}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel
@@ -345,6 +358,9 @@
                             <UserControl.DataTemplates>
                                 <DataTemplate DataType="vm:AnimeDetailsViewModel">
                                     <views:AnimeDetailsView DataContext="{Binding}" />
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:WatchAnimeViewModel">
+                                    <views:WatchAnimeView DataContext="{Binding}" />
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:CalendarViewModel">
                                     <views:CalendarView />

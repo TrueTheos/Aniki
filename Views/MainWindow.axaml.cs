@@ -1,16 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media.Imaging;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System;
 using Aniki.Services;
 using Aniki.ViewModels;
-using Aniki.Views;
+using Aniki.Models;
 using Avalonia;
 
 namespace Aniki.Views
@@ -26,13 +19,13 @@ namespace Aniki.Views
             this.AttachDevTools();
 #endif
 
-            _viewModel = new MainViewModel();
+            _viewModel = new();
             _viewModel.LogoutRequested += OnLogoutRequested;
             _viewModel.SettingsRequested += OnSettingsRequested;
 
             DataContext = _viewModel;
 
-            this.Loaded += MainWindow_Loaded;
+            Loaded += MainWindow_Loaded;
         }
 
         private void InitializeComponent()
@@ -43,27 +36,36 @@ namespace Aniki.Views
         private async void MainWindow_Loaded(object sender, EventArgs e)
         {
             await _viewModel.InitializeAsync();
-            SaveService.SyncAnimeWithMal();
+            _ = SaveService.SyncAnimeWithMal();
         }
 
         private void OnLogoutRequested(object sender, EventArgs e)
         {
-            var loginWindow = new LoginWindow();
+            LoginWindow loginWindow = new LoginWindow();
             loginWindow.Show();
-            this.Close();
+            Close();
         }
 
         private async void OnSettingsRequested(object sender, EventArgs e)
         {
-            var settingsWindow = new SettingsWindow
+            SettingsWindow settingsWindow = new SettingsWindow
             {
                 DataContext = new SettingsViewModel()
             };
-            await settingsWindow.ShowDialog((Window)this);
+            await settingsWindow.ShowDialog(this);
         }
 
-        private void SearchCommand(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+        private void TodayAnime_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
+            if (e.AddedItems.Count <= 0) return;
+            
+            var anime = (AnimeScheduleItem)e.AddedItems[0];
+            _viewModel.GoToAnime(anime.MalId ?? 0);
+
+            if (sender is ListBox listBox)
+            {
+                listBox.SelectedItem = null;
+            }
         }
     }
 }

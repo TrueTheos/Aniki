@@ -2,23 +2,24 @@
 using Aniki.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Controls.ApplicationLifetimes;
-using Aniki.Views;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using Aniki.Views;
 
 namespace Aniki.ViewModels
 {
     public partial class WatchAnimeViewModel : ViewModelBase
     {
-        private AnimeDetails _details;
+        private readonly AnimeDetailsViewModel _animeDetailsViewModel;
+        private readonly AnimeNameParser _animeNameParser = new();
+        private readonly AbsoluteEpisodeService _absoluteEpisodeService = new();
+        private AnimeDetails? _details;
 
         private Episode? _lastPlayedEpisode;
 
@@ -29,12 +30,15 @@ namespace Aniki.ViewModels
         private bool _isNoEpisodesViewVisible;
 
         [ObservableProperty]
+        private bool _isLoading;
+
+        [ObservableProperty]
         private ObservableCollection<Episode> _episodes = new();
 
         public string EpisodesFolderMessage { get; } = $"Episodes folder is empty - {SaveService.DefaultEpisodesFolder}";
 
         [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
+        static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string? pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
 
         enum AssocF
         {
@@ -46,35 +50,53 @@ namespace Aniki.ViewModels
             Executable = 2,
         }
 
-        public WatchAnimeViewModel() { }
+        public WatchAnimeViewModel(AnimeDetailsViewModel animeDetails)
+        {
+            _animeDetailsViewModel = animeDetails;
+            IsEpisodesViewVisible = false;
+            IsNoEpisodesViewVisible = true;
+        }
 
-        public void Update(AnimeDetails details)
+        public override async Task Enter()
+        {
+            await LoadEpisodesFromFolder();
+        }
+
+        private async Task LoadEpisodesFromFolder()
+        {
+            IsLoading = true;
+            Episodes.Clear();
+            foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder, "*.*", SearchOption.AllDirectories))
+            {
+                string fileName = Path.GetFileName(filePath);
+                ParseResult result = await _animeNameParser.ParseAnimeFilename(fileName);
+                if (result == null || result.EpisodeNumber == null) continue;
+
+                int? malId = await _absoluteEpisodeService.GetMalIdForSeason(result.AnimeName, result.Season);
+                if (malId.HasValue)
+                {
+                    Episodes.Add(new(filePath, int.Parse(result.EpisodeNumber ?? "0"), result.AbsoluteEpisodeNumber,
+                        result.AnimeName, malId.Value, result.Season));
+                }
+            }
+
+            UpdateView();
+            IsLoading = false;
+        }
+
+        public void Update(AnimeDetails? details)
         {
             _details = details;
-            if (_details == null) return;
 
             IsEpisodesViewVisible = false;
             IsNoEpisodesViewVisible = false;
             Episodes.Clear();
 
-            foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder))
-            {
-                string fileName = Path.GetFileName(filePath);
-                ParseResult result = AnimeNameParser.ParseAnimeFilename(fileName);
-                if (result == null || result.EpisodeNumber == null) continue;
-
-                if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > 90)
-                {
-                    Episodes.Add(new Episode
-                    {
-                        FilePath = filePath,
-                        EpisodeNumber = (int)result.EpisodeNumber,
-                        Title = _details.Title,
-                        Id = _details.Id
-                    });
-                }
-            }
-
+            UpdateView();
+        }
+        
+        private void UpdateView()
+        {
             if (Episodes.Count > 0)
             {
                 IsEpisodesViewVisible = true;
@@ -111,7 +133,7 @@ namespace Aniki.ViewModels
             uint length = 0;
             AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, null, ref length);
 
-            StringBuilder sb = new StringBuilder((int)length);
+            StringBuilder sb = new((int)length);
             AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, sb, ref length);
 
             return sb.ToString();
@@ -119,14 +141,16 @@ namespace Aniki.ViewModels
 
         private void LaunchAndTrack(string appPath, string filePath)
         {
-            Process process = new Process();
-            process.StartInfo.FileName = appPath;
-            process.StartInfo.Arguments = $"\"{filePath}\"";
-            process.EnableRaisingEvents = true;
-            process.Exited += (sender, e) =>
+            Process process = new()
             {
-                OnVideoPlayerClosed();
+                StartInfo =
+                {
+                    FileName = appPath,
+                    Arguments = $"\"{filePath}\""
+                },
+                EnableRaisingEvents = true
             };
+            process.Exited += (_, _) => { OnVideoPlayerClosed(); };
 
             process.Start();
         }
@@ -138,14 +162,14 @@ namespace Aniki.ViewModels
             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 if (_lastPlayedEpisode == null) return;
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    var dialog = new Aniki.Views.ConfirmEpisodeWindow
+                    ConfirmEpisodeWindow dialog = new Views.ConfirmEpisodeWindow
                     {
                         DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber)
                     };
 
-                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow);
+                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
 
                     if (result)
                     {
@@ -159,15 +183,28 @@ namespace Aniki.ViewModels
 
         private void MarkEpisodeCompleted(Episode ep)
         {
-            _ = MalUtils.UpdateAnimeStatus(ep.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, ep.EpisodeNumber.ToString());
+            int episodeToMark = ep.EpisodeNumber;
+            _ = MalUtils.UpdateAnimeStatus(ep.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, episodeToMark.ToString());
         }
     }
 
     public class Episode
     {
-        public string FilePath { get; set; }
-        public int EpisodeNumber { get; set; }
-        public string Title { get; set; }
-        public int Id { get; set; }
+        public string FilePath { get; }
+        public int EpisodeNumber { get; }
+        public int? AbsoluteEpisodeNumber { get; }
+        public int Season { get; }
+        public string Title { get; }
+        public int Id { get;  }
+
+        public Episode(string filePath, int episodeNumber, int? absoluteEpisodeNumber, string title, int id, int season)
+        {
+            FilePath = filePath;
+            EpisodeNumber = episodeNumber;
+            AbsoluteEpisodeNumber = absoluteEpisodeNumber;
+            Title = title;
+            Id = id;
+            Season = season;    
+        }
     }
 }

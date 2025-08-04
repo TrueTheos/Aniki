@@ -2,36 +2,41 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net.Http;
 using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
 
 namespace Aniki.Services
 {
     public class OAuthService
     {
-        private const string ClientId = "8275007b2d810ac90b7fd2e022f5edf2";
+        private string ClientId;
         private const string RedirectUri = "http://localhost:8000/callback";
 
         private string _codeVerifier;
         private HttpListener _httpListener;
 
-        public OAuthService()
-        {
-        }
+        public OAuthService() { }
 
         public async Task<bool> StartOAuthFlowAsync(IProgress<string> progressReporter)
         {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            using Stream? stream = assembly.GetManifestResourceStream("Aniki.Resources.CLIENTID.txt");
+            if (stream == null)
+                throw new FileNotFoundException("CLIENTID not found.");
+
+            using StreamReader reader = new StreamReader(stream);
+            ClientId = reader.ReadToEnd();
+
             try
             {
-                _codeVerifier = GenerateCodeVerifier();
-                string codeChallenge = _codeVerifier; // Using plain for simplicity
+                _codeVerifier = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-                _httpListener = new HttpListener();
+                _httpListener = new();
                 _httpListener.Prefixes.Clear();
                 _httpListener.Prefixes.Add(RedirectUri.EndsWith("/") ? RedirectUri : RedirectUri + "/");
                 _httpListener.Start();
@@ -41,7 +46,7 @@ namespace Aniki.Services
                 string authUrl = "https://myanimelist.net/v1/oauth2/authorize" +
                                  $"?response_type=code" +
                                  $"&client_id={ClientId}" +
-                                 $"&code_challenge={codeChallenge}" +
+                                 $"&code_challenge={_codeVerifier}" +
                                  $"&code_challenge_method=plain" +
                                  $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
                                  $"&state={Guid.NewGuid()}";
@@ -90,8 +95,8 @@ namespace Aniki.Services
         {
             try
             {
-                using HttpClient client = new HttpClient();
-                var content = new FormUrlEncodedContent(new[]
+                using HttpClient client = new();
+                FormUrlEncodedContent content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("client_id", ClientId),
                     new KeyValuePair<string, string>("code", code),
@@ -105,7 +110,7 @@ namespace Aniki.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseBody,
+                    TokenResponse? tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseBody,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                     if (tokenResponse != null)
@@ -126,23 +131,6 @@ namespace Aniki.Services
         private void OpenBrowser(string url)
         {
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-        }
-
-        private string GenerateCodeVerifier()
-        {
-            using var rng = RandomNumberGenerator.Create();
-            var bytes = new byte[32];
-            rng.GetBytes(bytes);
-            return Base64UrlEncode(bytes);
-        }
-
-        private string Base64UrlEncode(byte[] input)
-        {
-            var output = Convert.ToBase64String(input);
-            output = output.Replace('+', '-');
-            output = output.Replace('/', '_');
-            output = output.TrimEnd('=');
-            return output;
         }
     }
 }

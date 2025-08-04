@@ -1,11 +1,7 @@
-﻿using Aniki.ViewModels;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Aniki.Models
 {
@@ -29,8 +25,10 @@ namespace Aniki.Models
 
     public partial class AnimeScheduleItem : ObservableObject
     {
-        [ObservableProperty]
-        private string _title = "";
+        public int? MalId { get; set; }
+
+    [ObservableProperty]
+    private string? title;
 
         [ObservableProperty]
         private string _imageUrl = "";
@@ -84,8 +82,8 @@ namespace Aniki.Models
         {
             get
             {
-                var now = DateTime.Now;
-                var airTime = AiringAt;
+                DateTime now = DateTime.Now;
+                DateTime airTime = AiringAt;
 
                 // If it's today and hasn't aired yet
                 if (airTime.Date == now.Date && airTime > now)
@@ -108,7 +106,7 @@ namespace Aniki.Models
         {
             get
             {
-                var timeUntil = TimeUntilAiring;
+                TimeSpan timeUntil = TimeUntilAiring;
 
                 if (timeUntil <= TimeSpan.Zero)
                 {

@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Aniki.Services.SaveService;
 
 namespace Aniki.Misc
 {
-    public enum AnimeStatusAPI { watching, completed, on_hold, dropped, plan_to_watch, all }
+    public enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
     public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } //todo to wyjebac i uzywac tylko API enumow
 
     public static class StatusEnum
     {
-        public static IReadOnlyList<AnimeStatusTranslated> TranslatedStatusOptions { get; } = [.. Enum.GetValues<AnimeStatusTranslated>().Cast<AnimeStatusTranslated>()];
-        public static IReadOnlyList<AnimeStatusAPI> APIStatusOptions { get; } = [.. Enum.GetValues<AnimeStatusAPI>().Cast<AnimeStatusAPI>()];
-
         public static AnimeStatusTranslated StringToTranslated(string text)
         {
             return text switch
@@ -24,47 +17,46 @@ namespace Aniki.Misc
                 "On Hold" => AnimeStatusTranslated.OnHold,
                 "Dropped" => AnimeStatusTranslated.Dropped,
                 "Plan to Watch" => AnimeStatusTranslated.PlanToWatch,
-                _ => throw new ArgumentOutOfRangeException(nameof(text), text, null)
             };
         }
 
-        public static AnimeStatusAPI StringToAPI(string text)
+        public static AnimeStatusApi StringToApi(string text)
         {
             return text switch
             {
-                "watching" => AnimeStatusAPI.watching,
-                "completed" => AnimeStatusAPI.completed,
-                "on_hold" => AnimeStatusAPI.on_hold,
-                "dropped" => AnimeStatusAPI.dropped,
-                "plan_to_watch" => AnimeStatusAPI.plan_to_watch,
-                _ => throw new ArgumentOutOfRangeException(nameof(text), text, null)
+                "watching" => AnimeStatusApi.watching,
+                "completed" => AnimeStatusApi.completed,
+                "on_hold" => AnimeStatusApi.on_hold,
+                "dropped" => AnimeStatusApi.dropped,
+                "plan_to_watch" => AnimeStatusApi.plan_to_watch,
+                "none" => AnimeStatusApi.none
             };
         }
 
-        public static AnimeStatusAPI TranslatedToAPI(this AnimeStatusTranslated translated)
+        public static AnimeStatusApi TranslatedToApi(this AnimeStatusTranslated translated)
         {
             return translated switch
             {
-                AnimeStatusTranslated.Watching => AnimeStatusAPI.watching,
-                AnimeStatusTranslated.Completed => AnimeStatusAPI.completed,
-                AnimeStatusTranslated.OnHold => AnimeStatusAPI.on_hold,
-                AnimeStatusTranslated.Dropped => AnimeStatusAPI.dropped,
-                AnimeStatusTranslated.PlanToWatch => AnimeStatusAPI.plan_to_watch,
-                AnimeStatusTranslated.All => AnimeStatusAPI.all,
+                AnimeStatusTranslated.Watching => AnimeStatusApi.watching,
+                AnimeStatusTranslated.Completed => AnimeStatusApi.completed,
+                AnimeStatusTranslated.OnHold => AnimeStatusApi.on_hold,
+                AnimeStatusTranslated.Dropped => AnimeStatusApi.dropped,
+                AnimeStatusTranslated.PlanToWatch => AnimeStatusApi.plan_to_watch,
+                AnimeStatusTranslated.All => AnimeStatusApi.none,
                 _ => throw new ArgumentOutOfRangeException(nameof(translated), translated, null)
             };
         }
 
-        public static AnimeStatusTranslated APIToTranslated(this AnimeStatusAPI api)
+        public static AnimeStatusTranslated ApiToTranslated(this AnimeStatusApi api)
         {
             return api switch
             {
-                AnimeStatusAPI.watching => AnimeStatusTranslated.Watching,
-                AnimeStatusAPI.completed => AnimeStatusTranslated.Completed,
-                AnimeStatusAPI.on_hold => AnimeStatusTranslated.OnHold,
-                AnimeStatusAPI.dropped => AnimeStatusTranslated.Dropped,
-                AnimeStatusAPI.plan_to_watch => AnimeStatusTranslated.PlanToWatch,
-                AnimeStatusAPI.all => AnimeStatusTranslated.All,
+                AnimeStatusApi.watching => AnimeStatusTranslated.Watching,
+                AnimeStatusApi.completed => AnimeStatusTranslated.Completed,
+                AnimeStatusApi.on_hold => AnimeStatusTranslated.OnHold,
+                AnimeStatusApi.dropped => AnimeStatusTranslated.Dropped,
+                AnimeStatusApi.plan_to_watch => AnimeStatusTranslated.PlanToWatch,
+                AnimeStatusApi.none => AnimeStatusTranslated.All,
                 _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
             };
         }

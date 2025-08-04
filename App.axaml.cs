@@ -31,16 +31,16 @@ namespace Aniki
 
                 CheckForUpdates();
 
-                var notificationManager = new WindowNotificationManager(desktop.MainWindow)
+                WindowNotificationManager notificationManager = new WindowNotificationManager(desktop.MainWindow)
                 {
                     Position = NotificationPosition.TopRight,
                     MaxItems = 3
                 };
 
-                _notificationService = new EpisodeNotificationService(notificationManager);
+                _notificationService = new(notificationManager);
                 _notificationService.Start();
 
-                desktop.Exit += (sender, args) => _notificationService.Stop();
+                desktop.Exit += (_, _) => _notificationService.Stop();
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -50,9 +50,9 @@ namespace Aniki
         {
             try
             {
-                var mgr = new UpdateManager(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
+                UpdateManager mgr = new UpdateManager(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
 
-                var newVersion = await mgr.CheckForUpdatesAsync();
+                UpdateInfo? newVersion = await mgr.CheckForUpdatesAsync();
 
                 if (newVersion != null)
                 {

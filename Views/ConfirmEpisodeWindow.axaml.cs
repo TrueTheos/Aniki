@@ -1,7 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views
 {
@@ -13,9 +11,9 @@ namespace Aniki.Views
         }
 
         private void OnYes(object? sender, RoutedEventArgs e)
-           => this.Close(true);
+           => Close(true);
 
         private void OnNo(object? sender, RoutedEventArgs e)
-            => this.Close(false);
+            => Close(false);
     }
 }

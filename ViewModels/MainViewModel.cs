@@ -1,23 +1,14 @@
 ﻿using Aniki.Misc;
 using Aniki.Models;
 using Aniki.Services;
-using Aniki.Views;
-using Avalonia.Data.Converters;
-using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using System.Xml.Linq;
-using static Aniki.Services.SaveService;
+using Aniki.Models;
 
 namespace Aniki.ViewModels
 {
@@ -45,48 +36,79 @@ namespace Aniki.ViewModels
         [ObservableProperty]
         private AnimeDetailsViewModel _animeDetailsViewModel;
         [ObservableProperty]
-        private AnimeDetailsViewModel _watchViewModel;
+        private WatchAnimeViewModel _watchViewModel;
         [ObservableProperty]
         private CalendarViewModel _calendarViewModel;
         [ObservableProperty]
         private StatsViewModel _statsViewModel;
         #endregion
 
+        [ObservableProperty]
+        private ObservableCollection<AnimeScheduleItem> _todayAnime = new();
+
         public MainViewModel() 
         {
-            AnimeDetailsViewModel = new AnimeDetailsViewModel();
-            WatchViewModel = new AnimeDetailsViewModel();
-            CalendarViewModel = new CalendarViewModel();
-            StatsViewModel = new StatsViewModel();
+            AnimeDetailsViewModel = new();
+            WatchViewModel = new(AnimeDetailsViewModel);
+            CalendarViewModel = new(this);
+            StatsViewModel = new();
         }
 
         [RelayCommand]
-        public void ShowMainPage()
+        public async Task ShowMainPage()
         {
-            CurrentViewModel = AnimeDetailsViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = AnimeDetailsViewModel;
+            await CurrentViewModel.Enter();
         }
 
         [RelayCommand]
-        public void ShowWatchPage()
+        public async Task ShowWatchPage()
         {
-            CurrentViewModel = AnimeDetailsViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = WatchViewModel;
+            await CurrentViewModel.Enter();
         }
 
         [RelayCommand]
-        public void ShowCalendarPage()
+        public async Task ShowCalendarPage()
         {
-            CurrentViewModel = CalendarViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = CalendarViewModel; 
+            await CurrentViewModel.Enter();
         }
 
         [RelayCommand]
-        public void ShowStatsPage()
+        public async Task ShowStatsPage()
         {
-            CurrentViewModel = StatsViewModel; _ = CurrentViewModel.Enter();
+            CurrentViewModel = StatsViewModel; 
+            await CurrentViewModel.Enter();
+        }
+
+        public void GoToAnime(string title)
+        {
+            SearchForAnime(title.Replace('-', ' '), true);
+        }
+
+        public void GoToAnime(int malId)
+        {
+            SearchForAnime(malId);
         }
 
         public async Task InitializeAsync()
         {
             await LoadUserDataAsync();
+            await LoadTodayAnimeAsync();
+        }
+
+        private async Task LoadTodayAnimeAsync()
+        {
+            var watchingList = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
+            var animes = await CalendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
+
+            TodayAnime.Clear();
+            foreach (var anime in animes)
+            {
+                if(watchingList.Any(x => x.Node.Id == anime.MalId))
+                    TodayAnime.Add(anime);
+            }
         }
 
         private async Task LoadUserDataAsync()
@@ -94,7 +116,7 @@ namespace Aniki.ViewModels
             try
             {
                 IsLoading = true;
-                var userData = await MalUtils.GetUserDataAsync();
+                UserData userData = await MalUtils.GetUserDataAsync();
                 Username = userData.Name;
                 ProfileImage = await MalUtils.GetUserPicture();
             }
@@ -118,7 +140,12 @@ namespace Aniki.ViewModels
         [RelayCommand]
         public async Task Search()
         {
-            if (string.IsNullOrWhiteSpace(SearchQuery))
+            await SearchForAnime(SearchQuery);
+        }
+
+        private async Task SearchForAnime(string searchQuery, bool showFirstBest = false)
+        {
+            if (string.IsNullOrWhiteSpace(searchQuery))
             {
                 await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
                 return;
@@ -130,7 +157,27 @@ namespace Aniki.ViewModels
 
             try
             {
-                await AnimeDetailsViewModel.SearchAnime(SearchQuery);
+                await AnimeDetailsViewModel.SearchAnimeByTitle(searchQuery, true, showFirstBest);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error searching: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task SearchForAnime(int malId)
+        {
+            IsLoading = true;
+
+            ShowMainPage();
+
+            try
+            {
+                await AnimeDetailsViewModel.SearchAnimeById(malId);
             }
             catch (Exception ex)
             {

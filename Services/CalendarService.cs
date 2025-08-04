@@ -1,42 +1,25 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Aniki.Models;
 
-namespace Aniki.Services
+namespace Aniki.Services;
+
+public static partial class CalendarService
 {
-    public static class CalendarService
-    {
-        private static readonly string[] Weekdays =
-            { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+    private const string GraphQlEndpoint = "https://graphql.anilist.co";
 
-        private const string GraphQLEndpoint = "https://graphql.anilist.co";
-        private static readonly HttpClient _http = new HttpClient();
-
-        public static async Task<List<DaySchedule>> GetWeeklyScheduleAsync(
-            IEnumerable<string> watchingList,
-            int perPage = 150,
-            DateTime? specificWeek = null, string searchQuery = "")
-        {
-            // Calculate the start and end of specified week or current week
-            var referenceDate = specificWeek ?? DateTime.Now;
-            var startOfWeek = referenceDate.Date.AddDays(-(int)referenceDate.DayOfWeek + (int)DayOfWeek.Monday);
-            var endOfWeek = startOfWeek.AddDays(7);
-
-            var startUnix = ((DateTimeOffset)startOfWeek).ToUnixTimeSeconds();
-            var endUnix = ((DateTimeOffset)endOfWeek).ToUnixTimeSeconds();
-
-            var query = @"
+    private const string Query = @"
               query ($page: Int, $perPage: Int, $airingAt_greater: Int, $airingAt_lesser: Int) {
                 Page(page: $page, perPage: $perPage) {
+                  pageInfo {
+                    hasNextPage
+                  }
                   airingSchedules(
                     airingAt_greater: $airingAt_greater, 
                     airingAt_lesser: $airingAt_lesser,
@@ -44,6 +27,7 @@ namespace Aniki.Services
                   ) {
                     media { 
                       id
+                      idMal
                       title { 
                         romaji
                         english
@@ -78,166 +62,203 @@ namespace Aniki.Services
               }
             ";
 
-            var payload = new JObject
+    private static readonly HttpClient Http = new();
+
+    private static async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
+    {
+        JArray schedules = new();
+        int currentPage = 1;
+        bool hasNextPage;
+
+        do
+        {
+            JObject payload = new()
             {
-                ["query"] = query,
+                ["query"] = Query,
                 ["variables"] = new JObject
                 {
-                    ["page"] = 1,
+                    ["page"] = currentPage,
                     ["perPage"] = perPage,
                     ["airingAt_greater"] = startUnix,
                     ["airingAt_lesser"] = endUnix
                 }
             };
 
-            var content = new StringContent(payload.ToString(), Encoding.UTF8, "application/json");
-            var response = await _http.PostAsync(GraphQLEndpoint, content);
+            StringContent content = new(payload.ToString(), Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await Http.PostAsync(GraphQlEndpoint, content);
             response.EnsureSuccessStatusCode();
 
-            var body = await response.Content.ReadAsStringAsync();
-            var json = JObject.Parse(body);
-            var schedules = json["data"]?["Page"]?["airingSchedules"] as JArray ?? new JArray();
+            string body = await response.Content.ReadAsStringAsync();
+            JObject json = JObject.Parse(body);
 
-            var watchSet = new HashSet<string>(watchingList, StringComparer.OrdinalIgnoreCase);
+            JToken? pageNode = json["data"]?["Page"];
+            if (pageNode == null) break;
 
-            // Initialize days for the week
-            var daySchedules = new List<DaySchedule>();
-            for (int i = 0; i < 7; i++)
+            if (pageNode["airingSchedules"] is JArray pageSchedules)
             {
-                var currentDate = startOfWeek.AddDays(i);
-                daySchedules.Add(new DaySchedule
+                foreach (JToken schedule in pageSchedules)
                 {
-                    Name = currentDate.DayOfWeek.ToString(),
-                    DayName = currentDate.ToString("dddd"),
-                    Date = currentDate,
-                    IsToday = currentDate.Date == DateTime.Today,
-                    Items = new ObservableCollection<AnimeScheduleItem>()
-                });
-            }
-
-            var byDay = daySchedules.ToDictionary(ds => ds.Name, StringComparer.OrdinalIgnoreCase);
-
-            // Process schedules
-            foreach (var schedule in schedules)
-            {
-                try
-                {
-                    var animeItem = ParseAnimeScheduleItem(schedule, watchSet);
-                    if (animeItem != null)
-                    {
-                        var weekday = animeItem.AiringAt.ToString("dddd", CultureInfo.InvariantCulture);
-
-                        if (byDay.TryGetValue(weekday, out var daySchedule))
-                        {
-                            // Check for duplicates (same anime, same episode, same day)
-                            var isDuplicate = daySchedule.Items.Any(existing =>
-                                string.Equals(existing.Title, animeItem.Title, StringComparison.OrdinalIgnoreCase) &&
-                                existing.Episode == animeItem.Episode &&
-                                Math.Abs((existing.AiringAt - animeItem.AiringAt).TotalMinutes) < 5);
-
-                            if (!isDuplicate)
-                            {
-                                daySchedule.Items.Add(animeItem);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error parsing schedule item: {ex.Message}");
-                    // Continue processing other items
+                    schedules.Add(schedule);
                 }
             }
 
-            // Sort items within each day by airing time
-            foreach (var day in daySchedules)
-            {
-                var sortedItems = day.Items.OrderBy(item => item.AiringAt).ToList();
-                day.Items.Clear();
-                foreach (var item in sortedItems)
-                {
-                    day.Items.Add(item);
-                }
-            }
+            hasNextPage = pageNode["pageInfo"]?["hasNextPage"]?.Value<bool>() ?? false;
+            currentPage++;
 
-            return daySchedules;
+        } while (hasNextPage);
+
+        return schedules;
+    }
+
+    public static async Task<List<DaySchedule>> GetScheduleAsync(
+        IEnumerable<string> watchingList,
+        DateTime startDate,
+        DateTime endDate,
+        int perPage = 150)
+    {
+        long startUnix = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
+        long endUnix = ((DateTimeOffset)endDate).ToUnixTimeSeconds();
+
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix, perPage);
+
+        HashSet<string> watchSet = new(watchingList, StringComparer.OrdinalIgnoreCase);
+
+        List<DaySchedule> daySchedules = [];
+        for (DateTime date = startDate.Date; date < endDate.Date; date = date.AddDays(1))
+        {
+            daySchedules.Add(new()
+            {
+                Name = date.DayOfWeek.ToString(),
+                DayName = date.ToString("dddd"),
+                Date = date,
+                IsToday = date.Date == DateTime.Today,
+                Items = []
+            });
         }
 
-        private static AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
+        Dictionary<string, DaySchedule> byDay = daySchedules.ToDictionary(ds => ds.Name, StringComparer.OrdinalIgnoreCase);
+
+        foreach (JToken schedule in schedules)
         {
-            var media = schedule["media"];
-            if (media == null) return null;
+            AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
+            if (animeItem == null) continue;
+            string weekday = animeItem.AiringAt.ToString("dddd", CultureInfo.InvariantCulture);
 
-            var title = GetBestTitle(media["title"]);
-            if (string.IsNullOrEmpty(title)) return null;
+            if (!byDay.TryGetValue(weekday, out DaySchedule? daySchedule)) continue;
+                
+            bool isDuplicate = daySchedule.Items.Any(existing =>
+                string.Equals(existing.Title, animeItem.Title, StringComparison.OrdinalIgnoreCase) &&
+                existing.Episode == animeItem.Episode &&
+                Math.Abs((existing.AiringAt - animeItem.AiringAt).TotalMinutes) < 5);
 
-            if (!long.TryParse(schedule["airingAt"]?.ToString(), out var airingAtUnix))
-                return null;
+            if (!isDuplicate)
+            {
+                daySchedule.Items.Add(animeItem);
+            }
+        }
 
-            var airingAt = DateTimeOffset.FromUnixTimeSeconds(airingAtUnix).LocalDateTime;
-            var episode = schedule["episode"]?.ToObject<int>() ?? 0;
+        foreach (DaySchedule day in daySchedules)
+        {
+            List<AnimeScheduleItem> sortedItems = day.Items.OrderBy(item => item.AiringAt).ToList();
+            day.Items.Clear();
+            foreach (AnimeScheduleItem item in sortedItems)
+            {
+                day.Items.Add(item);
+            }
+        }
 
-            var coverImage = media["coverImage"];
-            var imageUrl = coverImage?["large"]?.ToString() ??
+        return daySchedules;
+    }
+
+    public static async Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date, IEnumerable<string> watchingList)
+    {
+        long startUnix = ((DateTimeOffset)date.Date).ToUnixTimeSeconds();
+        long endUnix = ((DateTimeOffset)date.Date.AddDays(1)).ToUnixTimeSeconds();
+
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix);
+
+        HashSet<string> watchSet = new(watchingList, StringComparer.OrdinalIgnoreCase);
+        List<AnimeScheduleItem> animeItems = new();
+
+        foreach (JToken schedule in schedules)
+        {
+            AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
+            if (animeItem != null)
+            {
+                animeItems.Add(animeItem);
+            }
+        }
+
+        return animeItems;
+    }
+
+    private static AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
+    {
+        JToken? media = schedule["media"];
+        if (media == null) return null;
+
+        string title = GetBestTitle(media["title"]);
+        if (string.IsNullOrEmpty(title)) return null;
+
+        if (!long.TryParse(schedule["airingAt"]?.ToString(), out long airingAtUnix))
+            return null;
+
+        DateTime airingAt = DateTimeOffset.FromUnixTimeSeconds(airingAtUnix).LocalDateTime;
+        int episode = schedule["episode"]?.ToObject<int>() ?? 0;
+
+        JToken? coverImage = media["coverImage"];
+        string imageUrl = coverImage?["large"]?.ToString() ??
                           coverImage?["medium"]?.ToString() ??
                           "/api/placeholder/300/400";
 
-            var format = media["format"]?.ToString() ?? "TV";
-            var duration = media["duration"]?.ToObject<int>() ?? 24;
-            var genres = media["genres"]?.ToObject<List<string>>() ?? new List<string>();
-            var studio = media["studios"]?["nodes"]?.FirstOrDefault()?["name"]?.ToString() ?? "";
-            var averageScore = media["averageScore"]?.ToObject<double>() ?? 0;
-            var description = media["description"]?.ToString() ?? "";
-            var status = media["status"]?.ToString() ?? "";
+        string format = media["format"]?.ToString() ?? "TV";
+        int duration = media["duration"]?.ToObject<int?>() ?? -1;
+        List<string> genres = media["genres"]?.ToObject<List<string>>() ?? [];
+        string studio = media["studios"]?["nodes"]?.FirstOrDefault()?["name"]?.ToString() ?? "";
+        double averageScore = media["averageScore"]?.ToObject<double?>() ?? 0;
+        string description = media["description"]?.ToString() ?? "";
+        string status = media["status"]?.ToString() ?? "";
 
-            if (!string.IsNullOrEmpty(description))
-            {
-                description = System.Text.RegularExpressions.Regex.Replace(description, "<.*?>", "");
-                if (description.Length > 200)
-                {
-                    description = description.Substring(0, 200) + "...";
-                }
-            }
+        int? malId = media["idMal"]?.ToObject<int?>();
 
-            return new AnimeScheduleItem
-            {
-                Title = title,
-                ImageUrl = imageUrl,
-                AiringAt = airingAt,
-                Episode = episode,
-                EpisodeInfo = episode > 0 ? $"EP{episode} • {format}" : format,
-                Type = format,
-                Duration = duration,
-                Genre = string.Join(", ", genres.Take(2)),
-                Studio = studio,
-                Rating = averageScore / 10.0,
-                Description = description,
-                Status = status,
-                IsBookmarked = watchSet.Contains(title)
-            };
-        }
-
-        private static string GetBestTitle(JToken? titleObject)
+        if (!string.IsNullOrEmpty(description))
         {
-            if (titleObject == null) return "";
-
-            return titleObject["english"]?.ToString() ??
-                   titleObject["romaji"]?.ToString() ??
-                   titleObject["native"]?.ToString() ??
-                   "";
+            description = MyRegex().Replace(description, "");
+            if (description.Length > 200)
+            {
+                description = string.Concat(description.AsSpan(0, 200), "...");
+            }
         }
+
+        return new()
+        {
+            Title = title,
+            ImageUrl = imageUrl,
+            AiringAt = airingAt,
+            Episode = episode,
+            EpisodeInfo = episode > 0 ? $"EP{episode} • {format}" : format,
+            Type = format,
+            Duration = duration,
+            Genre = string.Join(", ", genres.Take(2)),
+            Studio = studio,
+            Rating = averageScore / 10.0,
+            Description = description,
+            Status = status,
+            MalId = malId,
+            IsBookmarked = watchSet.Contains(title)
+        };
     }
 
-    public class AnimeSearchResult
+    private static string GetBestTitle(JToken? titleObject)
     {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string ImageUrl { get; set; } = "";
-        public string Format { get; set; } = "";
-        public string Status { get; set; } = "";
-        public int? Episodes { get; set; }
-        public double Rating { get; set; }
-        public List<string> Genres { get; set; } = new();
-        public string Studio { get; set; } = "";
+        if (titleObject == null) return "";
+
+        return titleObject["romaji"]?.ToString() ??
+               titleObject["english"]?.ToString() ??
+               titleObject["native"]?.ToString() ??
+               "";
     }
+
+    [System.Text.RegularExpressions.GeneratedRegex("<.*?>")]
+    private static partial System.Text.RegularExpressions.Regex MyRegex();
 }

@@ -1,4 +1,4 @@
-﻿using Aniki.Misc;
+using Aniki.Misc;
 using Aniki.Models;
 using Aniki.ViewModels;
 using Avalonia.Media.Imaging;
@@ -6,30 +6,33 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace Aniki.Services
 {
+    using SeasonCache = Dictionary<string, Dictionary<int, SeasonData>>;
+    
+    public struct SeasonData
+    {
+        public int Episodes { get; set; }
+        public int MalId { get; set; }
+    }
+
     public class SaveService
     {
         private static readonly string _mainDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Aniki");
-
         private static readonly string _cacheDirectory = Path.Combine(_mainDirectory, "ImageCache");
-
-        public static readonly string DefaultEpisodesFolder = Path.Combine(_mainDirectory, "Episodes");
-
         private static readonly string _settingsConfigFile = Path.Combine(_mainDirectory, "config.json");
-
         private static readonly string _animeStatusesFile = Path.Combine(_mainDirectory, "animeStatuses.json");
+        private static readonly string _seasonCacheFile = Path.Combine(_mainDirectory, "season_cache.json");
+        
+        public static readonly string DefaultEpisodesFolder = Path.Combine(_mainDirectory, "Episodes");
         public static List<AnimeStatus> AnimeStatuses { get; private set; } = new();
-
+        
         public static void Init()
         {
             if (!Directory.Exists(_cacheDirectory))
@@ -45,10 +48,35 @@ namespace Aniki.Services
             LoadAnimeStatuses();
         }
 
+        public static SeasonCache GetSeasonCache()
+        {
+            if (File.Exists(_seasonCacheFile))
+            {
+                try
+                {
+                    var json = File.ReadAllText(_seasonCacheFile);
+                    return JsonSerializer.Deserialize<SeasonCache>(json) ?? new SeasonCache();
+                }
+                catch (JsonException)
+                {
+                    // Cache file is malformed, delete it and start fresh
+                    File.Delete(_seasonCacheFile);
+                }
+            }
+            return new SeasonCache();
+        }
+
+        public static void SaveSeasonCache(SeasonCache cache)
+        {
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(cache, options);
+            File.WriteAllText(_seasonCacheFile, json);
+        }
+
         public static void SaveImageToCache(string fileName, Bitmap image)
         {
             string filePath = Path.Combine(_cacheDirectory, fileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using (FileStream stream = new FileStream(filePath, FileMode.Create))
             {
                 image.Save(stream);
             }
@@ -58,17 +86,17 @@ namespace Aniki.Services
         {
             try
             {
-                var animeList = await MalUtils.LoadAnimeList();
+                List<AnimeData>? animeList = await MalUtils.LoadAnimeList();
 
                 if (animeList != null)
                 {
                     AnimeStatuses.Clear();
 
-                    foreach (var anime in animeList)
+                    foreach (AnimeData anime in animeList)
                     {
                         if (anime.Node != null)
                         {
-                            AnimeStatuses.Add(new AnimeStatus
+                            AnimeStatuses.Add(new()
                             {
                                 Title = anime.Node.Title,
                                 WatchedEpisodes = anime.ListStatus.NumEpisodesWatched,
@@ -90,23 +118,23 @@ namespace Aniki.Services
         {
             if (File.Exists(_animeStatusesFile))
             {
-                var json = File.ReadAllText(_animeStatusesFile);
+                string json = File.ReadAllText(_animeStatusesFile);
                 AnimeStatuses = JsonSerializer.Deserialize<List<AnimeStatus>>(json) ?? new List<AnimeStatus>();
                 return;
             }
 
-            AnimeStatuses = new List<AnimeStatus>();
+            AnimeStatuses = new();
         }
 
         public static void SaveWatchingAnime()
         {
-            var json = JsonSerializer.Serialize(AnimeStatuses, new JsonSerializerOptions { WriteIndented = true });
+            string json = JsonSerializer.Serialize(AnimeStatuses, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_animeStatusesFile, json);
         }
 
-        public static void ChangeWatchingAnimeStatus(string animeName, AnimeStatusAPI status)
+        public static void ChangeWatchingAnimeStatus(string animeName, AnimeStatusApi status)
         {
-            var existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
+            AnimeStatus? existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
             if (existingAnime != null)
             {
                 existingAnime.Status = status;
@@ -116,7 +144,7 @@ namespace Aniki.Services
 
         public static void ChangeWatchingAnimeEpisode(string animeName, int watchedEpisodes)
         {
-            var existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
+            AnimeStatus? existingAnime = AnimeStatuses.FirstOrDefault(a => a.Title.Equals(animeName, StringComparison.OrdinalIgnoreCase));
             if (existingAnime != null)
             {
                 existingAnime.WatchedEpisodes = watchedEpisodes;
@@ -133,7 +161,7 @@ namespace Aniki.Services
             {
                 try
                 {
-                    return new Bitmap(cacheFilePath);
+                    return new(cacheFilePath);
                 }
                 catch (Exception)
                 {
@@ -160,7 +188,7 @@ namespace Aniki.Services
             {
                 try
                 {
-                    return new Bitmap(cacheFilePath);
+                    return new(cacheFilePath);
                 }
                 catch (Exception)
                 {
@@ -186,7 +214,7 @@ namespace Aniki.Services
                 string defaultImagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "default_profile.png");
                 if (File.Exists(defaultImagePath))
                 {
-                    return new Bitmap(defaultImagePath);
+                    return new(defaultImagePath);
                 }
             }
             catch (Exception)
@@ -206,8 +234,8 @@ namespace Aniki.Services
         {
             if (File.Exists(_settingsConfigFile))
             {
-                var json = File.ReadAllText(_settingsConfigFile);
-                var config = JsonSerializer.Deserialize<SettingsConfig>(json);
+                string json = File.ReadAllText(_settingsConfigFile);
+                SettingsConfig? config = JsonSerializer.Deserialize<SettingsConfig>(json);
                 return config;
             }
 
@@ -219,7 +247,7 @@ namespace Aniki.Services
             public string Title { get; set; }
             public int WatchedEpisodes { get; set; }
             [JsonConverter(typeof(JsonStringEnumConverter))]
-            public AnimeStatusAPI Status { get; set; }
+            public AnimeStatusApi Status { get; set; }
         }
     }
 }

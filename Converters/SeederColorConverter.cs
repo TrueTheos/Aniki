@@ -1,28 +1,27 @@
 ﻿using Avalonia.Data.Converters;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Aniki.Converters
 {
     public class SeederColorConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is int seeders)
             {
-                if (seeders == 0) return "#FF5252"; // Red
-                if (seeders < 5) return "#FFA726"; // Orange
-                if (seeders < 20) return "#FFEB3B"; // Yellow
-                return "#66BB6A"; // Green
+                return seeders switch
+                {
+                    0 => "#FF5252",
+                    < 5 => "#FFA726",
+                    < 20 => "#FFEB3B",
+                    _ => "#66BB6A"
+                };
             }
             return "#E0E0E0"; // Default gray
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

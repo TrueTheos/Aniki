@@ -1,29 +1,24 @@
 ﻿using Aniki.Misc;
 using Aniki.Models;
-using Avalonia.Controls;
 using Avalonia.Media.Imaging;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using static Aniki.Services.SaveService;
 
 namespace Aniki.Services
 {
     public static class MalUtils
     {
-        private static JsonSerializerOptions _jso = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        private static readonly HttpClient _client = new HttpClient();
+        private static JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
+        private static HttpClient _client = new();
 
         public static void Init(string accessToken)
         {
+            _client = new();
             _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
         }
 
@@ -58,30 +53,30 @@ namespace Aniki.Services
                     return JsonSerializer.Deserialize<UserData>(responseBody, _jso);
                 }
 
-                throw new Exception($"API returned status code: {response.StatusCode}");
+                throw new($"API returned status code: {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading user data: {ex.Message}", ex);
+                throw new($"Error loading user data: {ex.Message}", ex);
             }
         }
 
-        public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusAPI status = AnimeStatusAPI.all)
+        public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
         {
             try
             {
-                List<AnimeData> animeList = new List<AnimeData>();
+                List<AnimeData> animeList = new();
 
                 string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
-                string fields = "list_status,num_episodes,status,pictures";
-
-                if (status != AnimeStatusAPI.all)
-                {
-                    url += $"status={status}&";
-                }
-
+                string fields = $"list_status,num_episodes,pictures,status";
+                
                 url += $"fields={fields}&limit=100";
 
+                if (status != AnimeStatusApi.none)
+                {
+                    url += $"&status={status}";
+                }
+                
                 bool hasNextPage = true;
                 string nextPageUrl = url;
 
@@ -92,7 +87,7 @@ namespace Aniki.Services
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var animeListResponse = JsonSerializer.Deserialize<AnimeListResponse>(responseBody, _jso);
+                        AnimeListResponse? animeListResponse = JsonSerializer.Deserialize<AnimeListResponse>(responseBody, _jso);
 
                         if (animeListResponse.Data != null)
                         {
@@ -111,7 +106,7 @@ namespace Aniki.Services
                     else
                     {
                         hasNextPage = false;
-                        throw new Exception($"API returned status code: {response.StatusCode}");
+                        throw new($"API returned status code: {response.StatusCode}");
                     }
                 }
 
@@ -119,7 +114,7 @@ namespace Aniki.Services
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading anime list: {ex.Message}", ex);
+                throw new($"Error loading anime list: {ex.Message}", ex);
             }
         }
 
@@ -134,18 +129,18 @@ namespace Aniki.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                    AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
                     animeResponse.Picture = await SaveService.GetAnimeImage(animeResponse);
                     return animeResponse;
                 }
                 else
                 {
-                    throw new Exception($"API returned status code: {response.StatusCode}");
+                    throw new($"API returned status code: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading anime details: {ex.Message}", ex);
+                throw new($"Error loading anime details: {ex.Message}", ex);
             }
         }
 
@@ -158,12 +153,12 @@ namespace Aniki.Services
                 string responseBody = await response.Content.ReadAsStringAsync();
                 if (response.IsSuccessStatusCode)
                 {
-                    var animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                    AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
                     return animeResponse.Title;
                 }
                 else
                 {
-                    throw new Exception($"API returned status code: {response.StatusCode}");
+                    throw new($"API returned status code: {response.StatusCode}");
                 }
             }
             catch (Exception ex) { }
@@ -189,8 +184,8 @@ namespace Aniki.Services
 
                         byte[] imageData = await _client.GetByteArrayAsync(pictureUrl);
 
-                        using MemoryStream ms = new MemoryStream(imageData);
-                        return new Bitmap(ms);
+                        using MemoryStream ms = new(imageData);
+                        return new(ms);
                     }
                 }
             }
@@ -208,8 +203,8 @@ namespace Aniki.Services
             {
                 byte[] imageData = await _client.GetByteArrayAsync(animePictureData.Medium);
 
-                using MemoryStream ms = new MemoryStream(imageData);
-                return new Bitmap(ms);
+                using MemoryStream ms = new(imageData);
+                return new(ms);
             }
             catch (Exception ex)
             {
@@ -219,15 +214,20 @@ namespace Aniki.Services
             return null;
         }
 
-        public static async Task<List<SearchEntry>> SearchAnime(string query)
+        public static async Task<List<SearchEntry>> SearchAnimeOrdered(string query)
         {
             string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=totalepisodes";
 
             HttpResponseMessage response = await _client.GetAsync(url);
             string responseBody = await response.Content.ReadAsStringAsync();
-            var responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
+            AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
 
-            return responseData?.Data?.ToList() ?? new List<SearchEntry>();
+            // we are using TokenSortRatio instead of Ratio because there was a weird case:
+            // Fuzz.Ratio("Shingeki no Kyojin Season 2", "DAN DA DAN Season 2") was greater than
+            // Fuzz.Ratio("Dandadan 2nd Season", "DAN DA DAN Season 2")
+            // why? I have no clue. If someone smarter than me sees this please let me know!
+            
+            return responseData?.Data?.OrderByDescending(x => FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, query)).ToList() ?? new List<SearchEntry>();
         }
 
         public enum AnimeStatusField
@@ -241,7 +241,7 @@ namespace Aniki.Services
         {
             string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
 
-            var formData = new Dictionary<string, string>();
+            Dictionary<string, string> formData = new Dictionary<string, string>();
             switch (field)
             {
                 case AnimeStatusField.STATUS:
@@ -257,26 +257,75 @@ namespace Aniki.Services
                     break;
             }
 
-            var content = new FormUrlEncodedContent(formData);
+            FormUrlEncodedContent content = new FormUrlEncodedContent(formData);
 
-            var response = await _client.PutAsync(url, content);
+            HttpResponseMessage response = await _client.PutAsync(url, content);
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception($"Failed to update anime status: {response.StatusCode}");
+                throw new($"Failed to update anime status: {response.StatusCode}");
             }
+        }
+
+        public static async Task RemoveFromList(int animeId)
+        {
+            string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
+
+            HttpResponseMessage response = await _client.DeleteAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Anime with ID {animeId} not found on the user's list, or already deleted.");
+                    return;
+                }
+                throw new($"Failed to remove anime from list: {response.StatusCode}");
+            }
+        }
+
+        public static async Task<List<RelatedAnime>> GetRelatedAnime(int id)
+        {
+            try
+            {
+                string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=related_anime";
+
+                HttpResponseMessage response = await _client.GetAsync(url);
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    using JsonDocument doc = JsonDocument.Parse(responseBody);
+                    JsonElement root = doc.RootElement;
+
+                    if (root.TryGetProperty("related_anime", out JsonElement relatedAnimeElement))
+                    {
+                        return JsonSerializer.Deserialize<List<RelatedAnime>>(relatedAnimeElement.ToString(), _jso);
+                    }
+                }
+                else
+                {
+                    throw new($"API returned status code: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new($"Error loading related anime: {ex.Message}", ex);
+            }
+
+            return new List<RelatedAnime>();
         }
 
         private static async void OnEpisodesWatchedChanged(int animeId, string value)
         {
-            var animeTitle = await GetAnimeNameById(animeId);
+            string animeTitle = await GetAnimeNameById(animeId);
             SaveService.ChangeWatchingAnimeEpisode(animeTitle, int.Parse(value));
         }
 
         private static async void OnStatusChanged(int animeId, string value)
         {
-            var animeTitle = await GetAnimeNameById(animeId);
-            SaveService.ChangeWatchingAnimeStatus(animeTitle, StatusEnum.StringToAPI(value));
+            string animeTitle = await GetAnimeNameById(animeId);
+            SaveService.ChangeWatchingAnimeStatus(animeTitle, StatusEnum.StringToApi(value));
         }
     }
 }

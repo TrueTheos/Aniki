@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Web;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 using Aniki.Models;
 using System.Xml;
 using System.Linq;
@@ -11,48 +9,47 @@ using System.Linq;
 
 namespace Aniki.Services
 {
-    public static class NyaaService
+    public class NyaaService
     {
-        private static readonly HttpClient _http = new HttpClient();
-        public static async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
+        private static readonly HttpClient _http = new();
+        private readonly AnimeNameParser _animeNameParser = new();
+        public async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
         {
-            var term = HttpUtility.UrlEncode($"{animeName} {episodeNumber:D2}");
-            var url = $"https://nyaa.si/?page=rss&f=0&c=1_2&q={term}";
+            string term = HttpUtility.UrlEncode($"{animeName}");
+            string url = $"https://nyaa.si/?page=rss&f=0&c=1_2&q={term}";
 
-            var rssContent = await _http.GetStringAsync(url);
-            var results = new List<NyaaTorrent>();
+            string rssContent = await _http.GetStringAsync(url);
+            List<NyaaTorrent> results = new List<NyaaTorrent>();
 
-            var doc = new XmlDocument();
+            XmlDocument doc = new XmlDocument();
             doc.LoadXml(rssContent);
 
-            var itemNodes = doc.SelectNodes("//item");
+            XmlNodeList? itemNodes = doc.SelectNodes("//item");
             if (itemNodes == null) return results;
 
             foreach (XmlNode item in itemNodes)
             {
-                var title = item.SelectSingleNode("title")?.InnerText;
-                var link = item.SelectSingleNode("link")?.InnerText;
-
-                var descriptionNode = item.SelectSingleNode("description");
+                string? title = item.SelectSingleNode("title")?.InnerText;
+                var parsed = await _animeNameParser.ParseAnimeFilename(title);
+                string? episode = parsed.EpisodeNumber;
+                
                 string torrentLink = "";
 
-                var namespaceManager = new XmlNamespaceManager(doc.NameTable);
+                XmlNamespaceManager namespaceManager = new XmlNamespaceManager(doc.NameTable);
                 namespaceManager.AddNamespace("nyaa", "https://nyaa.si/xmlns/nyaa");
-                var infoHashNode = item.SelectSingleNode("nyaa:infoHash", namespaceManager);
+                XmlNode? infoHashNode = item.SelectSingleNode("nyaa:infoHash", namespaceManager);
                 
                 if (infoHashNode != null)
                 {
-                    var infoHash = infoHashNode.InnerText;
-                    var encodedTitle = HttpUtility.UrlEncode(title);
-                    var linkNode = item.SelectSingleNode("link");
+                    XmlNode? linkNode = item.SelectSingleNode("link");
                     torrentLink = linkNode?.InnerText;
                 }
 
-                var sizeNode = item.SelectSingleNode("nyaa:size", namespaceManager);
-                var size = sizeNode?.InnerText ?? "";
+                XmlNode? sizeNode = item.SelectSingleNode("nyaa:size", namespaceManager);
+                string size = sizeNode?.InnerText ?? "";
 
-                var seedersNode = item.SelectSingleNode("nyaa:seeders", namespaceManager) ??
-                                  item.SelectSingleNode("seeders", namespaceManager);
+                XmlNode? seedersNode = item.SelectSingleNode("nyaa:seeders", namespaceManager) ??
+                                       item.SelectSingleNode("seeders", namespaceManager);
                 int seeders = 0;
                 if (seedersNode != null)
                 {
@@ -61,9 +58,11 @@ namespace Aniki.Services
 
                 if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(torrentLink))
                 {
-                    results.Add(new NyaaTorrent
+                    results.Add(new()
                     {
-                        Title = HttpUtility.HtmlDecode(title),
+                        FileName = HttpUtility.HtmlDecode(title),
+                        AnimeTitle = parsed.AnimeName,
+                        EpisodeNumber = episode,
                         TorrentLink = torrentLink,
                         Size = size,
                         Seeders = seeders
@@ -71,7 +70,8 @@ namespace Aniki.Services
                 }
             }
 
-            results = results.OrderByDescending(x => FuzzySharp.Fuzz.Ratio(x.Title.ToLower(), animeName.ToLower()))
+            results = results.OrderByDescending(x => FuzzySharp.Fuzz.Ratio(x.AnimeTitle.ToLower(), animeName.ToLower()))
+                .ThenByDescending(x => int.TryParse(x.EpisodeNumber, out int ep) && ep == episodeNumber)
                 .ThenByDescending(x => x.Seeders).ToList();
 
             return results;

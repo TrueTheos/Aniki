@@ -1,17 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System;
-using System.Net;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Web;
 using Avalonia;
-using System.Security.Cryptography;
-using System.Text;
 using Aniki.Services;
 using Aniki.ViewModels;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -29,14 +19,14 @@ namespace Aniki.Views
             this.AttachDevTools();
 #endif
 
-            var oauthService = new OAuthService();
+            OAuthService oauthService = new OAuthService();
 
-            _viewModel = new LoginViewModel(oauthService);
+            _viewModel = new(oauthService);
             _viewModel.NavigateToMainRequested += OnNavigateToMainRequested;
 
             DataContext = _viewModel;
 
-            this.Loaded += LoginWindow_Loaded;
+            Loaded += LoginWindow_Loaded;
         }
 
         private void InitializeComponent()
@@ -51,13 +41,13 @@ namespace Aniki.Views
 
         private void OnNavigateToMainRequested(object sender, string accessToken)
         {
-            var mainWindow = new MainWindow();
-            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            MainWindow mainWindow = new MainWindow();
+            if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = mainWindow;
             }
             mainWindow.Show();
-            this.Close();
+            Close();
         }
     }
 }

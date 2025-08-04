@@ -1,4 +1,4 @@
-﻿using Aniki.Misc;
+using Aniki.Misc;
 using Aniki.Models;
 using Aniki.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,14 +8,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static Aniki.Services.SaveService;
 
 namespace Aniki.ViewModels
 {
     public partial class AnimeDetailsViewModel : ViewModelBase
     {
+        private readonly NyaaService _nyaaService = new();
         private AnimeData _selectedAnime;
         public AnimeData SelectedAnime
         {
@@ -36,6 +35,8 @@ namespace Aniki.ViewModels
         private ObservableCollection<AnimeData> _animeList;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanIncreaseEpisodeCount))]
+        [NotifyPropertyChangedFor(nameof(CanDecreaseEpisodeCount))]
         private int _episodesWatched;
 
         [ObservableProperty]
@@ -55,6 +56,9 @@ namespace Aniki.ViewModels
                 }
             }
         }
+
+        public bool CanIncreaseEpisodeCount => EpisodesWatched < (Details?.NumEpisodes ?? 0);
+        public bool CanDecreaseEpisodeCount => EpisodesWatched > 0;
 
         [ObservableProperty]
         private string _torrentSearchTerms = string.Empty;
@@ -101,11 +105,15 @@ namespace Aniki.ViewModels
             }
         }
 
-        public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } = StatusEnum.TranslatedStatusOptions;
+        public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } =
+        [
+            AnimeStatusTranslated.Watching, AnimeStatusTranslated.Completed, AnimeStatusTranslated.OnHold,
+            AnimeStatusTranslated.Dropped, AnimeStatusTranslated.PlanToWatch
+        ];
 
-        public IEnumerable<AnimeStatusTranslated> FilterOptions => StatusEnum.TranslatedStatusOptions;
+        public IEnumerable<AnimeStatusTranslated> FilterOptions => [.. Enum.GetValues<AnimeStatusTranslated>()];
 
-        public List<int> ScoreOptions { get; } = new List<int> {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        public List<int> ScoreOptions { get; } = new() {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
         [ObservableProperty]
         public ObservableCollection<int> _watchEpisodesOptions = new();
@@ -115,8 +123,8 @@ namespace Aniki.ViewModels
 
         public AnimeDetailsViewModel() 
         { 
-            WatchAnimeViewModel = new();
-            _animeList = new ObservableCollection<AnimeData>();
+            WatchAnimeViewModel = new(this);
+            _animeList = new();
             SelectedFilter = AnimeStatusTranslated.All;
         }
 
@@ -136,10 +144,13 @@ namespace Aniki.ViewModels
             {
                 WatchEpisodesOptions.Add(i + 1);
             }
+            
             OnPropertyChanged(nameof(EpisodesWatched));
             OnPropertyChanged(nameof(NextEpisodeNumber));
+            OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
+            OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
             SelectedScore = details.MyListStatus?.Score ?? 1;
-            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.APIToTranslated() : AnimeStatusTranslated.All;
+            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.All;
             WatchAnimeViewModel.Update(details);
         }
 
@@ -162,9 +173,9 @@ namespace Aniki.ViewModels
                 IsLoading = true;
                 AnimeList.Clear();
 
-                var animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToAPI());
+                List<AnimeData> animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToApi());
 
-                foreach (var anime in animeListData)
+                foreach (AnimeData anime in animeListData)
                 {
                     AnimeList.Add(anime);
                 }
@@ -179,27 +190,52 @@ namespace Aniki.ViewModels
             }
         }
 
-        public async Task SearchAnime(string searchQuery)
+        public async Task<List<SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
         {
-            try
+            List<SearchEntry> results = await MalUtils.SearchAnimeOrdered(searchQuery);
+            AnimeList.Clear();
+            
+            if (fillList)
             {
-                var results = await MalUtils.SearchAnime(searchQuery);
                 AnimeList.Clear();
-
-                foreach (var entry in results)
+                foreach (SearchEntry entry in results)
                 {
-                    if (entry == null) continue;
-
-                    var newAnimeData = new AnimeData()
+                    AnimeData newAnimeData = new AnimeData
                     {
-                        Node = new AnimeNode
+                        Node = new()
                         {
                             Id = entry.Anime.Id,
                             Title = entry.Anime.Title
-                        }
+                        },
+                        ListStatus = null
                     };
                     AnimeList.Add(newAnimeData);
                 }
+            }
+
+            if (showFirstBest) SelectedAnime = AnimeList[0];
+            
+            return results;
+        }
+        
+        public async Task SearchAnimeById(int malId, bool showDetails = true)
+        {
+            try
+            {
+                AnimeDetails details = await MalUtils.GetAnimeDetails(malId);
+                AnimeList.Clear();
+
+                AnimeData newAnimeData = new AnimeData
+                {
+                    Node = new()
+                    {
+                        Id = details.Id,
+                        Title = details.Title
+                    },
+                    ListStatus = details.MyListStatus
+                };
+                AnimeList.Add(newAnimeData);
+                SelectedAnime = newAnimeData;
             }
             catch (Exception ex)
             {
@@ -208,7 +244,38 @@ namespace Aniki.ViewModels
         }
 
         [RelayCommand]
-        public async Task UpdateEpisodeCount(int change)
+        public void IncreaseEpisodeCount()
+        {
+            _ = UpdateEpisodeCount(1);
+        }
+
+        [RelayCommand]
+        public void DecreaseEpisodeCount()
+        {
+            _ = UpdateEpisodeCount(-1);
+        }
+
+        [RelayCommand]
+        private async Task RemoveFromList()
+        {
+            if (Details == null) return;
+
+            await MalUtils.RemoveFromList(Details.Id);
+            
+            await LoadAnimeDetailsAsync(SelectedAnime);
+        }
+
+        [RelayCommand]
+        private async Task AddToList()
+        {
+            if (Details == null) return;
+
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, "watching");
+            
+            await LoadAnimeDetailsAsync(SelectedAnime);
+        }
+
+        private async Task UpdateEpisodeCount(int change)
         {
             if (Details?.MyListStatus == null) return;
 
@@ -221,13 +288,8 @@ namespace Aniki.ViewModels
                 newCount = Details.NumEpisodes;
             }
 
-            try
-            {
-                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
-
-                EpisodesWatched = newCount;
-            }
-            catch (Exception ex) { }
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
+            EpisodesWatched = newCount;
         }
 
         private async Task UpdateAnimeScore(string score)
@@ -235,25 +297,15 @@ namespace Aniki.ViewModels
             if (Details?.MyListStatus == null) return;
             if (score == null) return;
 
-            try
-            {
-                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score.ToString());
-                Details.MyListStatus.Score = int.Parse(score);
-
-            }
-            catch (Exception ex) { }
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score.ToString());
+            Details.MyListStatus.Score = int.Parse(score);
         }
 
         private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
         {
-            if (Details?.MyListStatus == null) return;
 
-            try
-            {
-                await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToAPI().ToString());
-                Details.MyListStatus.Status = status.TranslatedToAPI();
-            }
-            catch (Exception ex) { }
+            await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
+            if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
         }
 
         [RelayCommand]
@@ -263,9 +315,9 @@ namespace Aniki.ViewModels
 
             TorrentsList.Clear();
 
-            var list = await NyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
+            List<NyaaTorrent> list = await _nyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
 
-            foreach (var t in list)
+            foreach (NyaaTorrent t in list)
             {
                 TorrentsList.Add(t);
             }
@@ -275,6 +327,14 @@ namespace Aniki.ViewModels
         public void DownloadTorrent(string magnet)
         {
             Process.Start(new ProcessStartInfo(magnet) { UseShellExecute = true });
+        }
+
+        [RelayCommand]
+        private void OpenMalPage()
+        {
+            if (Details == null) return;
+            var url = $"https://myanimelist.net/anime/{Details.Id}";
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
     }
 }
