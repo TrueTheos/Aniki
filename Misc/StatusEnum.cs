@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Aniki.Misc
 {
     public enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
-    public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, None } //todo to wyjebac i uzywac tylko API enumow
+    public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } //todo to wyjebac i uzywac tylko API enumow
 
     public static class StatusEnum
     {
@@ -42,7 +42,7 @@ namespace Aniki.Misc
                 AnimeStatusTranslated.OnHold => AnimeStatusApi.on_hold,
                 AnimeStatusTranslated.Dropped => AnimeStatusApi.dropped,
                 AnimeStatusTranslated.PlanToWatch => AnimeStatusApi.plan_to_watch,
-                AnimeStatusTranslated.None => AnimeStatusApi.none,
+                AnimeStatusTranslated.All => AnimeStatusApi.none,
                 _ => throw new ArgumentOutOfRangeException(nameof(translated), translated, null)
             };
         }
@@ -56,7 +56,7 @@ namespace Aniki.Misc
                 AnimeStatusApi.on_hold => AnimeStatusTranslated.OnHold,
                 AnimeStatusApi.dropped => AnimeStatusTranslated.Dropped,
                 AnimeStatusApi.plan_to_watch => AnimeStatusTranslated.PlanToWatch,
-                AnimeStatusApi.none => AnimeStatusTranslated.None,
+                AnimeStatusApi.none => AnimeStatusTranslated.All,
                 _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
             };
         }

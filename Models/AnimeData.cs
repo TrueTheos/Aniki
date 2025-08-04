@@ -89,4 +89,16 @@ namespace Aniki.Models
         [JsonPropertyName("num_episodes_watched")]
         public int NumEpisodesWatched { get; set; }
     }
+
+    public class RelatedAnime
+    {
+        [JsonPropertyName("node")]
+        public AnimeNode Node { get; set; }
+
+        [JsonPropertyName("relation_type")]
+        public string RelationType { get; set; }
+
+        [JsonPropertyName("relation_type_formatted")]
+        public string RelationTypeFormatted { get; set; }
+    }
 }

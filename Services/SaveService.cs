@@ -1,4 +1,4 @@
-﻿using Aniki.Misc;
+using Aniki.Misc;
 using Aniki.Models;
 using Aniki.ViewModels;
 using Avalonia.Media.Imaging;
@@ -12,21 +12,27 @@ using System.Threading.Tasks;
 
 namespace Aniki.Services
 {
+    using SeasonCache = Dictionary<string, Dictionary<int, SeasonData>>;
+    
+    public struct SeasonData
+    {
+        public int Episodes { get; set; }
+        public int MalId { get; set; }
+    }
+
     public class SaveService
     {
         private static readonly string _mainDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Aniki");
-
         private static readonly string _cacheDirectory = Path.Combine(_mainDirectory, "ImageCache");
-
-        public static readonly string DefaultEpisodesFolder = Path.Combine(_mainDirectory, "Episodes");
-
         private static readonly string _settingsConfigFile = Path.Combine(_mainDirectory, "config.json");
-
         private static readonly string _animeStatusesFile = Path.Combine(_mainDirectory, "animeStatuses.json");
+        private static readonly string _seasonCacheFile = Path.Combine(_mainDirectory, "season_cache.json");
+        
+        public static readonly string DefaultEpisodesFolder = Path.Combine(_mainDirectory, "Episodes");
         public static List<AnimeStatus> AnimeStatuses { get; private set; } = new();
-
+        
         public static void Init()
         {
             if (!Directory.Exists(_cacheDirectory))
@@ -40,6 +46,31 @@ namespace Aniki.Services
             }
 
             LoadAnimeStatuses();
+        }
+
+        public static SeasonCache GetSeasonCache()
+        {
+            if (File.Exists(_seasonCacheFile))
+            {
+                try
+                {
+                    var json = File.ReadAllText(_seasonCacheFile);
+                    return JsonSerializer.Deserialize<SeasonCache>(json) ?? new SeasonCache();
+                }
+                catch (JsonException)
+                {
+                    // Cache file is malformed, delete it and start fresh
+                    File.Delete(_seasonCacheFile);
+                }
+            }
+            return new SeasonCache();
+        }
+
+        public static void SaveSeasonCache(SeasonCache cache)
+        {
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            var json = JsonSerializer.Serialize(cache, options);
+            File.WriteAllText(_seasonCacheFile, json);
         }
 
         public static void SaveImageToCache(string fileName, Bitmap image)

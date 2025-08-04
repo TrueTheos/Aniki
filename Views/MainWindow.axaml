@@ -258,7 +258,8 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock VerticalAlignment="Center" Text="•"/>
-                                        <TextBlock VerticalAlignment="Center" Text="{Binding Title}" Foreground="White" FontSize="15" Padding="10,0,0,0"/>
+                                        <TextBlock VerticalAlignment="Center" Text="{Binding Title}" Foreground="White" FontSize="15" Padding="10,0,0,0"
+                                                   ToolTip.Tip="{Binding Title}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

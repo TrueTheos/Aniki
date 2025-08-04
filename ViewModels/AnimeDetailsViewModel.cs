@@ -1,4 +1,4 @@
-﻿using Aniki.Misc;
+using Aniki.Misc;
 using Aniki.Models;
 using Aniki.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +14,7 @@ namespace Aniki.ViewModels
 {
     public partial class AnimeDetailsViewModel : ViewModelBase
     {
+        private readonly NyaaService _nyaaService = new();
         private AnimeData _selectedAnime;
         public AnimeData SelectedAnime
         {
@@ -122,14 +123,14 @@ namespace Aniki.ViewModels
 
         public AnimeDetailsViewModel() 
         { 
-            WatchAnimeViewModel = new();
+            WatchAnimeViewModel = new(this);
             _animeList = new();
-            SelectedFilter = AnimeStatusTranslated.None;
+            SelectedFilter = AnimeStatusTranslated.All;
         }
 
         public override async Task Enter()
         {
-            await LoadAnimeListAsync(AnimeStatusTranslated.None);
+            await LoadAnimeListAsync(AnimeStatusTranslated.All);
         }
 
         public void Update(AnimeDetails details)
@@ -149,7 +150,7 @@ namespace Aniki.ViewModels
             OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
             OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
             SelectedScore = details.MyListStatus?.Score ?? 1;
-            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.None;
+            SelectedStatus = details.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.All;
             WatchAnimeViewModel.Update(details);
         }
 
@@ -191,15 +192,9 @@ namespace Aniki.ViewModels
 
         public async Task<List<SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
         {
-            List<SearchEntry> results = await MalUtils.SearchAnime(searchQuery);
+            List<SearchEntry> results = await MalUtils.SearchAnimeOrdered(searchQuery);
             AnimeList.Clear();
-
-            // we are using TokenSortRatio instead of Ratio because there was a weird case:
-            // Fuzz.Ratio("Shingeki no Kyojin Season 2", "DAN DA DAN Season 2") was greater than
-            // Fuzz.Ratio("Dandadan 2nd Season", "DAN DA DAN Season 2")
-            // why? I have no clue. If someone smarter than me sees this please let me know!
             
-            results = results.OrderByDescending(x => FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, searchQuery)).ToList();
             if (fillList)
             {
                 AnimeList.Clear();
@@ -261,6 +256,16 @@ namespace Aniki.ViewModels
         }
 
         [RelayCommand]
+        private async Task RemoveFromList()
+        {
+            if (Details == null) return;
+
+            await MalUtils.RemoveFromList(Details.Id);
+            
+            await LoadAnimeDetailsAsync(SelectedAnime);
+        }
+
+        [RelayCommand]
         private async Task AddToList()
         {
             if (Details == null) return;
@@ -310,7 +315,7 @@ namespace Aniki.ViewModels
 
             TorrentsList.Clear();
 
-            List<NyaaTorrent> list = await NyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
+            List<NyaaTorrent> list = await _nyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
 
             foreach (NyaaTorrent t in list)
             {

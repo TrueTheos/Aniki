@@ -9,12 +9,13 @@ using System.Linq;
 
 namespace Aniki.Services
 {
-    public static class NyaaService
+    public class NyaaService
     {
         private static readonly HttpClient _http = new();
-        public static async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
+        private readonly AnimeNameParser _animeNameParser = new();
+        public async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
         {
-            string term = HttpUtility.UrlEncode($"{animeName} {episodeNumber:D2}");
+            string term = HttpUtility.UrlEncode($"{animeName}");
             string url = $"https://nyaa.si/?page=rss&f=0&c=1_2&q={term}";
 
             string rssContent = await _http.GetStringAsync(url);
@@ -29,7 +30,9 @@ namespace Aniki.Services
             foreach (XmlNode item in itemNodes)
             {
                 string? title = item.SelectSingleNode("title")?.InnerText;
-
+                var parsed = await _animeNameParser.ParseAnimeFilename(title);
+                string? episode = parsed.EpisodeNumber;
+                
                 string torrentLink = "";
 
                 XmlNamespaceManager namespaceManager = new XmlNamespaceManager(doc.NameTable);
@@ -57,7 +60,9 @@ namespace Aniki.Services
                 {
                     results.Add(new()
                     {
-                        Title = HttpUtility.HtmlDecode(title),
+                        FileName = HttpUtility.HtmlDecode(title),
+                        AnimeTitle = parsed.AnimeName,
+                        EpisodeNumber = episode,
                         TorrentLink = torrentLink,
                         Size = size,
                         Seeders = seeders
@@ -65,7 +70,8 @@ namespace Aniki.Services
                 }
             }
 
-            results = results.OrderByDescending(x => FuzzySharp.Fuzz.Ratio(x.Title.ToLower(), animeName.ToLower()))
+            results = results.OrderByDescending(x => FuzzySharp.Fuzz.Ratio(x.AnimeTitle.ToLower(), animeName.ToLower()))
+                .ThenByDescending(x => int.TryParse(x.EpisodeNumber, out int ep) && ep == episodeNumber)
                 .ThenByDescending(x => x.Seeders).ToList();
 
             return results;

@@ -9,12 +9,16 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Aniki.Views;
 
 namespace Aniki.ViewModels
 {
     public partial class WatchAnimeViewModel : ViewModelBase
     {
+        private readonly AnimeDetailsViewModel _animeDetailsViewModel;
+        private readonly AnimeNameParser _animeNameParser = new();
+        private readonly AbsoluteEpisodeService _absoluteEpisodeService = new();
         private AnimeDetails? _details;
 
         private Episode? _lastPlayedEpisode;
@@ -24,6 +28,9 @@ namespace Aniki.ViewModels
 
         [ObservableProperty]
         private bool _isNoEpisodesViewVisible;
+
+        [ObservableProperty]
+        private bool _isLoading;
 
         [ObservableProperty]
         private ObservableCollection<Episode> _episodes = new();
@@ -43,9 +50,38 @@ namespace Aniki.ViewModels
             Executable = 2,
         }
 
-        public WatchAnimeViewModel()
+        public WatchAnimeViewModel(AnimeDetailsViewModel animeDetails)
         {
-            Update(null);
+            _animeDetailsViewModel = animeDetails;
+            IsEpisodesViewVisible = false;
+            IsNoEpisodesViewVisible = true;
+        }
+
+        public override async Task Enter()
+        {
+            await LoadEpisodesFromFolder();
+        }
+
+        private async Task LoadEpisodesFromFolder()
+        {
+            IsLoading = true;
+            Episodes.Clear();
+            foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder, "*.*", SearchOption.AllDirectories))
+            {
+                string fileName = Path.GetFileName(filePath);
+                ParseResult result = await _animeNameParser.ParseAnimeFilename(fileName);
+                if (result == null || result.EpisodeNumber == null) continue;
+
+                int? malId = await _absoluteEpisodeService.GetMalIdForSeason(result.AnimeName, result.Season);
+                if (malId.HasValue)
+                {
+                    Episodes.Add(new(filePath, int.Parse(result.EpisodeNumber ?? "0"), result.AbsoluteEpisodeNumber,
+                        result.AnimeName, malId.Value, result.Season));
+                }
+            }
+
+            UpdateView();
+            IsLoading = false;
         }
 
         public void Update(AnimeDetails? details)
@@ -56,20 +92,11 @@ namespace Aniki.ViewModels
             IsNoEpisodesViewVisible = false;
             Episodes.Clear();
 
-            foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder, "*.*", SearchOption.AllDirectories))
-            {
-                string fileName = Path.GetFileName(filePath);
-                ParseResult result = AnimeNameParser.ParseAnimeFilename(fileName);
-                if (result == null || result.EpisodeNumber == null) continue;
-
-                if (_details == null) continue;
-                if (FuzzySharp.Fuzz.Ratio(result.AnimeName.ToLower(), _details.Title.ToLower()) > 90)
-                {
-                    Episodes.Add(new(filePath, result.EpisodeNumber,
-                        title: _details.Title, id: _details.Id));
-                }
-            }
-
+            UpdateView();
+        }
+        
+        private void UpdateView()
+        {
             if (Episodes.Count > 0)
             {
                 IsEpisodesViewVisible = true;
@@ -156,15 +183,28 @@ namespace Aniki.ViewModels
 
         private void MarkEpisodeCompleted(Episode ep)
         {
-            _ = MalUtils.UpdateAnimeStatus(ep.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, ep.EpisodeNumber.ToString());
+            int episodeToMark = ep.EpisodeNumber;
+            _ = MalUtils.UpdateAnimeStatus(ep.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, episodeToMark.ToString());
         }
     }
 
-    public class Episode(string filePath, int episodeNumber, string title, int id)
+    public class Episode
     {
-        public string FilePath { get; init; } = filePath;
-        public int EpisodeNumber { get; init; } = episodeNumber;
-        public string Title { get; init; } = title;
-        public int Id { get; init; } = id;
+        public string FilePath { get; }
+        public int EpisodeNumber { get; }
+        public int? AbsoluteEpisodeNumber { get; }
+        public int Season { get; }
+        public string Title { get; }
+        public int Id { get;  }
+
+        public Episode(string filePath, int episodeNumber, int? absoluteEpisodeNumber, string title, int id, int season)
+        {
+            FilePath = filePath;
+            EpisodeNumber = episodeNumber;
+            AbsoluteEpisodeNumber = absoluteEpisodeNumber;
+            Title = title;
+            Id = id;
+            Season = season;    
+        }
     }
 }

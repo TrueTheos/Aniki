@@ -214,7 +214,7 @@ namespace Aniki.Services
             return null;
         }
 
-        public static async Task<List<SearchEntry>> SearchAnime(string query)
+        public static async Task<List<SearchEntry>> SearchAnimeOrdered(string query)
         {
             string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=totalepisodes";
 
@@ -222,7 +222,12 @@ namespace Aniki.Services
             string responseBody = await response.Content.ReadAsStringAsync();
             AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
 
-            return responseData?.Data?.ToList() ?? new List<SearchEntry>();
+            // we are using TokenSortRatio instead of Ratio because there was a weird case:
+            // Fuzz.Ratio("Shingeki no Kyojin Season 2", "DAN DA DAN Season 2") was greater than
+            // Fuzz.Ratio("Dandadan 2nd Season", "DAN DA DAN Season 2")
+            // why? I have no clue. If someone smarter than me sees this please let me know!
+            
+            return responseData?.Data?.OrderByDescending(x => FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, query)).ToList() ?? new List<SearchEntry>();
         }
 
         public enum AnimeStatusField
@@ -260,6 +265,55 @@ namespace Aniki.Services
             {
                 throw new($"Failed to update anime status: {response.StatusCode}");
             }
+        }
+
+        public static async Task RemoveFromList(int animeId)
+        {
+            string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
+
+            HttpResponseMessage response = await _client.DeleteAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Anime with ID {animeId} not found on the user's list, or already deleted.");
+                    return;
+                }
+                throw new($"Failed to remove anime from list: {response.StatusCode}");
+            }
+        }
+
+        public static async Task<List<RelatedAnime>> GetRelatedAnime(int id)
+        {
+            try
+            {
+                string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=related_anime";
+
+                HttpResponseMessage response = await _client.GetAsync(url);
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    using JsonDocument doc = JsonDocument.Parse(responseBody);
+                    JsonElement root = doc.RootElement;
+
+                    if (root.TryGetProperty("related_anime", out JsonElement relatedAnimeElement))
+                    {
+                        return JsonSerializer.Deserialize<List<RelatedAnime>>(relatedAnimeElement.ToString(), _jso);
+                    }
+                }
+                else
+                {
+                    throw new($"API returned status code: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new($"Error loading related anime: {ex.Message}", ex);
+            }
+
+            return new List<RelatedAnime>();
         }
 
         private static async void OnEpisodesWatchedChanged(int animeId, string value)

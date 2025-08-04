@@ -49,7 +49,7 @@ namespace Aniki.ViewModels
         public MainViewModel() 
         {
             AnimeDetailsViewModel = new();
-            WatchViewModel = new();
+            WatchViewModel = new(AnimeDetailsViewModel);
             CalendarViewModel = new(this);
             StatsViewModel = new();
         }
@@ -106,7 +106,7 @@ namespace Aniki.ViewModels
             TodayAnime.Clear();
             foreach (var anime in animes)
             {
-                if(watchingList.Any(x => x.Node.Title == anime.Title))
+                if(watchingList.Any(x => x.Node.Id == anime.MalId))
                     TodayAnime.Add(anime);
             }
         }
@@ -147,7 +147,7 @@ namespace Aniki.ViewModels
         {
             if (string.IsNullOrWhiteSpace(searchQuery))
             {
-                await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.None);
+                await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
                 return;
             }
 

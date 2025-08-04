@@ -171,9 +171,14 @@
                                                     Text="{Binding Details.Title}"
                                                     TextWrapping="Wrap" />
 
-                                                <Button Grid.Column="1" Classes="SearchButton" Command="{Binding OpenMalPageCommand}" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Open MAL page">
-                                                    <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
-                                                </Button>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <Button Classes="SearchButton" Command="{Binding OpenMalPageCommand}" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Open MAL page">
+                                                        <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+                                                    </Button>
+                                                    <Button Classes="SearchButton" Command="{Binding RemoveFromListCommand}" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Remove from list" IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                        <PathIcon Width="20" Height="20" Data="{StaticResource delete_regular}" Foreground="White"/>
+                                                    </Button>
+                                                </StackPanel>
                                             </Grid>
 
                                             <!--  Picture and Rating  -->
@@ -429,7 +434,7 @@
                                                     <TextBlock
                                                         Grid.Column="0"
                                                         Foreground="{StaticResource White}"
-                                                        Text="{Binding Title}"
+                                                        Text="{Binding FileName}"
                                                         TextWrapping="Wrap" />
                                                     <TextBlock
                                                         Grid.Column="1"
