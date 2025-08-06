@@ -16,6 +16,7 @@ namespace Aniki.Models
     {
         public int Id { get; init; }
         public string Title { get; init; }
+        public Genre[] Genres { get; set; }
     }
 
     public class AnimeListResponse

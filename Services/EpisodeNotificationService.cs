@@ -43,12 +43,12 @@ namespace Aniki.Services
                     {
                         System.Diagnostics.Debug.WriteLine("Fetching currently watching anime...");
                         SaveService.LoadAnimeStatuses();
-                        List<SaveService.AnimeStatus> watching = SaveService.AnimeStatuses.Where(a => a.Status == Misc.AnimeStatusApi.watching).ToList();
+                        List<AnimeStatus> watching = SaveService.AnimeStatuses.Where(a => a.Status == Misc.AnimeStatusApi.watching).ToList();
                         System.Diagnostics.Debug.WriteLine($"Found {watching.Count} anime(s) currently being watched.");
 
                         List<AiringSchedule>? airingData = await FetchAiringScheduleFromAniList();
 
-                        foreach (SaveService.AnimeStatus anime in watching)
+                        foreach (AnimeStatus anime in watching)
                         {
                             AiringSchedule? matchingAnime = airingData?.FirstOrDefault(a => a.Title == anime.Title);
                             if (matchingAnime != null && matchingAnime.NextEpisodeDate <= DateTime.Now)

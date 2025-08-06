@@ -42,9 +42,28 @@ namespace Aniki.ViewModels
             }
         }
 
+        [ObservableProperty]
+        private long _cacheSize;
+
+        private readonly CacheManager _cacheManager;
+
         public SettingsViewModel()
         {
             LoadSettings();
+            _cacheManager = SaveService.ImageCache;
+            UpdateCacheSize();
+        }
+
+        private void UpdateCacheSize()
+        {
+            CacheSize = _cacheManager.GetCacheSize();
+        }
+
+        [RelayCommand]
+        private void ClearCache()
+        {
+            _cacheManager.ClearCache();
+            UpdateCacheSize();
         }
 
         private void LoadSettings()

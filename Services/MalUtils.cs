@@ -45,7 +45,7 @@ namespace Aniki.Services
         {
             try
             {
-                HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me?fields=name,id");
+                HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me?fields=name,id,anime_statistics");
                 string responseBody = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -68,7 +68,7 @@ namespace Aniki.Services
                 List<AnimeData> animeList = new();
 
                 string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
-                string fields = $"list_status,num_episodes,pictures,status";
+                string fields = $"list_status,num_episodes,pictures,status,genres";
                 
                 url += $"fields={fields}&limit=100";
 
