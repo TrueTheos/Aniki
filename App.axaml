@@ -16,6 +16,7 @@
                     <conv:StringToIntConverter x:Key="StringToIntConverter" />
                     <conv:TimeToOffsetConverter x:Key="TimeToOffsetConverter" />
                     <conv:AnimeTypeToColorConverter x:Key="AnimeTypeToColorConverter" />
+                    <conv:ValueToGridLengthConverter  x:Key="ValueToGridLengthConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

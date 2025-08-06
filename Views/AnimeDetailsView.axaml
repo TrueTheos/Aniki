@@ -470,7 +470,7 @@
                     </TabItem>
 
                     <!--  Watch Anime  -->
-                    <TabItem Foreground="{StaticResource Complementary}" Header="Watch!">
+                    <TabItem Foreground="{StaticResource Green}" Header="Watch!">
                         <Grid Margin="0,16,0,0">
                             <views:WatchAnimeView Grid.Column="1" DataContext="{Binding WatchAnimeViewModel}" />
                         </Grid>
