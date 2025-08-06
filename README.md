@@ -7,9 +7,9 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 <details>
   <summary><b>Show preview</b></summary>
 
-![UI Preview](https://imgur.com/BmEyU0o)
-![UI Preview](https://imgur.com/K3gQIsR)
-![UI Preview](https://imgur.com/pi3iPSW)
+![UI Preview](https://i.imgur.com/BmEyU0o.png)
+![UI Preview](https://i.imgur.com/K3gQIsR.png)
+![UI Preview](https://i.imgur.com/pi3iPSW.png)
 
 </details>
 
