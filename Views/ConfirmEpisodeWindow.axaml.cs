@@ -1,19 +1,18 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
-namespace Aniki.Views
+namespace Aniki.Views;
+
+public partial class ConfirmEpisodeWindow : Window
 {
-    public partial class ConfirmEpisodeWindow : Window
+    public ConfirmEpisodeWindow()
     {
-        public ConfirmEpisodeWindow()
-        {
-            InitializeComponent();
-        }
-
-        private void OnYes(object? sender, RoutedEventArgs e)
-           => Close(true);
-
-        private void OnNo(object? sender, RoutedEventArgs e)
-            => Close(false);
+        InitializeComponent();
     }
+
+    private void OnYes(object? sender, RoutedEventArgs e)
+        => Close(true);
+
+    private void OnNo(object? sender, RoutedEventArgs e)
+        => Close(false);
 }

@@ -1,5 +1,3 @@
-using Aniki.Models;
-using Aniki.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
@@ -16,10 +14,10 @@ public partial class CalendarView : UserControl
     {
         if (sender is ListBox lb )
         {
-            if (lb.SelectedItem == null) return;
+            if (lb.SelectedItem is not AnimeScheduleItem asi) return;
             if (DataContext is CalendarViewModel vm)
             {
-                vm.GoToClickedAnime(lb.SelectedItem as AnimeScheduleItem);
+                vm.GoToClickedAnime(asi);
             }
         }
     }

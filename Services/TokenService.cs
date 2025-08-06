@@ -1,111 +1,106 @@
-﻿using Aniki.Models;
-using System;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace Aniki.Services
+namespace Aniki.Services;
+
+public static class TokenService
 {
-    public static class TokenService
+    private static string _tokenFilePath = "";
+    private static StoredTokenData? _cachedTokens;
+
+    public static void Init()
     {
-        private static string _tokenFilePath;
-        private static StoredTokenData _cachedTokens;
+        string appDataFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Aniki");
 
-        public static void Init()
+        if (!Directory.Exists(appDataFolder))
         {
-            string appDataFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Aniki");
-
-            if (!Directory.Exists(appDataFolder))
-            {
-                Directory.CreateDirectory(appDataFolder);
-            }
-
-            _tokenFilePath = Path.Combine(appDataFolder, "tokens.json");
+            Directory.CreateDirectory(appDataFolder);
         }
 
-        public static async Task<StoredTokenData> LoadTokensAsync()
-        {
-            if (_cachedTokens != null)
-            {
-                MalUtils.Init(_cachedTokens.AccessToken);
-                return _cachedTokens;
-            }
+        _tokenFilePath = Path.Combine(appDataFolder, "tokens.json");
+    }
 
-            if (!File.Exists(_tokenFilePath))
+    public static async Task<StoredTokenData?> LoadTokensAsync()
+    {
+        if (_cachedTokens != null)
+        {
+            MalUtils.Init(_cachedTokens.AccessToken);
+            return _cachedTokens;
+        }
+
+        if (!File.Exists(_tokenFilePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            string encryptedJson = await File.ReadAllTextAsync(_tokenFilePath);
+            string decryptedJson = DecryptData(encryptedJson);
+            _cachedTokens = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
+
+            if (_cachedTokens != null && DateTime.UtcNow > _cachedTokens.ExpiresAtUtc)
             {
                 return null;
             }
 
-            try
-            {
-                string encryptedJson = await File.ReadAllTextAsync(_tokenFilePath);
-                string decryptedJson = DecryptData(encryptedJson);
-                _cachedTokens = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
-
-                if (_cachedTokens != null && DateTime.UtcNow > _cachedTokens.ExpiresAtUtc)
-                {
-                    return null;
-                }
-
-                MalUtils.Init(_cachedTokens.AccessToken);
-                return _cachedTokens;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading tokens: {ex.Message}");
-                return null;
-            }
+            MalUtils.Init(_cachedTokens?.AccessToken);
+            return _cachedTokens;
         }
-
-        public static async Task SaveTokensAsync(TokenResponse tokenResponse)
+        catch (Exception ex)
         {
-            StoredTokenData tokens = new()
-            {
-                AccessToken = tokenResponse.access_token,
-                RefreshToken = tokenResponse.refresh_token,
-                ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.expires_in)
-            };
-
-            string json = JsonSerializer.Serialize(tokens);
-            string encryptedJson = EncryptData(json);
-            await File.WriteAllTextAsync(_tokenFilePath, encryptedJson);
-            _cachedTokens = tokens;
+            Console.WriteLine($"Error loading tokens: {ex.Message}");
+            return null;
         }
+    }
 
-        public static void ClearTokens()
+    public static async Task SaveTokensAsync(TokenResponse tokenResponse)
+    {
+        StoredTokenData? tokens = new()
         {
-            if (File.Exists(_tokenFilePath))
-            {
-                File.Delete(_tokenFilePath);
-            }
-            _cachedTokens = null;
-        }
+            AccessToken = tokenResponse.access_token,
+            RefreshToken = tokenResponse.refresh_token,
+            ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.expires_in)
+        };
 
-        public static bool HasValidToken()
-        {
-            return _cachedTokens != null &&
-                   !string.IsNullOrEmpty(_cachedTokens.AccessToken) &&
-                   DateTime.UtcNow < _cachedTokens.ExpiresAtUtc;
-        }
+        string json = JsonSerializer.Serialize(tokens);
+        string encryptedJson = EncryptData(json);
+        await File.WriteAllTextAsync(_tokenFilePath, encryptedJson);
+        _cachedTokens = tokens;
+    }
 
-        public static string GetAccessToken()
+    public static void ClearTokens()
+    {
+        if (File.Exists(_tokenFilePath))
         {
-            return _cachedTokens?.AccessToken;
+            File.Delete(_tokenFilePath);
         }
+        _cachedTokens = null;
+    }
 
-        private static string EncryptData(string data)
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(data);
-            return Convert.ToBase64String(bytes);
-        }
+    public static bool HasValidToken()
+    {
+        return _cachedTokens != null &&
+               !string.IsNullOrEmpty(_cachedTokens.AccessToken) &&
+               DateTime.UtcNow < _cachedTokens.ExpiresAtUtc;
+    }
 
-        private static string DecryptData(string encryptedData)
-        {
-            byte[] bytes = Convert.FromBase64String(encryptedData);
-            return Encoding.UTF8.GetString(bytes);
-        }
+    public static string? GetAccessToken()
+    {
+        return _cachedTokens?.AccessToken;
+    }
+
+    private static string EncryptData(string data)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(data);
+        return Convert.ToBase64String(bytes);
+    }
+
+    private static string DecryptData(string encryptedData)
+    {
+        byte[] bytes = Convert.FromBase64String(encryptedData);
+        return Encoding.UTF8.GetString(bytes);
     }
 }

@@ -1,20 +1,18 @@
-﻿using System;
-using Avalonia;
+﻿using Avalonia;
 using Velopack;
 
-namespace Aniki
+namespace Aniki;
+
+internal class Program
 {
-    internal class Program
+    [STAThread]
+    public static void Main(string[] args)
     {
-        [STAThread]
-        public static void Main(string[] args)
-        {
-            VelopackApp.Build().Run();
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-        }
-        public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
-                .UsePlatformDetect()
-                .LogToTrace();
+        VelopackApp.Build().Run();
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .LogToTrace();
 }

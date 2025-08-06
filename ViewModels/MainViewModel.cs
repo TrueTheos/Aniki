@@ -1,197 +1,186 @@
 ﻿using Aniki.Misc;
-using Aniki.Models;
-using Aniki.Services;
 using Avalonia.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Aniki.ViewModels
+namespace Aniki.ViewModels;
+
+public partial class MainViewModel : ViewModelBase
 {
-    public partial class MainViewModel : ViewModelBase
+    [ObservableProperty]
+    private string? _username;
+
+    [ObservableProperty]
+    private Bitmap? _profileImage;
+
+    [ObservableProperty]
+    private bool _isLoading;
+
+    [ObservableProperty]
+    private string _searchQuery = string.Empty;
+
+    public event EventHandler? LogoutRequested;
+    public event EventHandler? SettingsRequested;
+
+    #region Views
+    [ObservableProperty]
+    private ViewModelBase? _currentViewModel;
+
+    [ObservableProperty]
+    private AnimeDetailsViewModel _animeDetailsViewModel = new();
+    [ObservableProperty]
+    private WatchAnimeViewModel _watchViewModel = new();
+    [ObservableProperty]
+    private CalendarViewModel _calendarViewModel;
+    [ObservableProperty]
+    private StatsViewModel _statsViewModel = new();
+    #endregion
+
+    [ObservableProperty]
+    private ObservableCollection<AnimeScheduleItem> _todayAnime = new();
+
+    public MainViewModel() 
     {
-        [ObservableProperty]
-        private string _username;
+        CalendarViewModel = new(this);
+    }
 
-        [ObservableProperty]
-        private Bitmap _profileImage;
+    [RelayCommand]
+    public async Task ShowMainPage()
+    {
+        CurrentViewModel = AnimeDetailsViewModel;
+        await CurrentViewModel.Enter();
+    }
 
-        [ObservableProperty]
-        private bool _isLoading;
+    [RelayCommand]
+    public async Task ShowWatchPage()
+    {
+        CurrentViewModel = WatchViewModel;
+        await CurrentViewModel.Enter();
+    }
 
-        [ObservableProperty]
-        private string _searchQuery = string.Empty;
+    [RelayCommand]
+    public async Task ShowCalendarPage()
+    {
+        CurrentViewModel = CalendarViewModel; 
+        await CurrentViewModel.Enter();
+    }
 
-        public event EventHandler LogoutRequested;
-        public event EventHandler SettingsRequested;
+    [RelayCommand]
+    public async Task ShowStatsPage()
+    {
+        CurrentViewModel = StatsViewModel; 
+        await CurrentViewModel.Enter();
+    }
 
-        #region Views
-        [ObservableProperty]
-        private ViewModelBase _currentViewModel;
+    public void GoToAnime(string title)
+    {
+        _ = SearchForAnime(title.Replace('-', ' '), true);
+    }
 
-        [ObservableProperty]
-        private AnimeDetailsViewModel _animeDetailsViewModel;
-        [ObservableProperty]
-        private WatchAnimeViewModel _watchViewModel;
-        [ObservableProperty]
-        private CalendarViewModel _calendarViewModel;
-        [ObservableProperty]
-        private StatsViewModel _statsViewModel;
-        #endregion
+    public void GoToAnime(int malId)
+    {
+        _ = SearchForAnime(malId);
+    }
 
-        [ObservableProperty]
-        private ObservableCollection<AnimeScheduleItem> _todayAnime = new();
+    public async Task InitializeAsync()
+    {
+        await LoadUserDataAsync();
+        await LoadTodayAnimeAsync();
+    }
 
-        public MainViewModel() 
+    private async Task LoadTodayAnimeAsync()
+    {
+        var watchingList = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
+        var animes = await CalendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
+
+        TodayAnime.Clear();
+        foreach (AnimeScheduleItem anime in animes)
         {
-            AnimeDetailsViewModel = new();
-            WatchViewModel = new();
-            CalendarViewModel = new(this);
-            StatsViewModel = new();
+            if(watchingList.Any(x => x.Node.Id == anime.MalId))
+                TodayAnime.Add(anime);
         }
+    }
 
-        [RelayCommand]
-        public async Task ShowMainPage()
+    private async Task LoadUserDataAsync()
+    {
+        try
         {
-            CurrentViewModel = AnimeDetailsViewModel;
-            await CurrentViewModel.Enter();
+            IsLoading = true;
+            UserData userData = await MalUtils.GetUserDataAsync();
+            Username = userData.Name;
+            ProfileImage = await MalUtils.GetUserPicture();
         }
-
-        [RelayCommand]
-        public async Task ShowWatchPage()
+        catch (Exception ex)
         {
-            CurrentViewModel = WatchViewModel;
-            await CurrentViewModel.Enter();
+            Console.WriteLine($"Error loading user data: {ex.Message}");
         }
-
-        [RelayCommand]
-        public async Task ShowCalendarPage()
+        finally
         {
-            CurrentViewModel = CalendarViewModel; 
-            await CurrentViewModel.Enter();
+            _ = ShowMainPage();
+            IsLoading = false;
         }
-
-        [RelayCommand]
-        public async Task ShowStatsPage()
-        {
-            CurrentViewModel = StatsViewModel; 
-            await CurrentViewModel.Enter();
-        }
-
-        public void GoToAnime(string title)
-        {
-            SearchForAnime(title.Replace('-', ' '), true);
-        }
-
-        public void GoToAnime(int malId)
-        {
-            SearchForAnime(malId);
-        }
-
-        public async Task InitializeAsync()
-        {
-            await LoadUserDataAsync();
-            await LoadTodayAnimeAsync();
-        }
-
-        private async Task LoadTodayAnimeAsync()
-        {
-            var watchingList = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
-            var animes = await CalendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
-
-            TodayAnime.Clear();
-            foreach (AnimeScheduleItem anime in animes)
-            {
-                if(watchingList.Any(x => x.Node.Id == anime.MalId))
-                    TodayAnime.Add(anime);
-            }
-        }
-
-        private async Task LoadUserDataAsync()
-        {
-            try
-            {
-                IsLoading = true;
-                UserData userData = await MalUtils.GetUserDataAsync();
-                Username = userData.Name;
-                ProfileImage = await MalUtils.GetUserPicture();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading user data: {ex.Message}");
-            }
-            finally
-            {
-                ShowMainPage();
-                IsLoading = false;
-            }
-        }
+    }
         
-        [RelayCommand]
-        private void Logout()
+    [RelayCommand]
+    private void Logout()
+    {
+        LogoutRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    public async Task Search()
+    {
+        await SearchForAnime(SearchQuery);
+    }
+
+    private async Task SearchForAnime(string searchQuery, bool showFirstBest = false)
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
         {
-            LogoutRequested?.Invoke(this, EventArgs.Empty);
+            await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
+            return;
         }
 
-        [RelayCommand]
-        public async Task Search()
+        IsLoading = true;
+
+        _ = ShowMainPage();
+
+        try
         {
-            await SearchForAnime(SearchQuery);
+            await AnimeDetailsViewModel.SearchAnimeByTitle(searchQuery, true, showFirstBest);
         }
-
-        private async Task SearchForAnime(string searchQuery, bool showFirstBest = false)
+        catch (Exception ex)
         {
-            if (string.IsNullOrWhiteSpace(searchQuery))
-            {
-                await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
-                return;
-            }
-
-            IsLoading = true;
-
-            ShowMainPage();
-
-            try
-            {
-                await AnimeDetailsViewModel.SearchAnimeByTitle(searchQuery, true, showFirstBest);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error searching: {ex.Message}");
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            Console.WriteLine($"Error searching: {ex.Message}");
         }
-
-        private async Task SearchForAnime(int malId)
+        finally
         {
-            IsLoading = true;
-
-            ShowMainPage();
-
-            try
-            {
-                await AnimeDetailsViewModel.SearchAnimeById(malId);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error searching: {ex.Message}");
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+            IsLoading = false;
         }
+    }
 
-        [RelayCommand]
-        private void OpenSettings()
+    private async Task SearchForAnime(int malId)
+    {
+        IsLoading = true;
+
+        _ = ShowMainPage();
+
+        try
         {
-            SettingsRequested?.Invoke(this, EventArgs.Empty);
+            await AnimeDetailsViewModel.SearchAnimeById(malId);
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenSettings()
+    {
+        SettingsRequested?.Invoke(this, EventArgs.Empty);
     }
 }

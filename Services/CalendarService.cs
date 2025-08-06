@@ -1,12 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using Aniki.Models;
 
 namespace Aniki.Services;
 
@@ -115,7 +109,9 @@ public static partial class CalendarService
         {
             daySchedules.Add(new()
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 Name = date.DayOfWeek.ToString(CultureInfo.InvariantCulture),
+#pragma warning restore CS0618 // Type or member is obsolete
                 DayName = date.ToString("dddd", CultureInfo.InvariantCulture),
                 Date = date,
                 IsToday = date.Date == DateTime.Today,

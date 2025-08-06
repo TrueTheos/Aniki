@@ -1,70 +1,67 @@
-using Aniki.Services;
 using Aniki.Services.Aniki.Services;
 using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Markup.Xaml;
-using System;
 using Velopack;
 using Velopack.Sources;
 
-namespace Aniki
+namespace Aniki;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    private EpisodeNotificationService? _notificationService;
+
+    public override void Initialize()
     {
-        private EpisodeNotificationService _notificationService;
+        TokenService.Init();
+        SaveService.Init();
 
-        public override void Initialize()
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            TokenService.Init();
-            SaveService.Init();
+            desktop.MainWindow = new LoginWindow();
 
-            AvaloniaXamlLoader.Load(this);
+            CheckForUpdates();
+
+            WindowNotificationManager notificationManager = new(desktop.MainWindow)
+            {
+                Position = NotificationPosition.TopRight,
+                MaxItems = 3
+            };
+
+            _notificationService = new(notificationManager);
+            _notificationService.Start();
+
+            desktop.Exit += (_, _) => _notificationService.Stop();
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private async void CheckForUpdates()
+    {
+        try
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            UpdateManager mgr = new(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
+
+            UpdateInfo? newVersion = await mgr.CheckForUpdatesAsync();
+
+            if (newVersion != null)
             {
-                desktop.MainWindow = new LoginWindow();
+                await mgr.DownloadUpdatesAsync(newVersion);
 
-                CheckForUpdates();
-
-                WindowNotificationManager notificationManager = new(desktop.MainWindow)
-                {
-                    Position = NotificationPosition.TopRight,
-                    MaxItems = 3
-                };
-
-                _notificationService = new(notificationManager);
-                _notificationService.Start();
-
-                desktop.Exit += (_, _) => _notificationService.Stop();
+                mgr.ApplyUpdatesAndRestart(newVersion);
             }
-
-            base.OnFrameworkInitializationCompleted();
         }
-
-        private async void CheckForUpdates()
+        catch (Exception ex)
         {
-            try
-            {
-                UpdateManager mgr = new(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
-
-                UpdateInfo? newVersion = await mgr.CheckForUpdatesAsync();
-
-                if (newVersion != null)
-                {
-                    await mgr.DownloadUpdatesAsync(newVersion);
-
-                    mgr.ApplyUpdatesAndRestart(newVersion);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Update check failed: {ex.Message}");
-            }
+            Console.WriteLine($"Update check failed: {ex.Message}");
         }
     }
 }

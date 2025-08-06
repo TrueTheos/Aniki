@@ -1,14 +1,12 @@
-﻿using Aniki.Models;
-using System.Threading.Tasks;
+﻿
 
-namespace Aniki.Services
+namespace Aniki.Services;
+
+public interface ITokenService
 {
-    public interface ITokenService
-    {
-        Task<StoredTokenData> LoadTokensAsync();
-        Task SaveTokensAsync(TokenResponse tokenResponse);
-        void ClearTokens();
-        bool HasValidToken();
-        string GetAccessToken();
-    }
+    Task<StoredTokenData> LoadTokensAsync();
+    Task SaveTokensAsync(TokenResponse tokenResponse);
+    void ClearTokens();
+    bool HasValidToken();
+    string GetAccessToken();
 }

@@ -2,28 +2,27 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 
-namespace Aniki.Views
+namespace Aniki.Views;
+
+public partial class SettingsWindow : Window
 {
-    public partial class SettingsWindow : Window
+    public SettingsWindow()
     {
-        public SettingsWindow()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
 
-        private void OnCancel(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+    private void OnCancel(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 
-        private void OnSave(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+    private void OnSave(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }

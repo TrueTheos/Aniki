@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Aniki.Misc;
-using Aniki.Models;
+﻿using Aniki.Misc;
 
 namespace Aniki.Services;
 
@@ -20,7 +15,7 @@ public class AnimeStatusManager
 
         public void Load()
         {
-            AnimeStatuses = _dataManager.Load(new List<AnimeStatus>());
+            AnimeStatuses = _dataManager.Load(new List<AnimeStatus>())!;
         }
 
         public void Save()
@@ -66,12 +61,13 @@ public class AnimeStatusManager
                     {
                         if (anime.Node != null)
                         {
-                            AnimeStatuses.Add(new AnimeStatus
-                            {
-                                Title = anime.Node.Title,
-                                WatchedEpisodes = anime.ListStatus.NumEpisodesWatched,
-                                Status = anime.ListStatus.Status
-                            });
+                            if (anime.ListStatus != null)
+                                AnimeStatuses.Add(new AnimeStatus
+                                {
+                                    Title = anime.Node.Title,
+                                    WatchedEpisodes = anime.ListStatus.NumEpisodesWatched,
+                                    Status = anime.ListStatus.Status
+                                });
                         }
                     }
 

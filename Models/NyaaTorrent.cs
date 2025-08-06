@@ -1,12 +1,11 @@
-﻿namespace Aniki.Models
+﻿namespace Aniki.Models;
+
+public class NyaaTorrent
 {
-    public class NyaaTorrent
-    {
-        public string FileName { get; set; }
-        public string AnimeTitle { get; set; }
-        public string? EpisodeNumber { get; set; }
-        public string TorrentLink { get; set; }
-        public string Size { get; set; }
-        public int Seeders { get; set; }
-    }
+    public required string FileName { get; set; }
+    public required string AnimeTitle { get; set; }
+    public string? EpisodeNumber { get; set; }
+    public required string TorrentLink { get; set; }
+    public required string Size { get; set; }
+    public int Seeders { get; set; }
 }

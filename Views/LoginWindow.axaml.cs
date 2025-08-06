@@ -2,52 +2,49 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia;
-using Aniki.Services;
-using Aniki.ViewModels;
 using Avalonia.Controls.ApplicationLifetimes;
 
-namespace Aniki.Views
-{
-    public partial class LoginWindow : Window
-    {
-        private LoginViewModel _viewModel;
+namespace Aniki.Views;
 
-        public LoginWindow()
-        {
-            InitializeComponent();
+public partial class LoginWindow : Window
+{
+    private LoginViewModel _viewModel;
+
+    public LoginWindow()
+    {
+        InitializeComponent();
 #if DEBUG
-            this.AttachDevTools();
+        this.AttachDevTools();
 #endif
 
-            OAuthService oauthService = new();
+        OAuthService oauthService = new();
 
-            _viewModel = new(oauthService);
-            _viewModel.NavigateToMainRequested += OnNavigateToMainRequested;
+        _viewModel = new(oauthService);
+        _viewModel.NavigateToMainRequested += OnNavigateToMainRequested;
 
-            DataContext = _viewModel;
+        DataContext = _viewModel;
 
-            Loaded += LoginWindow_Loaded;
-        }
+        Loaded += LoginWindow_Loaded;
+    }
 
-        private void InitializeComponent()
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    private async void LoginWindow_Loaded(object? sender, RoutedEventArgs e)
+    {
+        await _viewModel.CheckExistingLoginAsync();
+    }
+
+    private void OnNavigateToMainRequested(object? sender, string? accessToken)
+    {
+        MainWindow mainWindow = new();
+        if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            AvaloniaXamlLoader.Load(this);
+            desktop.MainWindow = mainWindow;
         }
-
-        private async void LoginWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            await _viewModel.CheckExistingLoginAsync();
-        }
-
-        private void OnNavigateToMainRequested(object sender, string accessToken)
-        {
-            MainWindow mainWindow = new();
-            if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                desktop.MainWindow = mainWindow;
-            }
-            mainWindow.Show();
-            Close();
-        }
+        mainWindow.Show();
+        Close();
     }
 }

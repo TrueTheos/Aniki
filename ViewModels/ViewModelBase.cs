@@ -1,10 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Threading.Tasks;
+﻿
 
-namespace Aniki.ViewModels
+namespace Aniki.ViewModels;
+
+public abstract class ViewModelBase : ObservableObject
 {
-    public abstract class ViewModelBase : ObservableObject
+    public virtual Task Enter()
     {
-        public virtual async Task Enter() { }
+        return Task.CompletedTask;
     }
 }
