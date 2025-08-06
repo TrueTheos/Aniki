@@ -115,8 +115,8 @@ public static partial class CalendarService
         {
             daySchedules.Add(new()
             {
-                Name = date.DayOfWeek.ToString(),
-                DayName = date.ToString("dddd"),
+                Name = date.DayOfWeek.ToString(CultureInfo.InvariantCulture),
+                DayName = date.ToString("dddd", CultureInfo.InvariantCulture),
                 Date = date,
                 IsToday = date.Date == DateTime.Today,
                 Items = []

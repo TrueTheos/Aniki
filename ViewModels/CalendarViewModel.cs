@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -154,8 +155,8 @@ namespace Aniki.ViewModels
                 {
                     newDays.Add(new()
                     {
-                        Name = currentDate.DayOfWeek.ToString(),
-                        DayName = currentDate.ToString("dddd"),
+                        Name = currentDate.DayOfWeek.ToString(CultureInfo.InvariantCulture),
+                        DayName = currentDate.ToString("dddd", CultureInfo.InvariantCulture),
                         Date = currentDate,
                         IsToday = currentDate.Date == DateTime.Today,
                         Items = new()
