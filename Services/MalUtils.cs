@@ -1,4 +1,5 @@
-﻿using Aniki.Misc;
+﻿using System.Diagnostics;
+using Aniki.Misc;
 using Avalonia.Media.Imaging;
 using System.Text.Json;
 
@@ -14,10 +15,23 @@ public static class MalUtils
     private static readonly Dictionary<int, AnimeDetails> _detailsCache = new();
     private static List<AnimeData>? _userAnimeList;
 
+    private static Stopwatch sw = new();
+    private static int requestCounter;
+    
     public static void Init(string? accessToken)
     {
         _client = new();
         _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+    }
+
+    private static async Task<HttpResponseMessage> GetAsync(string url, string message)
+    {
+        sw = Stopwatch.StartNew();
+        var result = await _client.GetAsync(url);
+        sw.Stop();
+        Console.WriteLine($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
+        requestCounter++;
+        return result;
     }
 
     public static async Task<MALUserData> GetUserDataAsync()
@@ -28,7 +42,7 @@ public static class MalUtils
             throw new InvalidOperationException("No access token available");
         }
 
-        HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me");
+        HttpResponseMessage response = await GetAsync("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
 
         if (!response.IsSuccessStatusCode)
         {
@@ -61,7 +75,7 @@ public static class MalUtils
             string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
             string fields = $"list_status,num_episodes,pictures,status,genres,synopsis,main_picture";
                 
-            url += $"fields={fields}&limit=100";
+            url += $"fields={fields}&limit=1000";
 
             if (status != AnimeStatusApi.none)
             {
@@ -73,7 +87,7 @@ public static class MalUtils
 
             while (hasNextPage)
             {
-                HttpResponseMessage response = await _client.GetAsync(nextPageUrl);
+                HttpResponseMessage response = await GetAsync(nextPageUrl, "GetUserAnimeList");
                 string responseBody = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -157,7 +171,7 @@ public static class MalUtils
         {
             string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=id,title,main_picture,status,synopsis,my_list_status,num_episodes,related_anime{{id,title,num_episodes,media_type,synopsis,status}},genres";
 
-            HttpResponseMessage response = await _client.GetAsync(url);
+            HttpResponseMessage response = await GetAsync(url, "Details");
             string responseBody = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
@@ -193,7 +207,7 @@ public static class MalUtils
         try
         {
             string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=title";
-            HttpResponseMessage response = await _client.GetAsync(url);
+            HttpResponseMessage response = await GetAsync(url, "TitleById");
             string responseBody = await response.Content.ReadAsStringAsync();
             if (response.IsSuccessStatusCode)
             {
@@ -228,7 +242,7 @@ public static class MalUtils
     {
         try
         {
-            HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me?fields=picture");
+            HttpResponseMessage response = await GetAsync("https://api.myanimelist.net/v2/users/@me?fields=picture", "UserPicture");
             string responseBody = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
@@ -277,7 +291,7 @@ public static class MalUtils
     {
         string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=id,title,main_picture,num_episodes,main_picture,synopsis,status";
 
-        HttpResponseMessage response = await _client.GetAsync(url);
+        HttpResponseMessage response = await GetAsync(url, "Search");
         string responseBody = await response.Content.ReadAsStringAsync();
         AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
 
