@@ -2,16 +2,16 @@ namespace Aniki.Services;
 
 using SeasonCache = Dictionary<string, Dictionary<int, SeasonData>>;
 
-public class AbsoluteEpisodeService
+public class AbsoluteEpisodeParser
 {
-    private SeasonCache _cache;
+    private static SeasonCache _cache = new();
 
-    public AbsoluteEpisodeService()
+    public static void Init()
     {
         _cache = SaveService.GetSeasonCache();
     }
 
-    public async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode)
+    public static async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode)
     {
         var seasonMap = await GetOrCreateSeasonMap(animeTitle);
 
@@ -37,7 +37,7 @@ public class AbsoluteEpisodeService
         return (lastKnownSeason + 1, absoluteEpisode - accumulatedEpisodes);
     }
 
-    public async Task<int?> GetMalIdForSeason(string animeTitle, int seasonNumber)
+    public static async Task<int?> GetMalIdForSeason(string animeTitle, int seasonNumber)
     {
         var seasonMap = await GetOrCreateSeasonMap(animeTitle);
         if (seasonMap != null && seasonMap.TryGetValue(seasonNumber, out SeasonData seasonData))
@@ -47,7 +47,7 @@ public class AbsoluteEpisodeService
         return null;
     }
 
-    private async Task<Dictionary<int, SeasonData>?> GetOrCreateSeasonMap(string animeTitle)
+    private static async Task<Dictionary<int, SeasonData>?> GetOrCreateSeasonMap(string animeTitle)
     {
         if (_cache.TryGetValue(animeTitle, out var seasonMap))
         {
@@ -69,7 +69,7 @@ public class AbsoluteEpisodeService
         return newMap;
     }
 
-    private async Task<Dictionary<int, SeasonData>?> BuildSeasonMap(int animeId)
+    private static async Task<Dictionary<int, SeasonData>?> BuildSeasonMap(int animeId)
     {
         try
         {

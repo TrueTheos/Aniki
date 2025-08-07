@@ -11,7 +11,6 @@ namespace Aniki.ViewModels;
 public partial class WatchAnimeViewModel : ViewModelBase
 {
     private readonly AnimeNameParser _animeNameParser = new();
-    private readonly AbsoluteEpisodeService _absoluteEpisodeService = new();
 
     private Episode? _lastPlayedEpisode;
 
@@ -84,37 +83,27 @@ public partial class WatchAnimeViewModel : ViewModelBase
                                      .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower()))
                                      .ToList();
 
-        List<ParseResult> parsedFiles = new();
         int processedFilesCount = 0;
+        Dictionary<string, int?> animeMalIds = new();
         foreach (string filePath in filePaths)
         {
             string fileName = Path.GetFileName(filePath);
-            parsedFiles.Add(await _animeNameParser.ParseAnimeFilename(fileName));
+            ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
             processedFilesCount++;
             ProcessingProgress = $"Processing files: {processedFilesCount}/{filePaths.Count}";
-        }
-
-        Dictionary<string, int?> animeMalIds = new();
-        foreach (ParseResult parsedFile in parsedFiles.DistinctBy(p => new { p.AnimeName, p.Season }))
-        {
+            
             if (parsedFile.EpisodeNumber == null) continue;
-
-            int? malId = await _absoluteEpisodeService.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
+            int? malId = await AbsoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
             animeMalIds.TryAdd(parsedFile.AnimeName, malId);
-        }
-
-        foreach (ParseResult parsedFile in parsedFiles)
-        {
-            if (parsedFile.EpisodeNumber == null) continue;
-
-            if (animeMalIds.TryGetValue(parsedFile.AnimeName, out int? malId) && malId.HasValue)
+            if (malId != null)
             {
-                Episodes.Add(new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"), parsedFile.AbsoluteEpisodeNumber,
+                Episodes.Add(new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"),
+                    parsedFile.AbsoluteEpisodeNumber,
                     parsedFile.AnimeName, malId.Value, parsedFile.Season));
+                UpdateView();
             }
         }
 
-        UpdateView();
         IsLoading = false;
     }
 

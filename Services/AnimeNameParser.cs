@@ -4,8 +4,6 @@ namespace Aniki.Services;
 
 public class AnimeNameParser
 {
-    private readonly AbsoluteEpisodeService _absoluteEpisodeService = new();
-
     public async Task<ParseResult> ParseAnimeFilename(string filename)
     {
         filename = Regex.Replace(filename, @"\.(mkv|mp4|avi|mov)$", "");
@@ -62,7 +60,7 @@ public class AnimeNameParser
                 animeName = Regex.Replace(animeName, @"\sS\d+$", "").Trim(); //Remove season suffixes like " S2"
 
                 //Check for absolute episode numbering
-                (int finalSeason, int relativeEpisode) = await _absoluteEpisodeService.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
+                (int finalSeason, int relativeEpisode) = await AbsoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
 
                 return new ParseResult
                 {

@@ -17,6 +17,7 @@ public static class MalUtils
 
     private static Stopwatch sw = new();
     private static int requestCounter;
+    private static Queue<DateTime> _requestTimestamps = new();
     
     public static void Init(string? accessToken)
     {
@@ -26,10 +27,20 @@ public static class MalUtils
 
     private static async Task<HttpResponseMessage> GetAsync(string url, string message)
     {
-        sw = Stopwatch.StartNew();
-        var result = await _client.GetAsync(url);
-        sw.Stop();
-        Console.WriteLine($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
+        _requestTimestamps.Enqueue(DateTime.Now);
+        while (_requestTimestamps.Count > 3 && _requestTimestamps.Peek() > DateTime.Now.Subtract(TimeSpan.FromSeconds(1)))
+        {
+            await Task.Delay(500);
+        }
+        if (_requestTimestamps.Count > 3)
+        {
+            _requestTimestamps.Dequeue();
+        }
+
+        //sw = Stopwatch.StartNew();
+        HttpResponseMessage result = await _client.GetAsync(url);
+        //sw.Stop();
+        //Console.WriteLine($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
         requestCounter++;
         return result;
     }

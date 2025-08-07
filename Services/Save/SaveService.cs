@@ -32,6 +32,8 @@ public class SaveService
     {
         EnsureDirectoriesExist();
         InitializeManagers();
+
+        AbsoluteEpisodeParser.Init();
     }
 
     private static void EnsureDirectoriesExist()
