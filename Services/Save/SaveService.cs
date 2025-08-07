@@ -19,7 +19,7 @@ public class SaveService
         "Aniki");
     
     public static readonly string DefaultEpisodesFolder = Path.Combine(_mainDirectory, "Episodes");
-
+    
     // Managers
     public static CacheManager? ImageCache { get; private set; }
     public static AnimeStatusManager? AnimeStatusManager { get; private set; }

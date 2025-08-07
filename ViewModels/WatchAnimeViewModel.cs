@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
 
 namespace Aniki.ViewModels;
@@ -26,7 +27,8 @@ public partial class WatchAnimeViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<Episode> _episodes = new();
 
-    public string EpisodesFolderMessage { get; } = $"Episodes folder is empty - {SaveService.DefaultEpisodesFolder}";
+    [ObservableProperty]
+    private string _episodesFolderMessage = "";
 
     [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
     static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string? pszExtra, [Out] StringBuilder? pszOut, ref uint pcchOut);
@@ -45,6 +47,11 @@ public partial class WatchAnimeViewModel : ViewModelBase
     {
         IsEpisodesViewVisible = false;
         IsNoEpisodesViewVisible = true;
+        
+        WeakReferenceMessenger.Default.Register<SettingsChangedMessage>(this, (r, m) =>
+        {
+            _ = LoadEpisodesFromFolder();
+        });
     }
 
     public override async Task Enter()
@@ -56,7 +63,21 @@ public partial class WatchAnimeViewModel : ViewModelBase
     {
         IsLoading = true;
         Episodes.Clear();
-        foreach (string filePath in Directory.GetFiles(SaveService.DefaultEpisodesFolder, "*.*", SearchOption.AllDirectories))
+
+        SettingsConfig? config = SaveService.GetSettingsConfig();
+        string episodesFolder = config?.EpisodesFolder ?? SaveService.DefaultEpisodesFolder;
+        EpisodesFolderMessage = $"Episodes folder is empty - {episodesFolder}";
+
+        if (!Directory.Exists(episodesFolder))
+        {
+            UpdateView();
+            IsLoading = false;
+            return;
+        }
+
+        string[] videoExtensions = { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
+        foreach (string filePath in Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
+                     .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower())))
         {
             string fileName = Path.GetFileName(filePath);
             ParseResult result = await _animeNameParser.ParseAnimeFilename(fileName);

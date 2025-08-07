@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Win32;
 
 namespace Aniki.ViewModels;
@@ -129,6 +130,8 @@ public partial class SettingsViewModel : ViewModelBase
         };
 
         SaveService.SaveSettings(config);
+        
+        WeakReferenceMessenger.Default.Send(new SettingsChangedMessage());
     }
 }
 
@@ -138,3 +141,5 @@ public class SettingsConfig
     public string? EpisodesFolder { get; set; }
     public bool NotifyAboutEpisodes { get; set; }
 }
+
+public class SettingsChangedMessage { }

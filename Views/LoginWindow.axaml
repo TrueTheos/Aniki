@@ -24,7 +24,7 @@
                     BackgroundSource="Digger"
                     TintColor="Black"
                     TintOpacity="1"
-                    MaterialOpacity="0.05" />
+                    MaterialOpacity="0.9" />
 			</ExperimentalAcrylicBorder.Material>
 		</ExperimentalAcrylicBorder>
 		<Panel Margin="15">
@@ -35,21 +35,29 @@
 				<TextBlock Text="{Binding StatusMessage}"
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap" />
-				<Button Content="Login with MyAnimeList"
+				<Button
                         Command="{Binding LoginCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
-                        IsVisible="{Binding !IsLoggedIn}"/>
-				<Button Content="{Binding Username, StringFormat=Continue as {0}}"
+                        IsVisible="{Binding !IsLoggedIn}">
+					<TextBlock Text="Login with MyAnimeList" HorizontalAlignment="Center"/>
+				</Button>
+				<Button
                         Command="{Binding ContinueCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
-                        IsVisible="{Binding IsLoggedIn}"/>
-				<Button Content="Log into different account"
+                        IsVisible="{Binding IsLoggedIn}">
+					<TextBlock Text="{Binding Username, StringFormat=Continue as {0}}"
+					           HorizontalAlignment="Center"/>
+				</Button>
+				<Button 
                         Command="{Binding LogoutCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
-                        IsVisible="{Binding IsLoggedIn}"/>
+                        IsVisible="{Binding IsLoggedIn}">
+					<TextBlock Text="Log into different account"
+					           HorizontalAlignment="Center"/>
+				</Button>
 				<ProgressBar IsIndeterminate="True"
                              HorizontalAlignment="Stretch"
                              IsVisible="{Binding IsLoading}"/>
