@@ -118,7 +118,7 @@
                     HorizontalAlignment="Center"
                     FontSize="16"
                     Foreground="{StaticResource White}"
-                    Text="Loading episodes..." />
+                    Text="{Binding ProcessingProgress}" />
             </StackPanel>
         </Grid>
     </Border>

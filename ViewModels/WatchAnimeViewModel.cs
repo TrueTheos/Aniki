@@ -25,6 +25,9 @@ public partial class WatchAnimeViewModel : ViewModelBase
     private bool _isLoading;
 
     [ObservableProperty]
+    private string _processingProgress = "";
+
+    [ObservableProperty]
     private ObservableCollection<Episode> _episodes = new();
 
     [ObservableProperty]
@@ -63,6 +66,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
     {
         IsLoading = true;
         Episodes.Clear();
+        ProcessingProgress = "Processing files: 0/0";
 
         SettingsConfig? config = SaveService.GetSettingsConfig();
         string episodesFolder = config?.EpisodesFolder ?? SaveService.DefaultEpisodesFolder;
@@ -81,10 +85,13 @@ public partial class WatchAnimeViewModel : ViewModelBase
                                      .ToList();
 
         List<ParseResult> parsedFiles = new();
+        int processedFilesCount = 0;
         foreach (string filePath in filePaths)
         {
             string fileName = Path.GetFileName(filePath);
             parsedFiles.Add(await _animeNameParser.ParseAnimeFilename(fileName));
+            processedFilesCount++;
+            ProcessingProgress = $"Processing files: {processedFilesCount}/{filePaths.Count}";
         }
 
         Dictionary<string, int?> animeMalIds = new();

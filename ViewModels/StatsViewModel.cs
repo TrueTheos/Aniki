@@ -25,7 +25,7 @@ public partial class StatsViewModel : ViewModelBase
 
     private async void LoadStats()
     {
-        var animeList = await MalUtils.LoadAnimeList();
+        var animeList = await MalUtils.GetUserAnimeList();
         if (animeList == null || !animeList.Any())
             return;
 

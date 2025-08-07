@@ -58,8 +58,8 @@ public partial class CalendarViewModel : ViewModelBase
     private async Task LoadUserAnimeList()
     {
         _watchingList.Clear();
-        List<AnimeData> watching = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
-        List<AnimeData> planToWatch = await MalUtils.LoadAnimeList(AnimeStatusApi.plan_to_watch);
+        List<AnimeData> watching = await MalUtils.GetUserAnimeList(AnimeStatusApi.watching);
+        List<AnimeData> planToWatch = await MalUtils.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
 
         foreach (AnimeData anime in watching)
         {

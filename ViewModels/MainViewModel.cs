@@ -89,7 +89,7 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task LoadTodayAnimeAsync()
     {
-        var watchingList = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
+        var watchingList = await MalUtils.GetUserAnimeList(AnimeStatusApi.watching);
         var animes = await CalendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
 
         TodayAnime.Clear();
@@ -105,8 +105,8 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             IsLoading = true;
-            UserData userData = await MalUtils.GetUserDataAsync();
-            Username = userData.Name;
+            MALUserData malUserData = await MalUtils.GetUserDataAsync();
+            Username = malUserData.Name;
             ProfileImage = await MalUtils.GetUserPicture();
         }
         catch (Exception ex)

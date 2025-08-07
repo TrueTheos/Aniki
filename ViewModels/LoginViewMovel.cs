@@ -64,7 +64,7 @@ public class LoginViewModel : ViewModelBase
             {
                 try
                 {
-                    UserData? userData = await MalUtils.GetUserDataAsync();
+                    MALUserData? userData = await MalUtils.GetUserDataAsync();
                     if (userData != null && !string.IsNullOrEmpty(userData.Name))
                     {
                         Username = userData.Name;

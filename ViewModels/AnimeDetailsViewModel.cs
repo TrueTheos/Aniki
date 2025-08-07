@@ -165,7 +165,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             IsLoading = true;
             AnimeList.Clear();
 
-            List<AnimeData> animeListData = await MalUtils.LoadAnimeList(filter.TranslatedToApi());
+            List<AnimeData> animeListData = await MalUtils.GetUserAnimeList(filter.TranslatedToApi());
 
             foreach (AnimeData anime in animeListData)
             {
@@ -197,7 +197,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
                     Node = new()
                     {
                         Id = entry.Anime.Id,
-                        Title = entry.Anime.Title
+                        Title = entry.Anime.Title,
+                        Synopsis = entry.Anime.Synopsis,
+                        Status = entry.Anime.Status
                     },
                     ListStatus = null
                 };
@@ -224,7 +226,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
                 Node = new()
                 {
                     Id = details.Id,
-                    Title = details.Title
+                    Title = details.Title,
+                    Synopsis = details.Synopsis,
+                    Status = details.Status
                 },
                 ListStatus = details.MyListStatus
             };

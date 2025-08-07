@@ -6,8 +6,13 @@ namespace Aniki.Services;
 
 public static class MalUtils
 {
+    public enum AnimeStatusField { STATUS, SCORE, EPISODES_WATCHED }
+    
     private static JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private static HttpClient _client = new();
+    
+    private static readonly Dictionary<int, AnimeDetails> _detailsCache = new();
+    private static List<AnimeData>? _userAnimeList;
 
     public static void Init(string? accessToken)
     {
@@ -15,7 +20,7 @@ public static class MalUtils
         _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
     }
 
-    public static async Task<UserData> GetUserDataAsync()
+    public static async Task<MALUserData> GetUserDataAsync()
     {
         string? accessToken = TokenService.GetAccessToken();
         if (string.IsNullOrEmpty(accessToken))
@@ -31,38 +36,30 @@ public static class MalUtils
         }
 
         string json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<UserData>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
+        return JsonSerializer.Deserialize<MALUserData>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
                ?? throw new InvalidOperationException("Failed to deserialize data");
     }
 
-    public static async Task<UserData> LoadUserData()
+    public static async Task<List<AnimeData>> GetUserAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
     {
-        try
+        if (_userAnimeList != null)
         {
-            HttpResponseMessage response = await _client.GetAsync("https://api.myanimelist.net/v2/users/@me?fields=name,id,anime_statistics");
-            string responseBody = await response.Content.ReadAsStringAsync();
-
-            if (response.IsSuccessStatusCode)
+            if (status == AnimeStatusApi.none)
             {
-                return JsonSerializer.Deserialize<UserData>(responseBody, _jso) ?? throw new InvalidOperationException("Failed to deserialize data");
+                return _userAnimeList;
             }
-
-            throw new($"API returned status code: {response.StatusCode}");
+            else
+            {
+                return _userAnimeList.Where(a => a.ListStatus?.Status == status).ToList();
+            }
         }
-        catch (Exception ex)
-        {
-            throw new($"Error loading user data: {ex.Message}", ex);
-        }
-    }
 
-    public static async Task<List<AnimeData>> LoadAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
-    {
         try
         {
             List<AnimeData> animeList = new();
 
             string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
-            string fields = $"list_status,num_episodes,pictures,status,genres";
+            string fields = $"list_status,num_episodes,pictures,status,genres,synopsis,main_picture";
                 
             url += $"fields={fields}&limit=100";
 
@@ -81,7 +78,7 @@ public static class MalUtils
 
                 if (response.IsSuccessStatusCode)
                 {
-                    AnimeListResponse? animeListResponse = JsonSerializer.Deserialize<AnimeListResponse>(responseBody, _jso);
+                    UserAnimeListResponse? animeListResponse = JsonSerializer.Deserialize<UserAnimeListResponse>(responseBody, _jso);
 
                     if (animeListResponse == null)
                     {
@@ -92,6 +89,25 @@ public static class MalUtils
                     if (animeListResponse.Data != null)
                     {
                         animeList.AddRange(animeListResponse.Data);
+                        
+                        foreach (var animeData in animeListResponse.Data)
+                        {
+                            if (animeData.Node?.Id != null && !_detailsCache.ContainsKey(animeData.Node.Id))
+                            {
+                                var basicDetails = new AnimeDetails
+                                {
+                                    Id = animeData.Node.Id,
+                                    Title = animeData.Node.Title,
+                                    MainPicture = animeData.Node.MainPicture,
+                                    Status = animeData.Node.Status,
+                                    Synopsis = animeData.Node.Synopsis,
+                                    NumEpisodes = animeData.Node.NumEpisodes,
+                                    MyListStatus = animeData.ListStatus,
+                                    Genres = animeData.Node.Genres
+                                };
+                                _detailsCache[animeData.Node.Id] = basicDetails;
+                            }
+                        }
                     }
 
                     if (animeListResponse.Paging != null && !string.IsNullOrEmpty(animeListResponse.Paging.Next))
@@ -110,6 +126,10 @@ public static class MalUtils
                 }
             }
 
+            if (status == AnimeStatusApi.none)
+            {
+                _userAnimeList = animeList;
+            }
             return animeList;
         }
         catch (Exception ex)
@@ -118,11 +138,24 @@ public static class MalUtils
         }
     }
 
-    public static async Task<AnimeDetails?> GetAnimeDetails(int id)
+    public static async Task<AnimeDetails?> GetAnimeDetails(int id, bool forceFull = false)
+    {
+        if (_detailsCache.TryGetValue(id, out var cached))
+        {
+            if (!forceFull || cached.RelatedAnime != null)
+            {
+                return cached;
+            }
+        }
+        
+        return await FetchFullAnimeDetails(id);
+    }
+
+    private static async Task<AnimeDetails?> FetchFullAnimeDetails(int id)
     {
         try
         {
-            string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=id,title,main_picture,status,synopsis,my_list_status,num_episodes";
+            string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=id,title,main_picture,status,synopsis,my_list_status,num_episodes,related_anime{{id,title,num_episodes,media_type,synopsis,status}},genres";
 
             HttpResponseMessage response = await _client.GetAsync(url);
             string responseBody = await response.Content.ReadAsStringAsync();
@@ -132,6 +165,7 @@ public static class MalUtils
                 AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
                 if (animeResponse != null)
                 {
+                    _detailsCache[id] = animeResponse;
                     animeResponse.Picture = await SaveService.GetAnimeImage(animeResponse);
                     return animeResponse;
                 }
@@ -146,11 +180,16 @@ public static class MalUtils
             throw new($"Error loading anime details: {ex.Message}", ex);
         }
             
-        return null; 
+        return null;
     }
 
     public static async Task<string> GetAnimeNameById(int id)
     {
+        if (_detailsCache.TryGetValue(id, out var cached))
+        {
+            return cached.Title ?? "";
+        }
+
         try
         {
             string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=title";
@@ -159,7 +198,21 @@ public static class MalUtils
             if (response.IsSuccessStatusCode)
             {
                 AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
-                return animeResponse?.Title ?? "";
+                if (animeResponse != null)
+                {
+                    if (!_detailsCache.ContainsKey(id))
+                    {
+                        _detailsCache[id] = animeResponse;
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(_detailsCache[id].Title))
+                        {
+                            _detailsCache[id].Title = animeResponse.Title;
+                        }
+                    }
+                    return animeResponse.Title ?? "";
+                }
             }
             else
             {
@@ -222,31 +275,41 @@ public static class MalUtils
 
     public static async Task<List<SearchEntry>> SearchAnimeOrdered(string query)
     {
-        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=totalepisodes";
+        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=id,title,main_picture,num_episodes,main_picture,synopsis,status";
 
         HttpResponseMessage response = await _client.GetAsync(url);
         string responseBody = await response.Content.ReadAsStringAsync();
         AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
 
-        return responseData?.Data?.Select(x =>
+        var results = responseData?.Data?.Select(x =>
         {
             int score = FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, query);
             if (x.Anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
             {
-                score += 50; // Add a bonus for titles that start with the query
+                score += 50;
             }
+
+            if (x.Anime?.Id != null && !_detailsCache.ContainsKey(x.Anime.Id))
+            {
+                _detailsCache[x.Anime.Id] = new AnimeDetails()
+                {
+                    Id = x.Anime.Id,
+                    Title = x.Anime.Title,
+                    Genres = x.Anime.Genres,
+                    MainPicture = x.Anime.MainPicture,
+                    Status = x.Anime.Status,
+                    Synopsis = x.Anime.Synopsis,
+                    NumEpisodes = x.Anime.NumEpisodes
+                };
+            }
+
             return new { Entry = x, Score = score };
         })
         .OrderByDescending(x => x.Score)
         .Select(x => x.Entry)
         .ToList() ?? new List<SearchEntry>();
-    }
 
-    public enum AnimeStatusField
-    {
-        STATUS,
-        SCORE,
-        EPISODES_WATCHED
+        return results;
     }
 
     public static async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, string value)
@@ -277,6 +340,29 @@ public static class MalUtils
         {
             throw new($"Failed to update anime status: {response.StatusCode}");
         }
+
+        if (_detailsCache.TryGetValue(animeId, out var cached))
+        {
+            if (cached.MyListStatus == null)
+                cached.MyListStatus = new MyListStatus();
+
+            switch (field)
+            {
+                case AnimeStatusField.STATUS:
+                    cached.MyListStatus.Status = StatusEnum.StringToApi(value);
+                    break;
+                case AnimeStatusField.SCORE:
+                    if (int.TryParse(value, out int score))
+                        cached.MyListStatus.Score = score;
+                    break;
+                case AnimeStatusField.EPISODES_WATCHED:
+                    if (int.TryParse(value, out int episodes))
+                        cached.MyListStatus.NumEpisodesWatched = episodes;
+                    break;
+            }
+        }
+
+        _userAnimeList = null;
     }
 
     public static async Task RemoveFromList(int animeId)
@@ -294,38 +380,13 @@ public static class MalUtils
             }
             throw new($"Failed to remove anime from list: {response.StatusCode}");
         }
-    }
 
-    public static async Task<List<RelatedAnime>> GetRelatedAnime(int id)
-    {
-        try
+        if (_detailsCache.TryGetValue(animeId, out var cached))
         {
-            string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=related_anime";
-
-            HttpResponseMessage response = await _client.GetAsync(url);
-            string responseBody = await response.Content.ReadAsStringAsync();
-
-            if (response.IsSuccessStatusCode)
-            {
-                using JsonDocument doc = JsonDocument.Parse(responseBody);
-                JsonElement root = doc.RootElement;
-
-                if (root.TryGetProperty("related_anime", out JsonElement relatedAnimeElement))
-                {
-                    return JsonSerializer.Deserialize<List<RelatedAnime>>(relatedAnimeElement.ToString(), _jso) ?? new();
-                }
-            }
-            else
-            {
-                throw new($"API returned status code: {response.StatusCode}");
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new($"Error loading related anime: {ex.Message}", ex);
+            cached.MyListStatus = null;
         }
 
-        return new List<RelatedAnime>();
+        _userAnimeList = null;
     }
 
     private static async void OnEpisodesWatchedChanged(int animeId, string value)

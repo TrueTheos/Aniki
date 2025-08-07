@@ -73,56 +73,71 @@ public class AbsoluteEpisodeService
     {
         try
         {
-            int firstSeasonId = await GetFirstSeasonId(animeId);
-
             var seasonMap = new Dictionary<int, SeasonData>();
-            int currentSeasonNum = 1;
-            int currentSeasonId = firstSeasonId;
-
+            var visitedIds = new HashSet<int>();
+            
+            var seasonChain = new List<(int id, AnimeDetails details)>();
+            int currentId = animeId;
+            
             while (true)
             {
-                AnimeDetails? details = await MalUtils.GetAnimeDetails(currentSeasonId);
-                    
-                if(details == null) break;
-                seasonMap[currentSeasonNum] = new SeasonData { Episodes = details.NumEpisodes, MalId = currentSeasonId };
-
-                var related = await MalUtils.GetRelatedAnime(currentSeasonId);
-                RelatedAnime? sequel = related.FirstOrDefault(r => r.RelationType == "sequel");
-
-                if (sequel != null && sequel.Node != null)
+                if (visitedIds.Contains(currentId)) break;
+                visitedIds.Add(currentId);
+                
+                AnimeDetails? details = await MalUtils.GetAnimeDetails(currentId, true);
+                if (details == null) break;
+                
+                seasonChain.Insert(0, (currentId, details));
+                
+                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
+                if (prequel?.Node != null)
                 {
-                    currentSeasonId = sequel.Node.Id;
-                    currentSeasonNum++;
+                    currentId = prequel.Node.Id;
+                }
+                else
+                {
+                    break; 
+                }
+            }
+            
+            currentId = animeId;
+            AnimeDetails? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
+            
+            while (currentDetails != null)
+            {
+                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
+                if (sequel?.Node != null && !visitedIds.Contains(sequel.Node.Id))
+                {
+                    currentId = sequel.Node.Id;
+                    visitedIds.Add(currentId);
+                    currentDetails = await MalUtils.GetAnimeDetails(currentId);
+                    if (currentDetails != null)
+                    {
+                        seasonChain.Add((currentId, currentDetails));
+                    }
                 }
                 else
                 {
                     break;
                 }
             }
+            
+            for (int i = 0; i < seasonChain.Count; i++)
+            {
+                (int id, AnimeDetails details) = seasonChain[i];
+                seasonMap[i + 1] = new SeasonData 
+                { 
+                    Episodes = details.NumEpisodes, 
+                    MalId = id 
+                };
+            }
+            
             return seasonMap;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error building season map for anime ID {animeId}: {ex.Message}");
             return null;
-        }
-    }
-
-    private async Task<int> GetFirstSeasonId(int animeId)
-    {
-        int currentId = animeId;
-        while (true)
-        {
-            var related = await MalUtils.GetRelatedAnime(currentId);
-            RelatedAnime? prequel = related.FirstOrDefault(r => r.RelationType == "prequel");
-            if (prequel != null && prequel.Node != null)
-            {
-                currentId = prequel.Node.Id;
-            }
-            else
-            {
-                return currentId;
-            }
         }
     }
 }

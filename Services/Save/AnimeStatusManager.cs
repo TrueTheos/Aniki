@@ -51,7 +51,7 @@ public class AnimeStatusManager
         {
             try
             {
-                List<AnimeData>? animeList = await MalUtils.LoadAnimeList();
+                List<AnimeData>? animeList = await MalUtils.GetUserAnimeList();
 
                 if (animeList != null)
                 {
