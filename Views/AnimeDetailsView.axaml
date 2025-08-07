@@ -40,6 +40,7 @@
                             Width="36"
                             Height="36"
                             Padding="8"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource BooleanInverterConverter}}"
                             ToolTip.Tip="Filter Options">
                             <!--  Filter Icon  -->
                             <Path
@@ -52,6 +53,7 @@
                             Grid.Column="1"
                             Margin="8,0,0,0"
                             HorizontalAlignment="Stretch"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource BooleanInverterConverter}}"
                             ItemsSource="{Binding FilterOptions}"
                             SelectedItem="{Binding SelectedFilter}" />
                     </Grid>
