@@ -228,12 +228,18 @@ public static class MalUtils
         string responseBody = await response.Content.ReadAsStringAsync();
         AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
 
-        // we are using TokenSortRatio instead of Ratio because there was a weird case:
-        // Fuzz.Ratio("Shingeki no Kyojin Season 2", "DAN DA DAN Season 2") was greater than
-        // Fuzz.Ratio("Dandadan 2nd Season", "DAN DA DAN Season 2")
-        // why? I have no clue. If someone smarter than me sees this please let me know!
-            
-        return responseData?.Data?.OrderByDescending(x => FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, query)).ToList() ?? new List<SearchEntry>();
+        return responseData?.Data?.Select(x =>
+        {
+            int score = FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, query);
+            if (x.Anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+            {
+                score += 50; // Add a bonus for titles that start with the query
+            }
+            return new { Entry = x, Score = score };
+        })
+        .OrderByDescending(x => x.Score)
+        .Select(x => x.Entry)
+        .ToList() ?? new List<SearchEntry>();
     }
 
     public enum AnimeStatusField

@@ -76,18 +76,34 @@ public partial class WatchAnimeViewModel : ViewModelBase
         }
 
         string[] videoExtensions = { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
-        foreach (string filePath in Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
-                     .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower())))
+        List<string> filePaths = Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
+                                     .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower()))
+                                     .ToList();
+
+        List<ParseResult> parsedFiles = new();
+        foreach (string filePath in filePaths)
         {
             string fileName = Path.GetFileName(filePath);
-            ParseResult result = await _animeNameParser.ParseAnimeFilename(fileName);
-            if (result.EpisodeNumber == null) continue;
+            parsedFiles.Add(await _animeNameParser.ParseAnimeFilename(fileName));
+        }
 
-            int? malId = await _absoluteEpisodeService.GetMalIdForSeason(result.AnimeName, result.Season);
-            if (malId.HasValue)
+        Dictionary<string, int?> animeMalIds = new();
+        foreach (ParseResult parsedFile in parsedFiles.DistinctBy(p => new { p.AnimeName, p.Season }))
+        {
+            if (parsedFile.EpisodeNumber == null) continue;
+
+            int? malId = await _absoluteEpisodeService.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
+            animeMalIds.TryAdd(parsedFile.AnimeName, malId);
+        }
+
+        foreach (ParseResult parsedFile in parsedFiles)
+        {
+            if (parsedFile.EpisodeNumber == null) continue;
+
+            if (animeMalIds.TryGetValue(parsedFile.AnimeName, out int? malId) && malId.HasValue)
             {
-                Episodes.Add(new(filePath, int.Parse(result.EpisodeNumber ?? "0"), result.AbsoluteEpisodeNumber,
-                    result.AnimeName, malId.Value, result.Season));
+                Episodes.Add(new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"), parsedFile.AbsoluteEpisodeNumber,
+                    parsedFile.AnimeName, malId.Value, parsedFile.Season));
             }
         }
 
