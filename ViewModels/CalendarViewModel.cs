@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using Aniki.Misc;
 
 namespace Aniki.ViewModels;
 
@@ -10,6 +11,14 @@ public partial class CalendarViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<DaySchedule> _days;
+
+    [ObservableProperty]
+    private bool _showOnlyMyAnime;
+
+    partial void OnShowOnlyMyAnimeChanged(bool value)
+    {
+        ShowWindow();
+    }
 
     private readonly List<string> _watchingList = new() { };
 
@@ -42,9 +51,26 @@ public partial class CalendarViewModel : ViewModelBase
     public override async Task Enter()
     {
         _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+        await LoadUserAnimeList();
         await LoadScheduleAsync();
     }
         
+    private async Task LoadUserAnimeList()
+    {
+        _watchingList.Clear();
+        List<AnimeData> watching = await MalUtils.LoadAnimeList(AnimeStatusApi.watching);
+        List<AnimeData> planToWatch = await MalUtils.LoadAnimeList(AnimeStatusApi.plan_to_watch);
+
+        foreach (AnimeData anime in watching)
+        {
+            _watchingList.Add(anime.Node.Title);
+        }
+        foreach (AnimeData anime in planToWatch)
+        {
+            _watchingList.Add(anime.Node.Title);
+        }
+    }
+
     private async Task LoadScheduleAsync(bool forceRefresh = false)
     {
         IsLoading = true;
@@ -140,9 +166,19 @@ public partial class CalendarViewModel : ViewModelBase
             DateTime currentDate = _windowStartDate.AddDays(i);
             if (_cachedDays.TryGetValue(currentDate.Date, out DaySchedule? cachedDaySchedule))
             {
-                cachedDaySchedule.Items = new ObservableCollection<AnimeScheduleItem>(
-                    cachedDaySchedule.Items.Select(item => EnhanceAnimeItem(item, currentDate)));
-                newDays.Add(cachedDaySchedule);
+                var filteredItems = cachedDaySchedule.Items
+                    .Where(item => !ShowOnlyMyAnime || _watchingList.Contains(item.Title))
+                    .Select(item => EnhanceAnimeItem(item, currentDate));
+
+                var displayDaySchedule = new DaySchedule
+                {
+                    Name = cachedDaySchedule.Name,
+                    DayName = cachedDaySchedule.DayName,
+                    Date = cachedDaySchedule.Date,
+                    IsToday = cachedDaySchedule.IsToday,
+                    Items = new ObservableCollection<AnimeScheduleItem>(filteredItems)
+                };
+                newDays.Add(displayDaySchedule);
             }
             else
             {

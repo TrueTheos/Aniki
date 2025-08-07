@@ -33,7 +33,7 @@
         <Style Selector="Button.today-button">
             <Setter Property="Background" Value="{StaticResource Primary}" />
             <Setter Property="Foreground" Value="{StaticResource White}" />
-            <Setter Property="BorderBrush" Value="#106EBE" />
+            <Setter Property="BorderBrush" Value="{StaticResource Primary}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="12,6" />
@@ -130,7 +130,9 @@
                     Grid.Column="2"
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
-                    <!--  Add view toggle buttons here  -->
+                    <ToggleButton
+                        Content="My Anime"
+                        IsChecked="{Binding ShowOnlyMyAnime}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -293,23 +295,6 @@
                                                                 Grid.Column="2"
                                                                 Margin="0,6,8,6"
                                                                 VerticalAlignment="Top">
-
-                                                                <!--  Bookmark/Favorite icon  -->
-                                                                <Border
-                                                                    Width="20"
-                                                                    Height="20"
-                                                                    Margin="0,0,0,4"
-                                                                    Background="#333333"
-                                                                    CornerRadius="10"
-                                                                    IsVisible="{Binding IsBookmarked}">
-                                                                    <Path
-                                                                        Width="10"
-                                                                        Height="10"
-                                                                        HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"
-                                                                        Data="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.46,13.97L5.82,21L12,17.27Z"
-                                                                        Fill="#FFD700" />
-                                                                </Border>
 
                                                                 <!--  Live indicator  -->
                                                                 <Border
