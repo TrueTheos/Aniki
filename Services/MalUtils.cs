@@ -37,10 +37,14 @@ public static class MalUtils
             _requestTimestamps.Dequeue();
         }
 
+        #if DEBUG
         //sw = Stopwatch.StartNew();
+        #endif
         HttpResponseMessage result = await _client.GetAsync(url);
+        #if DEBUG
         //sw.Stop();
         //Console.WriteLine($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
+        #endif
         requestCounter++;
         return result;
     }

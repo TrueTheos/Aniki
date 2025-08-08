@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Serilog;
 
 namespace Aniki.Services;
 
@@ -34,42 +35,65 @@ public class AnimeNameParser
 
         foreach (string pattern in patterns)
         {
-            Match match = Regex.Match(filename, pattern);
-            if (match.Success)
+            try
             {
-                string animeName;
-                int season;
-                int episodeNumber;
-
-                if (pattern.Contains(@"S(\d+)"))
+                Match match = Regex.Match(filename, pattern);
+                if (match.Success)
                 {
-                    animeName = match.Groups[2].Value.Trim();
-                    season = int.Parse(match.Groups[3].Value);
-                    episodeNumber = int.Parse(match.Groups[4].Value);
+                    string animeName;
+                    int season = 1;
+                    int episodeNumber;
+
+                    if (pattern.Contains(@"S(\d+)E(\d+)")) // Pattern 5
+                    {
+                        if (!int.TryParse(match.Groups[3].Value, out episodeNumber) ||
+                            !int.TryParse(match.Groups[2].Value, out season))
+                        {
+                            continue; // Try next pattern if parsing fails
+                        }
+
+                        animeName = match.Groups[1].Value.Trim();
+                    }
+                    else if (pattern.Contains(@"S(\d+)"))
+                    {
+                        if (!int.TryParse(match.Groups[4].Value, out episodeNumber) ||
+                            !int.TryParse(match.Groups[3].Value, out season))
+                        {
+                            continue;
+                        }
+
+                        animeName = match.Groups[2].Value.Trim();
+                    }
+                    else
+                    {
+                        if (!int.TryParse(match.Groups[match.Groups.Count - 1].Value, out episodeNumber))
+                        {
+                            continue;
+                        }
+
+                        animeName = match.Groups[1].Value.Trim();
+                        season = 1;
+                    }
+
+                    animeName = Regex.Replace(animeName, @"[._]", " ").Trim();
+                    animeName = Regex.Replace(animeName, @"\sS\d+$", "").Trim();
+
+                    (int finalSeason, int relativeEpisode) =
+                        await AbsoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
+
+                    return new ParseResult
+                    {
+                        AnimeName = animeName,
+                        Season = season > 1 ? season : finalSeason,
+                        EpisodeNumber = relativeEpisode.ToString(),
+                        AbsoluteEpisodeNumber = episodeNumber,
+                        FileName = filename
+                    };
                 }
-                else
-                {
-                    animeName = match.Groups[1].Value.Trim();
-                    string episodeNumberStr = match.Groups[match.Groups.Count - 1].Value;
-                    episodeNumber = int.Parse(episodeNumberStr);
-                    season = 1; // Default to season 1 if not specified
-                }
-
-                //Clean up anime name
-                animeName = Regex.Replace(animeName, @"[._]", " ").Trim();
-                animeName = Regex.Replace(animeName, @"\sS\d+$", "").Trim(); //Remove season suffixes like " S2"
-
-                //Check for absolute episode numbering
-                (int finalSeason, int relativeEpisode) = await AbsoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
-
-                return new ParseResult
-                {
-                    AnimeName = animeName,
-                    Season = season > 1 ? season : finalSeason,
-                    EpisodeNumber = relativeEpisode.ToString(),
-                    AbsoluteEpisodeNumber = episodeNumber,
-                    FileName = filename
-                };
+            }
+            catch(Exception ex)
+            {
+                Log.Error($"{filename}: {ex.Message}");
             }
         }
 

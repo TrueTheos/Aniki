@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia;
@@ -23,6 +24,16 @@ public partial class MainWindow : Window
         DataContext = _viewModel;
 
         Loaded += MainWindow_Loaded;
+        
+        string? version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? null;
+        if (version != null)
+        {
+            Title = $"Aniki - {version}";
+        }
+        else
+        {
+            Title = "Aniki";
+        }
     }
 
     private void InitializeComponent()
