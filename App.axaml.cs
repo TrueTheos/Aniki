@@ -4,7 +4,6 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Markup.Xaml;
-using Serilog;
 using Velopack;
 using Velopack.Sources;
 
@@ -65,7 +64,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Update check failed: {ex.Message}");
+            Log.Information($"Update check failed: {ex.Message}");
         }
     }
 }

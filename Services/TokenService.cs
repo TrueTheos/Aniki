@@ -53,7 +53,7 @@ public static class TokenService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading tokens: {ex.Message}");
+            Log.Information($"Error loading tokens: {ex.Message}");
             return null;
         }
     }

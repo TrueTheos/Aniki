@@ -40,7 +40,7 @@ public static class DiscordService
                 new() { Label = "Use Aniki", Url = "https://github.com/TrueTheos/Aniki" }
             }
         });
-        Console.WriteLine("Presence set. Press any key to exit...");
+        Log.Information("Presence set. Press any key to exit...");
     }
 
     public static void Reset()

@@ -44,7 +44,7 @@ public static class MalUtils
         HttpResponseMessage result = await _client.GetAsync(url);
 #if DEBUG
         sw.Stop();
-        Console.WriteLine($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
+        Log.Information($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
 #endif
         requestCounter++;
         return result;
@@ -279,7 +279,7 @@ public static class MalUtils
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting profile picture URL: {ex.Message}");
+            Log.Information($"Error getting profile picture URL: {ex.Message}");
         }
 
         return null;
@@ -297,7 +297,7 @@ public static class MalUtils
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error getting anime picture: {ex.Message}");
+            Log.Information($"Error getting anime picture: {ex.Message}");
         }
 
         return null;
@@ -441,7 +441,7 @@ public static class MalUtils
         {
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                Console.WriteLine($"Anime with ID {animeId} not found on the user's list, or already deleted.");
+                Log.Information($"Anime with ID {animeId} not found on the user's list, or already deleted.");
                 return;
             }
             throw new($"Failed to remove anime from list: {response.StatusCode}");

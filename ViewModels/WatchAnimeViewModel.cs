@@ -253,7 +253,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
     private void OnVideoPlayerClosed()
     {
-        Console.WriteLine("Video player closed!");
+        Log.Information("Video player closed!");
 
         Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
         {

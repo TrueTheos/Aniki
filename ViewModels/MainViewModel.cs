@@ -111,7 +111,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading user data: {ex.Message}");
+            Log.Information($"Error loading user data: {ex.Message}");
         }
         finally
         {
@@ -150,7 +150,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error searching: {ex.Message}");
+            Log.Information($"Error searching: {ex.Message}");
         }
         finally
         {
@@ -170,7 +170,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error searching: {ex.Message}");
+            Log.Information($"Error searching: {ex.Message}");
         }
         finally
         {

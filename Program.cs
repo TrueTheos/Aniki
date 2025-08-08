@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using Serilog;
 using Velopack;
 
 namespace Aniki;

@@ -177,7 +177,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading anime list: {ex.Message}");
+            Log.Information($"Error loading anime list: {ex.Message}");
         }
         finally
         {
@@ -242,7 +242,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error searching anime: {ex.Message}");
+            Log.Information($"Error searching anime: {ex.Message}");
         }
     }
 
