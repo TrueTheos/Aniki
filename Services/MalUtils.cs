@@ -2,6 +2,7 @@
 using Aniki.Misc;
 using Avalonia.Media.Imaging;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Aniki.Services;
 
@@ -37,14 +38,14 @@ public static class MalUtils
             _requestTimestamps.Dequeue();
         }
 
-        #if DEBUG
-        //sw = Stopwatch.StartNew();
-        #endif
+#if DEBUG
+        sw = Stopwatch.StartNew();
+#endif
         HttpResponseMessage result = await _client.GetAsync(url);
-        #if DEBUG
-        //sw.Stop();
-        //Console.WriteLine($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
-        #endif
+#if DEBUG
+        sw.Stop();
+        Console.WriteLine($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
+#endif
         requestCounter++;
         return result;
     }
@@ -184,7 +185,7 @@ public static class MalUtils
     {
         try
         {
-            string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=id,title,main_picture,status,synopsis,my_list_status,num_episodes,related_anime{{id,title,num_episodes,media_type,synopsis,status}},genres";
+            string url = $"https://api.myanimelist.net/v2/anime/{id}?fields=id,title,main_picture,status,synopsis,my_list_status,num_episodes,related_anime{{id,title,num_episodes,media_type,synopsis,status,alternative_titles}},genres,alternative_titles";
 
             HttpResponseMessage response = await GetAsync(url, "Details");
             string responseBody = await response.Content.ReadAsStringAsync();
@@ -304,7 +305,7 @@ public static class MalUtils
 
     public static async Task<List<SearchEntry>> SearchAnimeOrdered(string query)
     {
-        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=id,title,main_picture,num_episodes,main_picture,synopsis,status";
+        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=id,title,main_picture,num_episodes,main_picture,synopsis,status,alternative_titles";
 
         HttpResponseMessage response = await GetAsync(url, "Search");
         string responseBody = await response.Content.ReadAsStringAsync();
@@ -312,6 +313,11 @@ public static class MalUtils
 
         var results = responseData?.Data?.Select(x =>
         {
+            if (DoesTitleMatch(x.Anime, query))
+            {
+                return new { Entry = x, Score = 1000 };
+            }
+            
             int score = FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, query);
             if (x.Anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
             {
@@ -328,7 +334,8 @@ public static class MalUtils
                     MainPicture = x.Anime.MainPicture,
                     Status = x.Anime.Status,
                     Synopsis = x.Anime.Synopsis,
-                    NumEpisodes = x.Anime.NumEpisodes
+                    NumEpisodes = x.Anime.NumEpisodes,
+                    AlternativeTitles = x.Anime.AlternativeTitles
                 };
             }
 
@@ -339,6 +346,36 @@ public static class MalUtils
         .ToList() ?? new List<SearchEntry>();
 
         return results;
+    }
+
+    private static bool DoesTitleMatch(AnimeNode anime, string query)
+    {
+        string normalizedQuery = NormalizeTitleToLower(query);
+        string normalizedTitle = NormalizeTitleToLower(anime.Title);
+        
+        if(normalizedTitle == anime.Title) return true;
+        
+        if(anime.AlternativeTitles == null) return false;
+        
+        string normalizedEn = NormalizeTitleToLower(anime.AlternativeTitles.En);
+        string normalizedJp = NormalizeTitleToLower(anime.AlternativeTitles.Ja);
+        
+        if(normalizedJp == normalizedQuery) return true;
+        if(normalizedEn == normalizedQuery) return true;
+        
+        if(anime.AlternativeTitles.Synonyms != null && anime.AlternativeTitles.Synonyms.Any(x => NormalizeTitleToLower(x) == normalizedQuery)) 
+            return true;
+        
+        return false; 
+    }
+
+    private static string NormalizeTitleToLower(string? title)
+    {
+        if (string.IsNullOrEmpty(title)) return string.Empty;
+    
+        string normalized = title.Replace("-", "").Replace("_", "").Replace(":", "").Trim();
+        normalized = Regex.Replace(normalized, @"\s+", " ");
+        return normalized.ToLower();
     }
 
     public static async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, string value)

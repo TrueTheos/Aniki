@@ -199,7 +199,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
                         Id = entry.Anime.Id,
                         Title = entry.Anime.Title,
                         Synopsis = entry.Anime.Synopsis,
-                        Status = entry.Anime.Status
+                        Status = entry.Anime.Status,
+                        AlternativeTitles = entry.Anime.AlternativeTitles,
                     },
                     ListStatus = null
                 };

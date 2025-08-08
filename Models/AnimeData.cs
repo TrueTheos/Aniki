@@ -16,6 +16,8 @@ public class AnimeNode
 {
     public int Id { get; init; }
     public required string Title { get; init; }
+    [JsonPropertyName("alternative_titles")]
+    public AlternativeTitles? AlternativeTitles { get; set; }
     public Genre[]? Genres { get; set; }
     public required string Synopsis { get; set; }
     public required string Status { get; set; }
@@ -56,6 +58,9 @@ public class AnimeDetails
     public MainPicture? MainPicture { get; set; }
     public required string Status { get; set; }
     public required string Synopsis { get; set; }
+    [JsonPropertyName("alternative_titles")]
+    public AlternativeTitles? AlternativeTitles { get; set; }
+    
     [JsonPropertyName("my_list_status")]
     public MyListStatus? MyListStatus { get; set; }
     [JsonPropertyName("num_episodes")]
@@ -76,6 +81,16 @@ public class Genre
 {
     public int Id { get; set; }
     public required string Name { get; set; }
+}
+
+public class AlternativeTitles
+{
+    [JsonPropertyName("synonyms")]
+    public string[]? Synonyms { get; set; }
+    [JsonPropertyName("en")]
+    public string? En { get; set; }
+    [JsonPropertyName("ja")]
+    public string? Ja { get; set; }
 }
 
 public class MyListStatus

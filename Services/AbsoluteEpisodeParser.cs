@@ -47,7 +47,7 @@ public class AbsoluteEpisodeParser
         return null;
     }
 
-    private static async Task<Dictionary<int, SeasonData>?> GetOrCreateSeasonMap(string animeTitle)
+    public static async Task<Dictionary<int, SeasonData>?> GetOrCreateSeasonMap(string animeTitle)
     {
         if (_cache.TryGetValue(animeTitle, out var seasonMap))
         {
@@ -110,7 +110,7 @@ public class AbsoluteEpisodeParser
                 {
                     currentId = sequel.Node.Id;
                     visitedIds.Add(currentId);
-                    currentDetails = await MalUtils.GetAnimeDetails(currentId);
+                    currentDetails = await MalUtils.GetAnimeDetails(currentId, true);
                     if (currentDetails != null)
                     {
                         seasonChain.Add((currentId, currentDetails));
