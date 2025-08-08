@@ -21,7 +21,10 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ImageUrl))]
     private AnimeDetails? _details;
+
+    public string? ImageUrl => Details?.MainPicture?.Large;
 
     [ObservableProperty]
     private ObservableCollection<AnimeData> _animeList;
@@ -229,7 +232,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
                     Id = details.Id,
                     Title = details.Title,
                     Synopsis = details.Synopsis,
-                    Status = details.Status
+                    Status = details.Status,
+                    MainPicture = details.MainPicture,
                 },
                 ListStatus = details.MyListStatus
             };

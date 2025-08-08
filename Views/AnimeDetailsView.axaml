@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     x:DataType="vm:AnimeDetailsViewModel">
     <Border
@@ -197,7 +198,7 @@
                                                         BoxShadow="0 4 12 0 #40000000"
                                                         ClipToBounds="True"
                                                         CornerRadius="8">
-                                                        <Image Source="{Binding Details.Picture}" Stretch="UniformToFill" />
+                                                        <Image asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}" Stretch="UniformToFill" />
                                                     </Border>
 
                                                     <Panel Margin="0,16,0,0">
