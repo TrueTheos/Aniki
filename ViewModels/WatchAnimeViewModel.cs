@@ -27,7 +27,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
     private string _processingProgress = "";
 
     [ObservableProperty]
-    private ObservableCollection<Episode> _episodes = new();
+    private ObservableCollection<AnimeGroup> _animeGroups = new();
 
     [ObservableProperty]
     private string _episodesFolderMessage = "";
@@ -64,7 +64,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
     private async Task LoadEpisodesFromFolder()
     {
         IsLoading = true;
-        Episodes.Clear();
+        AnimeGroups.Clear();
         ProcessingProgress = "Processing files: 0/0";
 
         SettingsConfig? config = SaveService.GetSettingsConfig();
@@ -85,6 +85,8 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
         int processedFilesCount = 0;
         Dictionary<string, int?> animeMalIds = new();
+        List<Episode> allEpisodes = new();
+
         foreach (string filePath in filePaths)
         {
             string fileName = Path.GetFileName(filePath);
@@ -97,13 +99,30 @@ public partial class WatchAnimeViewModel : ViewModelBase
             animeMalIds.TryAdd(parsedFile.AnimeName, malId);
             if (malId != null)
             {
-                Episodes.Add(new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"),
+                allEpisodes.Add(new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                     parsedFile.AbsoluteEpisodeNumber,
                     parsedFile.AnimeName, malId.Value, parsedFile.Season));
-                UpdateView();
             }
         }
 
+        // Group episodes by anime title and create sorted groups
+        var groupedEpisodes = allEpisodes
+            .GroupBy(ep => ep.Title)
+            .OrderBy(g => g.Key) // Sort anime titles alphabetically
+            .ToList();
+
+        foreach (var group in groupedEpisodes)
+        {
+            // Sort episodes within each group by Season first, then by Episode number
+            var sortedEpisodes = group
+                .OrderBy(ep => ep.Season)
+                .ThenBy(ep => ep.EpisodeNumber)
+                .ToList();
+
+            AnimeGroups.Add(new AnimeGroup(group.Key, new ObservableCollection<Episode>(sortedEpisodes)));
+        }
+
+        UpdateView();
         IsLoading = false;
     }
 
@@ -111,14 +130,14 @@ public partial class WatchAnimeViewModel : ViewModelBase
     {
         IsEpisodesViewVisible = false;
         IsNoEpisodesViewVisible = false;
-        Episodes.Clear();
+        AnimeGroups.Clear();
 
         UpdateView();
     }
         
     private void UpdateView()
     {
-        if (Episodes.Count > 0)
+        if (AnimeGroups.Count > 0)
         {
             IsEpisodesViewVisible = true;
             IsNoEpisodesViewVisible = false;
@@ -146,7 +165,21 @@ public partial class WatchAnimeViewModel : ViewModelBase
     private void DeleteEpisode(Episode ep)
     {
         File.Delete(ep.FilePath);
-        Episodes.Remove(ep);
+        
+        // Find and remove episode from the appropriate group
+        var group = AnimeGroups.FirstOrDefault(g => g.Episodes.Contains(ep));
+        if (group != null)
+        {
+            group.Episodes.Remove(ep);
+            
+            // Remove the group if it has no episodes left
+            if (group.Episodes.Count == 0)
+            {
+                AnimeGroups.Remove(group);
+            }
+        }
+        
+        UpdateView();
     }
 
     private string GetAssociatedProgram(string extension)
@@ -206,6 +239,19 @@ public partial class WatchAnimeViewModel : ViewModelBase
     {
         int episodeToMark = ep.EpisodeNumber;
         _ = MalUtils.UpdateAnimeStatus(ep.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, episodeToMark.ToString());
+    }
+}
+
+public class AnimeGroup
+{
+    public string Title { get; }
+    public ObservableCollection<Episode> Episodes { get; }
+    public int TotalEpisodes => Episodes.Count;
+    
+    public AnimeGroup(string title, ObservableCollection<Episode> episodes)
+    {
+        Title = title;
+        Episodes = episodes;
     }
 }
 
