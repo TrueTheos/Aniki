@@ -85,7 +85,6 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
         int processedFilesCount = 0;
         Dictionary<string, int?> animeMalIds = new();
-        List<Episode> allEpisodes = new();
 
         foreach (string filePath in filePaths)
         {
@@ -99,31 +98,76 @@ public partial class WatchAnimeViewModel : ViewModelBase
             animeMalIds.TryAdd(parsedFile.AnimeName, malId);
             if (malId != null)
             {
-                allEpisodes.Add(new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"),
+                Episode newEpisode = new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                     parsedFile.AbsoluteEpisodeNumber,
-                    parsedFile.AnimeName, malId.Value, parsedFile.Season));
+                    parsedFile.AnimeName, malId.Value, parsedFile.Season);
+                
+                AddEpisodeToGroup(newEpisode);
+                UpdateView();
             }
         }
 
-        // Group episodes by anime title and create sorted groups
-        var groupedEpisodes = allEpisodes
-            .GroupBy(ep => ep.Title)
-            .OrderBy(g => g.Key) // Sort anime titles alphabetically
-            .ToList();
-
-        foreach (var group in groupedEpisodes)
-        {
-            // Sort episodes within each group by Season first, then by Episode number
-            var sortedEpisodes = group
-                .OrderBy(ep => ep.Season)
-                .ThenBy(ep => ep.EpisodeNumber)
-                .ToList();
-
-            AnimeGroups.Add(new AnimeGroup(group.Key, new ObservableCollection<Episode>(sortedEpisodes)));
-        }
-
-        UpdateView();
         IsLoading = false;
+    }
+
+    private void AddEpisodeToGroup(Episode episode)
+    {
+        AnimeGroup? existingGroup = AnimeGroups.FirstOrDefault(g => g.Title == episode.Title);
+        
+        if (existingGroup != null)
+        {
+            InsertEpisodeInSortedOrder(existingGroup.Episodes, episode);
+        }
+        else
+        {
+            AnimeGroup newGroup = new(episode.Title, new ObservableCollection<Episode> { episode });
+            InsertGroupInSortedOrder(newGroup);
+        }
+    }
+
+    private void InsertEpisodeInSortedOrder(ObservableCollection<Episode> episodes, Episode newEpisode)
+    {
+        int insertIndex = 0;
+        
+        for (int i = 0; i < episodes.Count; i++)
+        {
+            Episode existingEpisode = episodes[i];
+            
+            if (newEpisode.Season < existingEpisode.Season)
+            {
+                insertIndex = i;
+                break;
+            }
+            else if (newEpisode.Season == existingEpisode.Season)
+            {
+                if (newEpisode.EpisodeNumber < existingEpisode.EpisodeNumber)
+                {
+                    insertIndex = i;
+                    break;
+                }
+            }
+            
+            insertIndex = i + 1;
+        }
+        
+        episodes.Insert(insertIndex, newEpisode);
+    }
+
+    private void InsertGroupInSortedOrder(AnimeGroup newGroup)
+    {
+        int insertIndex = 0;
+        
+        for (int i = 0; i < AnimeGroups.Count; i++)
+        {
+            if (string.Compare(newGroup.Title, AnimeGroups[i].Title, StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                insertIndex = i;
+                break;
+            }
+            insertIndex = i + 1;
+        }
+        
+        AnimeGroups.Insert(insertIndex, newGroup);
     }
 
     public void Update(AnimeDetails? details)
@@ -166,13 +210,11 @@ public partial class WatchAnimeViewModel : ViewModelBase
     {
         File.Delete(ep.FilePath);
         
-        // Find and remove episode from the appropriate group
         var group = AnimeGroups.FirstOrDefault(g => g.Episodes.Contains(ep));
         if (group != null)
         {
             group.Episodes.Remove(ep);
             
-            // Remove the group if it has no episodes left
             if (group.Episodes.Count == 0)
             {
                 AnimeGroups.Remove(group);
