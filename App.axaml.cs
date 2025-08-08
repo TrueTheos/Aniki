@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Markup.Xaml;
+using Serilog;
 using Velopack;
 using Velopack.Sources;
 
@@ -41,6 +42,9 @@ public partial class App : Application
             desktop.Exit += (_, _) => _notificationService.Stop();
         }
 
+        AppDomain.CurrentDomain.UnhandledException += (s, e) => 
+            Log.Fatal(e.ExceptionObject as Exception, "Unhandled exception");
+        
         base.OnFrameworkInitializationCompleted();
     }
 
