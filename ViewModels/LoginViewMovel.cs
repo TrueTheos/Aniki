@@ -1,10 +1,13 @@
 ﻿using System.Windows.Input;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
 public class LoginViewModel : ViewModelBase
 {
-    private readonly OAuthService? _oauthService;
+    private readonly IOAuthService _oauthService;
+    private readonly ITokenService _tokenService;
+    private readonly IMalService _malService;
 
     private bool _isLoading;
     private string _statusMessage = "";
@@ -42,13 +45,13 @@ public class LoginViewModel : ViewModelBase
     public ICommand ContinueCommand => _continueCommand ??= new RelayCommand(async () => await ContinueAsync());
     public ICommand LogoutCommand => _logoutCommand ??= new RelayCommand(LogoutAsync);
 
-    public event EventHandler<string?>? NavigateToMainRequested;
-
-    public LoginViewModel() { }
-
-    public LoginViewModel(OAuthService oauthService)
+    public event EventHandler<string>? NavigateToMainRequested;
+    
+    public LoginViewModel(IOAuthService oauthService, ITokenService tokenService, IMalService malService)
     {
         _oauthService = oauthService;
+        _tokenService = tokenService;
+        _malService = malService;
     }
 
     public async Task CheckExistingLoginAsync()
@@ -58,13 +61,13 @@ public class LoginViewModel : ViewModelBase
 
         try
         {
-            StoredTokenData? tokenData = await TokenService.LoadTokensAsync();
+            StoredTokenData? tokenData = await _tokenService.LoadTokensAsync();
 
             if (tokenData != null && !string.IsNullOrEmpty(tokenData.AccessToken))
             {
                 try
                 {
-                    MALUserData? userData = await MalUtils.GetUserDataAsync();
+                    MALUserData? userData = await _malService.GetUserDataAsync();
                     if (userData != null && !string.IsNullOrEmpty(userData.Name))
                     {
                         Username = userData.Name;
@@ -75,7 +78,7 @@ public class LoginViewModel : ViewModelBase
                 }
                 catch (Exception)
                 {
-                    TokenService.ClearTokens();
+                    _tokenService.ClearTokens();
                 }
             }
 
@@ -112,9 +115,9 @@ public class LoginViewModel : ViewModelBase
 
     private Task ContinueAsync()
     {
-        if (TokenService.HasValidToken())
+        if (_tokenService.HasValidToken())
         {
-            NavigateToMainRequested?.Invoke(this, TokenService.GetAccessToken());
+            NavigateToMainRequested?.Invoke(this, _tokenService.GetAccessToken());
         }
         else
         {
@@ -127,7 +130,7 @@ public class LoginViewModel : ViewModelBase
 
     private void LogoutAsync()
     {
-        TokenService.ClearTokens();
+        _tokenService.ClearTokens();
         IsLoggedIn = false;
         StatusMessage = "Logged out. Ready to log in.";
     }

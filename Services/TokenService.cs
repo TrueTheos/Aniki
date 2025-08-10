@@ -1,16 +1,24 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-public static class TokenService
+public class TokenService : ITokenService
 {
-    private static string _tokenFilePath = "";
-    private static StoredTokenData? _cachedTokens;
-    private static readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
+    private string _tokenFilePath = "";
+    private StoredTokenData? _cachedTokens;
+    private readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
 
-    public static void Init()
+    private readonly IMalService _malService;
+    
+    public TokenService(IMalService malService)
+    {
+        _malService = malService;
+    }
+
+    public void Init()
     {
         string appDataFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -24,11 +32,11 @@ public static class TokenService
         _tokenFilePath = Path.Combine(appDataFolder, "tokens.dat");
     }
 
-    public static async Task<StoredTokenData?> LoadTokensAsync()
+    public async Task<StoredTokenData?> LoadTokensAsync()
     {
         if (_cachedTokens != null)
         {
-            MalUtils.Init(_cachedTokens.AccessToken);
+            _malService.Init(_cachedTokens.AccessToken);
             return _cachedTokens;
         }
 
@@ -48,7 +56,7 @@ public static class TokenService
                 return null;
             }
 
-            MalUtils.Init(_cachedTokens?.AccessToken);
+            _malService.Init(_cachedTokens?.AccessToken ?? string.Empty);
             return _cachedTokens;
         }
         catch (Exception ex)
@@ -58,11 +66,11 @@ public static class TokenService
         }
     }
 
-    public static async Task SaveTokensAsync(TokenResponse tokenResponse)
+    public async Task SaveTokensAsync(TokenResponse tokenResponse)
     {
         StoredTokenData tokens = new()
         {
-            AccessToken = tokenResponse.access_token,
+            AccessToken = tokenResponse.access_token ?? string.Empty,
             RefreshToken = tokenResponse.refresh_token,
             ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.expires_in)
         };
@@ -73,7 +81,7 @@ public static class TokenService
         _cachedTokens = tokens;
     }
 
-    public static void ClearTokens()
+    public void ClearTokens()
     {
         if (File.Exists(_tokenFilePath))
         {
@@ -82,19 +90,19 @@ public static class TokenService
         _cachedTokens = null;
     }
 
-    public static bool HasValidToken()
+    public bool HasValidToken()
     {
         return _cachedTokens != null &&
                !string.IsNullOrEmpty(_cachedTokens.AccessToken) &&
                DateTime.UtcNow < _cachedTokens.ExpiresAtUtc;
     }
 
-    public static string? GetAccessToken()
+    public string GetAccessToken()
     {
-        return _cachedTokens?.AccessToken;
+        return _cachedTokens?.AccessToken ?? string.Empty;
     }
 
-    private static byte[] EncryptData(string data)
+    private byte[] EncryptData(string data)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -107,7 +115,7 @@ public static class TokenService
         }
     }
 
-    private static string DecryptData(byte[] encryptedData)
+    private string DecryptData(byte[] encryptedData)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -120,7 +128,7 @@ public static class TokenService
         }
     }
 
-    private static byte[] EncryptDataAes(string data)
+    private byte[] EncryptDataAes(string data)
     {
         using var aes = Aes.Create();
         
@@ -146,7 +154,7 @@ public static class TokenService
         return result;
     }
 
-    private static string DecryptDataAes(byte[] encryptedData)
+    private string DecryptDataAes(byte[] encryptedData)
     {
         using var aes = Aes.Create();
         

@@ -10,7 +10,7 @@ public class TokenResponse
 
 public class StoredTokenData
 {
-    public string? AccessToken { get; set; }
+    public required string AccessToken { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime ExpiresAtUtc { get; set; }
 }

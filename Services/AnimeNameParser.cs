@@ -1,9 +1,17 @@
 using System.Text.RegularExpressions;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-public class AnimeNameParser
+public class AnimeNameParser : IAnimeNameParser
 {
+    private readonly IAbsoluteEpisodeParser _absoluteEpisodeParser;
+
+    public AnimeNameParser(IAbsoluteEpisodeParser absoluteEpisodeParser)
+    {
+        _absoluteEpisodeParser = absoluteEpisodeParser;
+    }
+    
     public async Task<ParseResult> ParseAnimeFilename(string filename)
     {
         // Remove file extension
@@ -110,7 +118,7 @@ public class AnimeNameParser
                     
                     if (season > 1)
                     {
-                        await AbsoluteEpisodeParser.GetOrCreateSeasonMap(animeName);
+                        await _absoluteEpisodeParser.GetOrCreateSeasonMap(animeName);
                         return new ParseResult
                         {
                             AnimeName = animeName,
@@ -122,7 +130,7 @@ public class AnimeNameParser
                     }
                     else
                     {
-                        (int finalSeason, int relativeEpisode) = await AbsoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
+                        (int finalSeason, int relativeEpisode) = await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
                         return new ParseResult
                         {
                             AnimeName = animeName,

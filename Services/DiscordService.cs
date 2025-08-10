@@ -1,21 +1,22 @@
-﻿using DiscordRPC;
+﻿using Aniki.Services.Interfaces;
+using DiscordRPC;
 
 namespace Aniki.Services;
 
-public static class DiscordService
+public class DiscordService : IDiscordService
 {
     private const string ClientId = "1371263147792535592"; 
 
-    private static DiscordRpcClient _client;
-    private static bool _isDisposed = false;
+    private DiscordRpcClient _client;
+    private bool _isDisposed = false;
 
-    static DiscordService()
+    public DiscordService()
     {
         _client = new(ClientId);
         AppDomain.CurrentDomain.ProcessExit += (sender, e) => Reset();
     }
 
-    public static void SetPresenceEpisode(Episode ep)
+    public void SetPresenceEpisode(Episode ep)
     {
         if (_isDisposed)
         {
@@ -43,7 +44,7 @@ public static class DiscordService
         Log.Information("Presence set. Press any key to exit...");
     }
 
-    public static void Reset()
+    public void Reset()
     {
         if (!_isDisposed && _client != null)
         {

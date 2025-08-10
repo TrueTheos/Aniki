@@ -1,5 +1,7 @@
 ﻿
 
+using Aniki.Services.Interfaces;
+
 namespace Aniki.ViewModels;
 
 public class GenreStats
@@ -17,15 +19,18 @@ public partial class StatsViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<GenreStats>? _genreStats;
+    
+    private readonly IMalService _malService;
         
-    public StatsViewModel()
+    public StatsViewModel(IMalService malService)
     {
+        _malService = malService;
         LoadStats();
     }
 
     private async void LoadStats()
     {
-        var animeList = await MalUtils.GetUserAnimeList();
+        var animeList = await _malService.GetUserAnimeList();
         if (animeList == null || !animeList.Any())
             return;
 

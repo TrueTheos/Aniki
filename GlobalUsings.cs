@@ -8,3 +8,5 @@ global using Aniki.Services;
 global using CommunityToolkit.Mvvm.ComponentModel;
 global using CommunityToolkit.Mvvm.Input;
 global using Serilog;
+
+global using SeasonCache = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<int, Aniki.Services.SeasonData>>;

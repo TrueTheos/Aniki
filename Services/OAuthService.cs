@@ -3,16 +3,24 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Reflection;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-public class OAuthService
+public class OAuthService : IOAuthService
 {
     private string ClientId = "";
     private const string RedirectUri = "http://localhost:8000/callback";
 
     private string _codeVerifier = "";
     private HttpListener _httpListener = new();
+
+    private readonly ITokenService _tokenService;
+
+    public OAuthService(ITokenService tokenService)
+    {
+        _tokenService = tokenService;
+    }
 
     public async Task<bool> StartOAuthFlowAsync(IProgress<string> progressReporter)
     {
@@ -106,7 +114,7 @@ public class OAuthService
 
                 if (tokenResponse != null)
                 {
-                    await TokenService.SaveTokensAsync(tokenResponse);
+                    await _tokenService.SaveTokensAsync(tokenResponse);
                     return true;
                 }
             }

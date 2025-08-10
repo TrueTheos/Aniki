@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Text;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-public static partial class CalendarService
+public class CalendarService : ICalendarService
 {
     private const string GraphQlEndpoint = "https://graphql.anilist.co";
 
@@ -43,9 +44,9 @@ public static partial class CalendarService
               }
             ";
 
-    private static readonly HttpClient Http = new();
+    private  readonly HttpClient Http = new();
 
-    private static async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
+    private  async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
     {
         JArray schedules = new();
         int currentPage = 1;
@@ -91,7 +92,7 @@ public static partial class CalendarService
         return schedules;
     }
 
-    public static async Task<List<DaySchedule>> GetScheduleAsync(
+    public  async Task<List<DaySchedule>> GetScheduleAsync(
         IEnumerable<string> watchingList,
         DateTime startDate,
         DateTime endDate,
@@ -153,7 +154,7 @@ public static partial class CalendarService
         return daySchedules;
     }
 
-    public static async Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date, IEnumerable<string> watchingList)
+    public  async Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date, IEnumerable<string> watchingList)
     {
         long startUnix = ((DateTimeOffset)date.Date).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)date.Date.AddDays(1)).ToUnixTimeSeconds();
@@ -175,7 +176,7 @@ public static partial class CalendarService
         return animeItems;
     }
 
-    private static AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
+    private  AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
     {
         JToken? media = schedule["media"];
         if (media == null) return null;
@@ -210,7 +211,7 @@ public static partial class CalendarService
         };
     }
 
-    private static string GetBestTitle(JToken? titleObject)
+    private  string GetBestTitle(JToken? titleObject)
     {
         if (titleObject == null) return "";
 
@@ -219,7 +220,4 @@ public static partial class CalendarService
                titleObject["native"]?.ToString() ??
                "";
     }
-
-    [System.Text.RegularExpressions.GeneratedRegex("<.*?>")]
-    private static partial System.Text.RegularExpressions.Regex MyRegex();
 }

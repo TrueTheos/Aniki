@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using Aniki.Services.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
 
@@ -10,8 +11,6 @@ namespace Aniki.ViewModels;
 
 public partial class WatchAnimeViewModel : ViewModelBase
 {
-    private readonly AnimeNameParser _animeNameParser = new();
-
     private Episode? _lastPlayedEpisode;
 
     [ObservableProperty]
@@ -35,18 +34,24 @@ public partial class WatchAnimeViewModel : ViewModelBase
     [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
     static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string? pszExtra, [Out] StringBuilder? pszOut, ref uint pcchOut);
 
-    enum AssocF
-    {
-        None = 0,
-    }
+    enum AssocF { None = 0 }
 
-    enum AssocStr
-    {
-        Executable = 2,
-    }
+    enum AssocStr { Executable = 2 }
+    
+    private readonly IDiscordService _discordService;
+    private readonly IMalService  _malService;
+    private readonly ISaveService  _saveService;
+    private readonly IAbsoluteEpisodeParser  _absoluteEpisodeParser;
+    private readonly IAnimeNameParser  _animeNameParser;
 
-    public WatchAnimeViewModel()
+    public WatchAnimeViewModel(IDiscordService discordService, IMalService malService, ISaveService saveService, IAbsoluteEpisodeParser absoluteEpisodeParser, IAnimeNameParser animeNameParser)
     {
+        _discordService = discordService;
+        _malService = malService;
+        _saveService = saveService;
+        _absoluteEpisodeParser = absoluteEpisodeParser;
+        _animeNameParser = animeNameParser;
+        
         IsEpisodesViewVisible = false;
         IsNoEpisodesViewVisible = true;
         
@@ -67,8 +72,8 @@ public partial class WatchAnimeViewModel : ViewModelBase
         AnimeGroups.Clear();
         ProcessingProgress = "Processing files: 0/0";
 
-        SettingsConfig? config = SaveService.GetSettingsConfig();
-        string episodesFolder = config?.EpisodesFolder ?? SaveService.DefaultEpisodesFolder;
+        SettingsConfig? config = _saveService.GetSettingsConfig();
+        string episodesFolder = config?.EpisodesFolder ?? _saveService.DefaultEpisodesFolder;
         EpisodesFolderMessage = $"Episodes folder is empty - {episodesFolder}";
 
         if (!Directory.Exists(episodesFolder))
@@ -94,7 +99,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
             ProcessingProgress = $"Processing files: {processedFilesCount}/{filePaths.Count}";
             
             if (parsedFile.EpisodeNumber == null) continue;
-            int? malId = await AbsoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
+            int? malId = await _absoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
             animeMalIds.TryAdd(parsedFile.AnimeName, malId);
             if (malId != null)
             {
@@ -200,7 +205,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
         _lastPlayedEpisode = ep;
 
-        DiscordService.SetPresenceEpisode(ep);
+        _discordService.SetPresenceEpisode(ep);
 
         LaunchAndTrack(defaultApp, ep.FilePath);
     }
@@ -274,13 +279,13 @@ public partial class WatchAnimeViewModel : ViewModelBase
             }
         });
 
-        DiscordService.Reset();
+        _discordService.Reset();
     }
 
     private void MarkEpisodeCompleted(Episode ep)
     {
         int episodeToMark = ep.EpisodeNumber;
-        _ = MalUtils.UpdateAnimeStatus(ep.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, episodeToMark.ToString());
+        _ = _malService.UpdateAnimeStatus(ep.Id, MalService.AnimeStatusField.EPISODES_WATCHED, episodeToMark.ToString());
     }
 }
 

@@ -1,23 +1,27 @@
 using System.Reflection;
+using Aniki.Services.Interfaces;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia;
 using Avalonia.Interactivity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;
 
 public partial class MainWindow : Window
 {
     private MainViewModel _viewModel;
+    private readonly ISaveService _saveService; 
 
-    public MainWindow()
+    public MainWindow(MainViewModel viewModel)
     {
+        _saveService = App.ServiceProvider.GetRequiredService<ISaveService>();
         InitializeComponent();
 #if DEBUG
         this.AttachDevTools();
 #endif
 
-        _viewModel = new();
+        _viewModel = viewModel;
         _viewModel.LogoutRequested += OnLogoutRequested;
         _viewModel.SettingsRequested += OnSettingsRequested;
 
@@ -44,7 +48,6 @@ public partial class MainWindow : Window
     private async void MainWindow_Loaded(object? sender, RoutedEventArgs routedEventArgs)
     {
         await _viewModel.InitializeAsync();
-        _ = SaveService.SyncAnimeWithMal();
     }
 
     private void OnLogoutRequested(object? sender, EventArgs e)
@@ -56,9 +59,10 @@ public partial class MainWindow : Window
 
     private async void OnSettingsRequested(object? sender, EventArgs e)
     {
+        var settingsViewModel = App.ServiceProvider.GetRequiredService<SettingsViewModel>();
         SettingsWindow settingsWindow = new()
         {
-            DataContext = new SettingsViewModel()
+            DataContext = settingsViewModel
         };
         await settingsWindow.ShowDialog(this);
     }

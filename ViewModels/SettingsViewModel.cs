@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Aniki.Services.Interfaces;
+using Avalonia.Controls;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Messaging;
@@ -40,12 +41,15 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private long _cacheSize;
 
+    private readonly ISaveService _saveService;
     private readonly CacheManager _cacheManager;
 
-    public SettingsViewModel()
+    public SettingsViewModel(ISaveService saveService)
     {
+        _saveService = saveService;
+        
         LoadSettings();
-        _cacheManager = SaveService.ImageCache!;
+        _cacheManager = _saveService.ImageCache!;
         UpdateCacheSize();
     }
 
@@ -63,12 +67,12 @@ public partial class SettingsViewModel : ViewModelBase
 
     private void LoadSettings()
     {
-        SettingsConfig? config = SaveService.GetSettingsConfig();
+        SettingsConfig? config = _saveService.GetSettingsConfig();
 
         if(config == null)
         {
             AutoStart = false;
-            EpisodesFolder = SaveService.DefaultEpisodesFolder;
+            EpisodesFolder = _saveService.DefaultEpisodesFolder;
         }
         else
         {
@@ -129,7 +133,7 @@ public partial class SettingsViewModel : ViewModelBase
             NotifyAboutEpisodes = NotifyAboutEpisodes
         };
 
-        SaveService.SaveSettings(config);
+        _saveService.SaveSettings(config);
         
         WeakReferenceMessenger.Default.Send(new SettingsChangedMessage());
     }

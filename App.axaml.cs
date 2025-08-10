@@ -1,9 +1,12 @@
-using Aniki.Services.Aniki.Services;
+using Aniki.Misc;
+using Aniki.Services.Interfaces;
 using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
+using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
 using Velopack;
 using Velopack.Sources;
 
@@ -11,34 +14,30 @@ namespace Aniki;
 
 public partial class App : Application
 {
-    private EpisodeNotificationService? _notificationService;
-
+    private ServiceProvider _serviceProvider = null!;
+    
     public override void Initialize()
     {
-        TokenService.Init();
-        SaveService.Init();
+        var collection = new ServiceCollection();
+        collection.AddCommonServices();
+        _serviceProvider = collection.BuildServiceProvider();
 
         AvaloniaXamlLoader.Load(this);
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
+        BindingPlugins.DataValidators.RemoveAt(0);
+        
+        _serviceProvider.GetService<ITokenService>()?.Init();
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var vm = _serviceProvider.GetRequiredService<LoginViewModel>();
+
             desktop.MainWindow = new LoginWindow();
 
             CheckForUpdates();
-
-            WindowNotificationManager notificationManager = new(desktop.MainWindow)
-            {
-                Position = NotificationPosition.TopRight,
-                MaxItems = 3
-            };
-
-            _notificationService = new(notificationManager);
-            _notificationService.Start();
-
-            desktop.Exit += (_, _) => _notificationService.Stop();
         }
 
         AppDomain.CurrentDomain.UnhandledException += (s, e) => 
@@ -67,4 +66,6 @@ public partial class App : Application
             Log.Information($"Update check failed: {ex.Message}");
         }
     }
+    
+    public static ServiceProvider ServiceProvider => ((App)Current!)._serviceProvider;
 }

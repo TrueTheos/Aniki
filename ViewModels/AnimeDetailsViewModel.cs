@@ -1,12 +1,12 @@
 using Aniki.Misc;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
 public partial class AnimeDetailsViewModel : ViewModelBase
 {
-    private readonly NyaaService _nyaaService = new();
     private AnimeData? _selectedAnime;
     public AnimeData? SelectedAnime
     {
@@ -115,10 +115,17 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     [ObservableProperty]
     private WatchAnimeViewModel _watchAnimeViewModel;
+    
+    private readonly IMalService _malService;
+    private readonly INyaaService _nyaaService;
 
-    public AnimeDetailsViewModel() 
+    public AnimeDetailsViewModel(IMalService malService, INyaaService nyaaService, WatchAnimeViewModel watchAnimeViewModel) 
     { 
-        WatchAnimeViewModel = new();
+        _malService = malService;
+        _nyaaService = nyaaService;
+        
+        _watchAnimeViewModel = watchAnimeViewModel;
+        
         _animeList = new();
         SelectedFilter = AnimeStatusTranslated.All;
     }
@@ -154,7 +161,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (animeData?.Node?.Id != null)
         {
             IsLoading = true;
-            AnimeDetails? details = await MalUtils.GetAnimeDetails(animeData.Node.Id);
+            AnimeDetails? details = await _malService.GetAnimeDetails(animeData.Node.Id);
             Update(details);
 
             IsLoading = false;
@@ -168,7 +175,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             IsLoading = true;
             AnimeList.Clear();
 
-            List<AnimeData> animeListData = await MalUtils.GetUserAnimeList(filter.TranslatedToApi());
+            List<AnimeData> animeListData = await _malService.GetUserAnimeList(filter.TranslatedToApi());
 
             foreach (AnimeData anime in animeListData)
             {
@@ -187,7 +194,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     public async Task<List<SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
     {
-        List<SearchEntry> results = await MalUtils.SearchAnimeOrdered(searchQuery);
+        List<SearchEntry> results = await _malService.SearchAnimeOrdered(searchQuery);
         AnimeList.Clear();
             
         if (fillList)
@@ -220,7 +227,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         try
         {
-            AnimeDetails? details = await MalUtils.GetAnimeDetails(malId);
+            AnimeDetails? details = await _malService.GetAnimeDetails(malId);
             AnimeList.Clear();
 
             if (details == null) return;
@@ -263,7 +270,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await MalUtils.RemoveFromList(Details.Id);
+        await _malService.RemoveFromList(Details.Id);
             
         await LoadAnimeDetailsAsync(SelectedAnime);
     }
@@ -273,7 +280,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, "watching");
+        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.STATUS, "watching");
             
         await LoadAnimeDetailsAsync(SelectedAnime);
     }
@@ -291,7 +298,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             newCount = Details.NumEpisodes;
         }
 
-        await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
+        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
         EpisodesWatched = newCount;
     }
 
@@ -300,14 +307,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details?.MyListStatus == null) return;
         if (score == null) return;
 
-        await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.SCORE, score);
+        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.SCORE, score);
         Details.MyListStatus.Score = int.Parse(score);
     }
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
         if(Details == null) return;
-        await MalUtils.UpdateAnimeStatus(Details.Id, MalUtils.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
+        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
         if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
     }
 

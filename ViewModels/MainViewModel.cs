@@ -1,6 +1,7 @@
 ﻿using Aniki.Misc;
 using Avalonia.Media.Imaging;
 using System.Collections.ObjectModel;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
@@ -25,22 +26,29 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase? _currentViewModel;
 
+    [ObservableProperty] private AnimeDetailsViewModel _animeDetailsViewModel;
     [ObservableProperty]
-    private AnimeDetailsViewModel _animeDetailsViewModel = new();
-    [ObservableProperty]
-    private WatchAnimeViewModel _watchViewModel = new();
+    private WatchAnimeViewModel _watchViewModel;
     [ObservableProperty]
     private CalendarViewModel _calendarViewModel;
     [ObservableProperty]
-    private StatsViewModel _statsViewModel = new();
+    private StatsViewModel _statsViewModel;
     #endregion
 
     [ObservableProperty]
     private ObservableCollection<AnimeScheduleItem> _todayAnime = new();
+    
+    private readonly ICalendarService _calendarService;
+    private readonly IMalService _malService;
 
-    public MainViewModel() 
+    public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel, WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel) 
     {
-        CalendarViewModel = new(this);
+        _calendarService = calendarService;
+        _malService = malService;
+        _animeDetailsViewModel = animeDetailsViewModel;
+        _watchViewModel = watchViewModel;
+        _calendarViewModel = calendarViewModel;
+        _statsViewModel = statsViewModel;
     }
 
     [RelayCommand]
@@ -89,8 +97,8 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task LoadTodayAnimeAsync()
     {
-        var watchingList = await MalUtils.GetUserAnimeList(AnimeStatusApi.watching);
-        var animes = await CalendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
+        var watchingList = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
+        var animes = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
 
         TodayAnime.Clear();
         foreach (AnimeScheduleItem anime in animes)
@@ -105,9 +113,9 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             IsLoading = true;
-            MALUserData malUserData = await MalUtils.GetUserDataAsync();
+            MALUserData malUserData = await _malService.GetUserDataAsync();
             Username = malUserData.Name;
-            ProfileImage = await MalUtils.GetUserPicture();
+            ProfileImage = await _malService.GetUserPicture();
         }
         catch (Exception ex)
         {

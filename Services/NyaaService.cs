@@ -1,13 +1,20 @@
 ﻿using System.Web;
 using System.Xml;
+using Aniki.Services.Interfaces;
 
 
 namespace Aniki.Services;
 
-public class NyaaService
+public class NyaaService : INyaaService
 {
-    private static readonly HttpClient _http = new();
-    private readonly AnimeNameParser _animeNameParser = new();
+    private readonly HttpClient _http = new();
+    private readonly IAnimeNameParser _animeNameParser;
+
+    public NyaaService(IAnimeNameParser animeNameParser)
+    {
+        _animeNameParser = animeNameParser;
+    }
+    
     public async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
     {
         string term = HttpUtility.UrlEncode($"{animeName}");

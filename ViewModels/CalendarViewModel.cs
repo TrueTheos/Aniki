@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using Aniki.Misc;
+using Aniki.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
 
@@ -28,7 +30,8 @@ public partial class CalendarViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentWeekRange = "";
 
-    private MainViewModel _mainViewModel;
+    private readonly IMalService _malService;
+    private readonly ICalendarService _calendarService;
 
     public double CurrentTimeOffset
     {
@@ -41,9 +44,10 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    public CalendarViewModel(MainViewModel mainVm)
+    public CalendarViewModel(IMalService malService, ICalendarService calendarService)
     {
-        _mainViewModel = mainVm;
+        _malService = malService;
+        _calendarService = calendarService;
         Days = new();
         UpdateCurrentWeekRange();
     }
@@ -58,8 +62,8 @@ public partial class CalendarViewModel : ViewModelBase
     private async Task LoadUserAnimeList()
     {
         _watchingList.Clear();
-        List<AnimeData> watching = await MalUtils.GetUserAnimeList(AnimeStatusApi.watching);
-        List<AnimeData> planToWatch = await MalUtils.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
+        List<AnimeData> watching = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
+        List<AnimeData> planToWatch = await _malService.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
 
         foreach (AnimeData anime in watching)
         {
@@ -89,7 +93,7 @@ public partial class CalendarViewModel : ViewModelBase
 
         if (daysToFetch.Any())
         {
-            var schedule = await CalendarService.GetScheduleAsync(_watchingList, daysToFetch.First(), daysToFetch.Last().AddDays(1));
+            var schedule = await _calendarService.GetScheduleAsync(_watchingList, daysToFetch.First(), daysToFetch.Last().AddDays(1));
             foreach (DaySchedule day in schedule)
             {
                 _cachedDays[day.Date] = day;
@@ -103,13 +107,14 @@ public partial class CalendarViewModel : ViewModelBase
 
     public void GoToClickedAnime(AnimeScheduleItem anime)
     {
+        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
         if (anime.MalId.HasValue && anime.MalId.Value > 0)
         {
-            _mainViewModel.GoToAnime(anime.MalId.Value);
+            vm.GoToAnime(anime.MalId.Value);
         }
         else
         {
-            _mainViewModel.GoToAnime(anime.Title);
+            vm.GoToAnime(anime.Title);
         }
     }
 

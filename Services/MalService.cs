@@ -3,30 +3,41 @@ using Aniki.Misc;
 using Avalonia.Media.Imaging;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-public static class MalUtils
+public class MalService : IMalService
 {
     public enum AnimeStatusField { STATUS, SCORE, EPISODES_WATCHED }
     
-    private static JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
-    private static HttpClient _client = new();
+    private JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
+    private HttpClient _client = new();
     
-    private static readonly Dictionary<int, AnimeDetails> _detailsCache = new();
-    private static List<AnimeData>? _userAnimeList;
+    private readonly Dictionary<int, AnimeDetails> _detailsCache = new();
+    private List<AnimeData>? _userAnimeList;
 
-    private static Stopwatch sw = new();
-    private static int requestCounter;
-    private static Queue<DateTime> _requestTimestamps = new();
+    private Stopwatch _sw = new();
+    private int _requestCounter;
+    private readonly Queue<DateTime> _requestTimestamps = new();
     
-    public static void Init(string? accessToken)
+    private readonly ISaveService _saveService;
+    
+    private string _accessToken = "";
+
+    public MalService(ISaveService saveService)
     {
+        _saveService = saveService;
+    }
+    
+    public void Init(string accessToken)
+    {
+        _accessToken = accessToken;
         _client = new();
-        _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+        _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
     }
 
-    private static async Task<HttpResponseMessage> GetAsync(string url, string message)
+    private async Task<HttpResponseMessage> GetAsync(string url, string message)
     {
         _requestTimestamps.Enqueue(DateTime.Now);
         while (_requestTimestamps.Count > 3 && _requestTimestamps.Peek() > DateTime.Now.Subtract(TimeSpan.FromSeconds(1)))
@@ -39,21 +50,20 @@ public static class MalUtils
         }
 
 #if DEBUG
-        sw = Stopwatch.StartNew();
+        _sw = Stopwatch.StartNew();
 #endif
         HttpResponseMessage result = await _client.GetAsync(url);
 #if DEBUG
-        sw.Stop();
-        Log.Information($"{requestCounter}: {message} took: {sw.ElapsedMilliseconds}");
+        _sw.Stop();
+        Log.Information($"{_requestCounter}: {message} took: {_sw.ElapsedMilliseconds}");
 #endif
-        requestCounter++;
+        _requestCounter++;
         return result;
     }
 
-    public static async Task<MALUserData> GetUserDataAsync()
+    public  async Task<MALUserData> GetUserDataAsync()
     {
-        string? accessToken = TokenService.GetAccessToken();
-        if (string.IsNullOrEmpty(accessToken))
+        if (string.IsNullOrEmpty(_accessToken))
         {
             throw new InvalidOperationException("No access token available");
         }
@@ -70,7 +80,7 @@ public static class MalUtils
                ?? throw new InvalidOperationException("Failed to deserialize data");
     }
 
-    public static async Task<List<AnimeData>> GetUserAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
+    public  async Task<List<AnimeData>> GetUserAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
     {
         if (_userAnimeList != null)
         {
@@ -168,7 +178,7 @@ public static class MalUtils
         }
     }
 
-    public static async Task<AnimeDetails?> GetAnimeDetails(int id, bool forceFull = false)
+    public  async Task<AnimeDetails?> GetAnimeDetails(int id, bool forceFull = false)
     {
         if (_detailsCache.TryGetValue(id, out var cached))
         {
@@ -181,7 +191,7 @@ public static class MalUtils
         return await FetchFullAnimeDetails(id);
     }
 
-    private static async Task<AnimeDetails?> FetchFullAnimeDetails(int id)
+    private async Task<AnimeDetails?> FetchFullAnimeDetails(int id)
     {
         try
         {
@@ -196,7 +206,21 @@ public static class MalUtils
                 if (animeResponse != null)
                 {
                     _detailsCache[id] = animeResponse;
-                    animeResponse.Picture = await SaveService.GetAnimeImage(animeResponse);
+                    var pic = _saveService.TryGetAnimeImage(animeResponse.Id);
+                    if (pic != null)
+                    {
+                        animeResponse.Picture = _saveService.TryGetAnimeImage(animeResponse.Id);
+                    }
+                    else
+                    {
+                        Bitmap? downloadedImage = await GetAnimeImage(animeResponse.MainPicture);
+                        if (downloadedImage != null)
+                        {
+                            _saveService.SaveImage(animeResponse.Id, downloadedImage);
+                            animeResponse.Picture = downloadedImage;;
+                        }
+                    }
+
                     return animeResponse;
                 }
             }
@@ -213,7 +237,7 @@ public static class MalUtils
         return null;
     }
 
-    public static async Task<string> GetAnimeNameById(int id)
+    public  async Task<string> GetAnimeNameById(int id)
     {
         if (_detailsCache.TryGetValue(id, out var cached))
         {
@@ -254,7 +278,7 @@ public static class MalUtils
         return "";
     }
 
-    public static async Task<Bitmap?> GetUserPicture()
+    public  async Task<Bitmap?> GetUserPicture()
     {
         try
         {
@@ -285,7 +309,7 @@ public static class MalUtils
         return null;
     }
 
-    public static async Task<Bitmap?> GetAnimeImage(MainPicture? animePictureData)
+    public  async Task<Bitmap?> GetAnimeImage(MainPicture? animePictureData)
     {
         try
         {
@@ -303,7 +327,7 @@ public static class MalUtils
         return null;
     }
 
-    public static async Task<List<SearchEntry>> SearchAnimeOrdered(string query)
+    public  async Task<List<SearchEntry>> SearchAnimeOrdered(string query)
     {
         string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=id,title,main_picture,num_episodes,main_picture,synopsis,status,alternative_titles";
 
@@ -348,7 +372,7 @@ public static class MalUtils
         return results;
     }
 
-    private static bool DoesTitleMatch(AnimeNode anime, string query)
+    private  bool DoesTitleMatch(AnimeNode anime, string query)
     {
         string normalizedQuery = NormalizeTitleToLower(query);
         string normalizedTitle = NormalizeTitleToLower(anime.Title);
@@ -369,7 +393,7 @@ public static class MalUtils
         return false; 
     }
 
-    private static string NormalizeTitleToLower(string? title)
+    private  string NormalizeTitleToLower(string? title)
     {
         if (string.IsNullOrEmpty(title)) return string.Empty;
     
@@ -378,7 +402,7 @@ public static class MalUtils
         return normalized.ToLower();
     }
 
-    public static async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, string value)
+    public  async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, string value)
     {
         string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
 
@@ -431,7 +455,7 @@ public static class MalUtils
         _userAnimeList = null;
     }
 
-    public static async Task RemoveFromList(int animeId)
+    public  async Task RemoveFromList(int animeId)
     {
         string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
 
@@ -455,15 +479,13 @@ public static class MalUtils
         _userAnimeList = null;
     }
 
-    private static async void OnEpisodesWatchedChanged(int animeId, string value)
+    private  async void OnEpisodesWatchedChanged(int animeId, string value)
     {
         string animeTitle = await GetAnimeNameById(animeId);
-        SaveService.ChangeWatchingAnimeEpisode(animeTitle, int.Parse(value));
     }
 
-    private static async void OnStatusChanged(int animeId, string value)
+    private  async void OnStatusChanged(int animeId, string value)
     {
         string animeTitle = await GetAnimeNameById(animeId);
-        SaveService.ChangeWatchingAnimeStatus(animeTitle, StatusEnum.StringToApi(value));
     }
 }
