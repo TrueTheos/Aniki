@@ -20,6 +20,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty] private bool _isTorrentsLoading;
+    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
     private AnimeDetails? _details;
@@ -322,6 +324,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public async Task SearchTorrents()
     {
         if (Details == null) return;
+        
+        IsTorrentsLoading = true;
 
         TorrentsList.Clear();
 
@@ -331,6 +335,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         {
             TorrentsList.Add(t);
         }
+        
+        IsTorrentsLoading = false;
     }
 
     [RelayCommand]

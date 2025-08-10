@@ -415,10 +415,19 @@
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
+                                <ProgressBar
+                                    Width="300"
+                                    Height="10"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsIndeterminate="True"
+                                    IsVisible="{Binding IsTorrentsLoading}" />
+
                                 <ListBox
                                     Grid.Row="0"
                                     Background="Transparent"
-                                    ItemsSource="{Binding TorrentsList}">
+                                    ItemsSource="{Binding TorrentsList}"
+                                    IsVisible="{Binding !IsTorrentsLoading}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate DataType="models:NyaaTorrent">
                                             <Border
