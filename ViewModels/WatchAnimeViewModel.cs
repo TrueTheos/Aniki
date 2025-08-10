@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -30,6 +30,9 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _episodesFolderMessage = "";
+
+    [ObservableProperty]
+    private string? _animeTitleFilter;
 
     [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
     static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string? pszExtra, [Out] StringBuilder? pszOut, ref uint pcchOut);
@@ -63,7 +66,13 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
     public override async Task Enter()
     {
+        ClearFilter();
         await LoadEpisodesFromFolder();
+    }
+
+    public void ClearFilter()
+    {
+        AnimeTitleFilter = null;
     }
 
     private async Task LoadEpisodesFromFolder()
@@ -99,6 +108,12 @@ public partial class WatchAnimeViewModel : ViewModelBase
             ProcessingProgress = $"Processing files: {processedFilesCount}/{filePaths.Count}";
             
             if (parsedFile.EpisodeNumber == null) continue;
+
+            if (!string.IsNullOrEmpty(AnimeTitleFilter) && !parsedFile.AnimeName.Contains(AnimeTitleFilter, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             int? malId = await _absoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
             animeMalIds.TryAdd(parsedFile.AnimeName, malId);
             if (malId != null)
@@ -177,10 +192,8 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
     public void Update(AnimeDetails? details)
     {
-        IsEpisodesViewVisible = false;
-        IsNoEpisodesViewVisible = false;
-        AnimeGroups.Clear();
-
+        AnimeTitleFilter = details?.Title;
+        _ = LoadEpisodesFromFolder();
         UpdateView();
     }
         
