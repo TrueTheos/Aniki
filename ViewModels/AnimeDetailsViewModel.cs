@@ -98,6 +98,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             if (SetProperty(ref _selectedFilter, value))
             {
                 _ = LoadAnimeListAsync(value);
+                _lastStatus = value;
             }
         }
     }
@@ -120,6 +121,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     
     private readonly IMalService _malService;
     private readonly INyaaService _nyaaService;
+    
+    private AnimeStatusTranslated _lastStatus = AnimeStatusTranslated.All;
 
     public AnimeDetailsViewModel(IMalService malService, INyaaService nyaaService, WatchAnimeViewModel watchAnimeViewModel) 
     { 
@@ -134,7 +137,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     public override async Task Enter()
     {
-        await LoadAnimeListAsync(AnimeStatusTranslated.All);
+        await LoadAnimeListAsync(_lastStatus);
     }
 
     public void Update(AnimeDetails? details)

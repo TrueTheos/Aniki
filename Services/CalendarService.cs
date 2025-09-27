@@ -92,7 +92,7 @@ public class CalendarService : ICalendarService
         return schedules;
     }
 
-    public  async Task<List<DaySchedule>> GetScheduleAsync(
+    public async Task<List<DaySchedule>> GetScheduleAsync(
         IEnumerable<string> watchingList,
         DateTime startDate,
         DateTime endDate,
