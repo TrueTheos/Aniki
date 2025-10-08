@@ -409,7 +409,7 @@
                                 </Button>
                             </StackPanel>
 
-                            <!--  Torrent Results  -->
+                             <!--  Torrent Results  -->
                             <Grid Grid.Row="1" Margin="16,0,16,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
@@ -477,6 +477,29 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
+
+                                <!--  Empty state for torrents  -->
+                                <StackPanel
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding TorrentsList.Count, Converter={StaticResource EqualToZeroConverter}}">
+                                    <Viewbox
+                                        Stretch="Uniform"
+                                        MaxWidth="400"
+                                        MaxHeight="400"
+                                        MinWidth="300"
+                                        MinHeight="300">
+                                        <Image
+                                            Source="/Resources/nothingtoseehere_transparent_small.png"
+                                            RenderOptions.BitmapInterpolationMode="HighQuality"
+                                            RenderOptions.EdgeMode="Antialias" />
+                                    </Viewbox>
+                                    <TextBlock
+                                        Margin="0,16,0,0"
+                                        HorizontalAlignment="Center"
+                                        Foreground="{StaticResource White}"
+                                        Text="No torrents found... Try searching!" />
+                                </StackPanel>
                             </Grid>
                         </Grid>
                     </TabItem>
@@ -496,17 +519,13 @@
                 Background="{StaticResource Background0}"
                 IsVisible="{Binding SelectedAnime, Converter={x:Static ObjectConverters.IsNull}}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock
-                        HorizontalAlignment="Center"
-                        FontSize="24"
-                        FontWeight="Bold"
-                        Foreground="{StaticResource Primary}"
-                        Text="No Anime Selected" />
-                    <TextBlock
-                        Margin="0,8,0,0"
-                        HorizontalAlignment="Center"
-                        Foreground="{StaticResource White}"
-                        Text="Select an anime from your list to view details" />
+                    <Viewbox Stretch="Uniform" 
+                             MaxWidth="400" MaxHeight="400"
+                             MinWidth="300" MinHeight="300">
+                        <Image Source="/Resources/nothingtoseehere_transparent_small.png"
+                               RenderOptions.BitmapInterpolationMode="HighQuality"
+                               RenderOptions.EdgeMode="Antialias"/>
+                    </Viewbox>
                 </StackPanel>
             </Border>
         </Grid>

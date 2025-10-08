@@ -19,6 +19,7 @@
                     <conv:AnimeTypeToColorConverter x:Key="AnimeTypeToColorConverter" />
                     <conv:ValueToGridLengthConverter  x:Key="ValueToGridLengthConverter" />
                     <conv:BooleanInverterConverter x:Key="BooleanInverterConverter" />
+                    <conv:EqualToZeroConverter x:Key="EqualToZeroConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

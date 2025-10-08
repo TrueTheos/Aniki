@@ -16,6 +16,7 @@
     <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
     <PackageReference Include="Avalonia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
@@ -48,5 +49,11 @@
   <ItemGroup>
     <None Remove="Resources\icon.ico" />
     <AvaloniaResource Include="Resources\icon.ico" />
+    <None Remove="Resources\nothingtoseehere.png" />
+    <AvaloniaResource Include="Resources\nothingtoseehere.png" />
+    <None Remove="Resources\nothingtoseehere_transparent.png" />
+    <AvaloniaResource Include="Resources\nothingtoseehere_transparent.png" />
+    <None Remove="Resources\nothingtoseehere_transparent_small.png" />
+    <AvaloniaResource Include="Resources\nothingtoseehere_transparent_small.png" />
   </ItemGroup>
 </Project>
