@@ -74,15 +74,7 @@ public partial class AnimeCard : UserControl
         }
     }
 
-    private void Card_PointerEntered(object? sender, PointerEventArgs e)
-    {
-        StatusButton.ShowButton();
-    }
 
-    private void Card_PointerExited(object? sender, PointerEventArgs e)
-    {
-        StatusButton.HideButton();
-    }
 
     private void OnStatusSelected(object? sender, AnimeStatusApi status)
     {

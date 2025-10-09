@@ -1,9 +1,6 @@
-﻿using Avalonia;
-using Avalonia.Animation;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Media;
-using Avalonia.Styling;
 using Aniki.Misc;
 using System;
 
@@ -22,17 +19,9 @@ public partial class AnimeListStatusButton : UserControl
 
     public event EventHandler<AnimeStatusApi>? StatusSelected;
 
-    private bool _isActionButtonsVisible;
-
     public AnimeListStatusButton()
     {
         InitializeComponent();
-        
-        PlusButton.PointerEntered += PlusButton_PointerEntered;
-        PlusButton.PointerExited += PlusButton_PointerExited;
-        ActionButtons.PointerEntered += ActionButtons_PointerEntered;
-        ActionButtons.PointerExited += ActionButtons_PointerExited;
-        
         PropertyChanged += OnPropertyChanged;
     }
 
@@ -48,136 +37,23 @@ public partial class AnimeListStatusButton : UserControl
     {
         var status = CurrentStatus;
 
-        if (status == null || status == AnimeStatusApi.none)
-        {
-            // Not on list - show Watching and Plan to Watch
-            Button1Icon.Text = "▶";
-            Button2Icon.Text = "📋";
-            ToolTip.SetTip(Button1, "Add to Watching");
-            ToolTip.SetTip(Button2, "Add to Plan to Watch");
-        }
-        else if (status == AnimeStatusApi.watching)
-        {
-            // Watching - show Completed and Plan to Watch
-            Button1Icon.Text = "✓";
-            Button2Icon.Text = "📋";
-            ToolTip.SetTip(Button1, "Add to Completed");
-            ToolTip.SetTip(Button2, "Add to Plan to Watch");
-        }
-        else if (status == AnimeStatusApi.completed)
-        {
-            // Completed - show Watching and Plan to Watch
-            Button1Icon.Text = "▶";
-            Button2Icon.Text = "📋";
-            ToolTip.SetTip(Button1, "Add to Watching");
-            ToolTip.SetTip(Button2, "Add to Plan to Watch");
-        }
-        else if (status == AnimeStatusApi.plan_to_watch)
-        {
-            // Plan to Watch - show Watching and Completed
-            Button1Icon.Text = "▶";
-            Button2Icon.Text = "✓";
-            ToolTip.SetTip(Button1, "Add to Watching");
-            ToolTip.SetTip(Button2, "Add to Completed");
-        }
-        else
-        {
-            // On Hold or Dropped - show Watching and Completed
-            Button1Icon.Text = "▶";
-            Button2Icon.Text = "✓";
-            ToolTip.SetTip(Button1, "Add to Watching");
-            ToolTip.SetTip(Button2, "Add to Completed");
-        }
+        ButtonWatching.IsVisible = status != AnimeStatusApi.watching;
+        ButtonCompleted.IsVisible = status != AnimeStatusApi.completed;
+        ButtonPlanToWatch.IsVisible = status != AnimeStatusApi.plan_to_watch;
     }
 
-    private void PlusButton_PointerEntered(object? sender, PointerEventArgs e)
+    private void ButtonWatching_Click(object? sender, PointerPressedEventArgs e)
     {
-        ShowActionButtons();
+        StatusSelected?.Invoke(this, AnimeStatusApi.watching);
     }
 
-    private void PlusButton_PointerExited(object? sender, PointerEventArgs e)
+    private void ButtonCompleted_Click(object? sender, PointerPressedEventArgs e)
     {
-        if (!_isActionButtonsVisible)
-        {
-            HideActionButtons();
-        }
+        StatusSelected?.Invoke(this, AnimeStatusApi.completed);
     }
 
-    private void ActionButtons_PointerEntered(object? sender, PointerEventArgs e)
+    private void ButtonPlanToWatch_Click(object? sender, PointerPressedEventArgs e)
     {
-        _isActionButtonsVisible = true;
-    }
-
-    private void ActionButtons_PointerExited(object? sender, PointerEventArgs e)
-    {
-        _isActionButtonsVisible = false;
-        HideActionButtons();
-    }
-
-    private void ShowActionButtons()
-    {
-        ActionButtons.IsVisible = true;
-        ActionButtons.Opacity = 1;
-    }
-
-    private void HideActionButtons()
-    {
-        ActionButtons.Opacity = 0;
-        ActionButtons.IsVisible = false;
-    }
-
-    private void Button1_Click(object? sender, PointerPressedEventArgs e)
-    {
-        var status = CurrentStatus;
-        
-        if (status == null || status == AnimeStatusApi.none)
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.watching);
-        }
-        else if (status == AnimeStatusApi.watching)
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.completed);
-        }
-        else
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.watching);
-        }
-    }
-
-    private void Button2_Click(object? sender, PointerPressedEventArgs e)
-    {
-        var status = CurrentStatus;
-        
-        if (status == null || status == AnimeStatusApi.none)
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.plan_to_watch);
-        }
-        else if (status == AnimeStatusApi.watching)
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.plan_to_watch);
-        }
-        else if (status == AnimeStatusApi.completed)
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.plan_to_watch);
-        }
-        else if (status == AnimeStatusApi.plan_to_watch)
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.completed);
-        }
-        else
-        {
-            StatusSelected?.Invoke(this, AnimeStatusApi.completed);
-        }
-    }
-
-    public void ShowButton()
-    {
-        PlusButton.Opacity = 1;
-    }
-
-    public void HideButton()
-    {
-        PlusButton.Opacity = 0;
-        HideActionButtons();
+        StatusSelected?.Invoke(this, AnimeStatusApi.plan_to_watch);
     }
 }

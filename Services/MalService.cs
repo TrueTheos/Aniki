@@ -10,6 +10,7 @@ namespace Aniki.Services;
 public class MalService : IMalService
 {
     public enum AnimeStatusField { STATUS, SCORE, EPISODES_WATCHED }
+    public enum AnimeRankingCategory { AIRING, UPCOMING, ALLTIME }
     
     private JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private HttpClient _client = new();
@@ -36,7 +37,7 @@ public class MalService : IMalService
         _client = new();
         _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
     }
-
+    
     private async Task<HttpResponseMessage> GetAsync(string url, string message)
     {
         _requestTimestamps.Enqueue(DateTime.Now);
@@ -455,7 +456,7 @@ public class MalService : IMalService
         _userAnimeList = null;
     }
 
-    public  async Task RemoveFromList(int animeId)
+    public async Task RemoveFromList(int animeId)
     {
         string url = $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status";
 
@@ -479,7 +480,12 @@ public class MalService : IMalService
         _userAnimeList = null;
     }
 
-    private  async void OnEpisodesWatchedChanged(int animeId, string value)
+    public async Task<List<MAL_AnimeSearchListResponse>> GetTopAnimeInCategory(AnimeRankingCategory category)
+    {
+        
+    }
+
+    private async void OnEpisodesWatchedChanged(int animeId, string value)
     {
         string animeTitle = await GetAnimeNameById(animeId);
     }

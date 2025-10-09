@@ -1,4 +1,4 @@
-﻿using Aniki.Misc;
+using Aniki.Misc;
 using Aniki.Models;
 using Aniki.Services.Interfaces;
 using Avalonia.Media.Imaging;
@@ -75,32 +75,26 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            // For demo purposes, we'll use the user's anime list to populate categories
-            // In a real app, you'd have dedicated API endpoints for these categories
             var userList = await _malService.GetUserAnimeList();
             
-            // Trending Now - Recent watching
             var watching = userList
                 .Where(a => a.ListStatus?.Status == AnimeStatusApi.watching)
                 .Take(10)
                 .ToList();
             await LoadAnimeCards(watching, TrendingNow);
             
-            // Popular This Season - Currently airing
             var airing = userList
                 .Where(a => a.Node.Status == "currently_airing")
                 .Take(10)
                 .ToList();
             await LoadAnimeCards(airing, PopularThisSeason);
             
-            // Popular Upcoming - Plan to watch
             var upcoming = userList
                 .Where(a => a.ListStatus?.Status == AnimeStatusApi.plan_to_watch)
                 .Take(10)
                 .ToList();
             await LoadAnimeCards(upcoming, PopularUpcoming);
             
-            // Trending All Time - Completed with high scores
             var allTime = userList
                 .Where(a => a.ListStatus?.Status == AnimeStatusApi.completed && a.ListStatus.Score >= 8)
                 .Take(10)
@@ -129,9 +123,9 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                 {
                     AnimeId = details.Id,
                     Title = details.Title,
-                    Image = details.Picture,
                     Status = details.MyListStatus?.Status
                 };
+                _ = LoadAnimeImageAsync(card, details.MainPicture);
                 collection.Add(card);
             }
         }
@@ -199,7 +193,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                 Status = null // Will be loaded if needed
             };
             
-            // Load image async
             _ = LoadAnimeImageAsync(card, result.MalAnime.MainPicture);
             
             SearchResults.Add(card);
@@ -242,6 +235,12 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    private void GoBack()
+    {
+        SearchQuery = string.Empty;
+    }
+
     private void ExitSearchMode()
     {
         IsSearchMode = false;
@@ -256,7 +255,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         {
             await _malService.UpdateAnimeStatus(animeId, MalService.AnimeStatusField.STATUS, StatusEnum.ApiToString(newStatus));
             
-            // Update the card status in all collections
             UpdateCardStatus(TrendingNow, animeId, newStatus);
             UpdateCardStatus(PopularThisSeason, animeId, newStatus);
             UpdateCardStatus(PopularUpcoming, animeId, newStatus);

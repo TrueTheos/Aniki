@@ -1,11 +1,28 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
              x:Class="Aniki.Views.AnimeListStatusButton">
-    
-    <Grid x:Name="RootGrid">
+    <UserControl.Resources>
+        <StreamGeometry x:Key="check_icon">M2,10 L6,14 L14,6</StreamGeometry>
+        <StreamGeometry x:Key="plus_icon">M8,2 V14 M2,8 H14</StreamGeometry>
+    </UserControl.Resources>
+
+    <Grid x:Name="RootGrid" Background="Transparent">
+        <Grid.Styles>
+            <Style Selector="Grid#RootGrid:not(:pointerover) > Border#PlusButton">
+                <Setter Property="Opacity" Value="0"/>
+            </Style>
+            <Style Selector="Grid#RootGrid:pointerover > Border#PlusButton">
+                <Setter Property="Opacity" Value="1"/>
+            </Style>
+            <Style Selector="Grid#RootGrid:pointerover > StackPanel#ActionButtons">
+                <Setter Property="Opacity" Value="1"/>
+                <Setter Property="IsVisible" Value="True"/>
+            </Style>
+        </Grid.Styles>
+        
         <!-- Plus Button -->
         <Border x:Name="PlusButton"
                 Width="36" Height="36"
@@ -14,14 +31,11 @@
                 VerticalAlignment="Bottom"
                 HorizontalAlignment="Right"
                 Margin="8"
-                Opacity="0"
-                Cursor="Hand">
-            <TextBlock Text="+" 
-                      FontSize="24"
-                      FontWeight="Bold"
+                Cursor="Hand"
+                Transitions="{DynamicResource OpacityTransition}">
+            <PathIcon Data="{StaticResource plus_icon}" 
                       Foreground="White"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center"/>
+                      Width="16" Height="16"/>
         </Border>
 
         <!-- Action Buttons Popup -->
@@ -32,32 +46,40 @@
                    HorizontalAlignment="Right"
                    Margin="8,8,8,52"
                    Opacity="0"
-                   IsVisible="False">
+                   IsVisible="False"
+                   Transitions="{DynamicResource OpacityTransition}">
             
-            <Border x:Name="Button1"
+            <Border x:Name="ButtonWatching"
                    Width="36" Height="36"
                    CornerRadius="18"
-                   Background="#CC2196F3"
+                   Background="#CC000000"
                    Cursor="Hand"
-                   PointerPressed="Button1_Click">
-                <TextBlock x:Name="Button1Icon"
-                          FontSize="18"
+                   PointerPressed="ButtonWatching_Click">
+                <PathIcon Data="{StaticResource play_regular}"
                           Foreground="White"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"/>
+                          Width="16" Height="16"/>
             </Border>
 
-            <Border x:Name="Button2"
+            <Border x:Name="ButtonCompleted"
                    Width="36" Height="36"
                    CornerRadius="18"
-                   Background="#CC4CAF50"
+                   Background="#CC000000"
                    Cursor="Hand"
-                   PointerPressed="Button2_Click">
-                <TextBlock x:Name="Button2Icon"
-                          FontSize="18"
+                   PointerPressed="ButtonCompleted_Click">
+                <PathIcon Data="{StaticResource check_icon}"
                           Foreground="White"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"/>
+                          Width="16" Height="16"/>
+            </Border>
+            
+            <Border x:Name="ButtonPlanToWatch"
+                   Width="36" Height="36"
+                   CornerRadius="18"
+                   Background="#CC000000"
+                   Cursor="Hand"
+                   PointerPressed="ButtonPlanToWatch_Click">
+                <PathIcon Data="{StaticResource plus_icon}"
+                          Foreground="White"
+                          Width="16" Height="16"/>
             </Border>
         </StackPanel>
     </Grid>

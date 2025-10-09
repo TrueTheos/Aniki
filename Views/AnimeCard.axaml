@@ -7,8 +7,6 @@
              x:Class="Aniki.Views.AnimeCard">
     
     <Border Background="Transparent"
-            PointerEntered="Card_PointerEntered"
-            PointerExited="Card_PointerExited"
             Cursor="Hand">
         <StackPanel Spacing="8" Width="160">
             <!-- Image Container -->
