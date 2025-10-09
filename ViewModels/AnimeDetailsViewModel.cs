@@ -1,3 +1,4 @@
+
 using Aniki.Misc;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -20,8 +21,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
     }
 
-    [ObservableProperty] private bool _isTorrentsLoading;
-    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
     private AnimeDetails? _details;
@@ -38,30 +37,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isLoading;
-
-    private int _nextEpisodeNumber = -1;
-
-    public int NextEpisodeNumber
-    {
-        get => _nextEpisodeNumber == -1 ? EpisodesWatched + 1 : _nextEpisodeNumber;
-        set
-        {
-            if (_nextEpisodeNumber != value) 
-            {
-                _nextEpisodeNumber = value;
-                OnPropertyChanged(nameof(NextEpisodeNumber));
-            }
-        }
-    }
-
+    
     public bool CanIncreaseEpisodeCount => EpisodesWatched < (Details?.NumEpisodes ?? 0);
     public bool CanDecreaseEpisodeCount => EpisodesWatched > 0;
-
-    [ObservableProperty]
-    private string _torrentSearchTerms = string.Empty;
-
-    [ObservableProperty]
-    private ObservableCollection<NyaaTorrent> _torrentsList = new();
 
     private int _selectedScore;
     public int SelectedScore
@@ -114,23 +92,22 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public List<int> ScoreOptions { get; } = new() {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
     [ObservableProperty]
-    public ObservableCollection<int> _watchEpisodesOptions = new();
+    private WatchAnimeViewModel _watchAnimeViewModel;
 
     [ObservableProperty]
-    private WatchAnimeViewModel _watchAnimeViewModel;
+    private TorrentSearchViewModel _torrentSearchViewModel;
     
     private readonly IMalService _malService;
-    private readonly INyaaService _nyaaService;
     
     private AnimeStatusTranslated _lastStatus = AnimeStatusTranslated.All;
 
-    public AnimeDetailsViewModel(IMalService malService, INyaaService nyaaService, WatchAnimeViewModel watchAnimeViewModel) 
+    public AnimeDetailsViewModel(IMalService malService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
         _malService = malService;
-        _nyaaService = nyaaService;
         
         _watchAnimeViewModel = watchAnimeViewModel;
-        
+        _torrentSearchViewModel = torrentSearchViewModel;
+
         _animeList = new();
         SelectedFilter = AnimeStatusTranslated.All;
     }
@@ -145,20 +122,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         IsLoading = false;
         Details = details;
         EpisodesWatched = details?.MyListStatus?.NumEpisodesWatched ?? 0;
-
-        WatchEpisodesOptions = new();
-        for (int i = 0; i < details?.NumEpisodes; i++)
-        {
-            WatchEpisodesOptions.Add(i + 1);
-        }
-            
+        
         OnPropertyChanged(nameof(EpisodesWatched));
-        OnPropertyChanged(nameof(NextEpisodeNumber));
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
         SelectedScore = details?.MyListStatus?.Score ?? 1;
         SelectedStatus = details?.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.All;
         WatchAnimeViewModel.Update(details);
+        TorrentSearchViewModel.Update(details, EpisodesWatched);
     }
 
     private async Task LoadAnimeDetailsAsync(AnimeData? animeData)
@@ -322,32 +293,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
         if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
     }
-
-    [RelayCommand]
-    public async Task SearchTorrents()
-    {
-        if (Details == null) return;
-        
-        IsTorrentsLoading = true;
-
-        TorrentsList.Clear();
-
-        List<NyaaTorrent> list = await _nyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
-
-        foreach (NyaaTorrent t in list)
-        {
-            TorrentsList.Add(t);
-        }
-        
-        IsTorrentsLoading = false;
-    }
-
-    [RelayCommand]
-    public void DownloadTorrent(string magnet)
-    {
-        Process.Start(new ProcessStartInfo(magnet) { UseShellExecute = true });
-    }
-
+    
     [RelayCommand]
     private void OpenMalPage()
     {

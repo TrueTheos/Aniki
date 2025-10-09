@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Aniki.ViewModels"
+             xmlns:models="clr-namespace:Aniki.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Aniki.Views.TorrentSearchView"
+             x:DataType="vm:TorrentSearchViewModel">
+    <Grid Margin="0,16,0,0" Background="{StaticResource Background1}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Search Controls  -->
+        <StackPanel
+            Grid.Row="0"
+            Margin="16,16,16,16"
+            Orientation="Horizontal"
+            Spacing="8">
+            <TextBlock
+                VerticalAlignment="Center"
+                Foreground="{StaticResource White}"
+                Text="Episode:" />
+
+            <ComboBox
+                Width="60"
+                MinHeight="30"
+                VerticalAlignment="Center"
+                ItemsSource="{Binding WatchEpisodesOptions}"
+                SelectedItem="{Binding NextEpisodeNumber, Mode=TwoWay}" />
+
+            <TextBox
+                Width="300"
+                MinHeight="30"
+                VerticalAlignment="Center"
+                Text="{Binding TorrentSearchTerms}"
+                Watermark="Additional search terms (optional)" />
+
+            <Button
+                MinHeight="30"
+                VerticalAlignment="Center"
+                Classes="Purple"
+                Command="{Binding SearchTorrentsCommand}"
+                IsEnabled="{Binding NextEpisodeNumber, Converter={StaticResource GreaterThanZeroConverter}}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <PathIcon
+                        Width="16"
+                        Height="16"
+                        Data="{StaticResource search_glass}" />
+                    <TextBlock VerticalAlignment="Center" Text="Search" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!--  Torrent Results  -->
+        <Grid Grid.Row="1" Margin="16,0,16,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <ProgressBar
+                Width="300"
+                Height="10"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsIndeterminate="True"
+                IsVisible="{Binding IsTorrentsLoading}" />
+
+            <ListBox
+                Grid.Row="0"
+                Background="Transparent"
+                ItemsSource="{Binding TorrentsList}"
+                IsVisible="{Binding !IsTorrentsLoading}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="models:NyaaTorrent">
+                        <Border
+                            Padding="12"
+                            Background="{StaticResource Background0}"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Column="0"
+                                    Foreground="{StaticResource White}"
+                                    Text="{Binding FileName}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="16,0"
+                                    HorizontalAlignment="Right"
+                                    Foreground="{StaticResource White}"
+                                    Text="{Binding Size}" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="16,0"
+                                    HorizontalAlignment="Right"
+                                    Foreground="{Binding Seeders, Converter={StaticResource SeederColorConverter}}"
+                                    Text="{Binding Seeders}" />
+
+                                <StackPanel
+                                    Grid.Column="3"
+                                    Margin="16,0,0,0"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <Button
+                                        Classes="Purple"
+                                        Command="{Binding $parent[UserControl].DataContext.DownloadTorrentCommand}"
+                                        CommandParameter="{Binding TorrentLink}"
+                                        Content="Download" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!--  Empty state for torrents  -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="{Binding TorrentsList.Count, Converter={StaticResource EqualToZeroConverter}}">
+                <Viewbox
+                    Stretch="Uniform"
+                    MaxWidth="400"
+                    MaxHeight="400"
+                    MinWidth="300"
+                    MinHeight="300">
+                    <Image
+                        Source="/Resources/nothingtoseehere_transparent_small.png"
+                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                        RenderOptions.EdgeMode="Antialias" />
+                </Viewbox>
+                <TextBlock
+                    Margin="0,16,0,0"
+                    HorizontalAlignment="Center"
+                    Foreground="{StaticResource White}"
+                    Text="No torrents found... Try searching!" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

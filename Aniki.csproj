@@ -40,6 +40,9 @@
     <Compile Update="Views\LoginWindow.axaml.cs">
       <DependentUpon>LoginWindow.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\TorrentSearchView.axaml.cs">
+      <DependentUpon>TorrentSearchView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
