@@ -18,9 +18,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     private readonly IMalService _malService;
     
     [ObservableProperty]
-    private ObservableCollection<AnimeCardViewModel> _trendingNow = new();
-    
-    [ObservableProperty]
     private ObservableCollection<AnimeCardViewModel> _popularThisSeason = new();
     
     [ObservableProperty]
@@ -58,7 +55,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
     private List<MAL_SearchEntry> _allSearchResults = new();
     private const int PageSize = 10;
-    private CancellationTokenSource? _searchCts;
 
     public AnimeBrowseViewModel(IMalService malService)
     {
@@ -75,30 +71,13 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var userList = await _malService.GetUserAnimeList();
-            
-            var watching = userList
-                .Where(a => a.ListStatus?.Status == AnimeStatusApi.watching)
-                .Take(10)
-                .ToList();
-            await LoadAnimeCards(watching, TrendingNow);
-            
-            var airing = userList
-                .Where(a => a.Node.Status == "currently_airing")
-                .Take(10)
-                .ToList();
+            var airing = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.AIRING);
             await LoadAnimeCards(airing, PopularThisSeason);
-            
-            var upcoming = userList
-                .Where(a => a.ListStatus?.Status == AnimeStatusApi.plan_to_watch)
-                .Take(10)
-                .ToList();
+
+            var upcoming = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.UPCOMING);
             await LoadAnimeCards(upcoming, PopularUpcoming);
             
-            var allTime = userList
-                .Where(a => a.ListStatus?.Status == AnimeStatusApi.completed && a.ListStatus.Score >= 8)
-                .Take(10)
-                .ToList();
+            var allTime = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.BYPOPULARITY);
             await LoadAnimeCards(allTime, TrendingAllTime);
         }
         catch (Exception ex)
@@ -111,7 +90,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 
-    private async Task LoadAnimeCards(List<MAL_AnimeData> animeList, ObservableCollection<AnimeCardViewModel> collection)
+    private async Task LoadAnimeCards(List<MAL_RankingEntry> animeList, ObservableCollection<AnimeCardViewModel> collection)
     {
         collection.Clear();
         foreach (var anime in animeList)
@@ -130,36 +109,17 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             }
         }
     }
-
-    partial void OnSearchQueryChanged(string value)
+    
+    [RelayCommand]
+    private async Task PerformSearchAsync()
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            ExitSearchMode();
-        }
-        else
-        {
-            _ = PerformSearchAsync(value);
-        }
-    }
-
-    private async Task PerformSearchAsync(string query)
-    {
-        _searchCts?.Cancel();
-        _searchCts = new CancellationTokenSource();
-        var token = _searchCts.Token;
-
         try
         {
-            await Task.Delay(300, token); // Debounce
-            
-            if (token.IsCancellationRequested) return;
-
             IsLoading = true;
             IsSearchMode = true;
             ShowCategories = false;
 
-            _allSearchResults = await _malService.SearchAnimeOrdered(query);
+            _allSearchResults = await _malService.SearchAnimeOrdered(SearchQuery);
             CurrentPage = 1;
             TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PageSize);
             
@@ -255,7 +215,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         {
             await _malService.UpdateAnimeStatus(animeId, MalService.AnimeStatusField.STATUS, StatusEnum.ApiToString(newStatus));
             
-            UpdateCardStatus(TrendingNow, animeId, newStatus);
             UpdateCardStatus(PopularThisSeason, animeId, newStatus);
             UpdateCardStatus(PopularUpcoming, animeId, newStatus);
             UpdateCardStatus(TrendingAllTime, animeId, newStatus);

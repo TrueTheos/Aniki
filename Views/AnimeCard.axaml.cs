@@ -74,8 +74,6 @@ public partial class AnimeCard : UserControl
         }
     }
 
-
-
     private void OnStatusSelected(object? sender, AnimeStatusApi status)
     {
         StatusChangeRequested?.Invoke(this, (AnimeId, status));

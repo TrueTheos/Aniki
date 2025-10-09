@@ -15,4 +15,5 @@ public interface IMalService
     public Task<List<MAL_SearchEntry>> SearchAnimeOrdered(string query);
     public Task UpdateAnimeStatus(int animeId, MalService.AnimeStatusField field, string value);
     public Task RemoveFromList(int animeId);
+    public Task<List<MAL_RankingEntry>> GetTopAnimeInCategory(MalService.AnimeRankingCategory category, int limit = 10);
 }
