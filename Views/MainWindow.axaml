@@ -250,6 +250,18 @@
                             <TextBlock VerticalAlignment="Center" Text="Stats" />
                         </StackPanel>
                     </Button>
+                    <Button
+                        Name="AnimeBrowse"
+                        Classes="MenuButton"
+                        Command="{Binding ShowAnimeBrowsePageCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PathIcon
+                                Width="16"
+                                Height="16"
+                                Data="{StaticResource data_usage_regular}" />
+                            <TextBlock VerticalAlignment="Center" Text="Browse" />
+                        </StackPanel>
+                    </Button>
                     <StackPanel Margin="0,10,0,0" IsVisible="{Binding TodayAnime.Count}">
                         <TextBlock Text="Airing Today" FontWeight="Bold" FontSize="16" Foreground="White" Margin="0,0,0,5"/>
                         <ListBox ItemsSource="{Binding TodayAnime}" Background="Transparent" BorderThickness="0" SelectionChanged="TodayAnime_OnSelectionChanged">
@@ -368,6 +380,9 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:StatsViewModel">
                                     <views:StatsView />
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:AnimeBrowseViewModel">
+                                    <views:AnimeBrowseView />
                                 </DataTemplate>
                             </UserControl.DataTemplates>
                             <ContentControl Content="{Binding CurrentViewModel}" />

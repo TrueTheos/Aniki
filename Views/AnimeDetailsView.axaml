@@ -76,7 +76,7 @@
                             </Style>
                         </ListBox.Styles>
                         <ListBox.ItemTemplate>
-                            <DataTemplate DataType="models:AnimeData">
+                            <DataTemplate DataType="models:MAL_AnimeData">
                                 <Grid>
                                     <!--  Main Box  -->
                                     <Border

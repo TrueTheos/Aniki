@@ -8,8 +8,8 @@ namespace Aniki.ViewModels;
 
 public partial class AnimeDetailsViewModel : ViewModelBase
 {
-    private AnimeData? _selectedAnime;
-    public AnimeData? SelectedAnime
+    private MAL_AnimeData? _selectedAnime;
+    public MAL_AnimeData? SelectedAnime
     {
         get => _selectedAnime;
         set
@@ -23,12 +23,12 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
-    private AnimeDetails? _details;
+    private MAL_AnimeDetails? _details;
 
     public string? ImageUrl => Details?.MainPicture?.Large;
 
     [ObservableProperty]
-    private ObservableCollection<AnimeData> _animeList;
+    private ObservableCollection<MAL_AnimeData> _animeList;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanIncreaseEpisodeCount))]
@@ -117,7 +117,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         await LoadAnimeListAsync(_lastStatus);
     }
 
-    public void Update(AnimeDetails? details)
+    public void Update(MAL_AnimeDetails? details)
     {
         IsLoading = false;
         Details = details;
@@ -132,12 +132,12 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         TorrentSearchViewModel.Update(details, EpisodesWatched);
     }
 
-    private async Task LoadAnimeDetailsAsync(AnimeData? animeData)
+    private async Task LoadAnimeDetailsAsync(MAL_AnimeData? animeData)
     {
         if (animeData?.Node?.Id != null)
         {
             IsLoading = true;
-            AnimeDetails? details = await _malService.GetAnimeDetails(animeData.Node.Id);
+            MAL_AnimeDetails? details = await _malService.GetAnimeDetails(animeData.Node.Id);
             Update(details);
 
             IsLoading = false;
@@ -151,9 +151,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             IsLoading = true;
             AnimeList.Clear();
 
-            List<AnimeData> animeListData = await _malService.GetUserAnimeList(filter.TranslatedToApi());
+            List<MAL_AnimeData> animeListData = await _malService.GetUserAnimeList(filter.TranslatedToApi());
 
-            foreach (AnimeData anime in animeListData)
+            foreach (MAL_AnimeData anime in animeListData)
             {
                 AnimeList.Add(anime);
             }
@@ -168,29 +168,29 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
     }
 
-    public async Task<List<SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
+    public async Task<List<MAL_SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
     {
-        List<SearchEntry> results = await _malService.SearchAnimeOrdered(searchQuery);
+        List<MAL_SearchEntry> results = await _malService.SearchAnimeOrdered(searchQuery);
         AnimeList.Clear();
             
         if (fillList)
         {
             AnimeList.Clear();
-            foreach (SearchEntry entry in results)
+            foreach (MAL_SearchEntry entry in results)
             {
-                AnimeData newAnimeData = new()
+                MAL_AnimeData newMalAnimeData = new()
                 {
                     Node = new()
                     {
-                        Id = entry.Anime.Id,
-                        Title = entry.Anime.Title,
-                        Synopsis = entry.Anime.Synopsis,
-                        Status = entry.Anime.Status,
-                        AlternativeTitles = entry.Anime.AlternativeTitles,
+                        Id = entry.MalAnime.Id,
+                        Title = entry.MalAnime.Title,
+                        Synopsis = entry.MalAnime.Synopsis,
+                        Status = entry.MalAnime.Status,
+                        AlternativeTitles = entry.MalAnime.AlternativeTitles,
                     },
                     ListStatus = null
                 };
-                AnimeList.Add(newAnimeData);
+                AnimeList.Add(newMalAnimeData);
             }
         }
 
@@ -203,12 +203,12 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         try
         {
-            AnimeDetails? details = await _malService.GetAnimeDetails(malId);
+            MAL_AnimeDetails? details = await _malService.GetAnimeDetails(malId);
             AnimeList.Clear();
 
             if (details == null) return;
                 
-            AnimeData newAnimeData = new()
+            MAL_AnimeData newMalAnimeData = new()
             {
                 Node = new()
                 {
@@ -220,8 +220,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
                 },
                 ListStatus = details.MyListStatus
             };
-            AnimeList.Add(newAnimeData);
-            SelectedAnime = newAnimeData;
+            AnimeList.Add(newMalAnimeData);
+            SelectedAnime = newMalAnimeData;
         }
         catch (Exception ex)
         {

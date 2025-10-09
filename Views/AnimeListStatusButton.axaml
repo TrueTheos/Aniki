@@ -1,0 +1,64 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
+             x:Class="Aniki.Views.AnimeListStatusButton">
+    
+    <Grid x:Name="RootGrid">
+        <!-- Plus Button -->
+        <Border x:Name="PlusButton"
+                Width="36" Height="36"
+                CornerRadius="18"
+                Background="#CC000000"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Right"
+                Margin="8"
+                Opacity="0"
+                Cursor="Hand">
+            <TextBlock Text="+" 
+                      FontSize="24"
+                      FontWeight="Bold"
+                      Foreground="White"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Action Buttons Popup -->
+        <StackPanel x:Name="ActionButtons"
+                   Orientation="Vertical"
+                   Spacing="8"
+                   VerticalAlignment="Bottom"
+                   HorizontalAlignment="Right"
+                   Margin="8,8,8,52"
+                   Opacity="0"
+                   IsVisible="False">
+            
+            <Border x:Name="Button1"
+                   Width="36" Height="36"
+                   CornerRadius="18"
+                   Background="#CC2196F3"
+                   Cursor="Hand"
+                   PointerPressed="Button1_Click">
+                <TextBlock x:Name="Button1Icon"
+                          FontSize="18"
+                          Foreground="White"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+            </Border>
+
+            <Border x:Name="Button2"
+                   Width="36" Height="36"
+                   CornerRadius="18"
+                   Background="#CC4CAF50"
+                   Cursor="Hand"
+                   PointerPressed="Button2_Click">
+                <TextBlock x:Name="Button2Icon"
+                          FontSize="18"
+                          Foreground="White"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

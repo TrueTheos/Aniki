@@ -45,6 +45,20 @@ public static class StatusEnum
             _ => throw new ArgumentOutOfRangeException(nameof(translated), translated, null)
         };
     }
+    
+    public static string ApiToString(AnimeStatusApi api)
+    {
+        return api switch
+        {
+            AnimeStatusApi.watching => "watching",
+            AnimeStatusApi.completed => "completed",
+            AnimeStatusApi.on_hold => "on_hold",
+            AnimeStatusApi.dropped => "dropped",
+            AnimeStatusApi.plan_to_watch => "plan_to_watch",
+            AnimeStatusApi.none => "none",
+            _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
+        };
+    }
 
     public static AnimeStatusTranslated ApiToTranslated(this AnimeStatusApi api)
     {

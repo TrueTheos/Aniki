@@ -38,7 +38,7 @@ public partial class StatsViewModel : ViewModelBase
         CalculateGenreStats(animeList);
     }
 
-    private void CalculateAnimeStats(List<AnimeData> animeList)
+    private void CalculateAnimeStats(List<MAL_AnimeData> animeList)
     {
         var stats = new AnimeStats();
         var scoredAnime = animeList.Where(a => a.ListStatus != null && a.ListStatus.Score > 0).ToList();
@@ -63,9 +63,9 @@ public partial class StatsViewModel : ViewModelBase
         AnimeStats = stats;
     }
 
-    private void CalculateGenreStats(List<AnimeData> animeList)
+    private void CalculateGenreStats(List<MAL_AnimeData> animeList)
     {
-        var allGenres = animeList.SelectMany(a => a.Node.Genres ?? new Genre[0]).ToList();
+        var allGenres = animeList.SelectMany(a => a.Node.Genres ?? new MAL_Genre[0]).ToList();
         var totalGenres = allGenres.Count;
 
         GenreStats = allGenres

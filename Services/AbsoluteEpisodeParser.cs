@@ -64,7 +64,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         var searchResult = await _malService.SearchAnimeOrdered(animeTitle);
         if (searchResult.Count == 0) return null;
             
-        int animeId = searchResult.First().Anime.Id;
+        int animeId = searchResult.First().MalAnime.Id;
 
         var newMap = await BuildSeasonMap(animeId);
         if (newMap != null && newMap.Count > 0)
@@ -83,7 +83,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             var seasonMap = new Dictionary<int, SeasonData>();
             var visitedIds = new HashSet<int>();
             
-            var seasonChain = new List<(int id, AnimeDetails details)>();
+            var seasonChain = new List<(int id, MAL_AnimeDetails details)>();
             int currentId = animeId;
             
             while (true)
@@ -91,12 +91,12 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 if (visitedIds.Contains(currentId)) break;
                 visitedIds.Add(currentId);
                 
-                AnimeDetails? details = await _malService.GetAnimeDetails(currentId, true);
+                MAL_AnimeDetails? details = await _malService.GetAnimeDetails(currentId, true);
                 if (details == null) break;
                 
                 seasonChain.Insert(0, (currentId, details));
                 
-                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
+                MAL_RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
                 if (prequel?.Node != null)
                 {
                     currentId = prequel.Node.Id;
@@ -108,11 +108,11 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             }
             
             currentId = animeId;
-            AnimeDetails? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
+            MAL_AnimeDetails? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
             
             while (currentDetails != null)
             {
-                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
+                MAL_RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
                 if (sequel?.Node != null && !visitedIds.Contains(sequel.Node.Id))
                 {
                     currentId = sequel.Node.Id;
@@ -131,7 +131,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             
             for (int i = 0; i < seasonChain.Count; i++)
             {
-                (int id, AnimeDetails details) = seasonChain[i];
+                (int id, MAL_AnimeDetails details) = seasonChain[i];
                 seasonMap[i + 1] = new SeasonData 
                 { 
                     Episodes = details.NumEpisodes, 

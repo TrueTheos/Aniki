@@ -14,8 +14,8 @@ public class MalService : IMalService
     private JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private HttpClient _client = new();
     
-    private readonly Dictionary<int, AnimeDetails> _detailsCache = new();
-    private List<AnimeData>? _userAnimeList;
+    private readonly Dictionary<int, MAL_AnimeDetails> _detailsCache = new();
+    private List<MAL_AnimeData>? _userAnimeList;
 
     private Stopwatch _sw = new();
     private int _requestCounter;
@@ -61,7 +61,7 @@ public class MalService : IMalService
         return result;
     }
 
-    public  async Task<MALUserData> GetUserDataAsync()
+    public  async Task<MAL_UserData> GetUserDataAsync()
     {
         if (string.IsNullOrEmpty(_accessToken))
         {
@@ -76,11 +76,11 @@ public class MalService : IMalService
         }
 
         string json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<MALUserData>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
+        return JsonSerializer.Deserialize<MAL_UserData>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
                ?? throw new InvalidOperationException("Failed to deserialize data");
     }
 
-    public  async Task<List<AnimeData>> GetUserAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
+    public  async Task<List<MAL_AnimeData>> GetUserAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
     {
         if (_userAnimeList != null)
         {
@@ -96,7 +96,7 @@ public class MalService : IMalService
 
         try
         {
-            List<AnimeData> animeList = new();
+            List<MAL_AnimeData> animeList = new();
 
             string url = "https://api.myanimelist.net/v2/users/@me/animelist?";
             string fields = $"list_status,num_episodes,pictures,status,genres,synopsis,main_picture";
@@ -118,7 +118,7 @@ public class MalService : IMalService
 
                 if (response.IsSuccessStatusCode)
                 {
-                    UserAnimeListResponse? animeListResponse = JsonSerializer.Deserialize<UserAnimeListResponse>(responseBody, _jso);
+                    MAL_UserAnimeListResponse? animeListResponse = JsonSerializer.Deserialize<MAL_UserAnimeListResponse>(responseBody, _jso);
 
                     if (animeListResponse == null)
                     {
@@ -134,7 +134,7 @@ public class MalService : IMalService
                         {
                             if (animeData.Node?.Id != null && !_detailsCache.ContainsKey(animeData.Node.Id))
                             {
-                                var basicDetails = new AnimeDetails
+                                var basicDetails = new MAL_AnimeDetails
                                 {
                                     Id = animeData.Node.Id,
                                     Title = animeData.Node.Title,
@@ -178,7 +178,7 @@ public class MalService : IMalService
         }
     }
 
-    public  async Task<AnimeDetails?> GetAnimeDetails(int id, bool forceFull = false)
+    public  async Task<MAL_AnimeDetails?> GetAnimeDetails(int id, bool forceFull = false)
     {
         if (_detailsCache.TryGetValue(id, out var cached))
         {
@@ -191,7 +191,7 @@ public class MalService : IMalService
         return await FetchFullAnimeDetails(id);
     }
 
-    private async Task<AnimeDetails?> FetchFullAnimeDetails(int id)
+    private async Task<MAL_AnimeDetails?> FetchFullAnimeDetails(int id)
     {
         try
         {
@@ -202,7 +202,7 @@ public class MalService : IMalService
 
             if (response.IsSuccessStatusCode)
             {
-                AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                MAL_AnimeDetails? animeResponse = JsonSerializer.Deserialize<MAL_AnimeDetails>(responseBody, _jso);
                 if (animeResponse != null)
                 {
                     _detailsCache[id] = animeResponse;
@@ -251,7 +251,7 @@ public class MalService : IMalService
             string responseBody = await response.Content.ReadAsStringAsync();
             if (response.IsSuccessStatusCode)
             {
-                AnimeDetails? animeResponse = JsonSerializer.Deserialize<AnimeDetails>(responseBody, _jso);
+                MAL_AnimeDetails? animeResponse = JsonSerializer.Deserialize<MAL_AnimeDetails>(responseBody, _jso);
                 if (animeResponse != null)
                 {
                     if (!_detailsCache.ContainsKey(id))
@@ -309,7 +309,7 @@ public class MalService : IMalService
         return null;
     }
 
-    public  async Task<Bitmap?> GetAnimeImage(MainPicture? animePictureData)
+    public  async Task<Bitmap?> GetAnimeImage(MAL_MainPicture? animePictureData)
     {
         try
         {
@@ -327,39 +327,39 @@ public class MalService : IMalService
         return null;
     }
 
-    public  async Task<List<SearchEntry>> SearchAnimeOrdered(string query)
+    public  async Task<List<MAL_SearchEntry>> SearchAnimeOrdered(string query)
     {
         string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=id,title,main_picture,num_episodes,main_picture,synopsis,status,alternative_titles";
 
         HttpResponseMessage response = await GetAsync(url, "Search");
         string responseBody = await response.Content.ReadAsStringAsync();
-        AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<AnimeSearchListResponse>(responseBody, _jso);
+        MAL_AnimeSearchListResponse? responseData = JsonSerializer.Deserialize<MAL_AnimeSearchListResponse>(responseBody, _jso);
 
         var results = responseData?.Data?.Select(x =>
         {
-            if (DoesTitleMatch(x.Anime, query))
+            if (DoesTitleMatch(x.MalAnime, query))
             {
                 return new { Entry = x, Score = 1000 };
             }
             
-            int score = FuzzySharp.Fuzz.TokenSortRatio(x.Anime.Title, query);
-            if (x.Anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+            int score = FuzzySharp.Fuzz.TokenSortRatio(x.MalAnime.Title, query);
+            if (x.MalAnime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
             {
                 score += 50;
             }
 
-            if (x.Anime?.Id != null && !_detailsCache.ContainsKey(x.Anime.Id))
+            if (x.MalAnime?.Id != null && !_detailsCache.ContainsKey(x.MalAnime.Id))
             {
-                _detailsCache[x.Anime.Id] = new AnimeDetails()
+                _detailsCache[x.MalAnime.Id] = new MAL_AnimeDetails()
                 {
-                    Id = x.Anime.Id,
-                    Title = x.Anime.Title,
-                    Genres = x.Anime.Genres,
-                    MainPicture = x.Anime.MainPicture,
-                    Status = x.Anime.Status,
-                    Synopsis = x.Anime.Synopsis,
-                    NumEpisodes = x.Anime.NumEpisodes,
-                    AlternativeTitles = x.Anime.AlternativeTitles
+                    Id = x.MalAnime.Id,
+                    Title = x.MalAnime.Title,
+                    Genres = x.MalAnime.Genres,
+                    MainPicture = x.MalAnime.MainPicture,
+                    Status = x.MalAnime.Status,
+                    Synopsis = x.MalAnime.Synopsis,
+                    NumEpisodes = x.MalAnime.NumEpisodes,
+                    AlternativeTitles = x.MalAnime.AlternativeTitles
                 };
             }
 
@@ -367,27 +367,27 @@ public class MalService : IMalService
         })
         .OrderByDescending(x => x.Score)
         .Select(x => x.Entry)
-        .ToList() ?? new List<SearchEntry>();
+        .ToList() ?? new List<MAL_SearchEntry>();
 
         return results;
     }
 
-    private  bool DoesTitleMatch(AnimeNode anime, string query)
+    private  bool DoesTitleMatch(MAL_AnimeNode malAnime, string query)
     {
         string normalizedQuery = NormalizeTitleToLower(query);
-        string normalizedTitle = NormalizeTitleToLower(anime.Title);
+        string normalizedTitle = NormalizeTitleToLower(malAnime.Title);
         
-        if(normalizedTitle == anime.Title) return true;
+        if(normalizedTitle == malAnime.Title) return true;
         
-        if(anime.AlternativeTitles == null) return false;
+        if(malAnime.AlternativeTitles == null) return false;
         
-        string normalizedEn = NormalizeTitleToLower(anime.AlternativeTitles.En);
-        string normalizedJp = NormalizeTitleToLower(anime.AlternativeTitles.Ja);
+        string normalizedEn = NormalizeTitleToLower(malAnime.AlternativeTitles.En);
+        string normalizedJp = NormalizeTitleToLower(malAnime.AlternativeTitles.Ja);
         
         if(normalizedJp == normalizedQuery) return true;
         if(normalizedEn == normalizedQuery) return true;
         
-        if(anime.AlternativeTitles.Synonyms != null && anime.AlternativeTitles.Synonyms.Any(x => NormalizeTitleToLower(x) == normalizedQuery)) 
+        if(malAnime.AlternativeTitles.Synonyms != null && malAnime.AlternativeTitles.Synonyms.Any(x => NormalizeTitleToLower(x) == normalizedQuery)) 
             return true;
         
         return false; 
@@ -434,7 +434,7 @@ public class MalService : IMalService
         if (_detailsCache.TryGetValue(animeId, out var cached))
         {
             if (cached.MyListStatus == null)
-                cached.MyListStatus = new MyListStatus();
+                cached.MyListStatus = new MAL_MyListStatus();
 
             switch (field)
             {

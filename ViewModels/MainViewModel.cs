@@ -33,6 +33,8 @@ public partial class MainViewModel : ViewModelBase
     private CalendarViewModel _calendarViewModel;
     [ObservableProperty]
     private StatsViewModel _statsViewModel;
+    [ObservableProperty]
+    private AnimeBrowseViewModel _animeBrowseViewModel;
     #endregion
 
     [ObservableProperty]
@@ -41,7 +43,8 @@ public partial class MainViewModel : ViewModelBase
     private readonly ICalendarService _calendarService;
     private readonly IMalService _malService;
 
-    public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel, WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel) 
+    public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel,
+        WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel) 
     {
         _calendarService = calendarService;
         _malService = malService;
@@ -49,6 +52,7 @@ public partial class MainViewModel : ViewModelBase
         _watchViewModel = watchViewModel;
         _calendarViewModel = calendarViewModel;
         _statsViewModel = statsViewModel;
+        _animeBrowseViewModel = animeBrowseViewModel;
     }
 
     [RelayCommand]
@@ -76,6 +80,13 @@ public partial class MainViewModel : ViewModelBase
     public async Task ShowStatsPage()
     {
         CurrentViewModel = StatsViewModel; 
+        await CurrentViewModel.Enter();
+    }
+
+    [RelayCommand]
+    public async Task ShowAnimeBrowsePage()
+    {
+        CurrentViewModel = AnimeBrowseViewModel;
         await CurrentViewModel.Enter();
     }
 
@@ -113,7 +124,7 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             IsLoading = true;
-            MALUserData malUserData = await _malService.GetUserDataAsync();
+            MAL_UserData malUserData = await _malService.GetUserDataAsync();
             Username = malUserData.Name;
             ProfileImage = await _malService.GetUserPicture();
         }

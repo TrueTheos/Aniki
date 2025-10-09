@@ -190,7 +190,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
         AnimeGroups.Insert(insertIndex, newGroup);
     }
 
-    public void Update(AnimeDetails? details)
+    public void Update(MAL_AnimeDetails? details)
     {
         AnimeTitleFilter = details?.Title;
         _ = LoadEpisodesFromFolder();

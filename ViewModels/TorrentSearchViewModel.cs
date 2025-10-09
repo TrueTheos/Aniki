@@ -17,7 +17,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] private int _nextEpisodeNumber;
     [ObservableProperty] private ObservableCollection<int> _watchEpisodesOptions = new();
     
-    private AnimeDetails? _details;
+    private MAL_AnimeDetails? _details;
 
     private readonly INyaaService _nyaaService;
 
@@ -26,7 +26,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
         _nyaaService = nyaaService;
     }
 
-    public void Update(AnimeDetails? details, int episodesWatched)
+    public void Update(MAL_AnimeDetails? details, int episodesWatched)
     {
         _details = details;
         
