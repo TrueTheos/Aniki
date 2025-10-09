@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Aniki.Misc;
 using System;
+using Avalonia.Media.Transformation;
 
 namespace Aniki.Views;
 
@@ -17,43 +18,28 @@ public partial class AnimeListStatusButton : UserControl
         set => SetValue(CurrentStatusProperty, value);
     }
 
-    public event EventHandler<AnimeStatusApi>? StatusSelected;
-
     public AnimeListStatusButton()
     {
         InitializeComponent();
-        PropertyChanged += OnPropertyChanged;
+        MainButton.PointerEntered += (_, __) => ShowStatusButtons();
+        MainButton.PointerExited += (_, __) => HideStatusButtons();
     }
 
-    private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void ShowStatusButtons()
     {
-        if (e.Property == CurrentStatusProperty)
-        {
-            UpdateButtons();
-        }
+        // Scale status buttons up (they will animate from 0 to 0.8)
+        var scaleValue = "scale(0.8)";
+        StatusButton1.RenderTransform = TransformOperations.Parse(scaleValue);
+        StatusButton2.RenderTransform = TransformOperations.Parse(scaleValue);
+        StatusButton3.RenderTransform = TransformOperations.Parse(scaleValue);
     }
 
-    private void UpdateButtons()
+    private void HideStatusButtons()
     {
-        var status = CurrentStatus;
-
-        ButtonWatching.IsVisible = status != AnimeStatusApi.watching;
-        ButtonCompleted.IsVisible = status != AnimeStatusApi.completed;
-        ButtonPlanToWatch.IsVisible = status != AnimeStatusApi.plan_to_watch;
-    }
-
-    private void ButtonWatching_Click(object? sender, PointerPressedEventArgs e)
-    {
-        StatusSelected?.Invoke(this, AnimeStatusApi.watching);
-    }
-
-    private void ButtonCompleted_Click(object? sender, PointerPressedEventArgs e)
-    {
-        StatusSelected?.Invoke(this, AnimeStatusApi.completed);
-    }
-
-    private void ButtonPlanToWatch_Click(object? sender, PointerPressedEventArgs e)
-    {
-        StatusSelected?.Invoke(this, AnimeStatusApi.plan_to_watch);
+        // Scale status buttons back down to 0 (hidden)
+        var hideScale = "scale(0)";
+        StatusButton1.RenderTransform = TransformOperations.Parse(hideScale);
+        StatusButton2.RenderTransform = TransformOperations.Parse(hideScale);
+        StatusButton3.RenderTransform = TransformOperations.Parse(hideScale);
     }
 }

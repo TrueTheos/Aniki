@@ -5,149 +5,61 @@
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
              x:Class="Aniki.Views.AnimeListStatusButton">
 
-    <Grid x:Name="RootGrid" Background="Transparent" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="8">
-        <Grid.Styles>
-            <!-- Plus Button Default State (Hidden) -->
-            <Style Selector="Border#PlusButton">
-                <Setter Property="Opacity" Value="0"/>
-                <Setter Property="RenderTransform" Value="scale(0)"/>
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="BackEaseOut"/>
-                    </Transitions>
-                </Setter>
-            </Style>
-            
-            <!-- Show Plus Button on Grid Hover (when not hovering status buttons) -->
-            <Style Selector="Grid#RootGrid:pointerover Border#PlusButton">
-                <Setter Property="Opacity" Value="1"/>
-                <Setter Property="RenderTransform" Value="scale(1)"/>
-            </Style>
-            
-            <!-- Hide Plus Button when hovering over it -->
-            <Style Selector="Border#PlusButton:pointerover">
-                <Setter Property="Opacity" Value="0"/>
-                <Setter Property="RenderTransform" Value="scale(1.3)"/>
-            </Style>
-            
-            <!-- Action Buttons Default State (Hidden) -->
-            <Style Selector="StackPanel#ActionButtons">
-                <Setter Property="Opacity" Value="0"/>
-                <Setter Property="IsVisible" Value="False"/>
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
-                    </Transitions>
-                </Setter>
-            </Style>
-            
-            <!-- Show Action Buttons when hovering over Plus Button -->
-            <Style Selector="Border#PlusButton:pointerover StackPanel#ActionButtons">
-                <Setter Property="Opacity" Value="1"/>
-                <Setter Property="IsVisible" Value="True"/>
-            </Style>
-            
-            <!-- Keep Action Buttons visible when hovering over them -->
-            <Style Selector="StackPanel#ActionButtons:pointerover">
-                <Setter Property="Opacity" Value="1"/>
-                <Setter Property="IsVisible" Value="True"/>
-            </Style>
-            
-            <!-- Individual Action Button Default State -->
-            <Style Selector="StackPanel#ActionButtons > Border">
-                <Setter Property="RenderTransform" Value="scale(0)"/>
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.25" Easing="BackEaseOut"/>
-                    </Transitions>
-                </Setter>
-            </Style>
-            
-            <!-- Show buttons when parent is visible -->
-            <Style Selector="StackPanel#ActionButtons:pointerover > Border, Border#PlusButton:pointerover StackPanel#ActionButtons > Border">
-                <Setter Property="RenderTransform" Value="scale(1)"/>
-            </Style>
-            
-            <!-- Enlarge on individual button hover -->
-            <Style Selector="StackPanel#ActionButtons > Border:pointerover">
-                <Setter Property="RenderTransform" Value="scale(1.25)"/>
-            </Style>
-            
-            <!-- Stagger animation for each button -->
-            <Style Selector="StackPanel#ActionButtons > Border:nth-child(1)">
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Delay="0:0:0.05" Easing="BackEaseOut"/>
-                    </Transitions>
-                </Setter>
-            </Style>
-            
-            <Style Selector="StackPanel#ActionButtons > Border:nth-child(2)">
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Delay="0:0:0.1" Easing="BackEaseOut"/>
-                    </Transitions>
-                </Setter>
-            </Style>
-            
-            <Style Selector="StackPanel#ActionButtons > Border:nth-child(3)">
-                <Setter Property="Transitions">
-                    <Transitions>
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Delay="0:0:0.15" Easing="BackEaseOut"/>
-                    </Transitions>
-                </Setter>
-            </Style>
-        </Grid.Styles>
+    <UserControl.Styles>
+        <Style Selector="Button.SmallButton">
+            <Setter Property="RenderTransformOrigin" Value="1,1"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="CornerRadius" Value="25"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.1)"/>
+        </Style>
+        <Style Selector="UserControl Button#MainButton">
+            <Setter Property="RenderTransform" Value="scale(0)"/>
+        </Style>
+        <Style Selector="UserControl:pointerover Button#MainButton">
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+        </Style>
+        <Style Selector="UserControl Button#StatusButton1,
+                           UserControl Button#StatusButton2,
+                           UserControl Button#StatusButton3">
+            <Setter Property="RenderTransform" Value="scale(0)"/>
+        </Style>
+    </UserControl.Styles>
 
-        <!-- Plus Button -->
-        <Border x:Name="PlusButton"
-                Width="40" Height="40"
-                CornerRadius="20"
-                Background="#CC000000"
-                Cursor="Hand">
-            <PathIcon Data="{StaticResource plus_icon}" 
-                      Foreground="White"
-                      Width="18" Height="18"/>
-        </Border>
-
-        <!-- Action Buttons Popup -->
-        <StackPanel x:Name="ActionButtons"
-                   Orientation="Vertical"
-                   Spacing="10">
-            
-            <Border x:Name="ButtonWatching"
-                   Width="32" Height="32"
-                   CornerRadius="16"
-                   Background="#CC000000"
-                   Cursor="Hand"
-                   PointerPressed="ButtonWatching_Click">
-                <PathIcon Data="{StaticResource play_regular}"
-                          Foreground="White"
-                          Width="14" Height="14"/>
-            </Border>
-
-            <Border x:Name="ButtonCompleted"
-                   Width="32" Height="32"
-                   CornerRadius="16"
-                   Background="#CC000000"
-                   Cursor="Hand"
-                   PointerPressed="ButtonCompleted_Click">
-                <PathIcon Data="{StaticResource check_icon}"
-                          Foreground="White"
-                          Width="14" Height="14"/>
-            </Border>
-            
-            <Border x:Name="ButtonPlanToWatch"
-                   Width="32" Height="32"
-                   CornerRadius="16"
-                   Background="#CC000000"
-                   Cursor="Hand"
-                   PointerPressed="ButtonPlanToWatch_Click">
-                <PathIcon Data="{StaticResource plus_icon}"
-                          Foreground="White"
-                          Width="14" Height="14"/>
-            </Border>
+    <Grid>
+        <StackPanel x:Name="StatusPanel" Orientation="Vertical"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,10,60">
+            <Button Classes="SmallButton" x:Name="StatusButton1">
+                <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+            </Button>
+            <Button Classes="SmallButton" x:Name="StatusButton2">
+                <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+            </Button>
+            <Button Classes="SmallButton" x:Name="StatusButton3">
+                <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+            </Button>
         </StackPanel>
+
+        <Button x:Name="MainButton" Content="+"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Width="40"
+                Height="40"
+                Margin="10"
+                CornerRadius="25"
+                Background="{StaticResource Background1}"/>
     </Grid>
 </UserControl>

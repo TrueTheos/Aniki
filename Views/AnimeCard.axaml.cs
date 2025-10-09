@@ -54,7 +54,6 @@ public partial class AnimeCard : UserControl
         InitializeComponent();
         
         PropertyChanged += OnPropertyChanged;
-        StatusButton.StatusSelected += OnStatusSelected;
         PointerPressed += OnCardClicked;
     }
 
