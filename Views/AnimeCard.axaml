@@ -5,23 +5,39 @@
              xmlns:local="clr-namespace:Aniki.Views"
              mc:Ignorable="d" d:DesignWidth="160" d:DesignHeight="260"
              x:Class="Aniki.Views.AnimeCard">
+         
+    <UserControl.Styles>
+        <Style Selector="local|AnimeCard local|AnimeListStatusButton">
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="local|AnimeCard:pointerover local|AnimeListStatusButton">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+    </UserControl.Styles>
     
     <Border Background="Transparent"
             Cursor="Hand">
         <StackPanel Spacing="8" Width="160">
             <!-- Image Container -->
-            <Border CornerRadius="8" 
+            <Border x:Name="ImageContainer"
+                    CornerRadius="8"
                     ClipToBounds="True"
                     Background="#1E1E1E">
                 <Panel Width="160" Height="225">
-                    <Image x:Name="AnimeImage" 
+                    <Image x:Name="AnimeImage"
                            Stretch="UniformToFill"/>
-                    
+                                     
                     <!-- Status Button Overlay -->
                     <local:AnimeListStatusButton x:Name="StatusButton"/>
                 </Panel>
             </Border>
-            
+                     
             <!-- Title -->
             <TextBlock x:Name="AnimeTitle"
                        TextWrapping="Wrap"
