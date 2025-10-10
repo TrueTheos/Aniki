@@ -3,42 +3,66 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:Aniki.Views"
-             mc:Ignorable="d" d:DesignWidth="160" d:DesignHeight="260"
+             mc:Ignorable="d"
+             d:DesignWidth="160"
+             d:DesignHeight="260"
              x:Class="Aniki.Views.AnimeCard">
-         
+
     <UserControl.Styles>
         <Style Selector="local|AnimeCard local|AnimeListStatusButton">
             <Setter Property="Opacity" Value="0"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform X="0" Y="0"/>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Transitions">
                 <Transitions>
-                    <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.18"/>
                 </Transitions>
             </Setter>
         </Style>
 
         <Style Selector="local|AnimeCard:pointerover local|AnimeListStatusButton">
             <Setter Property="Opacity" Value="1"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform X="0" Y="0"/>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Styles>
-    
+
     <Border Background="Transparent"
             Cursor="Hand">
         <StackPanel Spacing="8" Width="160">
-            <!-- Image Container -->
             <Border x:Name="ImageContainer"
                     CornerRadius="8"
                     ClipToBounds="True"
                     Background="#1E1E1E">
-                <Panel Width="160" Height="225">
+
+                <Grid Width="160" Height="225">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+
                     <Image x:Name="AnimeImage"
+                           Grid.ColumnSpan="2"
                            Stretch="UniformToFill"/>
-                                     
-                    <!-- Status Button Overlay -->
-                    <local:AnimeListStatusButton x:Name="StatusButton"/>
-                </Panel>
+
+                    <Border Grid.Column="1"
+                            Background="Transparent"
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,5">
+                        <local:AnimeListStatusButton x:Name="StatusButton"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
             </Border>
-                     
-            <!-- Title -->
+
             <TextBlock x:Name="AnimeTitle"
                        TextWrapping="Wrap"
                        MaxHeight="60"

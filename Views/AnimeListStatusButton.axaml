@@ -3,13 +3,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
-             x:Class="Aniki.Views.AnimeListStatusButton">
+             x:Class="Aniki.Views.AnimeListStatusButton"
+             x:Name="Root">
 
     <UserControl.Styles>
         <Style Selector="Button.SmallButton">
-            <Setter Property="RenderTransformOrigin" Value="1,1"/>
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
             <Setter Property="Background" Value="{DynamicResource Background1}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -37,29 +37,37 @@
                            UserControl Button#StatusButton3">
             <Setter Property="RenderTransform" Value="scale(0)"/>
         </Style>
+        
+        <Style Selector="Button#MainButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
     </UserControl.Styles>
 
     <Grid>
         <StackPanel x:Name="StatusPanel" Orientation="Vertical"
                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                    Margin="0,0,10,60">
+                    Margin="0,0,10,50"
+                    Spacing="5">
             <Button Classes="SmallButton" x:Name="StatusButton1">
-                <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+                <PathIcon Width="15" Height="15" Data="{StaticResource globe_regular}" Foreground="White"/>
             </Button>
             <Button Classes="SmallButton" x:Name="StatusButton2">
-                <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+                <PathIcon Width="15" Height="15" Data="{StaticResource globe_regular}" Foreground="White"/>
             </Button>
             <Button Classes="SmallButton" x:Name="StatusButton3">
-                <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+                <PathIcon Width="15" Height="15" Data="{StaticResource globe_regular}" Foreground="White"/>
             </Button>
         </StackPanel>
 
-        <Button x:Name="MainButton" Content="+"
+        <Button x:Name="MainButton"
                 HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                Width="40"
-                Height="40"
+                Width="30"
+                Height="30"
                 Margin="10"
                 CornerRadius="25"
-                Background="{StaticResource Background1}"/>
+                Background="{StaticResource Background1}">
+            <PathIcon Width="15" Height="15" Data="{StaticResource plus_icon}" Foreground="White"/>
+        </Button>
     </Grid>
 </UserControl>

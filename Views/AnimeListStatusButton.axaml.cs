@@ -12,6 +12,8 @@ public partial class AnimeListStatusButton : UserControl
     public static readonly StyledProperty<AnimeStatusApi?> CurrentStatusProperty =
         AvaloniaProperty.Register<AnimeListStatusButton, AnimeStatusApi?>(nameof(CurrentStatus));
 
+    private bool _mouseOverRoot = false;
+
     public AnimeStatusApi? CurrentStatus
     {
         get => GetValue(CurrentStatusProperty);
@@ -23,12 +25,14 @@ public partial class AnimeListStatusButton : UserControl
         InitializeComponent();
         MainButton.PointerEntered += (_, __) => ShowStatusButtons();
         MainButton.PointerExited += (_, __) => HideStatusButtons();
+        Root.PointerExited += (_, __) => RootPointerExited();
+        Root.PointerEntered += (_, __) => RootPointerEnter();
     }
 
     private void ShowStatusButtons()
     {
-        // Scale status buttons up (they will animate from 0 to 0.8)
-        var scaleValue = "scale(0.8)";
+        Console.WriteLine("MainButton entered");
+        var scaleValue = "scale(1)";
         StatusButton1.RenderTransform = TransformOperations.Parse(scaleValue);
         StatusButton2.RenderTransform = TransformOperations.Parse(scaleValue);
         StatusButton3.RenderTransform = TransformOperations.Parse(scaleValue);
@@ -36,10 +40,25 @@ public partial class AnimeListStatusButton : UserControl
 
     private void HideStatusButtons()
     {
-        // Scale status buttons back down to 0 (hidden)
         var hideScale = "scale(0)";
-        StatusButton1.RenderTransform = TransformOperations.Parse(hideScale);
-        StatusButton2.RenderTransform = TransformOperations.Parse(hideScale);
-        StatusButton3.RenderTransform = TransformOperations.Parse(hideScale);
+        if (!_mouseOverRoot)
+        {
+            StatusButton1.RenderTransform = TransformOperations.Parse(hideScale);
+            StatusButton2.RenderTransform = TransformOperations.Parse(hideScale);
+            StatusButton3.RenderTransform = TransformOperations.Parse(hideScale);
+        }
+    }
+
+    private void RootPointerEnter()
+    {
+        Console.WriteLine("ROOT entered");
+        _mouseOverRoot = true;
+    }
+    
+    private void RootPointerExited()
+    {
+        Console.WriteLine("ROOT exited");
+        _mouseOverRoot = false;
+        HideStatusButtons();
     }
 }
