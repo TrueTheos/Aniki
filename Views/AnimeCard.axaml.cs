@@ -3,8 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Aniki.Misc;
-using Aniki.Models;
-using System;
 
 namespace Aniki.Views;
 

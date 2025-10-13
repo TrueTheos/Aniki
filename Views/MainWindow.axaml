@@ -181,12 +181,7 @@
                                 Classes="SearchButton"
                                 Command="{Binding SearchCommand}"
                                 Cursor="Hand">
-                                <PathIcon
-                                    Name="SearchIcon"
-                                    Width="16"
-                                    Height="16"
-                                    Data="{StaticResource search_glass}"
-                                    Foreground="#FFAAAAAA" />
+                                <Image Source="{SvgImage /Resources/Icons/search_icon.svg}" x:Name="SearchIcon" Width="16" Height="16"/>
                                 <Button.Styles>
                                     <Style Selector="Button:pointerover PathIcon">
                                         <Setter Property="Foreground" Value="#FFD0D0D0" />
@@ -207,10 +202,7 @@
                         Classes="MenuButton"
                         Command="{Binding ShowMainPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <PathIcon
-                                Width="16"
-                                Height="16"
-                                Data="{StaticResource home_regular}" />
+                            <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Main Page" />
                         </StackPanel>
                     </Button>
@@ -219,10 +211,7 @@
                         Classes="MenuButton"
                         Command="{Binding ShowWatchPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <PathIcon
-                                Width="16"
-                                Height="16"
-                                Data="{StaticResource play_regular}" />
+                            <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Watch" />
                         </StackPanel>
                     </Button>
@@ -231,10 +220,7 @@
                         Classes="MenuButton"
                         Command="{Binding ShowCalendarPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <PathIcon
-                                Width="16"
-                                Height="16"
-                                Data="{StaticResource calendar_regular}" />
+                            <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Calendar" />
                         </StackPanel>
                     </Button>
@@ -243,10 +229,7 @@
                         Classes="MenuButton"
                         Command="{Binding ShowStatsPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <PathIcon
-                                Width="16"
-                                Height="16"
-                                Data="{StaticResource data_usage_regular}" />
+                            <Image Source="{SvgImage /Resources/Icons/stats_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Stats" />
                         </StackPanel>
                     </Button>
@@ -255,10 +238,7 @@
                         Classes="MenuButton"
                         Command="{Binding ShowAnimeBrowsePageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <PathIcon
-                                Width="16"
-                                Height="16"
-                                Data="{StaticResource data_usage_regular}" />
+                            <Image Source="{SvgImage /Resources/Icons/stats_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Browse" />
                         </StackPanel>
                     </Button>
@@ -289,10 +269,7 @@
                         Classes="MenuButton"
                         Command="{Binding OpenSettingsCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <PathIcon
-                                Width="16"
-                                Height="16"
-                                Data="{StaticResource settings_regular}" />
+                            <Image Source="{SvgImage /Resources/Icons/settings_icon.svg}" Width="20" Height="20" />
                             <TextBlock VerticalAlignment="Center" Text="Settings" />
                         </StackPanel>
                     </Button>

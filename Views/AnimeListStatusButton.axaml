@@ -3,8 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
-             x:Class="Aniki.Views.AnimeListStatusButton"
-             x:Name="Root">
+             x:Class="Aniki.Views.AnimeListStatusButton">
 
     <UserControl.Styles>
         <Style Selector="Button.SmallButton">
@@ -32,9 +31,9 @@
         <Style Selector="UserControl:pointerover Button#MainButton">
             <Setter Property="RenderTransform" Value="scale(1)"/>
         </Style>
-        <Style Selector="UserControl Button#StatusButton1,
-                           UserControl Button#StatusButton2,
-                           UserControl Button#StatusButton3">
+        <Style Selector="UserControl Button#PlannedToWatchButton,
+                           UserControl Button#WatchingButton,
+                           UserControl Button#CompletedButton">
             <Setter Property="RenderTransform" Value="scale(0)"/>
         </Style>
         
@@ -44,19 +43,19 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid>
+    <Grid x:Name="Root" Background="#00000000">
         <StackPanel x:Name="StatusPanel" Orientation="Vertical"
                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Margin="0,0,10,50"
                     Spacing="5">
-            <Button Classes="SmallButton" x:Name="StatusButton1">
-                <PathIcon Width="15" Height="15" Data="{StaticResource globe_regular}" Foreground="White"/>
+            <Button Classes="SmallButton" x:Name="PlannedToWatchButton">
+                <Image Source="{SvgImage /Resources/Icons/calendarAdd_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="StatusButton2">
-                <PathIcon Width="15" Height="15" Data="{StaticResource globe_regular}" Foreground="White"/>
+            <Button Classes="SmallButton" x:Name="WatchingButton">
+                <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="StatusButton3">
-                <PathIcon Width="15" Height="15" Data="{StaticResource globe_regular}" Foreground="White"/>
+            <Button Classes="SmallButton" x:Name="CompletedButton">
+                <Image Source="{SvgImage /Resources/Icons/check_icon.svg}" Width="15" Height="15"/>
             </Button>
         </StackPanel>
 
@@ -67,7 +66,7 @@
                 Margin="10"
                 CornerRadius="25"
                 Background="{StaticResource Background1}">
-            <PathIcon Width="15" Height="15" Data="{StaticResource plus_icon}" Foreground="White"/>
+            <Image Source="{SvgImage /Resources/Icons/add_icon.svg}" Width="15" Height="15"/>
         </Button>
     </Grid>
 </UserControl>

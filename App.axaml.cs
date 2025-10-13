@@ -3,7 +3,6 @@ using Aniki.Services.Interfaces;
 using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Notifications;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,8 +32,6 @@ public partial class App : Application
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var vm = _serviceProvider.GetRequiredService<LoginViewModel>();
-
             desktop.MainWindow = new LoginWindow();
 
             CheckForUpdates();

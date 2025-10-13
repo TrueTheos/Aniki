@@ -85,19 +85,13 @@
                         Classes="nav-button"
                         Command="{Binding GoBackWeekCommand}"
                         ToolTip.Tip="Go by back one week">
-                        <PathIcon
-                            Width="16"
-                            Height="16"
-                            Data="{StaticResource double_chevron_left_regular}" />
+                        <Image Source="{SvgImage /Resources/Icons/doubleChevronLeft_icon.svg}" Width="16" Height="16"/>
                     </Button>
                     <Button
                         Classes="nav-button"
                         Command="{Binding GoBackDayCommand}"
                         ToolTip.Tip="Previous day">
-                        <PathIcon
-                            Width="16"
-                            Height="16"
-                            Data="{StaticResource chevron_left_regular}" />
+                        <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="16" Height="16"/>
                     </Button>
 
                     <Button
@@ -109,19 +103,13 @@
                         Classes="nav-button"
                         Command="{Binding GoForwardDayCommand}"
                         ToolTip.Tip="Next day">
-                        <PathIcon
-                            Width="16"
-                            Height="16"
-                            Data="{StaticResource chevron_right_regular}" />
+                        <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="16" Height="16"/>
                     </Button>
                     <Button
                         Classes="nav-button"
                         Command="{Binding GoForwardWeekCommand}"
                         ToolTip.Tip="Go forward by one week">
-                        <PathIcon
-                            Width="16"
-                            Height="16"
-                            Data="{StaticResource double_chevron_right_regular}" />
+                        <Image Source="{SvgImage /Resources/Icons/doubleChevronRight_icon.svg}" Width="16" Height="16"/>
                     </Button>
                 </StackPanel>
 

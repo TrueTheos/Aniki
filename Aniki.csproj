@@ -58,5 +58,23 @@
     <AvaloniaResource Include="Resources\nothingtoseehere_transparent.png" />
     <None Remove="Resources\nothingtoseehere_transparent_small.png" />
     <AvaloniaResource Include="Resources\nothingtoseehere_transparent_small.png" />
+    <AvaloniaResource Include="Resources\Icons\add_icon.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Resources\Icons\calendarAdd_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\calendar_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\check_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\chevronLeft_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\chevronRight_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\delete_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\doubleChevronLeft_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\doubleChevronRight_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\globe_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\home_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\play_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\search_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\settings_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\stats_icon.svg" />
   </ItemGroup>
 </Project>

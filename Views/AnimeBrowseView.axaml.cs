@@ -1,7 +1,5 @@
 ﻿using Avalonia.Controls;
-using Aniki.ViewModels;
 using Aniki.Misc;
-using System;
 
 namespace Aniki.Views;
 

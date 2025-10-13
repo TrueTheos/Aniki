@@ -45,10 +45,7 @@
                 Command="{Binding SearchTorrentsCommand}"
                 IsEnabled="{Binding NextEpisodeNumber, Converter={StaticResource GreaterThanZeroConverter}}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <PathIcon
-                        Width="16"
-                        Height="16"
-                        Data="{StaticResource search_glass}" />
+                    <Image Source="{SvgImage /Resources/Icons/search_icon.svg}" Width="16" Height="16"/>
                     <TextBlock VerticalAlignment="Center" Text="Search" />
                 </StackPanel>
             </Button>

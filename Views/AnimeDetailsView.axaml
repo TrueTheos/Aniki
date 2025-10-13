@@ -176,10 +176,10 @@
 
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                                                     <Button Classes="SearchButton" Command="{Binding OpenMalPageCommand}" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Open MAL page">
-                                                        <PathIcon Width="20" Height="20" Data="{StaticResource globe_regular}" Foreground="White"/>
+                                                        <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="20" Height="20"/>
                                                     </Button>
                                                     <Button Classes="SearchButton" Command="{Binding RemoveFromListCommand}" Margin="10,0,0,0" VerticalAlignment="Center" ToolTip.Tip="Remove from list" IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                        <PathIcon Width="20" Height="20" Data="{StaticResource delete_regular}" Foreground="White"/>
+                                                        <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}" Width="20" Height="20"/>
                                                     </Button>
                                                 </StackPanel>
                                             </Grid>
