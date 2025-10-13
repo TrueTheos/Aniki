@@ -29,20 +29,18 @@ public partial class AnimeListStatusButton : UserControl
 
     private void ShowStatusButtons()
     {
-        var scaleValue = "scale(1)";
-        PlannedToWatchButton.RenderTransform = TransformOperations.Parse(scaleValue);
-        WatchingButton.RenderTransform = TransformOperations.Parse(scaleValue);
-        CompletedButton.RenderTransform = TransformOperations.Parse(scaleValue);
+        PlannedToWatchButton.Classes.Add("visible");
+        WatchingButton.Classes.Add("visible");
+        CompletedButton.Classes.Add("visible");
     }
 
     private void HideStatusButtons()
     {
-        var hideScale = "scale(0)";
         if (!_mouseOverRoot)
         {
-            WatchingButton.RenderTransform = TransformOperations.Parse(hideScale);
-            PlannedToWatchButton.RenderTransform = TransformOperations.Parse(hideScale);
-            CompletedButton.RenderTransform = TransformOperations.Parse(hideScale);
+            PlannedToWatchButton.Classes.Remove("visible");
+            WatchingButton.Classes.Remove("visible");
+            CompletedButton.Classes.Remove("visible");
         }
     }
 

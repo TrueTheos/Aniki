@@ -7,39 +7,48 @@
 
     <UserControl.Styles>
         <Style Selector="Button.SmallButton">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
+            <Setter Property="Width" Value="25"/>
+            <Setter Property="Height" Value="25"/>
             <Setter Property="Background" Value="{DynamicResource Background1}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="CornerRadius" Value="25"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="RenderTransform" Value="scale(0)"/>
+            <Setter Property="Opacity" Value="1"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
                 </Transitions>
             </Setter>
         </Style>
-        <Style Selector="Button:pointerover">
-            <Setter Property="RenderTransform" Value="scale(1.1)"/>
+        
+        <Style Selector="Button.SmallButton.visible">
+            <Setter Property="RenderTransform" Value="scale(1)"/>
         </Style>
+        
+        <Style Selector="Button.SmallButton:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.2)"/>
+        </Style>
+        
         <Style Selector="UserControl Button#MainButton">
             <Setter Property="RenderTransform" Value="scale(0)"/>
+            <Setter Property="Opacity" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
         </Style>
+        
         <Style Selector="UserControl:pointerover Button#MainButton">
             <Setter Property="RenderTransform" Value="scale(1)"/>
         </Style>
-        <Style Selector="UserControl Button#PlannedToWatchButton,
-                           UserControl Button#WatchingButton,
-                           UserControl Button#CompletedButton">
-            <Setter Property="RenderTransform" Value="scale(0)"/>
-        </Style>
         
         <Style Selector="Button#MainButton:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.2)"/>
             <Setter Property="Background" Value="{DynamicResource Background1}"/>
-            <Setter Property="Opacity" Value="1"/>
         </Style>
     </UserControl.Styles>
 
