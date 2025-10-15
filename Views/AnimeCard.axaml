@@ -31,10 +31,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
-        <Style Selector="local|AnimeCard local|AnimeListStatusButton:pointerover">
-            <Setter Property="Opacity" Value="1"/>
-        </Style>
     </UserControl.Styles>
 
     <Border Background="Transparent"
