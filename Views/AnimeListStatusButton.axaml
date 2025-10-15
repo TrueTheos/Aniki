@@ -28,8 +28,9 @@
             <Setter Property="RenderTransform" Value="scale(1)"/>
         </Style>
         
-        <Style Selector="Button.SmallButton:pointerover">
+        <Style Selector="Button.SmallButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="RenderTransform" Value="scale(1.2)"/>
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
         </Style>
         
         <Style Selector="UserControl Button#MainButton">
