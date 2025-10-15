@@ -9,7 +9,6 @@
              x:DataType="vm:AnimeBrowseViewModel">
     
     <Grid RowDefinitions="Auto,*">
-        <!-- Search Bar and Back Button -->
         <Grid Grid.Row="0"
               ColumnDefinitions="Auto,*,Auto"
               Background="{StaticResource Background0}">

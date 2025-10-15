@@ -2,8 +2,8 @@
     <SolidColorBrush x:Key="Primary" Color="#9575CD" />
     <SolidColorBrush x:Key="PrimaryDarker" Color="#7e56c2" />
     <SolidColorBrush x:Key="Green" Color="#00D4AA" />
-    <SolidColorBrush x:Key="Background0" Color="#202324" />
-    <SolidColorBrush x:Key="Background1" Color="#2C2F31" />
+    <SolidColorBrush x:Key="Background0" Color="#FF202324" />
+    <SolidColorBrush x:Key="Background1" Color="#FF2C2F31" />
     <SolidColorBrush x:Key="White" Color="#E0E0E0" />
     <SolidColorBrush x:Key="Red" Color="#ED2939" />
 </ResourceDictionary>

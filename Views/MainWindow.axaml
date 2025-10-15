@@ -30,14 +30,14 @@
             <Setter Property="CornerRadius" Value="5" />
         </Style>
 
-        <Style Selector="Button.Default">
+        <Style Selector="Button.Basic">
             <Setter Property="Padding" Value="16,8" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Background" Value="{StaticResource Background1}" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
-        <Style Selector="Button.Default:pointerover /template/ ContentPresenter">
+        <Style Selector="Button.Basic:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource Background0}" />
         </Style>
 
@@ -231,15 +231,6 @@
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/stats_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Stats" />
-                        </StackPanel>
-                    </Button>
-                    <Button
-                        Name="AnimeBrowse"
-                        Classes="MenuButton"
-                        Command="{Binding ShowAnimeBrowsePageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/stats_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Browse" />
                         </StackPanel>
                     </Button>
                     <StackPanel Margin="0,10,0,0" IsVisible="{Binding TodayAnime.Count}">

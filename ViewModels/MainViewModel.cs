@@ -58,7 +58,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public async Task ShowMainPage()
     {
-        CurrentViewModel = AnimeDetailsViewModel;
+        CurrentViewModel = AnimeBrowseViewModel;
         await CurrentViewModel.Enter();
     }
 
@@ -80,13 +80,6 @@ public partial class MainViewModel : ViewModelBase
     public async Task ShowStatsPage()
     {
         CurrentViewModel = StatsViewModel; 
-        await CurrentViewModel.Enter();
-    }
-
-    [RelayCommand]
-    public async Task ShowAnimeBrowsePage()
-    {
-        CurrentViewModel = AnimeBrowseViewModel;
         await CurrentViewModel.Enter();
     }
 
