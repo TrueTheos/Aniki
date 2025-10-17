@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
              x:Class="Aniki.Views.AnimeListStatusButton">
-
+    
     <UserControl.Styles>
         <Style Selector="Button.SmallButton">
             <Setter Property="Width" Value="25"/>
@@ -12,7 +12,6 @@
             <Setter Property="Background" Value="{DynamicResource Background1}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="CornerRadius" Value="25"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="RenderTransform" Value="scale(0)"/>
@@ -23,16 +22,15 @@
                 </Transitions>
             </Setter>
         </Style>
-        
-        <Style Selector="Button.SmallButton.visible">
-            <Setter Property="RenderTransform" Value="scale(1)"/>
-        </Style>
-        
-        <Style Selector="Button.SmallButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Style Selector="Button.SmallButton:pointerover  /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="RenderTransform" Value="scale(1.2)"/>
             <Setter Property="Background" Value="{DynamicResource Background1}"/>
         </Style>
         
+        <Style Selector="Button.SmallButton.visible">
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+        </Style>
+
         <Style Selector="UserControl Button#MainButton">
             <Setter Property="RenderTransform" Value="scale(0)"/>
             <Setter Property="Opacity" Value="1"/>
@@ -51,6 +49,10 @@
             <Setter Property="RenderTransform" Value="scale(1.2)"/>
             <Setter Property="Background" Value="{DynamicResource Background1}"/>
         </Style>
+        
+        <Style Selector="Button#MainButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
+        </Style>
     </UserControl.Styles>
 
     <Grid x:Name="Root" Background="#00000000">
@@ -58,13 +60,13 @@
                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Margin="0,0,10,50"
                     Spacing="5">
-            <Button Classes="SmallButton" x:Name="PlannedToWatchButton">
+            <Button Classes="SmallButton" x:Name="PlannedToWatchButton" CornerRadius="25">
                 <Image Source="{SvgImage /Resources/Icons/calendarAdd_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="WatchingButton">
+            <Button Classes="SmallButton" x:Name="WatchingButton" CornerRadius="25">
                 <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="CompletedButton">
+            <Button Classes="SmallButton" x:Name="CompletedButton" CornerRadius="25">
                 <Image Source="{SvgImage /Resources/Icons/check_icon.svg}" Width="15" Height="15"/>
             </Button>
         </StackPanel>
