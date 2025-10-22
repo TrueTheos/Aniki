@@ -32,6 +32,35 @@ public partial class AnimeListStatusButton : UserControl
         PlannedToWatchButton.Classes.Add("visible");
         WatchingButton.Classes.Add("visible");
         CompletedButton.Classes.Add("visible");
+
+        if (CurrentStatus != null)
+        {
+            switch (CurrentStatus.Value)
+            {
+                case AnimeStatusApi.none:
+                case AnimeStatusApi.dropped:   
+                case AnimeStatusApi.on_hold:
+                    PlannedToWatchButton.IsVisible = true;
+                    WatchingButton.IsVisible = true;
+                    CompletedButton.IsVisible = true;
+                    break;
+                case AnimeStatusApi.completed:
+                    PlannedToWatchButton.IsVisible = true;
+                    WatchingButton.IsVisible = true;
+                    CompletedButton.IsVisible = false;
+                    break;
+                case AnimeStatusApi.plan_to_watch:
+                    PlannedToWatchButton.IsVisible = false;
+                    WatchingButton.IsVisible = true;
+                    CompletedButton.IsVisible = true;
+                    break;
+                case AnimeStatusApi.watching:
+                    PlannedToWatchButton.IsVisible = true;
+                    WatchingButton.IsVisible = false;
+                    CompletedButton.IsVisible = true;
+                    break;
+            }
+        }
     }
 
     private void HideStatusButtons()

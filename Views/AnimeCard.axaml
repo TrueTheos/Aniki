@@ -52,7 +52,8 @@
 
                     <Image x:Name="AnimeImage"
                            Grid.ColumnSpan="2"
-                           Stretch="UniformToFill"/>
+                           Stretch="UniformToFill"
+                           ToolTip.Tip="Double click to show details"/>
 
                     <Border Grid.Column="1"
                             Background="Transparent"

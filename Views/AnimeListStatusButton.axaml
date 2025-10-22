@@ -61,13 +61,13 @@
                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Margin="0,0,10,50"
                     Spacing="5">
-            <Button Classes="SmallButton" x:Name="PlannedToWatchButton" CornerRadius="25">
+            <Button Classes="SmallButton" x:Name="PlannedToWatchButton" CornerRadius="25" ToolTip.Tip="Add to Planned To Watch">
                 <Image Source="{SvgImage /Resources/Icons/calendarAdd_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="WatchingButton" CornerRadius="25">
+            <Button Classes="SmallButton" x:Name="WatchingButton" CornerRadius="25" ToolTip.Tip="Add to Watching">
                 <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="CompletedButton" CornerRadius="25">
+            <Button Classes="SmallButton" x:Name="CompletedButton" CornerRadius="25" ToolTip.Tip="Add to Completed">
                 <Image Source="{SvgImage /Resources/Icons/check_icon.svg}" Width="15" Height="15"/>
             </Button>
         </StackPanel>

@@ -28,9 +28,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public string? ImageUrl => Details?.MainPicture?.Large;
 
     [ObservableProperty]
-    private ObservableCollection<MAL_AnimeData> _animeList;
-
-    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanIncreaseEpisodeCount))]
     [NotifyPropertyChangedFor(nameof(CanDecreaseEpisodeCount))]
     private int _episodesWatched;
@@ -75,7 +72,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedFilter, value))
             {
-                _ = LoadAnimeListAsync(value);
+                //_ = LoadAnimeListAsync(value);
                 _lastStatus = value;
             }
         }
@@ -108,13 +105,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         _watchAnimeViewModel = watchAnimeViewModel;
         _torrentSearchViewModel = torrentSearchViewModel;
 
-        _animeList = new();
         SelectedFilter = AnimeStatusTranslated.All;
-    }
-
-    public override async Task Enter()
-    {
-        await LoadAnimeListAsync(_lastStatus);
     }
 
     public void Update(MAL_AnimeDetails? details)
@@ -141,91 +132,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             Update(details);
 
             IsLoading = false;
-        }
-    }
-
-    public async Task LoadAnimeListAsync(AnimeStatusTranslated filter)
-    {
-        try
-        {
-            IsLoading = true;
-            AnimeList.Clear();
-
-            List<MAL_AnimeData> animeListData = await _malService.GetUserAnimeList(filter.TranslatedToApi());
-
-            foreach (MAL_AnimeData anime in animeListData)
-            {
-                AnimeList.Add(anime);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Information($"Error loading anime list: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    public async Task<List<MAL_SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
-    {
-        List<MAL_SearchEntry> results = await _malService.SearchAnimeOrdered(searchQuery);
-        AnimeList.Clear();
-            
-        if (fillList)
-        {
-            AnimeList.Clear();
-            foreach (MAL_SearchEntry entry in results)
-            {
-                MAL_AnimeData newMalAnimeData = new()
-                {
-                    Node = new()
-                    {
-                        Id = entry.MalAnime.Id,
-                        Title = entry.MalAnime.Title,
-                        Synopsis = entry.MalAnime.Synopsis,
-                        Status = entry.MalAnime.Status,
-                        AlternativeTitles = entry.MalAnime.AlternativeTitles,
-                    },
-                    ListStatus = null
-                };
-                AnimeList.Add(newMalAnimeData);
-            }
-        }
-
-        if (showFirstBest) SelectedAnime = AnimeList[0];
-            
-        return results;
-    }
-        
-    public async Task SearchAnimeById(int malId, bool showDetails = true)
-    {
-        try
-        {
-            MAL_AnimeDetails? details = await _malService.GetAnimeDetails(malId);
-            AnimeList.Clear();
-
-            if (details == null) return;
-                
-            MAL_AnimeData newMalAnimeData = new()
-            {
-                Node = new()
-                {
-                    Id = details.Id,
-                    Title = details.Title,
-                    Synopsis = details.Synopsis,
-                    Status = details.Status,
-                    MainPicture = details.MainPicture,
-                },
-                ListStatus = details.MyListStatus
-            };
-            AnimeList.Add(newMalAnimeData);
-            SelectedAnime = newMalAnimeData;
-        }
-        catch (Exception ex)
-        {
-            Log.Information($"Error searching anime: {ex.Message}");
         }
     }
 
@@ -300,5 +206,33 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details == null) return;
         string url = $"https://myanimelist.net/anime/{Details.Id}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+    
+    public async Task SearchAnimeById(int malId, bool showDetails = true)
+    {
+        try
+        {
+            MAL_AnimeDetails? details = await _malService.GetAnimeDetails(malId);
+
+            if (details == null) return;
+                
+            MAL_AnimeData newMalAnimeData = new()
+            {
+                Node = new()
+                {
+                    Id = details.Id,
+                    Title = details.Title,
+                    Synopsis = details.Synopsis,
+                    Status = details.Status,
+                    MainPicture = details.MainPicture,
+                },
+                ListStatus = details.MyListStatus
+            };
+            SelectedAnime = newMalAnimeData;
+        }
+        catch (Exception ex)
+        {
+            Log.Information($"Error searching anime: {ex.Message}");
+        }
     }
 }

@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
 
@@ -54,7 +55,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     private bool _canGoPrevious;
 
     private List<MAL_SearchEntry> _allSearchResults = new();
-    private const int PageSize = 10;
+    private const int PageSize = 20;
 
     public AnimeBrowseViewModel(IMalService malService)
     {
@@ -113,17 +114,22 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [RelayCommand]
     private async Task PerformSearchAsync()
     {
+        await SearchAnimeByTitle(SearchQuery);
+    }
+
+    public async Task SearchAnimeByTitle(string query)
+    {
         try
         {
             IsLoading = true;
             IsSearchMode = true;
             ShowCategories = false;
 
-            _allSearchResults = await _malService.SearchAnimeOrdered(SearchQuery);
+            _allSearchResults = await _malService.SearchAnimeOrdered(query);
             CurrentPage = 1;
             TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PageSize);
             
-            LoadSearchResultsPage();
+            await LoadSearchResultsPage();
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -135,8 +141,8 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             IsLoading = false;
         }
     }
-
-    private void LoadSearchResultsPage()
+    
+    private async Task LoadSearchResultsPage()
     {
         SearchResults.Clear();
         
@@ -153,7 +159,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                 Status = null // Will be loaded if needed
             };
             
-            _ = LoadAnimeImageAsync(card, result.MalAnime.MainPicture);
+            await LoadAnimeImageAsync(card, result.MalAnime.MainPicture);
             
             SearchResults.Add(card);
         }
@@ -181,7 +187,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         if (CanGoNext)
         {
             CurrentPage++;
-            LoadSearchResultsPage();
+            _ = LoadSearchResultsPage();
         }
     }
 
@@ -191,7 +197,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         if (CanGoPrevious)
         {
             CurrentPage--;
-            LoadSearchResultsPage();
+            _ = LoadSearchResultsPage();
         }
     }
 

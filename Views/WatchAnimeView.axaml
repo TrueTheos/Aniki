@@ -24,7 +24,7 @@
             </StackPanel>
 
             <Grid Grid.Row="1">
-                <ScrollViewer IsVisible="{Binding IsEpisodesViewVisible}">
+                <ScrollViewer IsVisible="{Binding IsEpisodesViewVisible}" VerticalScrollBarVisibility="Visible">
                     <ItemsControl ItemsSource="{Binding AnimeGroups}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="vm:AnimeGroup">
@@ -89,11 +89,13 @@
                                                                 Width="36"
                                                                 Height="36"
                                                                 HorizontalAlignment="Right"
+                                                                Cursor="Hand"
                                                                 VerticalAlignment="Center"
                                                                 Background="#3A3A4A"
                                                                 CornerRadius="6"
                                                                 Command="{Binding #Root.((vm:WatchAnimeViewModel)DataContext).LaunchEpisodeCommand}"
-                                                                CommandParameter="{Binding}">
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip.Tip="Watch!">
                                                                 <Viewbox Width="16" Height="16">
                                                                     <Path Data="M0,0 L0,10 L10,5 Z" Fill="White" />
                                                                 </Viewbox>
@@ -109,8 +111,10 @@
                                                                 VerticalAlignment="Center"
                                                                 Background="#FF4444"
                                                                 CornerRadius="6"
+                                                                Cursor="Hand"
                                                                 Command="{Binding #Root.((vm:WatchAnimeViewModel)DataContext).DeleteEpisodeCommand}"
-                                                                CommandParameter="{Binding}">
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip.Tip="Delete">
                                                                 <Viewbox
                                                                     Width="16"
                                                                     Height="16"

@@ -56,7 +56,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task ShowMainPage()
+    public async Task ShowAnimeBrowsePage()
     {
         CurrentViewModel = AnimeBrowseViewModel;
         await CurrentViewModel.Enter();
@@ -92,7 +92,7 @@ public partial class MainViewModel : ViewModelBase
 
     public void GoToAnime(string title)
     {
-        _ = SearchForAnime(title.Replace('-', ' '), true);
+        _ = SearchForAnime(title.Replace('-', ' '));
     }
 
     public void GoToAnime(int malId)
@@ -134,7 +134,7 @@ public partial class MainViewModel : ViewModelBase
         }
         finally
         {
-            _ = ShowMainPage();
+            _ = ShowAnimeBrowsePage();
             IsLoading = false;
         }
     }
@@ -151,21 +151,15 @@ public partial class MainViewModel : ViewModelBase
         await SearchForAnime(SearchQuery);
     }
 
-    private async Task SearchForAnime(string searchQuery, bool showFirstBest = false)
+    private async Task SearchForAnime(string searchQuery)
     {
-        if (string.IsNullOrWhiteSpace(searchQuery))
-        {
-            await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
-            return;
-        }
-
         IsLoading = true;
 
-        _ = ShowMainPage();
+        _ = ShowAnimeBrowsePage();
 
         try
         {
-            await AnimeDetailsViewModel.SearchAnimeByTitle(searchQuery, true, showFirstBest);
+            await AnimeBrowseViewModel.SearchAnimeByTitle(searchQuery);
         }
         catch (Exception ex)
         {

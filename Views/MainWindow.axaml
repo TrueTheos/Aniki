@@ -156,7 +156,7 @@
 
                     <!--  Search box  -->
                     <Grid
-                        Margin="0,10,0,0">
+                        Margin="0,15,0,0">
                         <Grid HorizontalAlignment="Stretch">
                             <TextBox
                                 Name="SearchBox"
@@ -200,7 +200,7 @@
                         Name="MainPageButton"
                         Margin="0,10,0,0"
                         Classes="MenuButton"
-                        Command="{Binding ShowMainPageCommand}">
+                        Command="{Binding ShowAnimeBrowsePageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Main Page" />
@@ -276,7 +276,8 @@
                 BorderBrush="#5453531a"
                 BorderThickness="2,2,2,2"
                 ClipToBounds="True"
-                CornerRadius="15">
+                CornerRadius="15"
+                Background="{StaticResource Background0}">
                 <Grid x:Name="Root">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

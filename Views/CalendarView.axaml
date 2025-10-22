@@ -6,29 +6,6 @@
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     x:DataType="vm:CalendarViewModel">
     <UserControl.Styles>
-        <!--  Styles  -->
-        <Style Selector="Button.nav-button">
-            <Setter Property="Background" Value="{StaticResource Background0}" />
-            <Setter Property="Foreground" Value="{StaticResource White}" />
-            <Setter Property="BorderBrush" Value="#333333" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="Margin" Value="4,0" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="MinWidth" Value="40" />
-            <Setter Property="Height" Value="32" />
-        </Style>
-
-        <Style Selector="Button.nav-button:pointerover">
-            <Setter Property="Background" Value="{StaticResource Background1}" />
-            <Setter Property="BorderBrush" Value="#555555" />
-        </Style>
-
-        <Style Selector="Button.nav-button:pressed">
-            <Setter Property="Background" Value="#333333" />
-        </Style>
-
         <!--  Today button special styling  -->
         <Style Selector="Button.today-button">
             <Setter Property="Background" Value="{StaticResource Primary}" />
