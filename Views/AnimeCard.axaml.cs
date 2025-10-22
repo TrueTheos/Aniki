@@ -45,14 +45,12 @@ public partial class AnimeCard : UserControl
     }
 
     public event EventHandler<(int AnimeId, AnimeStatusApi Status)>? StatusChangeRequested;
-    public event EventHandler<int>? AnimeClicked;
-
+    
     public AnimeCard()
     {
         InitializeComponent();
         
         PropertyChanged += OnPropertyChanged;
-        PointerPressed += OnCardClicked;
     }
 
     private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -76,8 +74,11 @@ public partial class AnimeCard : UserControl
         StatusChangeRequested?.Invoke(this, (AnimeId, status));
     }
 
-    private void OnCardClicked(object? sender, PointerPressedEventArgs e)
+    private void OnDoubleTapped(object? sender, TappedEventArgs e)
     {
-        AnimeClicked?.Invoke(this, AnimeId);
+        if (DataContext is AnimeCardViewModel viewModel)
+        {
+            viewModel.OnCardClicked();
+        }
     }
 }

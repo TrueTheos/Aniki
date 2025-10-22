@@ -68,7 +68,7 @@
         <ScrollViewer Grid.Row="1" 
                      VerticalScrollBarVisibility="Auto"
                      HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Spacing="40" Margin="20">
+            <StackPanel Spacing="40" Margin="20" >
                 
                 <!-- Loading Indicator -->
                 <TextBlock Text="Loading..."

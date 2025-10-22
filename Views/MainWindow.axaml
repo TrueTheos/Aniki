@@ -335,7 +335,7 @@
                     </Grid>
 
                     <Grid Grid.Row="1" IsVisible="{Binding !IsLoading}">
-                        <UserControl>
+                        <UserControl Background="{StaticResource Background0}">
                             <UserControl.DataTemplates>
                                 <DataTemplate DataType="vm:AnimeDetailsViewModel">
                                     <views:AnimeDetailsView DataContext="{Binding}" />

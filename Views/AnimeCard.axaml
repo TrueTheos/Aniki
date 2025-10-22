@@ -3,10 +3,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:Aniki.Views"
+             xmlns:vm="clr-namespace:Aniki.ViewModels"
              mc:Ignorable="d"
              d:DesignWidth="160"
              d:DesignHeight="260"
-             x:Class="Aniki.Views.AnimeCard">
+             x:Class="Aniki.Views.AnimeCard"
+             x:DataType="vm:AnimeCardViewModel">
 
     <UserControl.Styles>
         <Style Selector="local|AnimeCard local|AnimeListStatusButton">
@@ -34,7 +36,8 @@
     </UserControl.Styles>
 
     <Border Background="Transparent"
-            Cursor="Hand">
+            Cursor="Hand"
+            DoubleTapped="OnDoubleTapped">
         <StackPanel Spacing="8" Width="160">
             <Border x:Name="ImageContainer"
                     CornerRadius="8"

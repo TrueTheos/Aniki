@@ -15,6 +15,7 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="RenderTransform" Value="scale(0)"/>
+            <Setter Property="ClipToBounds" Value="False"/>
             <Setter Property="Opacity" Value="1"/>
             <Setter Property="Transitions">
                 <Transitions>

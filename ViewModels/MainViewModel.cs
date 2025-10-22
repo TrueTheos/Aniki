@@ -63,6 +63,13 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    public async Task ShowAnimeDetailsPage()
+    {
+        CurrentViewModel = AnimeDetailsViewModel;
+        await CurrentViewModel.Enter();
+    }
+
+    [RelayCommand]
     public async Task ShowWatchPage()
     {
         CurrentViewModel = WatchViewModel;
@@ -174,7 +181,7 @@ public partial class MainViewModel : ViewModelBase
     {
         IsLoading = true;
 
-        _ = ShowMainPage();
+        _ = ShowAnimeDetailsPage();
 
         try
         {

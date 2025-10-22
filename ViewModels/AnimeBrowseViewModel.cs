@@ -235,18 +235,3 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 }
-
-public partial class AnimeCardViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private int _animeId;
-    
-    [ObservableProperty]
-    private string? _title;
-    
-    [ObservableProperty]
-    private Bitmap? _image;
-    
-    [ObservableProperty]
-    private AnimeStatusApi? _status;
-}
