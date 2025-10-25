@@ -33,14 +33,13 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty]
     private string _searchQuery = string.Empty;
     
+    public enum AnimeBrowseViewMode {Main, Search}
+    
     [ObservableProperty]
-    private bool _isSearchMode;
+    private AnimeBrowseViewMode _viewMode;
     
     [ObservableProperty]
     private bool _isLoading;
-    
-    [ObservableProperty]
-    private bool _showCategories = true;
     
     [ObservableProperty]
     private int _currentPage = 1;
@@ -122,8 +121,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         try
         {
             IsLoading = true;
-            IsSearchMode = true;
-            ShowCategories = false;
+            ViewMode = AnimeBrowseViewMode.Search;
 
             _allSearchResults = await _malService.SearchAnimeOrdered(query);
             CurrentPage = 1;
@@ -205,12 +203,12 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     private void GoBack()
     {
         SearchQuery = string.Empty;
+        ExitSearchMode();
     }
 
     private void ExitSearchMode()
     {
-        IsSearchMode = false;
-        ShowCategories = true;
+        ViewMode = AnimeBrowseViewMode.Main;
         SearchResults.Clear();
         _allSearchResults.Clear();
     }

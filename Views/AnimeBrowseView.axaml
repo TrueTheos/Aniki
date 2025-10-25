@@ -13,14 +13,12 @@
               ColumnDefinitions="Auto,*,Auto"
               Background="{StaticResource Background0}">
 
-            <StackPanel Orientation="Horizontal">
-                <Grid IsVisible="{Binding !IsLoading}"
-                    Margin="20,10,0,0">
+            <StackPanel Orientation="Horizontal" IsVisible="{Binding !IsLoading}" Margin="20,10,0,0">
+                <Grid>
                     <Grid HorizontalAlignment="Stretch">
                         <TextBox
                             Name="SearchBox"
                             MinWidth="150"
-                            Padding="10,0,30,0"
                             VerticalContentAlignment="Center"
                             Background="#FF3E3E3E"
                             BorderBrush="#FF505050"
@@ -28,7 +26,11 @@
                             CornerRadius="7"
                             Foreground="#FFE0E0E0"
                             Text="{Binding SearchQuery, Mode=TwoWay}"
-                            Watermark="Search" />
+                            Watermark="Search" >
+                            <TextBox.KeyBindings>
+                                <KeyBinding Gesture="Enter" Command="{Binding PerformSearchCommand}" />
+                            </TextBox.KeyBindings>
+                        </TextBox>
 
                         <Button
                             Margin="0,0,8,0"
@@ -55,7 +57,8 @@
                 <Button
                     Classes="nav-button"
                     Command="{Binding GoBackCommand}"
-                    IsVisible="{Binding IsSearchMode}">
+                    IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}"
+                    Cursor="Hand" >
                     <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="16" Height="16"/>
                 </Button>
             </StackPanel>
@@ -79,11 +82,13 @@
                         IsIndeterminate="True" />
                 </Border>
 
-                <!-- Categories View -->
+                <!-- Main View -->
                 <StackPanel Spacing="40">
                     <StackPanel.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="ShowCategories"/>
+                            <Binding Path="ViewMode" 
+                                     Converter="{StaticResource EnumMatchConverter}" 
+                                     ConverterParameter="Main"/>
                             <Binding Path="!IsLoading"/>
                         </MultiBinding>
                     </StackPanel.IsVisible>
@@ -171,7 +176,9 @@
                 <StackPanel Spacing="20">
                     <StackPanel.IsVisible>
                         <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="IsSearchMode"/>
+                            <Binding Path="ViewMode" 
+                                     Converter="{StaticResource EnumMatchConverter}" 
+                                     ConverterParameter="Search"/>
                             <Binding Path="!IsLoading"/>
                         </MultiBinding>
                     </StackPanel.IsVisible>

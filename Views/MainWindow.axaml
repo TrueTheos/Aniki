@@ -169,7 +169,11 @@
                                 CornerRadius="7"
                                 Foreground="#FFE0E0E0"
                                 Text="{Binding SearchQuery, Mode=TwoWay}"
-                                Watermark="Search" />
+                                Watermark="Search">
+                                <TextBox.KeyBindings>
+                                    <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                                </TextBox.KeyBindings>
+                            </TextBox>
 
                             <Button
                                 Margin="0,0,8,0"
