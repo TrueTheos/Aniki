@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Aniki.ViewModels"
              xmlns:local="clr-namespace:Aniki.Views"
+             xmlns:models="clr-namespace:Aniki.Models"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="Aniki.Views.AnimeBrowseView"
              x:DataType="vm:AnimeBrowseViewModel">
@@ -93,70 +94,46 @@
                         </MultiBinding>
                     </StackPanel.IsVisible>
                     <!-- Popular This Season -->
-                    <StackPanel Spacing="16">
-                        <TextBlock Text="Popular This Season"
-                                  FontSize="24"
-                                  FontWeight="Bold"/>
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                     VerticalScrollBarVisibility="Disabled">
-                            <ItemsControl ItemsSource="{Binding PopularThisSeason}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="16"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <local:AnimeCard Margin="10"/>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding PopularThisSeason}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="16"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:AnimeCardData">
+                                <local:AnimeCard Margin="10"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                    <!-- Popular Upcoming -->
-                    <StackPanel Spacing="16">
-                        <TextBlock Text="Popular Upcoming"
-                                  FontSize="24"
-                                  FontWeight="Bold"/>
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                     VerticalScrollBarVisibility="Disabled">
-                            <ItemsControl ItemsSource="{Binding PopularUpcoming}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="16"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <local:AnimeCard Margin="10"/>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </StackPanel>
+                    <!-- For Popular Upcoming -->
+                    <ItemsControl ItemsSource="{Binding PopularUpcoming}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="16"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:AnimeCardData">
+                                <local:AnimeCard Margin="10"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                    <!-- Trending All Time -->
-                    <StackPanel Spacing="16">
-                        <TextBlock Text="Trending All Time"
-                                  FontSize="24"
-                                  FontWeight="Bold"/>
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                     VerticalScrollBarVisibility="Disabled">
-                            <ItemsControl ItemsSource="{Binding TrendingAllTime}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="16"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <local:AnimeCard Margin="10"/>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </StackPanel>
+                    <!-- For Trending All Time -->
+                    <ItemsControl ItemsSource="{Binding TrendingAllTime}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="16"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:AnimeCardData">
+                                <local:AnimeCard Margin="10"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
                 </StackPanel>
 

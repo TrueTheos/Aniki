@@ -4,11 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:Aniki.Views"
              xmlns:vm="clr-namespace:Aniki.ViewModels"
+             xmlns:models="clr-namespace:Aniki.Models"
              mc:Ignorable="d"
              d:DesignWidth="160"
              d:DesignHeight="260"
              x:Class="Aniki.Views.AnimeCard"
-             x:DataType="vm:AnimeCardViewModel">
+             x:DataType="models:AnimeCardData">
 
     <UserControl.Styles>
         <Style Selector="local|AnimeCard local|AnimeListStatusButton">
@@ -53,6 +54,7 @@
                     <Image x:Name="AnimeImage"
                            Grid.ColumnSpan="2"
                            Stretch="UniformToFill"
+                           Source="{Binding Image}"
                            ToolTip.Tip="Double click to show details"/>
 
                     <Border Grid.Column="1"
@@ -74,6 +76,7 @@
                        FontSize="13"
                        FontWeight="Medium"
                        TextAlignment="Center"
+                       Text="{Binding Title}"
                        ToolTip.Tip="{Binding #AnimeTitle.Text}"/>
         </StackPanel>
     </Border>

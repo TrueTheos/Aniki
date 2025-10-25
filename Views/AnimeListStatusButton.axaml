@@ -64,19 +64,23 @@
                     Margin="0,0,10,50"
                     Spacing="5">
             <Button Classes="SmallButton" x:Name="PlannedToWatchButton" CornerRadius="25" ToolTip.Tip="Add to Planned To Watch"
-                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).AddToPlannedCommand}">
+                    Click="OnStatusButtonClick"
+                    Tag="plan_to_watch">
                 <Image Source="{SvgImage /Resources/Icons/calendarAdd_icon.svg}" Width="15" Height="15"/>
             </Button>
             <Button Classes="SmallButton" x:Name="WatchingButton" CornerRadius="25" ToolTip.Tip="Add to Watching"
-                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).AddToWatchingCommand}">
+                    Click="OnStatusButtonClick"
+                    Tag="watching">
                 <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="15" Height="15"/>
             </Button>
             <Button Classes="SmallButton" x:Name="CompletedButton" CornerRadius="25" ToolTip.Tip="Add to Completed"
-                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).AddToWatchingCommand}">
+                    Click="OnStatusButtonClick"
+                    Tag="completed">
                 <Image Source="{SvgImage /Resources/Icons/check_icon.svg}" Width="15" Height="15"/>
             </Button>
             <Button Classes="SmallButton" x:Name="RemoveButton" CornerRadius="25" ToolTip.Tip="Remove from the list"
-                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).RemoveFromListCommand}">
+                    Click="OnStatusButtonClick"
+                    Tag="none">
                 <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}" Width="15" Height="15"/>
             </Button>
         </StackPanel>
