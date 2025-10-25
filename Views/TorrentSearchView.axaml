@@ -110,7 +110,7 @@
                                     Spacing="8">
                                     <Button
                                         Classes="Purple"
-                                        Command="{Binding $parent[UserControl].DataContext.DownloadTorrentCommand}"
+                                        Command="{Binding $parent[UserControl].((vm:TorrentSearchViewModel)DataContext).DownloadTorrentCommand}"
                                         CommandParameter="{Binding TorrentLink}"
                                         Content="Download" />
                                 </StackPanel>

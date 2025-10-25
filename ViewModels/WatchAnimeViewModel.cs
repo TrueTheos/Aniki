@@ -298,7 +298,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
     private void MarkEpisodeCompleted(Episode ep)
     {
         int episodeToMark = ep.EpisodeNumber;
-        _ = _malService.UpdateAnimeStatus(ep.Id, MalService.AnimeStatusField.EPISODES_WATCHED, episodeToMark.ToString());
+        _ = _malService.UpdateEpisodesWatched(ep.Id,  episodeToMark);
     }
 }
 

@@ -413,32 +413,34 @@ public class MalService : IMalService
         }
     }
 
-    public async Task UpdateAnimeStatus(int animeId, AnimeStatusField field, string value)
-    {
-        var formData = new Dictionary<string, string>();
-        
-        switch (field)
-        {
-            case AnimeStatusField.STATUS:
-                formData["status"] = value;
-                break;
-            case AnimeStatusField.SCORE:
-                formData["score"] = value;
-                break;
-            case AnimeStatusField.EPISODES_WATCHED:
-                formData["num_watched_episodes"] = value;
-                break;
-        }
+    public Task UpdateAnimeStatus(int animeId, AnimeStatusApi status) 
+        => UpdateAnimeField(animeId, "status", status.ToString(), 
+            cached => cached.Status = status);
 
+    public Task UpdateAnimeScore(int animeId, int score) 
+        => UpdateAnimeField(animeId, "score", score.ToString(), 
+            cached => cached.Score = score);
+
+    public Task UpdateEpisodesWatched(int animeId, int episodes) 
+        => UpdateAnimeField(animeId, "num_watched_episodes", episodes.ToString(), 
+            cached => cached.NumEpisodesWatched = episodes);
+
+    private async Task UpdateAnimeField(int animeId, string fieldName, string value, Action<MAL_MyListStatus> updateCache)
+    {
+        var formData = new Dictionary<string, string> { [fieldName] = value };
         var content = new FormUrlEncodedContent(formData);
         var response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new($"Failed to update anime status: {response.StatusCode}");
+            throw new($"Failed to update anime: {response.StatusCode}");
         }
 
-        UpdateCache(animeId, field, value);
+        if (_detailsCache.TryGetValue(animeId, out var cached))
+        {
+            cached.MyListStatus ??= new MAL_MyListStatus();
+            updateCache(cached.MyListStatus);
+        }
         _userAnimeList = null;
     }
 

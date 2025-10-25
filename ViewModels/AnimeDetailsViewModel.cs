@@ -46,7 +46,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedScore, value))
             {
-                _ = UpdateAnimeScore(value.ToString());
+                _ = UpdateAnimeScore(value);
             }
         }
     }
@@ -162,7 +162,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.STATUS, "watching");
+        await _malService.UpdateAnimeStatus(Details.Id, AnimeStatusApi.plan_to_watch);
             
         await LoadAnimeDetailsAsync(SelectedAnime);
     }
@@ -180,23 +180,22 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             newCount = Details.NumEpisodes;
         }
 
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
+        await _malService.UpdateEpisodesWatched(Details.Id, newCount);
         EpisodesWatched = newCount;
     }
 
-    private async Task UpdateAnimeScore(string score)
+    private async Task UpdateAnimeScore(int score)
     {
         if (Details?.MyListStatus == null) return;
-        if (score == null) return;
 
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.SCORE, score);
-        Details.MyListStatus.Score = int.Parse(score);
+        await _malService.UpdateAnimeScore(Details.Id, score);
+        Details.MyListStatus.Score = score;
     }
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
         if(Details == null) return;
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
+        await _malService.UpdateAnimeStatus(Details.Id, status.TranslatedToApi());
         if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
     }
     

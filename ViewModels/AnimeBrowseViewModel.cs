@@ -1,241 +1,204 @@
-using Aniki.Misc;
-using Aniki.Models;
-using Aniki.Services.Interfaces;
-using Avalonia.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+    using Aniki.Services.Interfaces;
+    using System.Collections.ObjectModel;
 
-namespace Aniki.ViewModels;
+    namespace Aniki.ViewModels;
 
-public partial class AnimeBrowseViewModel : ViewModelBase
-{
-    private readonly IMalService _malService;
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardViewModel> _popularThisSeason = new();
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardViewModel> _popularUpcoming = new();
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardViewModel> _trendingAllTime = new();
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardViewModel> _searchResults = new();
-    
-    [ObservableProperty]
-    private string _searchQuery = string.Empty;
-    
-    public enum AnimeBrowseViewMode {Main, Search}
-    
-    [ObservableProperty]
-    private AnimeBrowseViewMode _viewMode;
-    
-    [ObservableProperty]
-    private bool _isLoading;
-    
-    [ObservableProperty]
-    private int _currentPage = 1;
-    
-    [ObservableProperty]
-    private int _totalPages = 1;
-    
-    [ObservableProperty]
-    private bool _canGoNext;
-    
-    [ObservableProperty]
-    private bool _canGoPrevious;
-
-    private List<MAL_SearchEntry> _allSearchResults = new();
-    private const int PageSize = 20;
-
-    public AnimeBrowseViewModel(IMalService malService)
+    public partial class AnimeBrowseViewModel : ViewModelBase
     {
-        _malService = malService;
-    }
+        private readonly IMalService _malService;
+        
+        [ObservableProperty]
+        private ObservableCollection<AnimeCardData> _popularThisSeason = new();
+        
+        [ObservableProperty]
+        private ObservableCollection<AnimeCardData> _popularUpcoming = new();
+        
+        [ObservableProperty]
+        private ObservableCollection<AnimeCardData> _trendingAllTime = new();
+        
+        [ObservableProperty]
+        private ObservableCollection<AnimeCardData> _searchResults = new();
+        
+        [ObservableProperty]
+        private string _searchQuery = string.Empty;
+        
+        public enum AnimeBrowseViewMode {Main, Search}
+        
+        [ObservableProperty]
+        private AnimeBrowseViewMode _viewMode;
+        
+        [ObservableProperty]
+        private bool _isLoading;
+        
+        [ObservableProperty]
+        private int _currentPage = 1;
+        
+        [ObservableProperty]
+        private int _totalPages = 1;
+        
+        [ObservableProperty]
+        private bool _canGoNext;
+        
+        [ObservableProperty]
+        private bool _canGoPrevious;
 
-    public async Task InitializeAsync()
-    {
-        await LoadCategoriesAsync();
-    }
+        private List<MAL_SearchEntry> _allSearchResults = new();
+        private const int PageSize = 20;
 
-    private async Task LoadCategoriesAsync()
-    {
-        IsLoading = true;
-        try
+        public AnimeBrowseViewModel(IMalService malService)
         {
-            var airing = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.AIRING);
-            await LoadAnimeCards(airing, PopularThisSeason);
+            _malService = malService;
+        }
 
-            var upcoming = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.UPCOMING);
-            await LoadAnimeCards(upcoming, PopularUpcoming);
-            
-            var allTime = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.BYPOPULARITY);
-            await LoadAnimeCards(allTime, TrendingAllTime);
-        }
-        catch (Exception ex)
+        public async Task InitializeAsync()
         {
-            Log.Information($"Error loading categories: {ex.Message}");
+            await LoadCategoriesAsync();
         }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
 
-    private async Task LoadAnimeCards(List<MAL_RankingEntry> animeList, ObservableCollection<AnimeCardViewModel> collection)
-    {
-        collection.Clear();
-        foreach (var anime in animeList)
-        {
-            var details = await _malService.GetAnimeDetails(anime.Node.Id);
-            if (details != null)
-            {
-                var card = new AnimeCardViewModel
-                {
-                    AnimeId = details.Id,
-                    Title = details.Title,
-                    Status = details.MyListStatus?.Status
-                };
-                _ = LoadAnimeImageAsync(card, details.MainPicture);
-                collection.Add(card);
-            }
-        }
-    }
-    
-    [RelayCommand]
-    private async Task PerformSearchAsync()
-    {
-        await SearchAnimeByTitle(SearchQuery);
-    }
-
-    public async Task SearchAnimeByTitle(string query)
-    {
-        try
+        private async Task LoadCategoriesAsync()
         {
             IsLoading = true;
-            ViewMode = AnimeBrowseViewMode.Search;
-
-            _allSearchResults = await _malService.SearchAnimeOrdered(query);
-            CurrentPage = 1;
-            TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PageSize);
-            
-            await LoadSearchResultsPage();
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            Log.Information($"Error searching: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-    
-    private async Task LoadSearchResultsPage()
-    {
-        SearchResults.Clear();
-        
-        var pageResults = _allSearchResults
-            .Skip((CurrentPage - 1) * PageSize)
-            .Take(PageSize);
-
-        foreach (var result in pageResults)
-        {
-            var card = new AnimeCardViewModel
+            try
             {
-                AnimeId = result.MalAnime.Id,
-                Title = result.MalAnime.Title,
-                Status = null // Will be loaded if needed
-            };
+                var airing = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.AIRING);
+                await LoadAnimeCards(airing, PopularThisSeason);
+
+                var upcoming = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.UPCOMING);
+                await LoadAnimeCards(upcoming, PopularUpcoming);
+                
+                var allTime = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.BYPOPULARITY);
+                await LoadAnimeCards(allTime, TrendingAllTime);
+            }
+            catch (Exception ex)
+            {
+                Log.Information($"Error loading categories: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task LoadAnimeCards(List<MAL_RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
+        {
+            collection.Clear();
+            foreach (var anime in animeList)
+            {
+                var details = await _malService.GetAnimeDetails(anime.Node.Id);
+                if (details != null)
+                {
+                    var card = new AnimeCardData
+                    {
+                        AnimeId = details.Id,
+                        Title = details.Title,
+                        Status = details.MyListStatus?.Status
+                    };
+                    _ = LoadAnimeImageAsync(card, details.MainPicture);
+                    collection.Add(card);
+                }
+            }
+        }
+        
+        [RelayCommand]
+        private async Task PerformSearchAsync()
+        {
+            await SearchAnimeByTitle(SearchQuery);
+        }
+
+        public async Task SearchAnimeByTitle(string query)
+        {
+            try
+            {
+                IsLoading = true;
+                ViewMode = AnimeBrowseViewMode.Search;
+
+                _allSearchResults = await _malService.SearchAnimeOrdered(query);
+                CurrentPage = 1;
+                TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PageSize);
+                
+                await LoadSearchResultsPage();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                Log.Information($"Error searching: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        
+        private async Task LoadSearchResultsPage()
+        {
+            SearchResults.Clear();
             
-            await LoadAnimeImageAsync(card, result.MalAnime.MainPicture);
-            
-            SearchResults.Add(card);
+            var pageResults = _allSearchResults
+                .Skip((CurrentPage - 1) * PageSize)
+                .Take(PageSize);
+
+            foreach (var result in pageResults)
+            {
+                var card = new AnimeCardData
+                {
+                    AnimeId = result.MalAnime.Id,
+                    Title = result.MalAnime.Title,
+                    Status = null
+                };
+                
+                await LoadAnimeImageAsync(card, result.MalAnime.MainPicture);
+                
+                SearchResults.Add(card);
+            }
+
+            UpdatePaginationState();
         }
 
-        UpdatePaginationState();
-    }
-
-    private async Task LoadAnimeImageAsync(AnimeCardViewModel card, MAL_MainPicture? picture)
-    {
-        if (picture != null)
+        private async Task LoadAnimeImageAsync(AnimeCardData card, MAL_MainPicture? picture)
         {
-            card.Image = await _malService.GetAnimeImage(picture);
+            if (picture != null)
+            {
+                card.Image = await _malService.GetAnimeImage(picture);
+            }
         }
-    }
 
-    private void UpdatePaginationState()
-    {
-        CanGoPrevious = CurrentPage > 1;
-        CanGoNext = CurrentPage < TotalPages;
-    }
-
-    [RelayCommand]
-    private void NextPage()
-    {
-        if (CanGoNext)
+        private void UpdatePaginationState()
         {
-            CurrentPage++;
-            _ = LoadSearchResultsPage();
+            CanGoPrevious = CurrentPage > 1;
+            CanGoNext = CurrentPage < TotalPages;
         }
-    }
 
-    [RelayCommand]
-    private void PreviousPage()
-    {
-        if (CanGoPrevious)
+        [RelayCommand]
+        private void NextPage()
         {
-            CurrentPage--;
-            _ = LoadSearchResultsPage();
+            if (CanGoNext)
+            {
+                CurrentPage++;
+                _ = LoadSearchResultsPage();
+            }
         }
-    }
 
-    [RelayCommand]
-    private void GoBack()
-    {
-        SearchQuery = string.Empty;
-        ExitSearchMode();
-    }
-
-    private void ExitSearchMode()
-    {
-        ViewMode = AnimeBrowseViewMode.Main;
-        SearchResults.Clear();
-        _allSearchResults.Clear();
-    }
-
-    public async Task UpdateAnimeStatusAsync(int animeId, AnimeStatusApi newStatus)
-    {
-        try
+        [RelayCommand]
+        private void PreviousPage()
         {
-            await _malService.UpdateAnimeStatus(animeId, MalService.AnimeStatusField.STATUS, StatusEnum.ApiToString(newStatus));
-            
-            UpdateCardStatus(PopularThisSeason, animeId, newStatus);
-            UpdateCardStatus(PopularUpcoming, animeId, newStatus);
-            UpdateCardStatus(TrendingAllTime, animeId, newStatus);
-            UpdateCardStatus(SearchResults, animeId, newStatus);
+            if (CanGoPrevious)
+            {
+                CurrentPage--;
+                _ = LoadSearchResultsPage();
+            }
         }
-        catch (Exception ex)
-        {
-            Log.Information($"Error updating anime status: {ex.Message}");
-        }
-    }
 
-    private void UpdateCardStatus(ObservableCollection<AnimeCardViewModel> collection, int animeId, AnimeStatusApi status)
-    {
-        var card = collection.FirstOrDefault(c => c.AnimeId == animeId);
-        if (card != null)
+        [RelayCommand]
+        private void GoBack()
         {
-            card.Status = status;
+            SearchQuery = string.Empty;
+            ExitSearchMode();
+        }
+
+        private void ExitSearchMode()
+        {
+            ViewMode = AnimeBrowseViewMode.Main;
+            SearchResults.Clear();
+            _allSearchResults.Clear();
         }
     }
-}

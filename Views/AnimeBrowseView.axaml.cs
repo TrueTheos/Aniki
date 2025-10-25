@@ -19,12 +19,4 @@ public partial class AnimeBrowseView : UserControl
             await vm.InitializeAsync();
         }
     }
-
-    private async void AnimeCard_StatusChangeRequested(object? sender, (int AnimeId, AnimeStatusApi Status) e)
-    {
-        if (DataContext is AnimeBrowseViewModel vm)
-        {
-            await vm.UpdateAnimeStatusAsync(e.AnimeId, e.Status);
-        }
-    }
 }

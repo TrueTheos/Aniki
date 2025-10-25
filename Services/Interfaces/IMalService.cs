@@ -13,7 +13,9 @@ public interface IMalService
     public Task<Bitmap?> GetUserPicture();
     public Task<Bitmap?> GetAnimeImage(MAL_MainPicture? animePictureData);
     public Task<List<MAL_SearchEntry>> SearchAnimeOrdered(string query);
-    public Task UpdateAnimeStatus(int animeId, MalService.AnimeStatusField field, string value);
+    public Task UpdateAnimeStatus(int animeId, AnimeStatusApi status);
+    public Task UpdateAnimeScore(int animeId, int score);
+    public Task UpdateEpisodesWatched(int animeId, int episodes);
     public Task RemoveFromList(int animeId);
     public Task<List<MAL_RankingEntry>> GetTopAnimeInCategory(MalService.AnimeRankingCategory category, int limit = 10);
 }

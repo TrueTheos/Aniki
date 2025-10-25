@@ -2,6 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Aniki.ViewModels"
+             xmlns:local="clr-namespace:Aniki.Views"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
              x:Class="Aniki.Views.AnimeListStatusButton">
     
@@ -61,14 +63,21 @@
                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Margin="0,0,10,50"
                     Spacing="5">
-            <Button Classes="SmallButton" x:Name="PlannedToWatchButton" CornerRadius="25" ToolTip.Tip="Add to Planned To Watch">
+            <Button Classes="SmallButton" x:Name="PlannedToWatchButton" CornerRadius="25" ToolTip.Tip="Add to Planned To Watch"
+                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).AddToPlannedCommand}">
                 <Image Source="{SvgImage /Resources/Icons/calendarAdd_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="WatchingButton" CornerRadius="25" ToolTip.Tip="Add to Watching">
+            <Button Classes="SmallButton" x:Name="WatchingButton" CornerRadius="25" ToolTip.Tip="Add to Watching"
+                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).AddToWatchingCommand}">
                 <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="15" Height="15"/>
             </Button>
-            <Button Classes="SmallButton" x:Name="CompletedButton" CornerRadius="25" ToolTip.Tip="Add to Completed">
+            <Button Classes="SmallButton" x:Name="CompletedButton" CornerRadius="25" ToolTip.Tip="Add to Completed"
+                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).AddToWatchingCommand}">
                 <Image Source="{SvgImage /Resources/Icons/check_icon.svg}" Width="15" Height="15"/>
+            </Button>
+            <Button Classes="SmallButton" x:Name="RemoveButton" CornerRadius="25" ToolTip.Tip="Remove from the list"
+                    Command="{Binding $parent[local:AnimeCard].((vm:AnimeCardViewModel)DataContext).RemoveFromListCommand}">
+                <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}" Width="15" Height="15"/>
             </Button>
         </StackPanel>
 

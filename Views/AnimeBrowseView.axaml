@@ -107,11 +107,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <local:AnimeCard Image="{Binding Image}"
-                                                       Title="{Binding Title}"
-                                                       Status="{Binding Status}"
-                                                       AnimeId="{Binding AnimeId}"
-                                                       StatusChangeRequested="AnimeCard_StatusChangeRequested"/>
+                                        <local:AnimeCard Margin="10"/>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -133,11 +129,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <local:AnimeCard Image="{Binding Image}"
-                                                       Title="{Binding Title}"
-                                                       Status="{Binding Status}"
-                                                       AnimeId="{Binding AnimeId}"
-                                                       StatusChangeRequested="AnimeCard_StatusChangeRequested"/>
+                                        <local:AnimeCard Margin="10"/>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -159,11 +151,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <local:AnimeCard Image="{Binding Image}"
-                                                       Title="{Binding Title}"
-                                                       Status="{Binding Status}"
-                                                       AnimeId="{Binding AnimeId}"
-                                                       StatusChangeRequested="AnimeCard_StatusChangeRequested"/>
+                                        <local:AnimeCard Margin="10"/>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -220,12 +208,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <local:AnimeCard Image="{Binding Image}"
-                                               Title="{Binding Title}"
-                                               Status="{Binding Status}"
-                                               AnimeId="{Binding AnimeId}"
-                                               StatusChangeRequested="AnimeCard_StatusChangeRequested"
-                                               Margin="10"/>
+                                <local:AnimeCard Margin="10"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

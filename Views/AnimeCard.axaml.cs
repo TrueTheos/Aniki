@@ -1,79 +1,51 @@
-﻿using Avalonia;
+﻿using System.ComponentModel;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Aniki.Misc;
+using Avalonia.Interactivity;
 
 namespace Aniki.Views;
 
 public partial class AnimeCard : UserControl
 {
-    public static readonly StyledProperty<Bitmap?> ImageProperty =
-        AvaloniaProperty.Register<AnimeCard, Bitmap?>(nameof(Image));
+    private AnimeCardViewModel? _viewModel;
 
-    public static readonly StyledProperty<string?> TitleProperty =
-        AvaloniaProperty.Register<AnimeCard, string?>(nameof(Title));
-
-    public static readonly StyledProperty<AnimeStatusApi?> StatusProperty =
-        AvaloniaProperty.Register<AnimeCard, AnimeStatusApi?>(nameof(Status));
-
-    public static readonly StyledProperty<int> AnimeIdProperty =
-        AvaloniaProperty.Register<AnimeCard, int>(nameof(AnimeId));
-
-    public Bitmap? Image
-    {
-        get => GetValue(ImageProperty);
-        set => SetValue(ImageProperty, value);
-    }
-
-    public string? Title
-    {
-        get => GetValue(TitleProperty);
-        set => SetValue(TitleProperty, value);
-    }
-
-    public AnimeStatusApi? Status
-    {
-        get => GetValue(StatusProperty);
-        set => SetValue(StatusProperty, value);
-    }
-
-    public int AnimeId
-    {
-        get => GetValue(AnimeIdProperty);
-        set => SetValue(AnimeIdProperty, value);
-    }
-
-    public event EventHandler<(int AnimeId, AnimeStatusApi Status)>? StatusChangeRequested;
-    
     public AnimeCard()
     {
         InitializeComponent();
-        
-        PropertyChanged += OnPropertyChanged;
+        Loaded += OnLoaded;
     }
 
-    private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        if (e.Property == ImageProperty)
+        if (DataContext is AnimeCardData data)
         {
-            AnimeImage.Source = Image;
-        }
-        else if (e.Property == TitleProperty)
-        {
-            AnimeTitle.Text = Title;
-        }
-        else if (e.Property == StatusProperty)
-        {
-            StatusButton.CurrentStatus = Status;
+            _viewModel = new AnimeCardViewModel
+            {
+                AnimeId = data.AnimeId,
+                Title = data.Title,
+                Image = data.Image,
+                Status = data.Status
+            };
+            
+            data.PropertyChanged += OnDataPropertyChanged;
+            
+            StatusButton.DataContext = _viewModel;
         }
     }
 
-    private void OnStatusSelected(object? sender, AnimeStatusApi status)
+    private void OnDataPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        StatusChangeRequested?.Invoke(this, (AnimeId, status));
+        if (_viewModel != null && sender is AnimeCardData data)
+        {
+            if (e.PropertyName == nameof(AnimeCardData.Status))
+                _viewModel.Status = data.Status;
+        }
     }
 
+    
     private void OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (DataContext is AnimeCardViewModel viewModel)
