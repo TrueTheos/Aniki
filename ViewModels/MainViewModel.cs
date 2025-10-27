@@ -17,9 +17,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoading;
 
-    [ObservableProperty]
-    private string _searchQuery = string.Empty;
-
     public event EventHandler? LogoutRequested;
     public event EventHandler? SettingsRequested;
 
@@ -144,12 +141,6 @@ public partial class MainViewModel : ViewModelBase
     private void Logout()
     {
         LogoutRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    [RelayCommand]
-    public async Task Search()
-    {
-        await SearchForAnime(SearchQuery);
     }
 
     private async Task SearchForAnime(string searchQuery)

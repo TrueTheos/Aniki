@@ -59,6 +59,14 @@
     <None Remove="Resources\nothingtoseehere_transparent_small.png" />
     <AvaloniaResource Include="Resources\nothingtoseehere_transparent_small.png" />
     <AvaloniaResource Include="Resources\Icons\add_icon.svg" />
+    <None Remove="Resources\Icons\logout_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\logout_icon.svg" />
+    <None Remove="Resources\Icons\book_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\book_icon.svg" />
+    <None Remove="Resources\Icons\info_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\info_icon.svg" />
+    <None Remove="Resources\Icons\person_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\person_icon.svg" />
   </ItemGroup>
 
   <ItemGroup>

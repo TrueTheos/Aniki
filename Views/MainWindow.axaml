@@ -23,7 +23,7 @@
         <!--  Base Styles  -->
         <Style Selector="Button.MenuButton">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Padding" Value="30,5" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="CornerRadius" Value="5" />
@@ -80,43 +80,18 @@
         <Style Selector="Panel.detailPanel TextBlock.value">
             <Setter Property="Foreground" Value="White" />
         </Style>
-        <Style Selector="Button.SearchButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-        <Style Selector="Button.SearchButton:pointerover">
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-        <Style Selector="Button.SearchButton:pressed">
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-        <Style Selector="Button.SearchButton:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-        <Style Selector="Button.SearchButton:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
     </Window.Styles>
 
     <Panel>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="160" MinWidth="160" MaxWidth="300" />
-                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!-- Left Bar -->
             <Grid Grid.Column="0" Margin="10,35,5,10">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
                 <StackPanel
-                    Grid.Row="0"
                     VerticalAlignment="Top"
                     Orientation="Vertical"
                     Spacing="5">
@@ -130,52 +105,7 @@
                         Foreground="{StaticResource White}"
                         Text="Aniki" />
 
-                    <!--  Search box  -->
-                    <Grid
-                        Margin="0,15,0,0">
-                        <Grid HorizontalAlignment="Stretch">
-                            <TextBox
-                                Name="SearchBox"
-                                MinWidth="150"
-                                Padding="10,0,30,0"
-                                VerticalContentAlignment="Center"
-                                Background="#FF3E3E3E"
-                                BorderBrush="#FF505050"
-                                BorderThickness="1"
-                                CornerRadius="7"
-                                Foreground="#FFE0E0E0"
-                                Text="{Binding SearchQuery, Mode=TwoWay}"
-                                Watermark="Search">
-                                <TextBox.KeyBindings>
-                                    <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
-                                </TextBox.KeyBindings>
-                            </TextBox>
-
-                            <Button
-                                Margin="0,0,8,0"
-                                Padding="0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Classes="SearchButton"
-                                Command="{Binding SearchCommand}"
-                                Cursor="Hand">
-                                <Image Source="{SvgImage /Resources/Icons/search_icon.svg}" x:Name="SearchIcon" Width="16" Height="16"/>
-                                <Button.Styles>
-                                    <Style Selector="Button:pointerover PathIcon">
-                                        <Setter Property="Foreground" Value="#FFD0D0D0" />
-                                    </Style>
-                                    <Style Selector="Button:pressed PathIcon">
-                                        <Setter Property="Foreground" Value="White" />
-                                    </Style>
-                                </Button.Styles>
-                            </Button>
-                        </Grid>
-                    </Grid>
-
                     <!--  Navigation buttons  -->
-
                     <Button
                         Name="MainPageButton"
                         Margin="0,10,0,0"
@@ -183,7 +113,7 @@
                         Command="{Binding ShowAnimeBrowsePageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Main Page" />
+                            <TextBlock VerticalAlignment="Center" Text="Main Page" Foreground="Gray" />
                         </StackPanel>
                     </Button>
                     <Button
@@ -192,7 +122,7 @@
                         Command="{Binding ShowWatchPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Watch" />
+                            <TextBlock VerticalAlignment="Center" Text="Watch" Foreground="Gray"/>
                         </StackPanel>
                     </Button>
                     <Button
@@ -201,7 +131,7 @@
                         Command="{Binding ShowCalendarPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Calendar" />
+                            <TextBlock VerticalAlignment="Center" Text="Calendar" Foreground="Gray" />
                         </StackPanel>
                     </Button>
                     <Button
@@ -209,49 +139,53 @@
                         Classes="MenuButton"
                         Command="{Binding ShowStatsPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/stats_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Stats" />
+                            <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="20" Height="20"/>
+                            <TextBlock VerticalAlignment="Center" Text="Profile" Foreground="Gray" />
                         </StackPanel>
                     </Button>
-                    <StackPanel Margin="0,10,0,0" IsVisible="{Binding TodayAnime.Count}">
-                        <TextBlock Text="Airing Today" FontWeight="Bold" FontSize="16" Foreground="White" Margin="0,0,0,5"/>
-                        <ListBox ItemsSource="{Binding TodayAnime}" Background="Transparent" BorderThickness="0" SelectionChanged="TodayAnime_OnSelectionChanged">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock VerticalAlignment="Center" Text="•"/>
-                                        <TextBlock VerticalAlignment="Center" Text="{Binding Title}" Foreground="White" FontSize="15" Padding="10,0,0,0"
-                                                   TextWrapping="Wrap"
-                                                   ToolTip.Tip="{Binding Title}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
-                </StackPanel>
-
-                <StackPanel
-                    Grid.Row="1"
-                    VerticalAlignment="Bottom"
-                    Orientation="Vertical"
-                    Spacing="5">
+                    <Button
+                        Name="YourLibraryButton"
+                        Classes="MenuButton"
+                        Command="{Binding OpenSettingsCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Image Source="{SvgImage /Resources/Icons/book_icon.svg}" Width="20" Height="20" />
+                            <TextBlock VerticalAlignment="Center" Text="Your Library" Foreground="Gray" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Name="AnimeDetailsButton"
+                        Classes="MenuButton"
+                        Command="{Binding OpenSettingsCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="20" Height="20" />
+                            <TextBlock VerticalAlignment="Center" Text="Anime Details" Foreground="Gray" />
+                        </StackPanel>
+                    </Button>
                     <Button
                         Name="SettingsPageButton"
                         Classes="MenuButton"
                         Command="{Binding OpenSettingsCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/settings_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Settings" />
+                            <TextBlock VerticalAlignment="Center" Text="Settings" Foreground="Gray" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Name="LogOutButton"
+                        Classes="MenuButton"
+                        Command="{Binding OpenSettingsCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Image Source="{SvgImage /Resources/Icons/logout_icon.svg}" Width="20" Height="20" />
+                            <TextBlock VerticalAlignment="Center" Text="Log Out" Foreground="Gray" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
             </Grid>
 
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent"/>
 
             <!--  Content  -->
             <Border
-                Grid.Column="2"
+                Grid.Column="1"
                 Margin="0,0,0,0"
                 BorderBrush="{StaticResource Border}"
                 BorderThickness="1,0,0,0"
