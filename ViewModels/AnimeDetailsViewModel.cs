@@ -225,6 +225,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
                     Synopsis = details.Synopsis,
                     Status = details.Status,
                     MainPicture = details.MainPicture,
+                    Mean = details.Mean
                 },
                 ListStatus = details.MyListStatus
             };

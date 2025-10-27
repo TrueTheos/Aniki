@@ -26,6 +26,8 @@ public class MalService : IMalService
     private readonly ISaveService _saveService;
     
     private string _accessToken = "";
+    
+    private const string MAL_NODE_FIELDS = "list_status,num_episodes,pictures,status,genres,synopsis,main_picture,mean";
 
     public MalService(ISaveService saveService)
     {
@@ -99,8 +101,7 @@ public class MalService : IMalService
         try
         {
             List<MAL_AnimeData> animeList = new();
-            string fields = "list_status,num_episodes,pictures,status,genres,synopsis,main_picture";
-            string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={fields}&limit=1000";
+            string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={MAL_NODE_FIELDS}&limit=1000";
             
             if (status != AnimeStatusApi.none)
             {
@@ -150,7 +151,8 @@ public class MalService : IMalService
                     Synopsis = animeData.Node.Synopsis,
                     NumEpisodes = animeData.Node.NumEpisodes,
                     MyListStatus = animeData.ListStatus,
-                    Genres = animeData.Node.Genres
+                    Genres = animeData.Node.Genres,
+                    Mean = animeData.Node.Mean
                 };
             }
         }
@@ -177,8 +179,8 @@ public class MalService : IMalService
             
             if (animeResponse != null)
             {
-                _detailsCache[id] = animeResponse;
                 await LoadAndCacheAnimeImage(animeResponse);
+                _detailsCache[id] = animeResponse;
                 return animeResponse;
             }
         }
@@ -293,7 +295,7 @@ public class MalService : IMalService
 
     public async Task<List<MAL_SearchEntry>> SearchAnimeOrdered(string query)
     {
-        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields=id,title,main_picture,num_episodes,synopsis,status,alternative_titles";
+        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={MAL_NODE_FIELDS}";
 
         var responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, "SearchAnimeOrdered");
 
@@ -340,7 +342,8 @@ public class MalService : IMalService
                 Status = anime.Status,
                 Synopsis = anime.Synopsis,
                 NumEpisodes = anime.NumEpisodes,
-                AlternativeTitles = anime.AlternativeTitles
+                AlternativeTitles = anime.AlternativeTitles,
+                Mean = anime.Mean
             };
         }
     }
@@ -381,7 +384,7 @@ public class MalService : IMalService
             _ => "all"
         };
 
-        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields=id,title,main_picture,num_episodes,synopsis,status";
+        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields={MAL_NODE_FIELDS}";
 
         var response = await GetAndDeserializeAsync<MAL_AnimeRankingResponse>(url, "GetTopAnimeInCategory");
         
@@ -409,7 +412,8 @@ public class MalService : IMalService
                 MainPicture = entry.Node.MainPicture,
                 Status = entry.Node.Status,
                 Synopsis = entry.Node.Synopsis,
-                NumEpisodes = entry.Node.NumEpisodes
+                NumEpisodes = entry.Node.NumEpisodes,
+                Mean = entry.Node.Mean
             };
         }
     }

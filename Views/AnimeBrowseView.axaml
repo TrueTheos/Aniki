@@ -18,7 +18,7 @@
                      VerticalScrollBarVisibility="Auto"
                      HorizontalScrollBarVisibility="Disabled"
                      Background="{StaticResource BackgroundBlack}">
-            <StackPanel Spacing="40" Margin="30,20" Background="{StaticResource BackgroundBlack}">
+            <StackPanel Spacing="40" Margin="50,20" Background="{StaticResource BackgroundBlack}">
                 
                 <!-- Loading Indicator -->
                 <Border Height="4"
@@ -59,19 +59,36 @@
                 <!-- Main View Content -->
                 <StackPanel Spacing="50" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Main}">
                     
-                    <!-- Hero Section - First anime from PopularThisSeason -->
+                    <!-- Hero Section -->
                     <Border CornerRadius="16" 
                             Height="450"
                             Background="#1A1A1A"
                             ClipToBounds="True"
-                            IsVisible="{Binding PopularThisSeason.Count}">
+                            IsVisible="{Binding HeroAnime, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <Grid>
-                            <!-- Background with gradient overlay -->
+                            <!-- Background Video Thumbnail -->
+                            <Image asyncImageLoader:ImageLoader.Source="{Binding HeroAnime.VideoThumbnail}"
+                                   Stretch="UniformToFill">
+                                <Image.Effect>
+                                    <BlurEffect Radius="20"/>
+                                </Image.Effect>
+                            </Image>
+                            
                             <Border>
                                 <Border.Background>
-                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#2A2A2A" Offset="0"/>
-                                        <GradientStop Color="#1A1A1A" Offset="1"/>
+                                    <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                        <GradientStop Color="#DD000000" Offset="0"/>
+                                        <GradientStop Color="#00000000" Offset="0.5"/>
+                                        <GradientStop Color="#DD000000" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            
+                            <Border>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+                                        <GradientStop Color="#00000000" Offset="0"/>
+                                        <GradientStop Color="#DD000000" Offset="1"/>
                                     </LinearGradientBrush>
                                 </Border.Background>
                             </Border>
@@ -80,65 +97,117 @@
                             <Grid Margin="50,0,0,50" VerticalAlignment="Bottom">
                                 <StackPanel Spacing="15" MaxWidth="600" HorizontalAlignment="Left">
                                     
-                                    <!-- Navigation Arrows -->
-                                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
-                                        <Button Content="❮" 
-                                                Background="#2A2A2A"
-                                                Foreground="White"
-                                                Width="40" Height="40"
-                                                CornerRadius="20"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
-                                        <Button Content="❯" 
-                                                Background="#2A2A2A"
-                                                Foreground="White"
-                                                Width="40" Height="40"
-                                                CornerRadius="20"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
-                                    </StackPanel>
-                                    
                                     <!-- Title Section -->
-                                    <TextBlock Text="Popular This Season"
+                                    <TextBlock Text="{Binding HeroAnime.Title}"
                                               FontSize="48"
                                               FontWeight="Bold"
                                               Foreground="White"
-                                              TextWrapping="Wrap"/>
+                                              TextWrapping="Wrap"
+                                              MaxLines="2"
+                                              TextTrimming="CharacterEllipsis"/>
                                     
                                     <!-- Tags -->
                                     <StackPanel Orientation="Horizontal" Spacing="15">
                                         <Border Background="#2A2A2A" 
                                                 CornerRadius="12"
                                                 Padding="14,6">
-                                            <TextBlock Text="Airing Now" Foreground="White" FontSize="13"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="★" Foreground="{StaticResource Red}" FontSize="13"/>
+                                                <TextBlock Text="{Binding HeroAnime.Score}" Foreground="White" FontSize="13"/>
+                                            </StackPanel>
                                         </Border>
                                         <Border Background="#2A2A2A" 
                                                 CornerRadius="12"
-                                                Padding="14,6">
-                                            <TextBlock Text="Top Rated" Foreground="#999999" FontSize="13"/>
+                                                Padding="14,6"
+                                                IsVisible="{Binding HeroAnime.Status, Converter={StaticResource EnumMatchConverter}, ConverterParameter=watching}">
+                                            <TextBlock Text="Watching" Foreground="#4CAF50" FontSize="13"/>
                                         </Border>
                                     </StackPanel>
                                     
                                     <!-- Description -->
-                                    <TextBlock Text="Discover the most popular anime currently airing this season"
-                                              Foreground="#999999"
+                                    <TextBlock Text="{Binding HeroAnime.Synopsis}"
+                                              Foreground="#CCCCCC"
                                               TextWrapping="Wrap"
                                               FontSize="14"
-                                              LineHeight="22"/>
+                                              LineHeight="22"
+                                              MaxLines="3"
+                                              TextTrimming="CharacterEllipsis"
+                                              MaxWidth="550"/>
                                 </StackPanel>
                             </Grid>
                             
+                            <!-- Navigation Arrows - Top Left -->
+                            <StackPanel Orientation="Horizontal" 
+                                       Spacing="10" 
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Top"
+                                       Margin="20,20,0,0">
+                                <Button 
+                                        Command="{Binding PreviousHeroCommand}"
+                                        Background="#00000000"
+                                        Foreground="White"
+                                        Width="40" Height="40"
+                                        CornerRadius="20"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        FontSize="18"
+                                        Opacity="0.9">
+                                    <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
+                                </Button>
+                                
+                                <Button
+                                        Command="{Binding NextHeroCommand}"
+                                        Background="#00000000"
+                                        Foreground="White"
+                                        Width="40" Height="40"
+                                        CornerRadius="20"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        FontSize="18"
+                                        Opacity="0.9">
+                                    <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
+                                </Button>
+                            </StackPanel>
+                            
                             <!-- Play Button -->
-                            <Ellipse Width="70" Height="70"
-                                    Fill="{StaticResource Red}"
+                            <Button Command="{Binding PlayHeroVideoCommand}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
                                     HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"/>
-                            <PathIcon Data="M8 5v14l11-7z"
-                                     Width="24" Height="24"
-                                     Foreground="White"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center"
-                                     Margin="4,0,0,0"/>
+                                    VerticalAlignment="Center"
+                                    Cursor="Hand">
+                                <Grid>
+                                    <Ellipse Width="80" Height="80"
+                                            Fill="{StaticResource Red}"
+                                            Opacity="0.95"/>
+                                    <PathIcon Data="M8 5v14l11-7z"
+                                             Width="28" Height="28"
+                                             Foreground="White"
+                                             Margin="6,0,0,0"/>
+                                </Grid>
+                            </Button>
+                            
+                            <!-- Carousel Indicators -->
+                            <StackPanel Orientation="Horizontal" 
+                                       Spacing="8"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Bottom"
+                                       Margin="0,0,0,20">
+                                <ItemsControl ItemsSource="{Binding HeroAnimeList}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="8"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="30" Height="3"
+                                                   CornerRadius="2"
+                                                   Background="{Binding IsCurrentHero, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#FFFFFF:#666666}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
@@ -154,18 +223,18 @@
                         
                         <Grid>
                             <!-- Left Navigation Arrow -->
-                            <Button Content="❮"
-                                    Background="#1A1A1A"
+                            <Button Background="#00000000"
                                     Foreground="White"
-                                    Width="50" Height="50"
+                                    Width="30" Height="30"
                                     CornerRadius="25"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
-                                    Margin="-25,0,0,0"
+                                    Margin="-40,0,0,30"
                                     ZIndex="10"
                                     BorderThickness="0"
-                                    Opacity="0.9"
-                                    Cursor="Hand"/>
+                                    Cursor="Hand">
+                                <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
+                            </Button>
                             
                             <!-- Anime Cards -->
                             <ScrollViewer HorizontalScrollBarVisibility="Hidden"
@@ -185,8 +254,7 @@
                             </ScrollViewer>
                             
                             <!-- Right Navigation Arrow -->
-                            <Button Content="❯"
-                                    Background="#1A1A1A"
+                            <Button Background="#00000000"
                                     Foreground="White"
                                     Width="50" Height="50"
                                     CornerRadius="25"
@@ -196,7 +264,9 @@
                                     ZIndex="10"
                                     BorderThickness="0"
                                     Opacity="0.9"
-                                    Cursor="Hand"/>
+                                    Cursor="Hand">
+                                <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
+                            </Button>
                         </Grid>
                     </StackPanel>
 
@@ -211,8 +281,7 @@
                         </Grid>
                         
                         <Grid>
-                            <Button Content="❮"
-                                    Background="#1A1A1A"
+                            <Button Background="#00000000" 
                                     Foreground="White"
                                     Width="50" Height="50"
                                     CornerRadius="25"
@@ -222,7 +291,9 @@
                                     ZIndex="10"
                                     BorderThickness="0"
                                     Opacity="0.9"
-                                    Cursor="Hand"/>
+                                    Cursor="Hand">
+                                <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
+                            </Button>
                             
                             <ScrollViewer HorizontalScrollBarVisibility="Hidden"
                                          VerticalScrollBarVisibility="Disabled">
@@ -240,8 +311,7 @@
                                 </ItemsControl>
                             </ScrollViewer>
                             
-                            <Button Content="❯"
-                                    Background="#1A1A1A"
+                            <Button Background="#00000000"
                                     Foreground="White"
                                     Width="50" Height="50"
                                     CornerRadius="25"
@@ -251,7 +321,9 @@
                                     ZIndex="10"
                                     BorderThickness="0"
                                     Opacity="0.9"
-                                    Cursor="Hand"/>
+                                    Cursor="Hand">
+                                <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
+                            </Button>
                         </Grid>
                     </StackPanel>
 
@@ -266,8 +338,7 @@
                         </Grid>
                         
                         <Grid>
-                            <Button Content="❮"
-                                    Background="#1A1A1A"
+                            <Button Background="#00000000"
                                     Foreground="White"
                                     Width="50" Height="50"
                                     CornerRadius="25"
@@ -277,7 +348,9 @@
                                     ZIndex="10"
                                     BorderThickness="0"
                                     Opacity="0.9"
-                                    Cursor="Hand"/>
+                                    Cursor="Hand">
+                                <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
+                            </Button>
                             
                             <ScrollViewer HorizontalScrollBarVisibility="Hidden"
                                          VerticalScrollBarVisibility="Disabled">
@@ -295,8 +368,7 @@
                                 </ItemsControl>
                             </ScrollViewer>
                             
-                            <Button Content="❯"
-                                    Background="#1A1A1A"
+                            <Button Background="#00000000" 
                                     Foreground="White"
                                     Width="50" Height="50"
                                     CornerRadius="25"
@@ -306,7 +378,9 @@
                                     ZIndex="10"
                                     BorderThickness="0"
                                     Opacity="0.9"
-                                    Cursor="Hand"/>
+                                    Cursor="Hand">
+                                <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
+                            </Button>
                         </Grid>
                     </StackPanel>
 
@@ -475,7 +549,9 @@
                                     <Border Background="#1A1A1A" 
                                             CornerRadius="12" 
                                             Padding="12"
-                                            Margin="0,0,0,10">
+                                            Margin="0,0,0,10"
+                                            DoubleTapped="OnDoubleTapped"
+                                            Cursor="Hand">
                                         <Grid ColumnDefinitions="60,*">
                                             <Border Grid.Column="0" 
                                                     Width="60" Height="85" 

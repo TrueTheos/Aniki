@@ -26,6 +26,13 @@ public class MAL_AnimeNode
     [JsonPropertyName("num_episodes")]
     public int NumEpisodes { get; set; }
     public MAL_Video[]? Videos { get; set; }
+    private float _mean;
+    [JsonPropertyName("mean")]
+    public float Mean 
+    { 
+        get => _mean;
+        set => _mean = (float)Math.Round(value, 1);
+    }
 }
 
 public class MAL_UserAnimeListResponse
@@ -53,23 +60,23 @@ public class MAL_Paging
 
 public class MAL_AnimeDetails
 {
-    public int Id { get; set; }
+    public required int Id { get; init; }
     public required string Title { get; set; }
     [JsonPropertyName("main_picture")]
-    public MAL_MainPicture? MainPicture { get; set; }
-    public required string Status { get; set; }
-    public required string Synopsis { get; set; }
+    public MAL_MainPicture? MainPicture { get; init; }
+    public required string Status { get; init; }
+    public required string Synopsis { get; init; }
     [JsonPropertyName("alternative_titles")]
-    public MAL_AlternativeTitles? AlternativeTitles { get; set; }
+    public MAL_AlternativeTitles? AlternativeTitles { get; init; }
     
     [JsonPropertyName("my_list_status")]
     public MAL_MyListStatus? MyListStatus { get; set; }
     [JsonPropertyName("num_episodes")]
-    public int NumEpisodes { get; set; }
+    public required int NumEpisodes { get; init; }
     public Bitmap? Picture { get; set; }
     private float _mean;
     [JsonPropertyName("mean")]
-    public float Mean 
+    public required float Mean 
     { 
         get => _mean;
         set => _mean = (float)Math.Round(value, 1);
