@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:local="clr-namespace:Aniki.Views"
              xmlns:vm="clr-namespace:Aniki.ViewModels"
              xmlns:models="clr-namespace:Aniki.Models"
@@ -54,7 +55,7 @@
                     <Image x:Name="AnimeImage"
                            Grid.ColumnSpan="2"
                            Stretch="UniformToFill"
-                           Source="{Binding Image}"
+                           asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}"
                            ToolTip.Tip="Double click to show details"/>
 
                     <Border Grid.Column="1"

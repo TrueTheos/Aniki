@@ -1,5 +1,6 @@
-﻿namespace Aniki.Models;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+
+namespace Aniki.Models.MAL;
 
 public class MAL_AnimeRankingResponse
 {

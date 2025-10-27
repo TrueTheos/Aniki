@@ -1,8 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using Aniki.Misc;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
+using Avalonia.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
+using Tmds.DBus.Protocol;
 
 namespace Aniki.ViewModels;
 
@@ -212,13 +215,13 @@ public partial class CalendarViewModel : ViewModelBase
         return new()
         {
             Title = original.Title,
-            ImageUrl = original.ImageUrl,
             AiringAt = original.AiringAt,
             EpisodeInfo = original.EpisodeInfo ?? $"EP{original.Episode} • {original.Type}",
             Type = original.Type,
             Episode = original.Episode,
             IsBookmarked = _watchingList.Contains(original.Title),
-            IsAiringNow = IsCurrentlyAiring(original.AiringAt, dayDate)
+            IsAiringNow = IsCurrentlyAiring(original.AiringAt, dayDate),
+            ImageUrl = original.ImageUrl
         };
     }
 

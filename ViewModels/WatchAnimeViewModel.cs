@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;

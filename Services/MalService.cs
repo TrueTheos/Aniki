@@ -3,6 +3,7 @@ using Aniki.Misc;
 using Avalonia.Media.Imaging;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -169,7 +170,7 @@ public class MalService : IMalService
     {
         try
         {
-            string fields = "id,title,main_picture,status,synopsis,my_list_status,num_episodes,genres,alternative_titles,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}";
+            string fields = "id,title,main_picture,status,synopsis,my_list_status,num_episodes,genres,videos,alternative_titles,mean,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}";
             string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={fields}";
 
             var animeResponse = await GetAndDeserializeAsync<MAL_AnimeDetails>(url, "FetchFullAnimeDetails");
@@ -267,7 +268,7 @@ public class MalService : IMalService
 
         try
         {
-            return await DownloadImageAsync(animePictureData.Medium);
+            return await DownloadImageAsync(animePictureData.Large);
         }
         catch (Exception ex)
         {

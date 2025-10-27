@@ -1,6 +1,7 @@
 ﻿using Aniki.Misc;
 using Avalonia.Media.Imaging;
 using System.Collections.ObjectModel;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -109,7 +110,7 @@ public partial class MainViewModel : ViewModelBase
     private async Task LoadTodayAnimeAsync()
     {
         var watchingList = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
-        var animes = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
+        var animes = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
 
         TodayAnime.Clear();
         foreach (AnimeScheduleItem anime in animes)

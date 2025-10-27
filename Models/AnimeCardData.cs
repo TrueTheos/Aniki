@@ -10,9 +10,11 @@ public partial class AnimeCardData : ObservableObject
     
     [ObservableProperty]
     private string? _title;
-    
-    [ObservableProperty]
-    private Bitmap? _image;
+
+    [ObservableProperty] 
+    private string? _imageUrl;
+
+    [ObservableProperty] private float _score;
     
     [ObservableProperty]
     private AnimeStatusApi? _status;

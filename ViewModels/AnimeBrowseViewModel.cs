@@ -1,11 +1,13 @@
     using Aniki.Services.Interfaces;
     using System.Collections.ObjectModel;
+    using Aniki.Models.MAL;
 
     namespace Aniki.ViewModels;
 
     public partial class AnimeBrowseViewModel : ViewModelBase
     {
         private readonly IMalService _malService;
+        private readonly ICalendarService _calendarService;
         
         [ObservableProperty]
         private ObservableCollection<AnimeCardData> _popularThisSeason = new();
@@ -18,6 +20,9 @@
         
         [ObservableProperty]
         private ObservableCollection<AnimeCardData> _searchResults = new();
+
+        [ObservableProperty] 
+        private ObservableCollection<AnimeCardData> _airingToday = new();
         
         [ObservableProperty]
         private string _searchQuery = string.Empty;
@@ -45,9 +50,10 @@
         private List<MAL_SearchEntry> _allSearchResults = new();
         private const int PageSize = 20;
 
-        public AnimeBrowseViewModel(IMalService malService)
+        public AnimeBrowseViewModel(IMalService malService, ICalendarService calendarService)
         {
             _malService = malService;
+            _calendarService = calendarService;
         }
 
         public async Task InitializeAsync()
@@ -68,6 +74,14 @@
                 
                 var allTime = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.BYPOPULARITY);
                 await LoadAnimeCards(allTime, TrendingAllTime);
+
+                var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
+                foreach (var anime in airingToday)
+                {
+                    if(anime.MalId == null) continue;
+                    MAL_AnimeDetails? details = await _malService.GetAnimeDetails(anime.MalId.Value);
+                    if(details != null) AiringToday.Add(details.ToCardData());
+                }
             }
             catch (Exception ex)
             {
@@ -84,17 +98,19 @@
             collection.Clear();
             foreach (var anime in animeList)
             {
-                var details = await _malService.GetAnimeDetails(anime.Node.Id);
+                var details = await _malService.GetAnimeDetails(anime.Node.Id, true);
                 if (details != null)
                 {
-                    var card = new AnimeCardData
+                    /*var card = new AnimeCardData
                     {
                         AnimeId = details.Id,
                         Title = details.Title,
-                        Status = details.MyListStatus?.Status
+                        Status = details.MyListStatus?.Status,
+                        Score = details.Mean,
+                        Image = details.Picture
                     };
-                    _ = LoadAnimeImageAsync(card, details.MainPicture);
-                    collection.Add(card);
+                    _ = LoadAnimeImageAsync(card, details.MainPicture);*/
+                    collection.Add(details.ToCardData());
                 }
             }
         }
@@ -116,7 +132,7 @@
                 CurrentPage = 1;
                 TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PageSize);
                 
-                await LoadSearchResultsPage();
+                LoadSearchResultsPage();
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)
@@ -129,7 +145,7 @@
             }
         }
         
-        private async Task LoadSearchResultsPage()
+        private void LoadSearchResultsPage()
         {
             SearchResults.Clear();
             
@@ -139,29 +155,20 @@
 
             foreach (var result in pageResults)
             {
+                MAL_MainPicture? picture = result.MalAnime.MainPicture;
                 var card = new AnimeCardData
                 {
                     AnimeId = result.MalAnime.Id,
                     Title = result.MalAnime.Title,
-                    Status = null
+                    Status = null,
+                    ImageUrl = picture!.Large != null ? picture.Large : picture.Medium
                 };
-                
-                await LoadAnimeImageAsync(card, result.MalAnime.MainPicture);
                 
                 SearchResults.Add(card);
             }
 
             UpdatePaginationState();
         }
-
-        private async Task LoadAnimeImageAsync(AnimeCardData card, MAL_MainPicture? picture)
-        {
-            if (picture != null)
-            {
-                card.Image = await _malService.GetAnimeImage(picture);
-            }
-        }
-
         private void UpdatePaginationState()
         {
             CanGoPrevious = CurrentPage > 1;
@@ -174,7 +181,7 @@
             if (CanGoNext)
             {
                 CurrentPage++;
-                _ = LoadSearchResultsPage();
+                LoadSearchResultsPage();
             }
         }
 
@@ -184,7 +191,7 @@
             if (CanGoPrevious)
             {
                 CurrentPage--;
-                _ = LoadSearchResultsPage();
+                LoadSearchResultsPage();
             }
         }
 

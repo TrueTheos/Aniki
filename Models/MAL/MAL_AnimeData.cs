@@ -1,8 +1,8 @@
-﻿using Aniki.Misc;
+﻿using System.Text.Json.Serialization;
+using Aniki.Misc;
 using Avalonia.Media.Imaging;
-using System.Text.Json.Serialization;
 
-namespace Aniki.Models;
+namespace Aniki.Models.MAL;
 
 public class MAL_AnimeData
 {
@@ -25,6 +25,7 @@ public class MAL_AnimeNode
     public MAL_MainPicture? MainPicture { get; set; }
     [JsonPropertyName("num_episodes")]
     public int NumEpisodes { get; set; }
+    public MAL_Video[]? Videos { get; set; }
 }
 
 public class MAL_UserAnimeListResponse
@@ -66,9 +67,29 @@ public class MAL_AnimeDetails
     [JsonPropertyName("num_episodes")]
     public int NumEpisodes { get; set; }
     public Bitmap? Picture { get; set; }
+    private float _mean;
+    [JsonPropertyName("mean")]
+    public float Mean 
+    { 
+        get => _mean;
+        set => _mean = (float)Math.Round(value, 1);
+    }
     public MAL_Genre[]? Genres { get; set; }
     [JsonPropertyName("related_anime")]
     public MAL_RelatedAnime[]? RelatedAnime { get; set; }
+    public MAL_Video[]? Videos { get; set; }
+
+    public AnimeCardData ToCardData()
+    {
+        return new AnimeCardData()
+        {
+            AnimeId = Id,
+            Title = Title,
+            ImageUrl = MainPicture!.Large != null ? MainPicture.Large : MainPicture.Medium,
+            Score = Mean,
+            Status = MyListStatus != null ? MyListStatus.Status : AnimeStatusApi.none
+        };
+    }
 }
 
 public class MAL_MainPicture
@@ -113,4 +134,16 @@ public class MAL_RelatedAnime
 
     [JsonPropertyName("relation_type")]
     public required string RelationType { get; set; }
+}
+
+public class MAL_Video
+{
+    public int Id { get; set; }
+    public required string Title { get; set; }
+    public required string Url { get; set; }
+    [JsonPropertyName("created_at")]
+    public long CreatedAt { get; set; }
+    [JsonPropertyName("updated_at")]
+    public long UpdatedAt { get; set; }
+    public required string Thumbnail { get; set; }
 }

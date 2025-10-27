@@ -5,173 +5,360 @@
              xmlns:vm="clr-namespace:Aniki.ViewModels"
              xmlns:local="clr-namespace:Aniki.Views"
              xmlns:models="clr-namespace:Aniki.Models"
-             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
              x:Class="Aniki.Views.AnimeBrowseView"
              x:DataType="vm:AnimeBrowseViewModel">
     
-    <Grid RowDefinitions="Auto,*">
-        <Grid Grid.Row="0"
-              ColumnDefinitions="Auto,*,Auto"
-              Background="{StaticResource Background0}">
-
-            <StackPanel Orientation="Horizontal" IsVisible="{Binding !IsLoading}" Margin="20,10,0,0">
-                <Grid>
-                    <Grid HorizontalAlignment="Stretch">
-                        <TextBox
-                            Name="SearchBox"
-                            MinWidth="150"
-                            VerticalContentAlignment="Center"
-                            Background="#FF3E3E3E"
-                            BorderBrush="#FF505050"
-                            BorderThickness="1"
-                            CornerRadius="7"
-                            Foreground="#FFE0E0E0"
-                            Text="{Binding SearchQuery, Mode=TwoWay}"
-                            Watermark="Search" >
-                            <TextBox.KeyBindings>
-                                <KeyBinding Gesture="Enter" Command="{Binding PerformSearchCommand}" />
-                            </TextBox.KeyBindings>
-                        </TextBox>
-
-                        <Button
-                            Margin="0,0,8,0"
-                            Padding="0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Command="{Binding PerformSearchCommand}"
-                            Cursor="Hand">
-                            <Image Source="{SvgImage /Resources/Icons/search_icon.svg}" Width="16" Height="16"/>
-                            <Button.Styles>
-                                <Style Selector="Button:pointerover PathIcon">
-                                    <Setter Property="Foreground" Value="#FFD0D0D0" />
-                                </Style>
-                                <Style Selector="Button:pressed PathIcon">
-                                    <Setter Property="Foreground" Value="White" />
-                                </Style>
-                            </Button.Styles>
-                        </Button>
-                    </Grid>
-                </Grid>
-                
-                <Button
-                    Classes="nav-button"
-                    Command="{Binding GoBackCommand}"
-                    IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}"
-                    Cursor="Hand" >
-                    <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="16" Height="16"/>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <!-- Content Area -->
-        <ScrollViewer Grid.Row="1" 
+    <Grid ColumnDefinitions="*,320" Margin="0,0,0,0" Background="{StaticResource BackgroundBlack}" RowDefinitions="*">
+        
+        <!-- Main Content Area -->
+        <ScrollViewer Grid.Column="0" 
+                     Grid.Row="0"
                      VerticalScrollBarVisibility="Auto"
-                     HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Spacing="40" Margin="20" >
+                     HorizontalScrollBarVisibility="Disabled"
+                     Background="{StaticResource BackgroundBlack}">
+            <StackPanel Spacing="40" Margin="30,20" Background="{StaticResource BackgroundBlack}">
                 
-                <Border
-                    Height="4"
-                    Background="{StaticResource Background0}"
-                    DockPanel.Dock="Top"
-                    IsVisible="{Binding IsLoading}">
-                    <ProgressBar
-                        Height="4"
+                <!-- Loading Indicator -->
+                <Border Height="4"
                         Background="Transparent"
-                        Foreground="{StaticResource Primary}"
-                        IsIndeterminate="True" />
+                        IsVisible="{Binding IsLoading}">
+                    <ProgressBar Height="4"
+                                Background="Transparent"
+                                Foreground="{StaticResource Red}"
+                                IsIndeterminate="True" />
                 </Border>
 
-                <!-- Main View -->
-                <StackPanel Spacing="40">
-                    <StackPanel.IsVisible>
-                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="ViewMode" 
-                                     Converter="{StaticResource EnumMatchConverter}" 
-                                     ConverterParameter="Main"/>
-                            <Binding Path="!IsLoading"/>
-                        </MultiBinding>
-                    </StackPanel.IsVisible>
+                <!-- Header with Search -->
+                <Grid ColumnDefinitions="Auto,*" 
+                      Margin="0,10,0,0"
+                      IsVisible="{Binding !IsLoading}">
+                    
+                    <!-- Movie/Serials Tabs -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="30">
+                        <Button Content="Movie" 
+                                Foreground="#999999"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontSize="15"
+                                Cursor="Hand"/>
+                        <StackPanel>
+                            <Button Content="Serials" 
+                                    Foreground="White"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontSize="15"
+                                    FontWeight="Medium"
+                                    Cursor="Hand"/>
+                            <Border Height="2" Background="{StaticResource Red}" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Main View Content -->
+                <StackPanel Spacing="50" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Main}">
+                    
+                    <!-- Hero Section - First anime from PopularThisSeason -->
+                    <Border CornerRadius="16" 
+                            Height="450"
+                            Background="#1A1A1A"
+                            ClipToBounds="True"
+                            IsVisible="{Binding PopularThisSeason.Count}">
+                        <Grid>
+                            <!-- Background with gradient overlay -->
+                            <Border>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#2A2A2A" Offset="0"/>
+                                        <GradientStop Color="#1A1A1A" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            
+                            <!-- Content Overlay -->
+                            <Grid Margin="50,0,0,50" VerticalAlignment="Bottom">
+                                <StackPanel Spacing="15" MaxWidth="600" HorizontalAlignment="Left">
+                                    
+                                    <!-- Navigation Arrows -->
+                                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+                                        <Button Content="❮" 
+                                                Background="#2A2A2A"
+                                                Foreground="White"
+                                                Width="40" Height="40"
+                                                CornerRadius="20"
+                                                BorderThickness="0"
+                                                Cursor="Hand"/>
+                                        <Button Content="❯" 
+                                                Background="#2A2A2A"
+                                                Foreground="White"
+                                                Width="40" Height="40"
+                                                CornerRadius="20"
+                                                BorderThickness="0"
+                                                Cursor="Hand"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Title Section -->
+                                    <TextBlock Text="Popular This Season"
+                                              FontSize="48"
+                                              FontWeight="Bold"
+                                              Foreground="White"
+                                              TextWrapping="Wrap"/>
+                                    
+                                    <!-- Tags -->
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <Border Background="#2A2A2A" 
+                                                CornerRadius="12"
+                                                Padding="14,6">
+                                            <TextBlock Text="Airing Now" Foreground="White" FontSize="13"/>
+                                        </Border>
+                                        <Border Background="#2A2A2A" 
+                                                CornerRadius="12"
+                                                Padding="14,6">
+                                            <TextBlock Text="Top Rated" Foreground="#999999" FontSize="13"/>
+                                        </Border>
+                                    </StackPanel>
+                                    
+                                    <!-- Description -->
+                                    <TextBlock Text="Discover the most popular anime currently airing this season"
+                                              Foreground="#999999"
+                                              TextWrapping="Wrap"
+                                              FontSize="14"
+                                              LineHeight="22"/>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <!-- Play Button -->
+                            <Ellipse Width="70" Height="70"
+                                    Fill="{StaticResource Red}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            <PathIcon Data="M8 5v14l11-7z"
+                                     Width="24" Height="24"
+                                     Foreground="White"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     Margin="4,0,0,0"/>
+                        </Grid>
+                    </Border>
+
                     <!-- Popular This Season -->
-                    <ItemsControl ItemsSource="{Binding PopularThisSeason}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="16"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="models:AnimeCardData">
-                                <local:AnimeCard Margin="10"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <StackPanel Spacing="25" IsVisible="{Binding PopularThisSeason.Count}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                      Text="Popular This Season"
+                                      FontSize="26"
+                                      FontWeight="Bold"
+                                      Foreground="White"/>
+                        </Grid>
+                        
+                        <Grid>
+                            <!-- Left Navigation Arrow -->
+                            <Button Content="❮"
+                                    Background="#1A1A1A"
+                                    Foreground="White"
+                                    Width="50" Height="50"
+                                    CornerRadius="25"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Margin="-25,0,0,0"
+                                    ZIndex="10"
+                                    BorderThickness="0"
+                                    Opacity="0.9"
+                                    Cursor="Hand"/>
+                            
+                            <!-- Anime Cards -->
+                            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                                         VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding PopularThisSeason}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="20"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="models:AnimeCardData">
+                                            <local:AnimeCard/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            
+                            <!-- Right Navigation Arrow -->
+                            <Button Content="❯"
+                                    Background="#1A1A1A"
+                                    Foreground="White"
+                                    Width="50" Height="50"
+                                    CornerRadius="25"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,-25,0"
+                                    ZIndex="10"
+                                    BorderThickness="0"
+                                    Opacity="0.9"
+                                    Cursor="Hand"/>
+                        </Grid>
+                    </StackPanel>
 
-                    <!-- For Popular Upcoming -->
-                    <ItemsControl ItemsSource="{Binding PopularUpcoming}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="16"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="models:AnimeCardData">
-                                <local:AnimeCard Margin="10"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <!-- Popular Upcoming -->
+                    <StackPanel Spacing="25" IsVisible="{Binding PopularUpcoming.Count}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                      Text="Popular Upcoming"
+                                      FontSize="26"
+                                      FontWeight="Bold"
+                                      Foreground="White"/>
+                        </Grid>
+                        
+                        <Grid>
+                            <Button Content="❮"
+                                    Background="#1A1A1A"
+                                    Foreground="White"
+                                    Width="50" Height="50"
+                                    CornerRadius="25"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Margin="-25,0,0,0"
+                                    ZIndex="10"
+                                    BorderThickness="0"
+                                    Opacity="0.9"
+                                    Cursor="Hand"/>
+                            
+                            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                                         VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding PopularUpcoming}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="20"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="models:AnimeCardData">
+                                            <local:AnimeCard/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            
+                            <Button Content="❯"
+                                    Background="#1A1A1A"
+                                    Foreground="White"
+                                    Width="50" Height="50"
+                                    CornerRadius="25"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,-25,0"
+                                    ZIndex="10"
+                                    BorderThickness="0"
+                                    Opacity="0.9"
+                                    Cursor="Hand"/>
+                        </Grid>
+                    </StackPanel>
 
-                    <!-- For Trending All Time -->
-                    <ItemsControl ItemsSource="{Binding TrendingAllTime}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="16"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="models:AnimeCardData">
-                                <local:AnimeCard Margin="10"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <!-- Trending All Time -->
+                    <StackPanel Spacing="25" IsVisible="{Binding TrendingAllTime.Count}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                      Text="Trending All Time"
+                                      FontSize="26"
+                                      FontWeight="Bold"
+                                      Foreground="White"/>
+                        </Grid>
+                        
+                        <Grid>
+                            <Button Content="❮"
+                                    Background="#1A1A1A"
+                                    Foreground="White"
+                                    Width="50" Height="50"
+                                    CornerRadius="25"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Margin="-25,0,0,0"
+                                    ZIndex="10"
+                                    BorderThickness="0"
+                                    Opacity="0.9"
+                                    Cursor="Hand"/>
+                            
+                            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                                         VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding TrendingAllTime}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="20"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="models:AnimeCardData">
+                                            <local:AnimeCard/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            
+                            <Button Content="❯"
+                                    Background="#1A1A1A"
+                                    Foreground="White"
+                                    Width="50" Height="50"
+                                    CornerRadius="25"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,-25,0"
+                                    ZIndex="10"
+                                    BorderThickness="0"
+                                    Opacity="0.9"
+                                    Cursor="Hand"/>
+                        </Grid>
+                    </StackPanel>
 
                 </StackPanel>
 
                 <!-- Search Results View -->
-                <StackPanel Spacing="20">
-                    <StackPanel.IsVisible>
-                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="ViewMode" 
-                                     Converter="{StaticResource EnumMatchConverter}" 
-                                     ConverterParameter="Search"/>
-                            <Binding Path="!IsLoading"/>
-                        </MultiBinding>
-                    </StackPanel.IsVisible>
-                    <!-- Pagination Controls Top -->
+                <StackPanel Spacing="25" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}">
+                    
+                    <!-- Back Button -->
+                    <Button Content="← Back to Browse"
+                            Command="{Binding GoBackCommand}"
+                            Background="Transparent"
+                            Foreground="#999999"
+                            BorderThickness="0"
+                            HorizontalAlignment="Left"
+                            FontSize="15"
+                            Cursor="Hand"/>
+                    
+                    <!-- Pagination Top -->
                     <StackPanel Orientation="Horizontal" 
                                HorizontalAlignment="Center"
                                Spacing="16">
                         <Button Content="Previous"
                                Command="{Binding PreviousPageCommand}"
                                IsEnabled="{Binding CanGoPrevious}"
-                               Padding="16,8"
-                               Background="#3A3A3A"/>
-                        <TextBlock Text="{Binding CurrentPage}"
-                                  FontSize="16"
-                                  VerticalAlignment="Center"
-                                  Margin="8,0"/>
-                        <TextBlock Text="/"
-                                  FontSize="16"
-                                  VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalPages}"
-                                  FontSize="16"
-                                  VerticalAlignment="Center"
-                                  Margin="0,0,8,0"/>
+                               Padding="20,10"
+                               Background="#1A1A1A"
+                               Foreground="White"
+                               BorderThickness="0"
+                               CornerRadius="8"
+                               Cursor="Hand"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="{Binding CurrentPage}"
+                                      FontSize="16"
+                                      Foreground="White"
+                                      FontWeight="Medium"/>
+                            <TextBlock Text="/"
+                                      FontSize="16"
+                                      Foreground="#666666"/>
+                            <TextBlock Text="{Binding TotalPages}"
+                                      FontSize="16"
+                                      Foreground="#666666"/>
+                        </StackPanel>
                         <Button Content="Next"
                                Command="{Binding NextPageCommand}"
                                IsEnabled="{Binding CanGoNext}"
-                               Padding="16,8"
-                               Background="#3A3A3A"/>
+                               Padding="20,10"
+                               Background="#1A1A1A"
+                               Foreground="White"
+                               BorderThickness="0"
+                               CornerRadius="8"
+                               Cursor="Hand"/>
                     </StackPanel>
 
                     <!-- Search Results Grid -->
@@ -179,18 +366,18 @@
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal" 
-                                          HorizontalAlignment="Center"
-                                          ItemWidth="180"/>
+                                          HorizontalAlignment="Left"
+                                          ItemWidth="200"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate DataType="models:AnimeCardData">
                                 <local:AnimeCard Margin="10"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Pagination Controls Bottom -->
+                    <!-- Pagination Bottom -->
                     <StackPanel Orientation="Horizontal" 
                                HorizontalAlignment="Center"
                                Spacing="16"
@@ -198,29 +385,137 @@
                         <Button Content="Previous"
                                Command="{Binding PreviousPageCommand}"
                                IsEnabled="{Binding CanGoPrevious}"
-                               Padding="16,8"
-                               Background="#3A3A3A"/>
-                        <TextBlock Text="{Binding CurrentPage}"
-                                  FontSize="16"
-                                  VerticalAlignment="Center"
-                                  Margin="8,0"/>
-                        <TextBlock Text="/"
-                                  FontSize="16"
-                                  VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalPages}"
-                                  FontSize="16"
-                                  VerticalAlignment="Center"
-                                  Margin="0,0,8,0"/>
+                               Padding="20,10"
+                               Background="#1A1A1A"
+                               Foreground="White"
+                               BorderThickness="0"
+                               CornerRadius="8"
+                               Cursor="Hand"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="{Binding CurrentPage}"
+                                      FontSize="16"
+                                      Foreground="White"
+                                      FontWeight="Medium"/>
+                            <TextBlock Text="/"
+                                      FontSize="16"
+                                      Foreground="#666666"/>
+                            <TextBlock Text="{Binding TotalPages}"
+                                      FontSize="16"
+                                      Foreground="#666666"/>
+                        </StackPanel>
                         <Button Content="Next"
                                Command="{Binding NextPageCommand}"
                                IsEnabled="{Binding CanGoNext}"
-                               Padding="16,8"
-                               Background="#3A3A3A"/>
+                               Padding="20,10"
+                               Background="#1A1A1A"
+                               Foreground="White"
+                               BorderThickness="0"
+                               CornerRadius="8"
+                               Cursor="Hand"/>
                     </StackPanel>
 
                 </StackPanel>
 
             </StackPanel>
         </ScrollViewer>
+
+        <!-- Right Sidebar -->
+        <Border Grid.Column="1" 
+                Grid.Row="0"
+                Background="#0F0F0F" 
+                BorderBrush="{StaticResource Border}" 
+                BorderThickness="1,0,0,0"
+                Padding="20"
+                IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Main}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                         AllowAutoHide="True"
+                         Margin="0,20,0,0">
+                <StackPanel Spacing="35">
+                    
+                    <!-- Search Box -->
+                    <Border
+                            Background="#1A1A1A"
+                            CornerRadius="12"
+                            Padding="12,8"
+                            Margin="10,5">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <PathIcon Grid.Column="0"
+                                      Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                      Width="16" Height="16"
+                                      Foreground="#666666"
+                                      Margin="0,0,10,0"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding SearchQuery, Mode=TwoWay}"
+                                     Watermark="Type to Search..."
+                                     Foreground="#999999"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     MinWidth="200"
+                                     VerticalContentAlignment="Center">
+                                <TextBox.KeyBindings>
+                                    <KeyBinding Gesture="Enter" Command="{Binding PerformSearchCommand}" />
+                                </TextBox.KeyBindings>
+                            </TextBox>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Airing Today Sidebar -->
+                    <StackPanel Spacing="15">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                      Text="Airing Today"
+                                      FontSize="18"
+                                      FontWeight="Bold"
+                                      Foreground="White"/>
+                        </Grid>
+                        
+                        <ItemsControl ItemsSource="{Binding PopularThisSeason}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="models:AnimeCardData">
+                                    <Border Background="#1A1A1A" 
+                                            CornerRadius="12" 
+                                            Padding="12"
+                                            Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="60,*">
+                                            <Border Grid.Column="0" 
+                                                    Width="60" Height="85" 
+                                                    CornerRadius="8" 
+                                                    Background="#2A2A2A"
+                                                    ClipToBounds="True">
+                                                <Image asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}" 
+                                                       Stretch="UniformToFill"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" 
+                                                       Margin="12,0,0,0" 
+                                                       VerticalAlignment="Center"
+                                                       Spacing="6">
+                                                <TextBlock Text="{Binding Title}"
+                                                          FontWeight="SemiBold"
+                                                          Foreground="White"
+                                                          FontSize="14"
+                                                          TextTrimming="CharacterEllipsis"
+                                                          MaxLines="2"
+                                                          TextWrapping="Wrap"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="★"
+                                                              Foreground="{StaticResource Red}"
+                                                              FontSize="12"
+                                                              VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Score}"
+                                                              Foreground="{StaticResource Red}"
+                                                              FontSize="11"
+                                                              VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
     </Grid>
 </UserControl>

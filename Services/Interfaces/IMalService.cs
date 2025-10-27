@@ -1,4 +1,5 @@
 ﻿using Aniki.Misc;
+using Aniki.Models.MAL;
 using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Interfaces;

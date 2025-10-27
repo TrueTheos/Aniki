@@ -2,6 +2,7 @@
 using Aniki.Misc;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;

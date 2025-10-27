@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Aniki.Models;
+﻿namespace Aniki.Models.MAL;
 
 public class MAL_UserData
 {

@@ -1,3 +1,4 @@
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;

@@ -13,7 +13,6 @@
     Background="#000000"
     ExtendClientAreaTitleBarHeightHint="30"
     ExtendClientAreaToDecorationsHint="True"
-    TransparencyLevelHint="Blur"
     mc:Ignorable="d">
 
     <Design.DataContext>
@@ -102,16 +101,6 @@
     </Window.Styles>
 
     <Panel>
-        <ExperimentalAcrylicBorder IsHitTestVisible="False">
-            <ExperimentalAcrylicBorder.Material>
-                <ExperimentalAcrylicMaterial
-                    BackgroundSource="Digger"
-                    MaterialOpacity="0.5"
-                    TintColor="#000000"
-                    TintOpacity=".99" />
-            </ExperimentalAcrylicBorder.Material>
-        </ExperimentalAcrylicBorder>
-
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="160" MinWidth="160" MaxWidth="300" />
@@ -119,6 +108,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
+            <!-- Left Bar -->
             <Grid Grid.Column="0" Margin="10,35,5,10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -130,29 +120,15 @@
                     VerticalAlignment="Top"
                     Orientation="Vertical"
                     Spacing="5">
-                    <!--  Profile picture and nickname  -->
-                    <StackPanel Orientation="Horizontal">
-                        <Border
-                            Width="30"
-                            Height="30"
-                            Background="{StaticResource Primary}"
-                            ClipToBounds="True"
-                            CornerRadius="24">
-                            <Image
-                                Width="36"
-                                Height="36"
-                                Source="{Binding ProfileImage}"
-                                Stretch="UniformToFill" />
-                        </Border>
-                        <TextBlock
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center"
-                            FontSize="18"
-                            FontWeight="Bold"
-                            TextWrapping="Wrap"
-                            Foreground="{StaticResource White}"
-                            Text="{Binding Username}" />
-                    </StackPanel>
+                    <TextBlock
+                        Margin="12,0,0,0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        TextWrapping="Wrap"
+                        Foreground="{StaticResource White}"
+                        Text="Aniki" />
 
                     <!--  Search box  -->
                     <Grid
@@ -276,54 +252,19 @@
             <!--  Content  -->
             <Border
                 Grid.Column="2"
-                Margin="0,30,0,0"
-                BorderBrush="#5453531a"
-                BorderThickness="2,2,2,2"
+                Margin="0,0,0,0"
+                BorderBrush="{StaticResource Border}"
+                BorderThickness="1,0,0,0"
                 ClipToBounds="True"
-                CornerRadius="15"
-                Background="{StaticResource Background0}">
+                Background="{StaticResource BackgroundBlack}">
                 <Grid x:Name="Root">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Border
-                        Grid.Row="0"
-                        Padding="10,5"
-                        Background="{StaticResource Background0}"
-                        BorderBrush="#1a545353"
-                        BorderThickness="0,0,0,2"
-                        BoxShadow="0 2 10 0 #20000000">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel
-                                Grid.Column="1"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Orientation="Horizontal">
-                                <TextBlock
-                                    FontSize="24"
-                                    FontWeight="Bold"
-                                    Foreground="{StaticResource Primary}"
-                                    Text="Aniki" />
-                                <TextBlock
-                                    Margin="5,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="18"
-                                    Foreground="{StaticResource White}"
-                                    Text=" - MyAnimeList Client" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
                     <!--  Loading indicator  -->
-                    <Grid Grid.Row="1" IsVisible="{Binding IsLoading}">
+                    <Grid Grid.Row="0" IsVisible="{Binding IsLoading}">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <ProgressBar
                                 Width="300"
@@ -339,8 +280,8 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid Grid.Row="1" IsVisible="{Binding !IsLoading}">
-                        <UserControl Background="{StaticResource Background0}">
+                    <Grid Grid.Row="0" IsVisible="{Binding !IsLoading}">
+                        <UserControl Background="{StaticResource BackgroundBlack}">
                             <UserControl.DataTemplates>
                                 <DataTemplate DataType="vm:AnimeDetailsViewModel">
                                     <views:AnimeDetailsView DataContext="{Binding}" />

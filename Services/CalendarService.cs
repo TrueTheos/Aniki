@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Text;
 using Aniki.Services.Interfaces;
+using Avalonia.Media.Imaging;
 
 namespace Aniki.Services;
 
@@ -44,7 +45,7 @@ public class CalendarService : ICalendarService
               }
             ";
 
-    private  readonly HttpClient Http = new();
+    private readonly HttpClient _client = new();
 
     private  async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
     {
@@ -67,7 +68,7 @@ public class CalendarService : ICalendarService
             };
 
             StringContent content = new(payload.ToString(), Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await Http.PostAsync(GraphQlEndpoint, content);
+            HttpResponseMessage response = await _client.PostAsync(GraphQlEndpoint, content);
             response.EnsureSuccessStatusCode();
 
             string body = await response.Content.ReadAsStringAsync();
@@ -154,19 +155,18 @@ public class CalendarService : ICalendarService
         return daySchedules;
     }
 
-    public  async Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date, IEnumerable<string> watchingList)
+    public async Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date)
     {
         long startUnix = ((DateTimeOffset)date.Date).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)date.Date.AddDays(1)).ToUnixTimeSeconds();
 
         JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix);
 
-        HashSet<string> watchSet = new(watchingList, StringComparer.OrdinalIgnoreCase);
         List<AnimeScheduleItem> animeItems = new();
 
         foreach (JToken schedule in schedules)
         {
-            AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
+            AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, new());
             if (animeItem != null)
             {
                 animeItems.Add(animeItem);
@@ -176,7 +176,7 @@ public class CalendarService : ICalendarService
         return animeItems;
     }
 
-    private  AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
+    private AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
     {
         JToken? media = schedule["media"];
         if (media == null) return null;
@@ -201,13 +201,13 @@ public class CalendarService : ICalendarService
         return new()
         {
             Title = title,
-            ImageUrl = imageUrl,
             AiringAt = airingAt,
             Episode = episode,
             EpisodeInfo = episode > 0 ? $"EP{episode} • {format}" : format,
             Type = format,
             MalId = malId,
-            IsBookmarked = watchSet.Contains(title)
+            IsBookmarked = watchSet.Contains(title),
+            ImageUrl = imageUrl
         };
     }
 
@@ -219,5 +219,19 @@ public class CalendarService : ICalendarService
                titleObject["english"]?.ToString() ??
                titleObject["native"]?.ToString() ??
                "";
+    }
+    
+    private async Task<Bitmap?> DownloadImageAsync(string url)
+    {
+        try
+        {
+            byte[] imageData = await _client.GetByteArrayAsync(url);
+            using MemoryStream ms = new(imageData);
+            return new Bitmap(ms);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
