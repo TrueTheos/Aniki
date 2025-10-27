@@ -106,14 +106,31 @@
                         Text="Aniki" />
 
                     <!--  Navigation buttons  -->
+                    <TextBlock
+                        Margin="30,20,0,10"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        TextWrapping="Wrap"
+                        Foreground="{StaticResource White}"
+                        Text="MENU" />
                     <Button
                         Name="MainPageButton"
-                        Margin="0,10,0,0"
                         Classes="MenuButton"
                         Command="{Binding ShowAnimeBrowsePageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="20" Height="20"/>
                             <TextBlock VerticalAlignment="Center" Text="Main Page" Foreground="Gray" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Name="AnimeDetailsButton"
+                        Classes="MenuButton"
+                        Command="{Binding OpenSettingsCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="20" Height="20" />
+                            <TextBlock VerticalAlignment="Center" Text="Anime Details" Foreground="Gray" />
                         </StackPanel>
                     </Button>
                     <Button
@@ -134,6 +151,17 @@
                             <TextBlock VerticalAlignment="Center" Text="Calendar" Foreground="Gray" />
                         </StackPanel>
                     </Button>
+                    
+                    
+                    <TextBlock
+                        Margin="30,20,0,10"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        TextWrapping="Wrap"
+                        Foreground="{StaticResource White}"
+                        Text="USER" />
                     <Button
                         Name="StatsPageButton"
                         Classes="MenuButton"
@@ -152,15 +180,17 @@
                             <TextBlock VerticalAlignment="Center" Text="Your Library" Foreground="Gray" />
                         </StackPanel>
                     </Button>
-                    <Button
-                        Name="AnimeDetailsButton"
-                        Classes="MenuButton"
-                        Command="{Binding OpenSettingsCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Anime Details" Foreground="Gray" />
-                        </StackPanel>
-                    </Button>
+                    
+                    
+                    <TextBlock
+                        Margin="30,20,0,10"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        TextWrapping="Wrap"
+                        Foreground="{StaticResource White}"
+                        Text="GENERAL" />
                     <Button
                         Name="SettingsPageButton"
                         Classes="MenuButton"
