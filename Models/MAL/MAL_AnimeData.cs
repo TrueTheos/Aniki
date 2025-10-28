@@ -25,6 +25,7 @@ public class MAL_AnimeNode
     public MAL_MainPicture? MainPicture { get; set; }
     [JsonPropertyName("num_episodes")]
     public int NumEpisodes { get; set; }
+    public int Popularity { get; set; }
     public MAL_Video[]? Videos { get; set; }
     private float _mean;
     [JsonPropertyName("mean")]
@@ -73,7 +74,9 @@ public class MAL_AnimeDetails
     public MAL_MyListStatus? MyListStatus { get; set; }
     [JsonPropertyName("num_episodes")]
     public required int NumEpisodes { get; init; }
+    public required int Popularity { get; init; }
     public Bitmap? Picture { get; set; }
+    public MAL_Studio[]? Studios { get; set; } 
     [JsonPropertyName("start_date")]
     public string? StartDate { get; set; }
     private float _mean;
@@ -99,6 +102,12 @@ public class MAL_AnimeDetails
             Status = MyListStatus != null ? MyListStatus.Status : AnimeStatusApi.none
         };
     }
+}
+
+public class MAL_Studio
+{
+    public int Id { get; set; }
+    public required string Name { get; set; }
 }
 
 public class MAL_MainPicture

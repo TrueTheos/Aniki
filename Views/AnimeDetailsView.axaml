@@ -144,37 +144,90 @@
                             
                             <!-- Action Buttons -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,30" Spacing="12">
+                                <!-- Status Button with Dropdown -->
                                 <Button Background="#E50914" 
                                         BorderThickness="0"
                                         CornerRadius="6"
                                         Padding="28,13"
-                                        Cursor="Hand">
+                                        Cursor="Hand"
+                                        IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                        Command="{Binding AddToListCommand}">
+                                    <Button.Flyout>
+                                        <MenuFlyout Placement="Bottom">
+                                            <MenuItem Header="Watching" Command="{Binding UpdateStatusCommand}" CommandParameter="Watching"/>
+                                            <MenuItem Header="Completed" Command="{Binding UpdateStatusCommand}" CommandParameter="Completed"/>
+                                            <MenuItem Header="On Hold" Command="{Binding UpdateStatusCommand}" CommandParameter="OnHold"/>
+                                            <MenuItem Header="Dropped" Command="{Binding UpdateStatusCommand}" CommandParameter="Dropped"/>
+                                            <MenuItem Header="Plan to Watch" Command="{Binding UpdateStatusCommand}" CommandParameter="PlanToWatch"/>
+                                        </MenuFlyout>
+                                    </Button.Flyout>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <PathIcon Data="M8 5v14l11-7z" 
                                                   Width="16" 
                                                   Height="16"
                                                   Foreground="White"/>
-                                        <TextBlock Text="Watching" 
+                                        <TextBlock Text="{Binding SelectedStatus}" 
                                                    FontSize="15"
                                                    FontWeight="SemiBold"
                                                    Foreground="White"/>
                                     </StackPanel>
                                 </Button>
                                 
+                                <!-- Add to List Button (when not on list) -->
+                                <Button Background="#E50914" 
+                                        BorderThickness="0"
+                                        CornerRadius="6"
+                                        Padding="28,13"
+                                        Cursor="Hand"
+                                        IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNull}}"
+                                        Command="{Binding AddToListCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <PathIcon Data="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" 
+                                                  Width="16" 
+                                                  Height="16"
+                                                  Foreground="White"/>
+                                        <TextBlock Text="Add to list" 
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <!-- Rating Button with Dropdown -->
                                 <Button Background="#3A3A3A"
                                         BorderThickness="0"
                                         CornerRadius="6"
                                         Padding="28,13"
                                         Cursor="Hand">
+                                    <Button.Flyout>
+                                        <MenuFlyout Placement="Bottom">
+                                            <MenuItem Header="1" Command="{Binding UpdateScoreCommand}" CommandParameter="1"/>
+                                            <MenuItem Header="2" Command="{Binding UpdateScoreCommand}" CommandParameter="2"/>
+                                            <MenuItem Header="3" Command="{Binding UpdateScoreCommand}" CommandParameter="3"/>
+                                            <MenuItem Header="4" Command="{Binding UpdateScoreCommand}" CommandParameter="4"/>
+                                            <MenuItem Header="5" Command="{Binding UpdateScoreCommand}" CommandParameter="5"/>
+                                            <MenuItem Header="6" Command="{Binding UpdateScoreCommand}" CommandParameter="6"/>
+                                            <MenuItem Header="7" Command="{Binding UpdateScoreCommand}" CommandParameter="7"/>
+                                            <MenuItem Header="8" Command="{Binding UpdateScoreCommand}" CommandParameter="8"/>
+                                            <MenuItem Header="9" Command="{Binding UpdateScoreCommand}" CommandParameter="9"/>
+                                            <MenuItem Header="10" Command="{Binding UpdateScoreCommand}" CommandParameter="10"/>
+                                        </MenuFlyout>
+                                    </Button.Flyout>
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <PathIcon Data="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
                                                   Width="16" 
                                                   Height="16"
                                                   Foreground="White"/>
-                                        <TextBlock Text="Review" 
-                                                   FontSize="15"
+                                        <TextBlock FontSize="15"
                                                    FontWeight="SemiBold"
-                                                   Foreground="White"/>
+                                                   Foreground="White">
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}">
+                                                    <Binding Path="SelectedScore"/>
+                                                    <Binding Path="Details.MyListStatus" Converter="{StaticResource ScoreTextConverter}"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
                                     </StackPanel>
                                 </Button>
                                 
@@ -208,58 +261,18 @@
                                 </Button>
                             </StackPanel>
                             
-                            <!-- Authors and Trailer Row -->
+                            <!-- Trailer, Studio and Popularity Row -->
                             <Grid Margin="0,0,0,25">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 
-                                <!-- Authors -->
-                                <StackPanel Grid.Column="0" Spacing="12">
-                                    <TextBlock Text="Authors" 
-                                               FontSize="12"
-                                               Foreground="#888888"
-                                               FontWeight="SemiBold"
-                                               LetterSpacing="1"/>
-                                    <StackPanel Orientation="Horizontal" Spacing="-14">
-                                        <Border Width="42" 
-                                                Height="42" 
-                                                CornerRadius="21"
-                                                Background="#4A4A4A"
-                                                BorderBrush="#1A1A1A"
-                                                BorderThickness="3"/>
-                                        <Border Width="42" 
-                                                Height="42" 
-                                                CornerRadius="21"
-                                                Background="#4A4A4A"
-                                                BorderBrush="#1A1A1A"
-                                                BorderThickness="3"/>
-                                        <Border Width="42" 
-                                                Height="42" 
-                                                CornerRadius="21"
-                                                Background="#4A4A4A"
-                                                BorderBrush="#1A1A1A"
-                                                BorderThickness="3"/>
-                                        <Border Width="42" 
-                                                Height="42" 
-                                                CornerRadius="21"
-                                                Background="#2A2A2A"
-                                                BorderBrush="#1A1A1A"
-                                                BorderThickness="3">
-                                            <TextBlock Text="+9"
-                                                       FontSize="13"
-                                                       Foreground="#AAAAAA"
-                                                       FontWeight="SemiBold"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"/>
-                                        </Border>
-                                    </StackPanel>
-                                </StackPanel>
-                                
                                 <!-- Trailer -->
-                                <StackPanel Grid.Column="2" Spacing="12">
+                                <StackPanel Grid.Column="0" Spacing="12">
                                     <TextBlock Text="Trailer" 
                                                FontSize="12"
                                                Foreground="#888888"
@@ -290,6 +303,39 @@
                                                       VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
+                                </StackPanel>
+                                
+                                <!-- Studio -->
+                                <StackPanel Grid.Column="2" Spacing="12">
+                                    <TextBlock Text="Studio" 
+                                               FontSize="12"
+                                               Foreground="#888888"
+                                               FontWeight="SemiBold"
+                                               LetterSpacing="1"/>
+                                    <TextBlock Text="{Binding Details.Studios[0].Name}"
+                                               FontSize="15"
+                                               Foreground="White"
+                                               FontWeight="Medium"/>
+                                </StackPanel>
+                                
+                                <!-- Popularity -->
+                                <StackPanel Grid.Column="4" Spacing="12">
+                                    <TextBlock Text="Popularity" 
+                                               FontSize="12"
+                                               Foreground="#888888"
+                                               FontWeight="SemiBold"
+                                               LetterSpacing="1"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <PathIcon Data="M16 17v2H2v-2s0-4 7-4 7 4 7 4m-3.5-9.5A3.5 3.5 0 1 0 9 11a3.5 3.5 0 0 0 3.5-3.5m3.44 5.5A5.32 5.32 0 0 1 18 17v2h4v-2s0-3.63-6.06-4M15 4a3.39 3.39 0 0 0-1.93.59 5 5 0 0 1 0 5.82A3.39 3.39 0 0 0 15 11a3.5 3.5 0 0 0 0-7z"
+                                                  Width="18"
+                                                  Height="18"
+                                                  Foreground="#FFD700"/>
+                                        <TextBlock Text="{Binding Details.Popularity, StringFormat='{}#{0}'}"
+                                                   FontSize="15"
+                                                   Foreground="White"
+                                                   FontWeight="Medium"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>

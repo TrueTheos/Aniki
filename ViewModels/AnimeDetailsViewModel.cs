@@ -39,6 +39,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public bool CanIncreaseEpisodeCount => EpisodesWatched < (Details?.NumEpisodes ?? 0);
     public bool CanDecreaseEpisodeCount => EpisodesWatched > 0;
 
+    [ObservableProperty]
+    private WatchAnimeViewModel _watchAnimeViewModel;
+
+    [ObservableProperty]
+    private TorrentSearchViewModel _torrentSearchViewModel;
+    
+    private readonly IMalService _malService;
+    
     private int _selectedScore;
     public int SelectedScore
     {
@@ -51,7 +59,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             }
         }
     }
-
+    
     private AnimeStatusTranslated _selectedStatus;
     public AnimeStatusTranslated SelectedStatus
     {
@@ -65,48 +73,12 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
     }
 
-    private AnimeStatusTranslated _selectedFilter;
-    public AnimeStatusTranslated SelectedFilter
-    {
-        get => _selectedFilter;
-        set
-        {
-            if (SetProperty(ref _selectedFilter, value))
-            {
-                //_ = LoadAnimeListAsync(value);
-                _lastStatus = value;
-            }
-        }
-    }
-
-    public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } =
-    [
-        AnimeStatusTranslated.Watching, AnimeStatusTranslated.Completed, AnimeStatusTranslated.OnHold,
-        AnimeStatusTranslated.Dropped, AnimeStatusTranslated.PlanToWatch
-    ];
-
-    public IEnumerable<AnimeStatusTranslated> FilterOptions => [.. Enum.GetValues<AnimeStatusTranslated>()];
-
-    public List<int> ScoreOptions { get; } = new() {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-
-    [ObservableProperty]
-    private WatchAnimeViewModel _watchAnimeViewModel;
-
-    [ObservableProperty]
-    private TorrentSearchViewModel _torrentSearchViewModel;
-    
-    private readonly IMalService _malService;
-    
-    private AnimeStatusTranslated _lastStatus = AnimeStatusTranslated.All;
-
     public AnimeDetailsViewModel(IMalService malService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
         _malService = malService;
         
         _watchAnimeViewModel = watchAnimeViewModel;
         _torrentSearchViewModel = torrentSearchViewModel;
-
-        SelectedFilter = AnimeStatusTranslated.All;
     }
 
     public void Update(MAL_AnimeDetails? details)
@@ -118,8 +90,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         OnPropertyChanged(nameof(EpisodesWatched));
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
-        SelectedScore = details?.MyListStatus?.Score ?? 1;
-        SelectedStatus = details?.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.All;
         WatchAnimeViewModel.Update(details);
         TorrentSearchViewModel.Update(details, EpisodesWatched);
     }
@@ -185,6 +155,34 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         EpisodesWatched = newCount;
     }
 
+    
+    [RelayCommand]
+    private async Task UpdateStatus(string status)
+    {
+        if (Details == null) return;
+    
+        AnimeStatusTranslated translatedStatus = status switch
+        {
+            "Watching" => AnimeStatusTranslated.Watching,
+            "Completed" => AnimeStatusTranslated.Completed,
+            "OnHold" => AnimeStatusTranslated.OnHold,
+            "Dropped" => AnimeStatusTranslated.Dropped,
+            "PlanToWatch" => AnimeStatusTranslated.PlanToWatch,
+            _ => AnimeStatusTranslated.Watching
+        };
+    
+        await UpdateAnimeStatus(translatedStatus);
+    }
+
+    [RelayCommand]
+    private async Task UpdateScore(string scoreStr)
+    {
+        if (Details == null) return;
+        if (int.TryParse(scoreStr, out int score))
+        {
+            await UpdateAnimeScore(score);
+        }
+    }
     private async Task UpdateAnimeScore(int score)
     {
         if (Details?.MyListStatus == null) return;

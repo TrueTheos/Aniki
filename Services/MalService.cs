@@ -27,7 +27,7 @@ public class MalService : IMalService
     
     private string _accessToken = "";
     
-    private const string MAL_NODE_FIELDS = "list_status,num_episodes,pictures,status,genres,synopsis,main_picture,mean";
+    private const string MAL_NODE_FIELDS = "list_status,num_episodes,pictures,status,genres,synopsis,main_picture,mean,popularity";
 
     public MalService(ISaveService saveService)
     {
@@ -152,7 +152,8 @@ public class MalService : IMalService
                     NumEpisodes = animeData.Node.NumEpisodes,
                     MyListStatus = animeData.ListStatus,
                     Genres = animeData.Node.Genres,
-                    Mean = animeData.Node.Mean
+                    Mean = animeData.Node.Mean,
+                    Popularity = animeData.Node.Popularity
                 };
             }
         }
@@ -172,7 +173,7 @@ public class MalService : IMalService
     {
         try
         {
-            string fields = "id,title,main_picture,status,synopsis,start_date,my_list_status,num_episodes,genres,videos,alternative_titles,mean,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}";
+            string fields = "id,title,main_picture,status,synopsis,studios,start_date,my_list_status,num_episodes,popularity,genres,videos,alternative_titles,mean,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}";
             string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={fields}";
 
             var animeResponse = await GetAndDeserializeAsync<MAL_AnimeDetails>(url, "FetchFullAnimeDetails");
@@ -343,7 +344,8 @@ public class MalService : IMalService
                 Synopsis = anime.Synopsis,
                 NumEpisodes = anime.NumEpisodes,
                 AlternativeTitles = anime.AlternativeTitles,
-                Mean = anime.Mean
+                Mean = anime.Mean,
+                Popularity = anime.Popularity
             };
         }
     }
@@ -413,7 +415,8 @@ public class MalService : IMalService
                 Status = entry.Node.Status,
                 Synopsis = entry.Node.Synopsis,
                 NumEpisodes = entry.Node.NumEpisodes,
-                Mean = entry.Node.Mean
+                Mean = entry.Node.Mean,
+                Popularity = entry.Node.Popularity
             };
         }
     }
