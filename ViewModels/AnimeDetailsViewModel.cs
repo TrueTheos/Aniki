@@ -244,4 +244,24 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             Log.Information($"Error searching anime: {ex.Message}");
         }
     }
+    
+    [RelayCommand]
+    private void PlayTrailerVideo()
+    {
+        if (Details?.TrailerURL != null)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = Details?.TrailerURL,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Information($"Error opening video: {ex.Message}");
+            }
+        }
+    }
 }

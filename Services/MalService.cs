@@ -17,6 +17,7 @@ public class MalService : IMalService
     private HttpClient _client = new();
     
     private readonly Dictionary<int, MAL_AnimeDetails> _detailsCache = new();
+    private readonly Dictionary<int, MAL_AnimeNode> _nodeCache = new();
     private List<MAL_AnimeData>? _userAnimeList;
 
     private readonly Stopwatch _sw = new();
@@ -116,8 +117,12 @@ public class MalService : IMalService
                 
                 if (response?.Data != null)
                 {
+                    foreach (var data in response.Data)
+                    {
+                        _nodeCache[data.Node.Id] = data.Node;
+                    }
+                    
                     animeList.AddRange(response.Data);
-                    CacheAnimeDetails(response.Data);
                 }
 
                 nextPageUrl = response?.Paging?.Next;
@@ -135,30 +140,7 @@ public class MalService : IMalService
             throw new($"Error loading anime list: {ex.Message}", ex);
         }
     }
-
-    private void CacheAnimeDetails(MAL_AnimeData[] animeDataArray)
-    {
-        foreach (var animeData in animeDataArray)
-        {
-            if (animeData.Node?.Id != null && !_detailsCache.ContainsKey(animeData.Node.Id))
-            {
-                _detailsCache[animeData.Node.Id] = new MAL_AnimeDetails
-                {
-                    Id = animeData.Node.Id,
-                    Title = animeData.Node.Title,
-                    MainPicture = animeData.Node.MainPicture,
-                    Status = animeData.Node.Status,
-                    Synopsis = animeData.Node.Synopsis,
-                    NumEpisodes = animeData.Node.NumEpisodes,
-                    MyListStatus = animeData.ListStatus,
-                    Genres = animeData.Node.Genres,
-                    Mean = animeData.Node.Mean,
-                    Popularity = animeData.Node.Popularity
-                };
-            }
-        }
-    }
-
+    
     public async Task<MAL_AnimeDetails?> GetAnimeDetails(int id, bool forceFull = false)
     {
         if (_detailsCache.TryGetValue(id, out var cached) && (!forceFull || cached.RelatedAnime != null))
@@ -173,13 +155,14 @@ public class MalService : IMalService
     {
         try
         {
-            string fields = "id,title,main_picture,status,synopsis,studios,start_date,my_list_status,num_episodes,popularity,genres,videos,alternative_titles,mean,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}";
+            string fields = "id,title,main_picture,status,synopsis,studios,start_date,my_list_status,num_episodes,popularity,genres,videos,alternative_titles,mean,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles},statistics,num_favorites";
             string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={fields}";
 
             var animeResponse = await GetAndDeserializeAsync<MAL_AnimeDetails>(url, "FetchFullAnimeDetails");
-            
+
             if (animeResponse != null)
             {
+                animeResponse.TrailerURL = await GetAnimeTrailerUrlJikan(animeResponse.Id);
                 await LoadAndCacheAnimeImage(animeResponse);
                 _detailsCache[id] = animeResponse;
                 return animeResponse;
@@ -305,7 +288,6 @@ public class MalService : IMalService
             .OrderByDescending(x => x.Score)
             .Select(x =>
             {
-                CacheSearchResult(x.Entry.MalAnime);
                 return x.Entry;
             })
             .ToList() ?? new List<MAL_SearchEntry>();
@@ -328,26 +310,6 @@ public class MalService : IMalService
         }
 
         return score;
-    }
-
-    private void CacheSearchResult(MAL_AnimeNode anime)
-    {
-        if (anime?.Id != null && !_detailsCache.ContainsKey(anime.Id))
-        {
-            _detailsCache[anime.Id] = new MAL_AnimeDetails
-            {
-                Id = anime.Id,
-                Title = anime.Title,
-                Genres = anime.Genres,
-                MainPicture = anime.MainPicture,
-                Status = anime.Status,
-                Synopsis = anime.Synopsis,
-                NumEpisodes = anime.NumEpisodes,
-                AlternativeTitles = anime.AlternativeTitles,
-                Mean = anime.Mean,
-                Popularity = anime.Popularity
-            };
-        }
     }
 
     private bool DoesTitleMatch(MAL_AnimeNode malAnime, string query)
@@ -392,33 +354,10 @@ public class MalService : IMalService
         
         if (response?.Data != null)
         {
-            foreach (var entry in response.Data)
-            {
-                CacheRankingEntry(entry);
-            }
-            
             return response.Data.ToList();
         }
 
         return new List<MAL_RankingEntry>();
-    }
-
-    private void CacheRankingEntry(MAL_RankingEntry entry)
-    {
-        if (entry.Node?.Id != null && !_detailsCache.ContainsKey(entry.Node.Id))
-        {
-            _detailsCache[entry.Node.Id] = new MAL_AnimeDetails
-            {
-                Id = entry.Node.Id,
-                Title = entry.Node.Title,
-                MainPicture = entry.Node.MainPicture,
-                Status = entry.Node.Status,
-                Synopsis = entry.Node.Synopsis,
-                NumEpisodes = entry.Node.NumEpisodes,
-                Mean = entry.Node.Mean,
-                Popularity = entry.Node.Popularity
-            };
-        }
     }
 
     public Task UpdateAnimeStatus(int animeId, AnimeStatusApi status) 
@@ -490,5 +429,51 @@ public class MalService : IMalService
         }
 
         _userAnimeList = null;
+    }
+    
+    private async Task<string?> GetAnimeTrailerUrlJikan(int animeId)
+    {
+        try
+        {
+            string url = $"https://api.jikan.moe/v4/anime/{animeId}/videos";
+
+            var response = await GetAsync(url, "GetAnimeTrailerUrlJikan");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Log.Information($"Failed to get trailer from Jikan: {response.StatusCode}");
+                return null;
+            }
+
+            string json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+
+            if (doc.RootElement.TryGetProperty("data", out var dataElem) &&
+                dataElem.TryGetProperty("promo", out var promoArray) &&
+                promoArray.ValueKind == JsonValueKind.Array &&
+                promoArray.GetArrayLength() > 0)
+            {
+                var firstPromo = promoArray[0];
+                if (firstPromo.TryGetProperty("trailer", out var trailerElem))
+                {
+                    if (trailerElem.TryGetProperty("embed_url", out var urlElem))
+                    {
+                        return urlElem.GetString();
+                    }
+                    else if (trailerElem.TryGetProperty("youtube_id", out var youtubeIdElem))
+                    {
+                        string youtubeId = youtubeIdElem.GetString() ?? "";
+                        return string.IsNullOrEmpty(youtubeId) ? null : $"https://www.youtube.com/watch?v={youtubeId}";
+                    }
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Log.Information($"Error getting trailer from Jikan: {ex.Message}");
+            return null;
+        }
     }
 }

@@ -38,7 +38,7 @@
                         </Grid.ColumnDefinitions>
                         
                         <!-- LEFT COLUMN: Poster + Rating + Reviews Info -->
-                        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,50,0,0">
+                        <Grid Grid.Column="0" RowDefinitions="Auto,Auto" Margin="0,50,0,0">
                             <!-- Poster with overlapping rating badge -->
                             <Grid Grid.Row="0" Height="495">
                                 <!-- Poster -->
@@ -74,42 +74,92 @@
                                 </Border>
                             </Grid>
                             
-                            <!-- Reviews/Comments/Views Info -->
-                            <StackPanel Grid.Row="1" 
-                                        Margin="0,30,0,15"
-                                        Spacing="2"
-                                        HorizontalAlignment="Center">
-                                <TextBlock FontSize="13" 
-                                           Foreground="#999999"
-                                           HorizontalAlignment="Center">
-                                    <Run Text="19 reviews"/>
-                                </TextBlock>
-                                <StackPanel Orientation="Horizontal" 
-                                            Spacing="8"
-                                            HorizontalAlignment="Center">
-                                    <TextBlock FontSize="13" Foreground="#999999">
-                                        <Run Text="15 comments"/>
-                                    </TextBlock>
-                                    <TextBlock Text="•" FontSize="13" Foreground="#666666"/>
-                                    <TextBlock FontSize="13" Foreground="#999999">
-                                        <Run Text="230 views"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </StackPanel>
-                            
-                            <!-- View Reviews Button -->
-                            <Button Grid.Row="2"
+                            <!-- Anime Stats -->
+                            <Border Grid.Row="1"
+                                    Margin="0,30,0,15"
                                     Background="Transparent"
-                                    BorderBrush="#444444"
-                                    BorderThickness="1"
                                     CornerRadius="8"
-                                    Padding="0,12"
-                                    HorizontalAlignment="Stretch"
-                                    Content="View reviews"
-                                    Foreground="#CCCCCC"
-                                    FontSize="14"
-                                    FontWeight="SemiBold"
-                                    HorizontalContentAlignment="Center"/>
+                                    Padding="15">
+                                <UniformGrid Columns="3" Rows="2" HorizontalAlignment="Center" RowSpacing="20">
+                                    <!-- Watching -->
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                        <TextBlock Text="{Binding Details.Statistics.Status.Watching, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Watching"
+                                                   FontSize="12"
+                                                   Foreground="#999999"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Completed -->
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                        <TextBlock Text="{Binding Details.Statistics.Status.Completed, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Completed"
+                                                   FontSize="12"
+                                                   Foreground="#999999"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Plan to Watch -->
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                        <TextBlock Text="{Binding Details.Statistics.Status.PlanToWatch, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Plan to Watch"
+                                                   FontSize="12"
+                                                   Foreground="#999999"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- On Hold -->
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                        <TextBlock Text="{Binding Details.Statistics.Status.OnHold, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="On Hold"
+                                                   FontSize="12"
+                                                   Foreground="#999999"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Dropped -->
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                        <TextBlock Text="{Binding Details.Statistics.Status.Dropped, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Dropped"
+                                                   FontSize="12"
+                                                   Foreground="#999999"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Favorites -->
+                                    <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                        <TextBlock Text="{Binding Details.NumFavorites, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                   FontSize="16"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Favorites"
+                                                   FontSize="12"
+                                                   Foreground="#999999"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Border>
                         </Grid>
                         
                         <StackPanel Grid.Column="1" Margin="40,0,0,50" Spacing="0" VerticalAlignment="Bottom">
@@ -264,7 +314,7 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <!-- Trailer -->
-                                <StackPanel Grid.Column="0" Spacing="12">
+                                <StackPanel Grid.Column="0" Spacing="12" IsVisible="{Binding Details.TrailerURL, Converter={x:Static ObjectConverters.IsNotNull}}">
                                     <TextBlock Text="Trailer" 
                                                FontSize="12"
                                                Foreground="#888888"

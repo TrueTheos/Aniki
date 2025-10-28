@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Aniki.Converters;
 using Aniki.Misc;
 using Avalonia.Media.Imaging;
 
@@ -90,6 +91,11 @@ public class MAL_AnimeDetails
     [JsonPropertyName("related_anime")]
     public MAL_RelatedAnime[]? RelatedAnime { get; set; }
     public MAL_Video[]? Videos { get; set; }
+    [JsonPropertyName("num_favorites")]
+    public int NumFavorites { get; set; }
+    public MAL_Statistics? Statistics { get; set; }
+    
+    public string? TrailerURL { get; set; }
 
     public AnimeCardData ToCardData()
     {
@@ -164,4 +170,27 @@ public class MAL_Video
     [JsonPropertyName("updated_at")]
     public long UpdatedAt { get; set; }
     public required string Thumbnail { get; set; }
+}
+
+public class MAL_Statistics
+{
+    [JsonPropertyName("num_list_users")]
+    public int NumListUsers { get; set; }
+    public MAL_StatusStatistics? Status { get; set; }
+}
+
+public class MAL_StatusStatistics
+{
+    [JsonConverter(typeof(IntToStringConverter))]
+    public string? Watching { get; set; }
+    [JsonConverter(typeof(IntToStringConverter))]
+    public string? Completed { get; set; }
+    [JsonPropertyName("on_hold")]
+    [JsonConverter(typeof(IntToStringConverter))]
+    public string? OnHold { get; set; }
+    [JsonConverter(typeof(IntToStringConverter))]
+    public string? Dropped { get; set; }
+    [JsonPropertyName("plan_to_watch")]
+    [JsonConverter(typeof(IntToStringConverter))]
+    public string? PlanToWatch { get; set; }
 }

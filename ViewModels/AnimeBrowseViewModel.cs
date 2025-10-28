@@ -94,7 +94,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                 if(details != null) AiringToday.Add(details.ToCardData());
             }
             
-            // Load Hero Anime (anime with videos)
             await LoadHeroAnimeAsync(airing);
         }
         catch (Exception ex)
