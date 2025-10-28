@@ -74,6 +74,8 @@ public class MAL_AnimeDetails
     [JsonPropertyName("num_episodes")]
     public required int NumEpisodes { get; init; }
     public Bitmap? Picture { get; set; }
+    [JsonPropertyName("start_date")]
+    public string? StartDate { get; set; }
     private float _mean;
     [JsonPropertyName("mean")]
     public float Mean

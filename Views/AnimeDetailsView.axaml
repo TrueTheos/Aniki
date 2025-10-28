@@ -16,11 +16,11 @@
         <ScrollViewer>
             <Grid RowDefinitions="Auto,Auto">
                 <!-- Hero Section with Blurred Background -->
-                <Grid Row="0" MinHeight="500">
+                <Grid Row="0" Height="600">
                     <!-- Blurred Background Image -->
                     <Image asyncImageLoader:ImageLoader.Source="{Binding Details.MainPicture.Large}"
                            Stretch="UniformToFill"
-                           Height="600"
+                           Height="550"
                            VerticalAlignment="Top">
                         <Image.Effect>
                             <BlurEffect Radius="35"/>
@@ -33,19 +33,19 @@
                     <!-- Main Content Grid -->
                     <Grid Margin="50,100,50,50">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="330"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         
                         <!-- LEFT COLUMN: Poster + Rating + Reviews Info -->
-                        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto">
+                        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,50,0,0">
                             <!-- Poster with overlapping rating badge -->
-                            <Grid Grid.Row="0" Height="330">
+                            <Grid Grid.Row="0" Height="495">
                                 <!-- Poster -->
                                 <Border CornerRadius="12"
                                         BoxShadow="0 10 40 #80000000"
-                                        Width="220"
-                                        Height="330"
+                                        Width="330"
+                                        Height="495"
                                         ClipToBounds="True"
                                         VerticalAlignment="Top">
                                     <Image asyncImageLoader:ImageLoader.Source="{Binding Details.MainPicture.Large}"
@@ -113,7 +113,7 @@
                         </Grid>
                         
                         <!-- RIGHT COLUMN: Title + All Info -->
-                        <StackPanel Grid.Column="1" Margin="40,0,0,0" Spacing="0" VerticalAlignment="Bottom">
+                        <StackPanel Grid.Column="1" Margin="40,0,0,50" Spacing="0" VerticalAlignment="Bottom">
                             <!-- Title -->
                             <TextBlock Text="{Binding Details.Title}"
                                        FontSize="56"
@@ -130,15 +130,15 @@
                                 <TextBlock Text="•" 
                                            FontSize="14"
                                            Foreground="#777777"/>
-                                <TextBlock Text="2016"
+                                <TextBlock Text="{Binding Details.StartDate}"
                                            FontSize="14"
                                            Foreground="#AAAAAA"/>
                                 <TextBlock Text="•" 
                                            FontSize="14"
                                            Foreground="#777777"/>
-                                <TextBlock FontSize="14"
-                                           Foreground="#AAAAAA">
-                                    <Run Text="24 mins"/>
+                                <TextBlock  Text="{Binding Details.NumEpisodes, StringFormat='{}{0} episodes'}"
+                                            FontSize="14"
+                                            Foreground="#AAAAAA">
                                 </TextBlock>
                             </StackPanel>
                             
@@ -291,60 +291,66 @@
                     </Grid>
                 </Grid>
                 
-                <Grid Row="1" Margin="50,0,50,60">
-                    <!-- Synopsis -->
-                    <TextBlock Text="{Binding Details.Synopsis}"
-                               FontSize="15"
-                               Foreground="#CCCCCC"
-                               TextWrapping="Wrap"
-                               LineHeight="24"
-                               Margin="0,0,0,20"/>
-                            
-                    <!-- Genre Tags -->
-                    <ItemsControl ItemsSource="{Binding Details.Genres}" Margin="0,0,0,20">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="mal:MAL_Genre">
-                                <Border Background="#44E50914"
-                                        CornerRadius="16"
-                                        Padding="16,8"
-                                        Margin="0,0,10,10">
-                                    <TextBlock Text="{Binding Name}"
-                                               FontSize="13"
-                                               Foreground="#FF6B8E"
-                                               FontWeight="Medium"/>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" 
-                                  VerticalScrollBarVisibility="Disabled">
-                        <ItemsControl ItemsSource="{Binding Details.Videos}">
+                <Grid Row="1" Margin="100,0,50,60">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="330"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="1">
+                        <!-- Synopsis -->
+                        <TextBlock Text="{Binding Details.Synopsis}"
+                                   FontSize="15"
+                                   Foreground="#CCCCCC"
+                                   TextWrapping="Wrap"
+                                   LineHeight="24"
+                                   Margin="0,0,0,20"/>
+                                
+                        <!-- Genre Tags -->
+                        <ItemsControl ItemsSource="{Binding Details.Genres}" Margin="0,0,0,20">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="20"/>
+                                    <WrapPanel Orientation="Horizontal"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="mal:MAL_Video">
-                                    <Border Width="380"
-                                            Height="214"
-                                            CornerRadius="10"
-                                            ClipToBounds="True"
-                                            BoxShadow="0 6 24 #50000000"
-                                            Cursor="Hand">
-                                        <Image asyncImageLoader:ImageLoader.Source="{Binding Thumbnail}"
-                                               Stretch="UniformToFill"/>
+                                <DataTemplate DataType="mal:MAL_Genre">
+                                    <Border Background="#44E50914"
+                                            CornerRadius="16"
+                                            Padding="16,8"
+                                            Margin="0,0,10,10">
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="13"
+                                                   Foreground="#FF6B8E"
+                                                   FontWeight="Medium"/>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </ScrollViewer>
+                        
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+                                      VerticalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding Details.Videos}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="20"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="mal:MAL_Video">
+                                        <Border Width="380"
+                                                Height="214"
+                                                CornerRadius="10"
+                                                ClipToBounds="True"
+                                                BoxShadow="0 6 24 #50000000"
+                                                Cursor="Hand">
+                                            <Image asyncImageLoader:ImageLoader.Source="{Binding Thumbnail}"
+                                                   Stretch="UniformToFill"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </ScrollViewer>

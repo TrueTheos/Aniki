@@ -172,7 +172,7 @@ public class MalService : IMalService
     {
         try
         {
-            string fields = "id,title,main_picture,status,synopsis,my_list_status,num_episodes,genres,videos,alternative_titles,mean,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}";
+            string fields = "id,title,main_picture,status,synopsis,start_date,my_list_status,num_episodes,genres,videos,alternative_titles,mean,related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}";
             string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={fields}";
 
             var animeResponse = await GetAndDeserializeAsync<MAL_AnimeDetails>(url, "FetchFullAnimeDetails");
