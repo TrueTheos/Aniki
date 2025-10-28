@@ -11,12 +11,12 @@
     <Border
         x:Name="Root"
         Padding="0"
-        Background="{StaticResource Background0}">
+        Background="{StaticResource BackgroundBlack}">
         <Grid>
             <!--  Anime Details Panel  -->
             <Border
                 Padding="16"
-                Background="{StaticResource Background0}"
+                Background="{StaticResource BackgroundBlack}"
                 IsVisible="{Binding SelectedAnime, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <TabControl Margin="0" Padding="0">
                     <!--  Info Tab  -->

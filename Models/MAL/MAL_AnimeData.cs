@@ -76,7 +76,7 @@ public class MAL_AnimeDetails
     public Bitmap? Picture { get; set; }
     private float _mean;
     [JsonPropertyName("mean")]
-    public required float Mean 
+    public float Mean
     { 
         get => _mean;
         set => _mean = (float)Math.Round(value, 1);
