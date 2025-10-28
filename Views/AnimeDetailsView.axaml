@@ -301,6 +301,19 @@
                                               Foreground="White"
                                               ToolTip.Tip="Copy page URL to clipboard"/>
                                 </Button>
+                                
+                                <Button Background="#3A3A3A"
+                                        BorderThickness="0"
+                                        Width="50"
+                                        Height="50"
+                                        CornerRadius="25"
+                                        Cursor="Hand"
+                                        Command="{Binding RemoveFromListCommand}"
+                                        IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull} }">
+                                    <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}"  Width="22" 
+                                           Height="22"
+                                           ToolTip.Tip="Remove from list"/>
+                                </Button>
                             </StackPanel>
                             
                             <!-- Trailer, Studio and Popularity Row -->
@@ -326,7 +339,9 @@
                                             Background="#FF4444"
                                             ClipToBounds="True"
                                             Cursor="Hand"
-                                            BoxShadow="0 4 16 #40000000">
+                                            BoxShadow="0 4 16 #40000000"
+                                            Tag="{Binding Details.TrailerURL}"
+                                            Tapped="PlayTrailerVideo">
                                         <Grid>
                                             <Image Stretch="UniformToFill"
                                                    asyncImageLoader:ImageLoader.Source="{Binding Details.Videos[0].Thumbnail}"/>

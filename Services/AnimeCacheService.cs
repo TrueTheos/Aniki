@@ -67,6 +67,7 @@ public struct FieldCacheEntry<T>
     public void Set(T? value)
     {
         Value = value;
+        WasFetched = true;
         if (value != null) State = FieldFetchState.HasValue;
         else
         {
@@ -498,7 +499,7 @@ public class AnimeCacheService
         return missing.ToArray();
     }
 
-    public async Task<AnimeFieldSet> GetFieldsAsync(int animeId, bool retryFetchedNulls = false, params AnimeField[] fields)
+    public async Task<AnimeFieldSet> GetFieldsAsync(int animeId, params AnimeField[] fields)
     {
         var missingFields = GetMissingFields(animeId, fields);
 

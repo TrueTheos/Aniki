@@ -199,24 +199,4 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
         _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.AnimeId}");
     }
-    
-    [RelayCommand]
-    private void PlayTrailerVideo()
-    {
-        if (Details?.TrailerURL != null)
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = Details?.TrailerURL,
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                Log.Information($"Error opening video: {ex.Message}");
-            }
-        }
-    }
 }
