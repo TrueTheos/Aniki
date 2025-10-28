@@ -127,7 +127,7 @@
                     <Button
                         Name="AnimeDetailsButton"
                         Classes="MenuButton"
-                        Command="{Binding OpenSettingsCommand}">
+                        Command="{Binding ShowAnimeDetailsPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="20" Height="20" />
                             <TextBlock VerticalAlignment="Center" Text="Anime Details" Foreground="Gray" />
