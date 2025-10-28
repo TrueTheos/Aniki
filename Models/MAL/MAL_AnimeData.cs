@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Aniki.Converters;
 using Aniki.Misc;
+using Aniki.Views;
 using Avalonia.Media.Imaging;
 
 namespace Aniki.Models.MAL;
@@ -20,6 +21,8 @@ public class MAL_AnimeNode
     [JsonPropertyName("alternative_titles")]
     public MAL_AlternativeTitles? AlternativeTitles { get; set; }
     public MAL_Genre[]? Genres { get; set; }
+    [JsonPropertyName("my_list_status")]
+    public MAL_MyListStatus? MyListStatus { get; set; }
     public required string Synopsis { get; set; }
     public required string Status { get; set; }
     [JsonPropertyName("main_picture")]
@@ -34,6 +37,18 @@ public class MAL_AnimeNode
     { 
         get => _mean;
         set => _mean = (float)Math.Round(value, 1);
+    }
+
+    public AnimeCardData ToCardData()
+    {
+        return new AnimeCardData()
+        {
+            AnimeId = Id,
+            Title = Title,
+            ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
+            Score = Mean,
+            Status = MyListStatus?.Status ?? AnimeStatusApi.none
+        };
     }
 }
 
@@ -62,52 +77,34 @@ public class MAL_Paging
 
 public class MAL_AnimeDetails
 {
-    public required int Id { get; init; }
-    public required string Title { get; set; }
+    public int Id { get; set; }
+    public string? Title { get; set; }
     [JsonPropertyName("main_picture")]
-    public MAL_MainPicture? MainPicture { get; init; }
-    public required string Status { get; init; }
-    public required string Synopsis { get; init; }
+    public MAL_MainPicture? MainPicture { get; set; }
+    public string? Status { get; set; }
+    public string? Synopsis { get; set; }
     [JsonPropertyName("alternative_titles")]
-    public MAL_AlternativeTitles? AlternativeTitles { get; init; }
+    public MAL_AlternativeTitles? AlternativeTitles { get; set; }
     
     [JsonPropertyName("my_list_status")]
     public MAL_MyListStatus? MyListStatus { get; set; }
     [JsonPropertyName("num_episodes")]
-    public required int NumEpisodes { get; init; }
-    public required int Popularity { get; init; }
+    public int? NumEpisodes { get; set; }
+    public int? Popularity { get; set; }
     public Bitmap? Picture { get; set; }
     public MAL_Studio[]? Studios { get; set; } 
     [JsonPropertyName("start_date")]
     public string? StartDate { get; set; }
-    private float _mean;
-    [JsonPropertyName("mean")]
-    public float Mean
-    { 
-        get => _mean;
-        set => _mean = (float)Math.Round(value, 1);
-    }
+    public float? Mean { get; set; }
     public MAL_Genre[]? Genres { get; set; }
     [JsonPropertyName("related_anime")]
     public MAL_RelatedAnime[]? RelatedAnime { get; set; }
     public MAL_Video[]? Videos { get; set; }
     [JsonPropertyName("num_favorites")]
-    public int NumFavorites { get; set; }
+    public int? NumFavorites { get; set; }
     public MAL_Statistics? Statistics { get; set; }
     
     public string? TrailerURL { get; set; }
-
-    public AnimeCardData ToCardData()
-    {
-        return new AnimeCardData()
-        {
-            AnimeId = Id,
-            Title = Title,
-            ImageUrl = MainPicture!.Large != null ? MainPicture.Large : MainPicture.Medium,
-            Score = Mean,
-            Status = MyListStatus != null ? MyListStatus.Status : AnimeStatusApi.none
-        };
-    }
 }
 
 public class MAL_Studio

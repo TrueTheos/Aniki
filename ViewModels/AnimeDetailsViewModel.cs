@@ -9,22 +9,9 @@ namespace Aniki.ViewModels;
 
 public partial class AnimeDetailsViewModel : ViewModelBase
 {
-    private MAL_AnimeData? _selectedAnime;
-    public MAL_AnimeData? SelectedAnime
-    {
-        get => _selectedAnime;
-        set
-        {
-            if (SetProperty(ref _selectedAnime, value))
-            {
-                _ = LoadAnimeDetailsAsync(value);
-            }
-        }
-    }
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
-    private MAL_AnimeDetails? _details;
+    private AnimeFieldSet? _details;
 
     public string? ImageUrl => Details?.MainPicture?.Large;
 
@@ -84,7 +71,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         _torrentSearchViewModel = torrentSearchViewModel;
     }
 
-    public void Update(MAL_AnimeDetails? details)
+    public void Update(AnimeFieldSet? details)
     {
         IsLoading = false;
         Details = details;
@@ -100,16 +87,13 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         TorrentSearchViewModel.Update(details, EpisodesWatched);
     }
 
-    private async Task LoadAnimeDetailsAsync(MAL_AnimeData? animeData)
+    public async Task LoadAnimeDetailsAsync(int id)
     {
-        if (animeData?.Node?.Id != null)
-        {
-            IsLoading = true;
-            MAL_AnimeDetails? details = await _malService.GetAnimeDetails(animeData.Node.Id);
-            Update(details);
+        IsLoading = true;
+        AnimeFieldSet? details = await _malService.GetAllFieldsAsync(id);
+        Update(details);
 
-            IsLoading = false;
-        }
+        IsLoading = false;
     }
 
     [RelayCommand]
@@ -129,9 +113,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await _malService.RemoveFromList(Details.Id);
+        await _malService.RemoveFromList(Details.AnimeId);
             
-        await LoadAnimeDetailsAsync(SelectedAnime);
+        await LoadAnimeDetailsAsync(Details.AnimeId);
     }
 
     [RelayCommand]
@@ -140,9 +124,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details == null) return;
         if (Details.MyListStatus == null || Details.MyListStatus.Status == AnimeStatusApi.none)
         {
-            await _malService.UpdateAnimeStatus(Details.Id, AnimeStatusApi.plan_to_watch);
+            await _malService.UpdateAnimeStatus(Details.AnimeId, AnimeStatusApi.plan_to_watch);
 
-            await LoadAnimeDetailsAsync(SelectedAnime);
+            await LoadAnimeDetailsAsync(Details.AnimeId);
         }
     }
 
@@ -156,10 +140,10 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
         if (Details.NumEpisodes > 0 && newCount > Details.NumEpisodes)
         {
-            newCount = Details.NumEpisodes;
+            newCount = Details.NumEpisodes ?? 0;
         }
 
-        await _malService.UpdateEpisodesWatched(Details.Id, newCount);
+        await _malService.UpdateEpisodesWatched(Details.AnimeId, newCount);
         EpisodesWatched = newCount;
     }
 
@@ -185,14 +169,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details?.MyListStatus == null) return;
 
-        await _malService.UpdateAnimeScore(Details.Id, score);
+        await _malService.UpdateAnimeScore(Details.AnimeId, score);
         Details.MyListStatus.Score = score;
     }
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
         if(Details == null) return;
-        await _malService.UpdateAnimeStatus(Details.Id, status.TranslatedToApi());
+        await _malService.UpdateAnimeStatus(Details.AnimeId, status.TranslatedToApi());
         if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
     }
     
@@ -200,7 +184,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     private void OpenMalPage()
     {
         if (Details == null) return;
-        string url = $"https://myanimelist.net/anime/{Details.Id}";
+        string url = $"https://myanimelist.net/anime/{Details.AnimeId}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
     
@@ -213,36 +197,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         
         if (Details == null) return;
 
-        _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.Id}");
-    }
-    
-    public async Task SearchAnimeById(int malId, bool showDetails = true)
-    {
-        try
-        {
-            MAL_AnimeDetails? details = await _malService.GetAnimeDetails(malId);
-
-            if (details == null) return;
-                
-            MAL_AnimeData newMalAnimeData = new()
-            {
-                Node = new()
-                {
-                    Id = details.Id,
-                    Title = details.Title,
-                    Synopsis = details.Synopsis,
-                    Status = details.Status,
-                    MainPicture = details.MainPicture,
-                    Mean = details.Mean
-                },
-                ListStatus = details.MyListStatus
-            };
-            SelectedAnime = newMalAnimeData;
-        }
-        catch (Exception ex)
-        {
-            Log.Information($"Error searching anime: {ex.Message}");
-        }
+        _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.AnimeId}");
     }
     
     [RelayCommand]

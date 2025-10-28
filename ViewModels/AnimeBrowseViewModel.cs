@@ -78,19 +78,19 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         try
         {
             var airing = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.AIRING);
-            await LoadAnimeCards(airing, PopularThisSeason);
+            LoadAnimeCards(airing, PopularThisSeason);
 
             var upcoming = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.UPCOMING);
-            await LoadAnimeCards(upcoming, PopularUpcoming);
+            LoadAnimeCards(upcoming, PopularUpcoming);
             
             var allTime = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.BYPOPULARITY);
-            await LoadAnimeCards(allTime, TrendingAllTime);
+            LoadAnimeCards(allTime, TrendingAllTime);
 
             var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
             foreach (var anime in airingToday)
             {
                 if(anime.MalId == null) continue;
-                MAL_AnimeDetails? details = await _malService.GetAnimeDetails(anime.MalId.Value);
+                AnimeFieldSet? details = await _malService.GetFieldsAsync(anime.MalId.Value,  AnimeField.TITLE, AnimeField.MAIN_PICTURE, AnimeField.MEAN, AnimeField.MY_LIST_STATUS);
                 if(details != null) AiringToday.Add(details.ToCardData());
             }
             
@@ -112,15 +112,15 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         
         foreach (var anime in animeList.Take(10))
         {
-            var details = await _malService.GetAnimeDetails(anime.Node.Id, true);
+            var details = await _malService.GetFieldsAsync(anime.Node.Id, AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS);
             if (details?.Videos != null && details.Videos.Length > 0)
             {
                 var heroData = new HeroAnimeData
                 {
-                    AnimeId = details.Id,
-                    Title = details.Title,
-                    Synopsis = details.Synopsis,
-                    Score = details.Mean,
+                    AnimeId = details.AnimeId,
+                    Title = details.Title!,
+                    Synopsis = details.Synopsis!,
+                    Score = details.Mean!.Value,
                     Status = details.MyListStatus?.Status ?? AnimeStatusApi.none,
                     VideoUrl = details.Videos[0].Url,
                     VideoThumbnail = details.Videos[0].Thumbnail,
@@ -129,7 +129,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                 
                 HeroAnimeList.Add(heroData);
                 
-                if (HeroAnimeList.Count >= 5) break; // Limit to 5 hero anime
+                if (HeroAnimeList.Count >= 5) break;
             }
         }
         
@@ -139,15 +139,14 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 
-    private async Task LoadAnimeCards(List<MAL_RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
+    private void LoadAnimeCards(List<MAL_RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
     {
         collection.Clear();
         foreach (var anime in animeList)
         {
-            var details = await _malService.GetAnimeDetails(anime.Node.Id);
-            if (details != null)
+            if (anime != null && anime.Node != null)
             {
-                collection.Add(details.ToCardData());
+                collection.Add(anime.Node.ToCardData());
             }
         }
     }

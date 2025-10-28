@@ -58,13 +58,13 @@ public class SaveService : ISaveService
     public void SaveSettings(SettingsConfig config) => SettingsManager!.Save(config);
     public SettingsConfig? GetSettingsConfig() => SettingsManager!.Load();
 
-    public Bitmap? TryGetAnimeImage(int id)
+    public bool TryGetAnimeImage(int id, out Bitmap? picture)
     {
         string fileName = $"anime_{id}.jpg";
-        
-        Bitmap? cachedImage = ImageCache!.LoadImage(fileName);
-        if (cachedImage != null) return cachedImage;
-        return null;
+    
+        picture = ImageCache!.LoadImage(fileName);
+    
+        return picture != null;
     }
 
     public void SaveImage(int id, Bitmap image)

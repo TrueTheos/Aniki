@@ -171,7 +171,7 @@ public partial class MainViewModel : ViewModelBase
 
         try
         {
-            await AnimeDetailsViewModel.SearchAnimeById(malId);
+            await AnimeDetailsViewModel.LoadAnimeDetailsAsync(malId);
         }
         catch (Exception ex)
         {

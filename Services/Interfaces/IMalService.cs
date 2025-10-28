@@ -9,9 +9,10 @@ public interface IMalService
     public void Init(string accessToken);
     public Task<MAL_UserData> GetUserDataAsync();
     public Task<List<MAL_AnimeData>> GetUserAnimeList(AnimeStatusApi status = AnimeStatusApi.none);
-    public Task<MAL_AnimeDetails?> GetAnimeDetails(int id, bool forceFull = false);
     public Task<string> GetAnimeNameById(int id);
     public Task<Bitmap?> GetUserPicture();
+    public Task<AnimeFieldSet> GetAllFieldsAsync(int animeId);
+    public Task<AnimeFieldSet> GetFieldsAsync(int animeId, params AnimeField[] fields);
     public Task<Bitmap?> GetAnimeImage(MAL_MainPicture? animePictureData);
     public Task<List<MAL_SearchEntry>> SearchAnimeOrdered(string query);
     public Task UpdateAnimeStatus(int animeId, AnimeStatusApi status);

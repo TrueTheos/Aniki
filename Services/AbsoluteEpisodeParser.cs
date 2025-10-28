@@ -84,7 +84,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             var seasonMap = new Dictionary<int, SeasonData>();
             var visitedIds = new HashSet<int>();
             
-            var seasonChain = new List<(int id, MAL_AnimeDetails details)>();
+            var seasonChain = new List<(int id, AnimeFieldSet details)>();
             int currentId = animeId;
             
             while (true)
@@ -92,7 +92,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 if (visitedIds.Contains(currentId)) break;
                 visitedIds.Add(currentId);
                 
-                MAL_AnimeDetails? details = await _malService.GetAnimeDetails(currentId, true);
+                AnimeFieldSet? details = await _malService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
                 if (details == null) break;
                 
                 seasonChain.Insert(0, (currentId, details));
@@ -107,9 +107,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     break; 
                 }
             }
-            
-            currentId = animeId;
-            MAL_AnimeDetails? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
+
+            AnimeFieldSet? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
             
             while (currentDetails != null)
             {
@@ -118,7 +117,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 {
                     currentId = sequel.Node.Id;
                     visitedIds.Add(currentId);
-                    currentDetails = await _malService.GetAnimeDetails(currentId, true);
+                    currentDetails = await _malService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
                     if (currentDetails != null)
                     {
                         seasonChain.Add((currentId, currentDetails));
@@ -132,10 +131,10 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             
             for (int i = 0; i < seasonChain.Count; i++)
             {
-                (int id, MAL_AnimeDetails details) = seasonChain[i];
+                (int id, AnimeFieldSet details) = seasonChain[i];
                 seasonMap[i + 1] = new SeasonData 
                 { 
-                    Episodes = details.NumEpisodes, 
+                    Episodes = details.NumEpisodes ?? 0, 
                     MalId = id 
                 };
             }
