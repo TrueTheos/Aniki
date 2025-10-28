@@ -5,6 +5,24 @@ public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanTo
 
 public static class StatusEnum
 {
+    public static AnimeStatusTranslated ToAnimeStatus(this string status)
+    {
+        return status switch
+        {
+            "Watching" => AnimeStatusTranslated.Watching,
+            "watching" => AnimeStatusTranslated.Watching,
+            "Completed" => AnimeStatusTranslated.Completed,
+            "completed" => AnimeStatusTranslated.Completed,
+            "OnHold" => AnimeStatusTranslated.OnHold,
+            "on_hold" => AnimeStatusTranslated.OnHold,
+            "Dropped" => AnimeStatusTranslated.Dropped,
+            "dropped" => AnimeStatusTranslated.Dropped,
+            "PlanToWatch" => AnimeStatusTranslated.PlanToWatch,
+            "plan_to_watch" => AnimeStatusTranslated.PlanToWatch,
+            _ => AnimeStatusTranslated.Watching
+        };
+    }
+
     public static AnimeStatusTranslated StringToTranslated(string text)
     {
         return text switch

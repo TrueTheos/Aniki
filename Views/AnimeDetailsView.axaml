@@ -112,7 +112,6 @@
                                     HorizontalContentAlignment="Center"/>
                         </Grid>
                         
-                        <!-- RIGHT COLUMN: Title + All Info -->
                         <StackPanel Grid.Column="1" Margin="40,0,0,50" Spacing="0" VerticalAlignment="Bottom">
                             <!-- Title -->
                             <TextBlock Text="{Binding Details.Title}"
@@ -150,8 +149,7 @@
                                         CornerRadius="6"
                                         Padding="28,13"
                                         Cursor="Hand"
-                                        IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                        Command="{Binding AddToListCommand}">
+                                        IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
                                     <Button.Flyout>
                                         <MenuFlyout Placement="Bottom">
                                             <MenuItem Header="Watching" Command="{Binding UpdateStatusCommand}" CommandParameter="Watching"/>
@@ -173,7 +171,6 @@
                                     </StackPanel>
                                 </Button>
                                 
-                                <!-- Add to List Button (when not on list) -->
                                 <Button Background="#E50914" 
                                         BorderThickness="0"
                                         CornerRadius="6"
@@ -224,7 +221,7 @@
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}">
                                                     <Binding Path="SelectedScore"/>
-                                                    <Binding Path="Details.MyListStatus" Converter="{StaticResource ScoreTextConverter}"/>
+                                                    <Binding Path="Details.MyListStatus" Converter="{StaticResource MyListStatusScoreConverter}"/>
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                         </TextBlock>

@@ -86,6 +86,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         IsLoading = false;
         Details = details;
         EpisodesWatched = details?.MyListStatus?.NumEpisodesWatched ?? 0;
+        SelectedScore = details?.MyListStatus?.Score ?? 0;
+        SelectedStatus = details?.MyListStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
         
         OnPropertyChanged(nameof(EpisodesWatched));
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
@@ -132,10 +134,12 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     private async Task AddToList()
     {
         if (Details == null) return;
+        if (Details.MyListStatus == null || Details.MyListStatus.Status == AnimeStatusApi.none)
+        {
+            await _malService.UpdateAnimeStatus(Details.Id, AnimeStatusApi.plan_to_watch);
 
-        await _malService.UpdateAnimeStatus(Details.Id, AnimeStatusApi.plan_to_watch);
-            
-        await LoadAnimeDetailsAsync(SelectedAnime);
+            await LoadAnimeDetailsAsync(SelectedAnime);
+        }
     }
 
     private async Task UpdateEpisodeCount(int change)
@@ -157,30 +161,20 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     
     [RelayCommand]
-    private async Task UpdateStatus(string status)
+    private void UpdateStatus(string status)
     {
         if (Details == null) return;
     
-        AnimeStatusTranslated translatedStatus = status switch
-        {
-            "Watching" => AnimeStatusTranslated.Watching,
-            "Completed" => AnimeStatusTranslated.Completed,
-            "OnHold" => AnimeStatusTranslated.OnHold,
-            "Dropped" => AnimeStatusTranslated.Dropped,
-            "PlanToWatch" => AnimeStatusTranslated.PlanToWatch,
-            _ => AnimeStatusTranslated.Watching
-        };
-    
-        await UpdateAnimeStatus(translatedStatus);
+        SelectedStatus = status.ToAnimeStatus();
     }
 
     [RelayCommand]
-    private async Task UpdateScore(string scoreStr)
+    private void UpdateScore(string scoreStr)
     {
         if (Details == null) return;
         if (int.TryParse(scoreStr, out int score))
         {
-            await UpdateAnimeScore(score);
+            SelectedScore = score;
         }
     }
     private async Task UpdateAnimeScore(int score)
