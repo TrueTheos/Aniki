@@ -47,6 +47,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     
     private readonly IMalService _malService;
     
+    public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString();
+
     private int _selectedScore;
     public int SelectedScore
     {
@@ -56,6 +58,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             if (SetProperty(ref _selectedScore, value))
             {
                 _ = UpdateAnimeScore(value);
+                OnPropertyChanged(nameof(ScoreText));
             }
         }
     }
@@ -87,6 +90,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         Details = details;
         EpisodesWatched = details?.MyListStatus?.NumEpisodesWatched ?? 0;
         SelectedScore = details?.MyListStatus?.Score ?? 0;
+        OnPropertyChanged(nameof(ScoreText));
         SelectedStatus = details?.MyListStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
         
         OnPropertyChanged(nameof(EpisodesWatched));

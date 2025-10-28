@@ -215,15 +215,10 @@
                                                   Width="16" 
                                                   Height="16"
                                                   Foreground="White"/>
-                                        <TextBlock FontSize="15"
+                                        <TextBlock Text="{Binding ScoreText}" 
+                                                   FontSize="15"
                                                    FontWeight="SemiBold"
                                                    Foreground="White">
-                                            <TextBlock.Text>
-                                                <MultiBinding StringFormat="{}">
-                                                    <Binding Path="SelectedScore"/>
-                                                    <Binding Path="Details.MyListStatus" Converter="{StaticResource MyListStatusScoreConverter}"/>
-                                                </MultiBinding>
-                                            </TextBlock.Text>
                                         </TextBlock>
                                     </StackPanel>
                                 </Button>

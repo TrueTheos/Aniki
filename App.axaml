@@ -20,7 +20,6 @@
                     <conv:EqualToZeroConverter x:Key="EqualToZeroConverter" />
                     <conv:EnumMatchConverter x:Key="EnumMatchConverter" />
                     <conv:BoolToColorConverter x:Key="BoolToColorConverter" />
-                    <conv:MyListStatusScoreConverter x:Key="MyListStatusScoreConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
