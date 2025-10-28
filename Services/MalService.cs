@@ -433,6 +433,7 @@ public class MalService : IMalService
     private async Task UpdateAnimeField(int animeId, string fieldName, string value, Action<MAL_MyListStatus> updateCache)
     {
         var formData = new Dictionary<string, string> { [fieldName] = value };
+        
         var content = new FormUrlEncodedContent(formData);
         var response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
 

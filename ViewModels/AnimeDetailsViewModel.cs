@@ -1,9 +1,9 @@
-
 using Aniki.Misc;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 
 namespace Aniki.ViewModels;
 
@@ -206,6 +206,18 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details == null) return;
         string url = $"https://myanimelist.net/anime/{Details.Id}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+    
+    [RelayCommand]
+    private void CopyMalPageUrl()
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+            desktop.MainWindow?.Clipboard is not { } provider)
+            return;
+        
+        if (Details == null) return;
+
+        _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.Id}");
     }
     
     public async Task SearchAnimeById(int malId, bool showDetails = true)
