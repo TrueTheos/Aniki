@@ -16,15 +16,13 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public string? ImageUrl => Details?.MainPicture?.Large;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanIncreaseEpisodeCount))]
-    [NotifyPropertyChangedFor(nameof(CanDecreaseEpisodeCount))]
-    private int _episodesWatched;
+    private int _watchedEpisodes;
 
     [ObservableProperty]
     private bool _isLoading;
     
-    public bool CanIncreaseEpisodeCount => EpisodesWatched < (Details?.NumEpisodes ?? 0);
-    public bool CanDecreaseEpisodeCount => EpisodesWatched > 0;
+    public bool CanIncreaseEpisodeCount => WatchedEpisodes < (Details?.NumEpisodes ?? 0);
+    public bool CanDecreaseEpisodeCount => WatchedEpisodes > 0;
 
     [ObservableProperty]
     private WatchAnimeViewModel _watchAnimeViewModel;
@@ -75,16 +73,15 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         IsLoading = false;
         Details = details;
-        EpisodesWatched = details?.MyListStatus?.NumEpisodesWatched ?? 0;
+        WatchedEpisodes = details?.MyListStatus?.NumEpisodesWatched ?? 0;
         SelectedScore = details?.MyListStatus?.Score ?? 0;
         OnPropertyChanged(nameof(ScoreText));
         SelectedStatus = details?.MyListStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
         
-        OnPropertyChanged(nameof(EpisodesWatched));
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
         WatchAnimeViewModel.Update(details);
-        TorrentSearchViewModel.Update(details, EpisodesWatched);
+        TorrentSearchViewModel.Update(details, WatchedEpisodes);
     }
 
     public async Task LoadAnimeDetailsAsync(int id)
@@ -97,13 +94,13 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void IncreaseEpisodeCount()
+    public void IncrementWatchedEpisodes()
     {
         _ = UpdateEpisodeCount(1);
     }
 
     [RelayCommand]
-    public void DecreaseEpisodeCount()
+    public void DecrementWatchedEpisodes()
     {
         _ = UpdateEpisodeCount(-1);
     }
@@ -134,7 +131,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details?.MyListStatus == null) return;
 
-        int newCount = EpisodesWatched + change;
+        int newCount = WatchedEpisodes + change;
 
         if (newCount < 0) newCount = 0;
 
@@ -144,7 +141,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
 
         await _malService.UpdateEpisodesWatched(Details.AnimeId, newCount);
-        EpisodesWatched = newCount;
+        WatchedEpisodes = newCount;
     }
 
     

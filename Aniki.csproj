@@ -67,6 +67,8 @@
     <AvaloniaResource Include="Resources\Icons\info_icon.svg" />
     <None Remove="Resources\Icons\person_icon.svg" />
     <AvaloniaResource Include="Resources\Icons\person_icon.svg" />
+    <None Remove="Resources\Icons\minus_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\minus_icon.svg" />
   </ItemGroup>
 
   <ItemGroup>

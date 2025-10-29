@@ -150,7 +150,6 @@
                                         CornerRadius="20"
                                         BorderThickness="0"
                                         Cursor="Hand"
-                                        FontSize="18"
                                         Opacity="0.9">
                                     <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
                                 </Button>
@@ -163,7 +162,6 @@
                                         CornerRadius="20"
                                         BorderThickness="0"
                                         Cursor="Hand"
-                                        FontSize="18"
                                         Opacity="0.9">
                                     <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
                                 </Button>
