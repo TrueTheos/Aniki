@@ -17,7 +17,7 @@ public class IntToStringConverter : JsonConverter<string>
         {
             return reader.GetString() ?? "0";
         }
-        return "0"; // Default value or throw exception based on desired behavior
+        return "0";
     }
 
     public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)

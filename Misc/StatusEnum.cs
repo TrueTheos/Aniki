@@ -1,7 +1,7 @@
 ﻿namespace Aniki.Misc;
 
 public enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
-public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } //todo to wyjebac i uzywac tylko API enumow
+public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } 
 
 public static class StatusEnum
 {

@@ -20,7 +20,6 @@ public class SaveService : ISaveService
     
     public string DefaultEpisodesFolder => Path.Combine(_mainDirectory, "Episodes");
     
-    // Managers
     public CacheManager? ImageCache { get; private set; }
     public JsonDataManager<SeasonCache>? SeasonCacheManager { get; private set; }
     public JsonDataManager<SettingsConfig>? SettingsManager { get; private set; }
