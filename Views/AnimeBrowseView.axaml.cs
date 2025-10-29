@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Aniki.Misc;
+using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,28 @@ public partial class AnimeBrowseView : UserControl
         if (sender is Border border && border.DataContext is AnimeCardData anime)
         {
             App.ServiceProvider.GetRequiredService<MainViewModel>().GoToAnime(anime!.AnimeId);
+        }
+    }
+    
+    private const double CardWidth = 160;
+    private const double CardSpacing = 20;
+    private const double ScrollAmount = CardWidth + CardSpacing;
+
+    private void ScrollLeft(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.CommandParameter is ScrollViewer scroller)
+        {
+            var newOffset = scroller.Offset.X - ScrollAmount;
+            scroller.Offset = new Vector(newOffset, scroller.Offset.Y);
+        }
+    }
+
+    private void ScrollRight(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.CommandParameter is ScrollViewer scroller)
+        {
+            var newOffset = scroller.Offset.X + ScrollAmount;
+            scroller.Offset = new Vector(newOffset, scroller.Offset.Y);
         }
     }
 }

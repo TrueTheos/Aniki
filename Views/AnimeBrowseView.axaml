@@ -222,6 +222,8 @@
                         <Grid>
                             <!-- Left Navigation Arrow -->
                             <Button Background="#00000000"
+                                    Click="ScrollLeft"
+                                    CommandParameter="{Binding #PopularThisSeasonScroller}"
                                     Foreground="White"
                                     Width="30" Height="30"
                                     CornerRadius="25"
@@ -235,7 +237,8 @@
                             </Button>
                             
                             <!-- Anime Cards -->
-                            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                            <ScrollViewer Name="PopularThisSeasonScroller"
+                                          HorizontalScrollBarVisibility="Hidden"
                                          VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl ItemsSource="{Binding PopularThisSeason}">
                                     <ItemsControl.ItemsPanel>
@@ -253,6 +256,8 @@
                             
                             <!-- Right Navigation Arrow -->
                             <Button Background="#00000000"
+                                    Click="ScrollRight"
+                                    CommandParameter="{Binding #PopularThisSeasonScroller}"
                                     Foreground="White"
                                     Width="30" Height="30"
                                     CornerRadius="25"
@@ -279,6 +284,8 @@
                         
                         <Grid>
                             <Button Background="#00000000"
+                                    Click="ScrollLeft"
+                                    CommandParameter="{Binding #PopularUpcomingScroller}"
                                     Foreground="White"
                                     Width="30" Height="30"
                                     CornerRadius="25"
@@ -291,7 +298,8 @@
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
-                            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                            <ScrollViewer Name="PopularUpcomingScroller" 
+                                          HorizontalScrollBarVisibility="Hidden"
                                          VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl ItemsSource="{Binding PopularUpcoming}">
                                     <ItemsControl.ItemsPanel>
@@ -308,6 +316,8 @@
                             </ScrollViewer>
                             
                             <Button Background="#00000000"
+                                    Click="ScrollRight"
+                                    CommandParameter="{Binding #PopularUpcomingScroller}"
                                     Foreground="White"
                                     Width="30" Height="30"
                                     CornerRadius="25"
@@ -334,6 +344,8 @@
                         
                         <Grid>
                             <Button Background="#00000000"
+                                    Click="ScrollLeft"
+                                    CommandParameter="{Binding #TrendingAllTimeScroller}"
                                     Foreground="White"
                                     Width="30" Height="30"
                                     CornerRadius="25"
@@ -346,7 +358,8 @@
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
-                            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                            <ScrollViewer Name="TrendingAllTimeScroller" 
+                                          HorizontalScrollBarVisibility="Hidden"
                                          VerticalScrollBarVisibility="Disabled">
                                 <ItemsControl ItemsSource="{Binding TrendingAllTime}">
                                     <ItemsControl.ItemsPanel>
@@ -363,6 +376,8 @@
                             </ScrollViewer>
                             
                             <Button Background="#00000000" 
+                                    Click="ScrollRight"
+                                    CommandParameter="{Binding #TrendingAllTimeScroller}"
                                     Foreground="White"
                                     Width="50" Height="50"
                                     CornerRadius="25"
