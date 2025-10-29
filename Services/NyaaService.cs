@@ -15,10 +15,11 @@ public class NyaaService : INyaaService
         _animeNameParser = animeNameParser;
     }
     
-    public async Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber)
+    public async Task<List<NyaaTorrent>> SearchAsync(string animeName, string torrentSearchTerms)
     {
         string term = HttpUtility.UrlEncode($"{animeName}");
-        string url = $"https://nyaa.si/?page=rss&f=0&c=1_2&q={term}";
+        string searchTerm = HttpUtility.UrlEncode($"{torrentSearchTerms}");
+        string url = $"https://nyaa.si/?page=rss&f=0&c=1_2&q={term} {searchTerm}";
 
         string rssContent = await _http.GetStringAsync(url);
         List<NyaaTorrent> results = new List<NyaaTorrent>();
@@ -72,10 +73,6 @@ public class NyaaService : INyaaService
                 });
             }
         }
-
-        results = results.OrderByDescending(x => FuzzySharp.Fuzz.Ratio(x.AnimeTitle.ToLower(), animeName.ToLower()))
-            .ThenByDescending(x => int.TryParse(x.EpisodeNumber, out int ep) && ep == episodeNumber)
-            .ThenByDescending(x => x.Seeders).ToList();
 
         return results;
     }

@@ -196,4 +196,12 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
         _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.AnimeId}");
     }
+
+    [RelayCommand]
+    private void OpenUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return;
+        
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
 }

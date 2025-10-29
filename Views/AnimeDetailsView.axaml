@@ -392,15 +392,15 @@
                                                            Foreground="#888888"
                                                            FontWeight="SemiBold"
                                                            LetterSpacing="1"/>
-                                                <Border Width="120" 
+                                                <Button Width="120" 
                                                         Height="68" 
                                                         CornerRadius="8"
+                                                        Padding="0"
                                                         Background="#FF4444"
                                                         ClipToBounds="True"
                                                         Cursor="Hand"
-                                                        BoxShadow="0 4 16 #40000000"
-                                                        Tag="{Binding Details.TrailerURL}"
-                                                        Tapped="PlayTrailerVideo">
+                                                        Command="{Binding OpenUrlCommand}"
+                                                        CommandParameter="{Binding Details.TrailerURL, Converter={StaticResource YoutubeEmbedUrlToWatchUrlConverter}}">
                                                     <Grid ToolTip.Tip="Play Trailer">
                                                         <Image Stretch="UniformToFill"
                                                                asyncImageLoader:ImageLoader.Source="{Binding Details.Videos[0].Thumbnail}"/>
@@ -418,7 +418,7 @@
                                                                   HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center"/>
                                                     </Grid>
-                                                </Border>
+                                                </Button>
                                             </StackPanel>
                                             
                                             <!-- Studio -->
@@ -511,15 +511,28 @@
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate DataType="mal:MAL_Video">
-                                                        <Border Width="380"
+                                                        <Border x:Name="thumbnailCard"
+                                                                Width="380"
                                                                 Height="214"
                                                                 CornerRadius="10"
                                                                 ClipToBounds="True"
                                                                 BoxShadow="0 6 24 #50000000"
                                                                 Cursor="Hand"
-                                                                ToolTip.Tip="{Binding Title }">
-                                                            <Image asyncImageLoader:ImageLoader.Source="{Binding Thumbnail}"
-                                                                   Stretch="UniformToFill"/>
+                                                                Tag="{Binding Url}"
+                                                                ToolTip.Tip="{Binding Title }"
+                                                                >
+                                                            <Grid>
+                                                                <Image asyncImageLoader:ImageLoader.Source="{Binding Thumbnail}"
+                                                                       Stretch="UniformToFill"/>
+                                                                <Button IsVisible="{Binding #thumbnailCard.IsPointerOver}"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"
+                                                                        Background="#00000000"
+                                                                        CommandParameter="{Binding Url}"
+                                                                        Command="{Binding $parent[UserControl].((vm:AnimeDetailsViewModel)DataContext).OpenUrlCommand}">
+                                                                    <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="50" Height="50"/>
+                                                                </Button>
+                                                            </Grid>
                                                         </Border>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>

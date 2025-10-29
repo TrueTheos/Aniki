@@ -15,8 +15,6 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] private bool _isTorrentsLoading;
     [ObservableProperty] private string _torrentSearchTerms = string.Empty;
     [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = new();
-    [ObservableProperty] private int _nextEpisodeNumber;
-    [ObservableProperty] private ObservableCollection<int> _watchEpisodesOptions = new();
     
     private AnimeFieldSet? _details;
 
@@ -32,17 +30,6 @@ public partial class TorrentSearchViewModel : ViewModelBase
         _details = details;
         
         TorrentsList.Clear();
-        
-        WatchEpisodesOptions.Clear();
-        if (details?.NumEpisodes != null && details.NumEpisodes > 0)
-        {
-            for (var i = 0; i < details.NumEpisodes; i++)
-            {
-                WatchEpisodesOptions.Add(i + 1);
-            }
-        }
-
-        NextEpisodeNumber = episodesWatched + 1;
     }
 
     [RelayCommand]
@@ -56,9 +43,9 @@ public partial class TorrentSearchViewModel : ViewModelBase
 
         if (_details.Title != null)
         {
-            List<NyaaTorrent> list = await _nyaaService.SearchAsync(_details.Title, NextEpisodeNumber);
+            List<NyaaTorrent> list = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
 
-            foreach (NyaaTorrent t in list)
+            foreach (NyaaTorrent t in list) 
             {
                 TorrentsList.Add(t);
             }
