@@ -44,7 +44,7 @@ public class LoginViewModel : ViewModelBase
 
     public ICommand LoginCommand => _loginCommand ??= new RelayCommand(async () => await LoginAsync());
     public ICommand ContinueCommand => _continueCommand ??= new RelayCommand(async () => await ContinueAsync());
-    public ICommand LogoutCommand => _logoutCommand ??= new RelayCommand(LogoutAsync);
+    public ICommand LogoutCommand => _logoutCommand ??= new RelayCommand(Logout);
 
     public event EventHandler<string>? NavigateToMainRequested;
     
@@ -129,7 +129,7 @@ public class LoginViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
-    private void LogoutAsync()
+    public void Logout()
     {
         _tokenService.ClearTokens();
         IsLoggedIn = false;

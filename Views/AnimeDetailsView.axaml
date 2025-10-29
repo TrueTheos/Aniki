@@ -402,7 +402,7 @@
                                                         Command="{Binding OpenUrlCommand}"
                                                         CommandParameter="{Binding Details.TrailerURL, Converter={StaticResource YoutubeEmbedUrlToWatchUrlConverter}}">
                                                     <Grid ToolTip.Tip="Play Trailer">
-                                                        <Image Stretch="UniformToFill"
+                                                        <Image Stretch="UniformToFill" ClipToBounds="True"
                                                                asyncImageLoader:ImageLoader.Source="{Binding Details.Videos[0].Thumbnail}"/>
                                                         <Border Background="#55000000">
                                                             <Ellipse Width="32" 
@@ -519,8 +519,7 @@
                                                                 BoxShadow="0 6 24 #50000000"
                                                                 Cursor="Hand"
                                                                 Tag="{Binding Url}"
-                                                                ToolTip.Tip="{Binding Title }"
-                                                                >
+                                                                ToolTip.Tip="{Binding Title}">
                                                             <Grid>
                                                                 <Image asyncImageLoader:ImageLoader.Source="{Binding Thumbnail}"
                                                                        Stretch="UniformToFill"/>

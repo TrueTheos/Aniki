@@ -11,6 +11,12 @@ using Aniki.Models.MAL;
 
 namespace Aniki.ViewModels;
 
+public enum SortDirection
+{
+    Ascending,
+    Descending
+}
+
 public partial class TorrentSearchViewModel : ViewModelBase
 {
     [ObservableProperty] private bool _isTorrentsLoading;
@@ -18,8 +24,13 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = new();
     
     private AnimeFieldSet? _details;
-    private List<NyaaTorrent> _cachedTorrents = new();
 
+    [ObservableProperty]
+    private SortDirection _seedersSortDirection = SortDirection.Descending;
+
+    [ObservableProperty]
+    private SortDirection _dateSortDirection = SortDirection.Descending;
+    
     private readonly INyaaService _nyaaService;
 
     public TorrentSearchViewModel(INyaaService nyaaService)
@@ -32,7 +43,8 @@ public partial class TorrentSearchViewModel : ViewModelBase
         _details = details;
         
         TorrentsList.Clear();
-        _cachedTorrents.Clear();
+
+        _ = SearchTorrents();
     }
 
     [RelayCommand]
@@ -43,18 +55,11 @@ public partial class TorrentSearchViewModel : ViewModelBase
         IsTorrentsLoading = true;
 
         TorrentsList.Clear();
-        _cachedTorrents.Clear();
 
         if (_details.Title != null)
         {
-            List<NyaaTorrent> list = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
-
-            _cachedTorrents = new List<NyaaTorrent>(list);
-
-            foreach (NyaaTorrent t in list) 
-            {
-                TorrentsList.Add(t);
-            }
+            var list = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
+            TorrentsList = new ObservableCollection<NyaaTorrent>(list.OrderByDescending(x => x.Seeders));
         }
 
         IsTorrentsLoading = false;
@@ -63,29 +68,31 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [RelayCommand]
     public void SortBySeeders()
     {
-        var sorted = _cachedTorrents.OrderByDescending(t => t.Seeders).ToList();
-        
-        TorrentsList.Clear();
-        foreach (var torrent in sorted)
+        if (SeedersSortDirection == SortDirection.Descending)
         {
-            TorrentsList.Add(torrent);
+            SeedersSortDirection = SortDirection.Ascending;
+            TorrentsList = new ObservableCollection<NyaaTorrent>(TorrentsList.OrderBy(x => x.Seeders));
         }
-        
-        _cachedTorrents = sorted;
+        else
+        {
+            SeedersSortDirection = SortDirection.Descending;
+            TorrentsList = new ObservableCollection<NyaaTorrent>(TorrentsList.OrderByDescending(x => x.Seeders));
+        }
     }
 
     [RelayCommand]
     public void SortByReleaseDate()
     {
-        var sorted = _cachedTorrents.OrderByDescending(t => t.PublishDate).ToList();
-        
-        TorrentsList.Clear();
-        foreach (var torrent in sorted)
+        if (DateSortDirection == SortDirection.Descending)
         {
-            TorrentsList.Add(torrent);
+            DateSortDirection = SortDirection.Ascending;
+            TorrentsList = new ObservableCollection<NyaaTorrent>(TorrentsList.OrderBy(x => x.PublishDate));
         }
-        
-        _cachedTorrents = sorted;
+        else
+        {
+            DateSortDirection = SortDirection.Descending;
+            TorrentsList = new ObservableCollection<NyaaTorrent>(TorrentsList.OrderByDescending(x => x.PublishDate));
+        }
     }
 
     [RelayCommand]

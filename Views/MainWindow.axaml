@@ -203,7 +203,7 @@
                     <Button
                         Name="LogOutButton"
                         Classes="MenuButton"
-                        Command="{Binding OpenSettingsCommand}">
+                        Click="LogOut">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/logout_icon.svg}" Width="20" Height="20" />
                             <TextBlock VerticalAlignment="Center" Text="Log Out" Foreground="Gray" />
@@ -211,7 +211,6 @@
                     </Button>
                 </StackPanel>
             </Grid>
-
 
             <!--  Content  -->
             <Border
