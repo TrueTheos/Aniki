@@ -15,7 +15,7 @@ public class NyaaService : INyaaService
         _animeNameParser = animeNameParser;
     }
     
-    public async Task<List<NyaaTorrent>> SearchAsync(string animeName, string torrentSearchTerms)
+   public async Task<List<NyaaTorrent>> SearchAsync(string animeName, string torrentSearchTerms)
     {
         string term = HttpUtility.UrlEncode($"{animeName}");
         string searchTerm = HttpUtility.UrlEncode($"{torrentSearchTerms}");
@@ -60,6 +60,13 @@ public class NyaaService : INyaaService
                 int.TryParse(seedersNode.InnerText, out seeders);
             }
 
+            XmlNode? pubDateNode = item.SelectSingleNode("pubDate");
+            DateTime publishDate = DateTime.MinValue;
+            if (pubDateNode != null)
+            {
+                DateTime.TryParse(pubDateNode.InnerText, out publishDate);
+            }
+
             if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(torrentLink))
             {
                 results.Add(new()
@@ -69,7 +76,8 @@ public class NyaaService : INyaaService
                     EpisodeNumber = episode,
                     TorrentLink = torrentLink,
                     Size = size,
-                    Seeders = seeders
+                    Seeders = seeders,
+                    PublishDate = publishDate
                 });
             }
         }

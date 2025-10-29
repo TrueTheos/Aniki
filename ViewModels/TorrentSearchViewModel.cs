@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 using Aniki.Models.MAL;
 
 namespace Aniki.ViewModels;
@@ -17,6 +18,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = new();
     
     private AnimeFieldSet? _details;
+    private List<NyaaTorrent> _cachedTorrents = new();
 
     private readonly INyaaService _nyaaService;
 
@@ -30,6 +32,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
         _details = details;
         
         TorrentsList.Clear();
+        _cachedTorrents.Clear();
     }
 
     [RelayCommand]
@@ -40,10 +43,13 @@ public partial class TorrentSearchViewModel : ViewModelBase
         IsTorrentsLoading = true;
 
         TorrentsList.Clear();
+        _cachedTorrents.Clear();
 
         if (_details.Title != null)
         {
             List<NyaaTorrent> list = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
+
+            _cachedTorrents = new List<NyaaTorrent>(list);
 
             foreach (NyaaTorrent t in list) 
             {
@@ -52,6 +58,34 @@ public partial class TorrentSearchViewModel : ViewModelBase
         }
 
         IsTorrentsLoading = false;
+    }
+
+    [RelayCommand]
+    public void SortBySeeders()
+    {
+        var sorted = _cachedTorrents.OrderByDescending(t => t.Seeders).ToList();
+        
+        TorrentsList.Clear();
+        foreach (var torrent in sorted)
+        {
+            TorrentsList.Add(torrent);
+        }
+        
+        _cachedTorrents = sorted;
+    }
+
+    [RelayCommand]
+    public void SortByReleaseDate()
+    {
+        var sorted = _cachedTorrents.OrderByDescending(t => t.PublishDate).ToList();
+        
+        TorrentsList.Clear();
+        foreach (var torrent in sorted)
+        {
+            TorrentsList.Add(torrent);
+        }
+        
+        _cachedTorrents = sorted;
     }
 
     [RelayCommand]
