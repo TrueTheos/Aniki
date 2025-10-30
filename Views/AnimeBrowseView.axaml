@@ -384,10 +384,10 @@
                 </StackPanel>
 
                 <!-- Search Results View -->
-                <StackPanel Spacing="25" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}">
+                <Grid RowDefinitions="Auto,Auto,Auto" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}">
                     
                     <!-- Back Button -->
-                    <Button Content="← Back to Browse"
+                    <Button Grid.Row="0" Content="← Back to Browse"
                             Command="{Binding GoBackCommand}"
                             Background="Transparent"
                             Foreground="#999999"
@@ -396,17 +396,19 @@
                             FontSize="15"/>
                     
                     <!-- Pagination Top -->
-                    <StackPanel Orientation="Horizontal" 
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" 
                                HorizontalAlignment="Center"
                                Spacing="16">
-                        <Button Content="Previous"
-                               Command="{Binding PreviousPageCommand}"
-                               IsEnabled="{Binding CanGoPrevious}"
-                               Padding="20,10"
-                               Background="{StaticResource BackgroundGray}"
-                               Foreground="White"
-                               BorderThickness="0"
-                               CornerRadius="8"/>
+                        <Button 
+                            Command="{Binding PreviousPageCommand}"
+                            Background="#00000000"
+                            Foreground="White"
+                            Width="40" Height="40"
+                            CornerRadius="20"
+                            BorderThickness="0"
+                            Opacity="0.9">
+                            <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
+                        </Button>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                             <TextBlock Text="{Binding CurrentPage}"
                                       FontSize="16"
@@ -419,21 +421,23 @@
                                       FontSize="16"
                                       Foreground="#666666"/>
                         </StackPanel>
-                        <Button Content="Next"
-                               Command="{Binding NextPageCommand}"
-                               IsEnabled="{Binding CanGoNext}"
-                               Padding="20,10"
-                               Background="{StaticResource BackgroundGray}"
-                               Foreground="White"
-                               BorderThickness="0"
-                               CornerRadius="8"/>
+                        <Button 
+                            Command="{Binding NextPageCommand}"
+                            Background="#00000000"
+                            Foreground="White"
+                            Width="40" Height="40"
+                            CornerRadius="20"
+                            BorderThickness="0"
+                            Opacity="0.9">
+                            <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
+                        </Button>
                     </StackPanel>
 
                     <!-- Search Results Grid -->
-                    <ItemsControl ItemsSource="{Binding SearchResults}">
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding SearchResults}" HorizontalAlignment="Center">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <UniformGrid />
+                                <WrapPanel Orientation="Horizontal" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -444,19 +448,20 @@
                     </ItemsControl>
 
                     <!-- Pagination Bottom -->
-                    <StackPanel Orientation="Horizontal" 
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" 
                                HorizontalAlignment="Center"
-                               VerticalAlignment="Top"
                                Spacing="16"
                                Margin="0,20,0,0">
-                        <Button Content="Previous"
-                               Command="{Binding PreviousPageCommand}"
-                               IsEnabled="{Binding CanGoPrevious}"
-                               Padding="20,10"
-                               Background="{StaticResource BackgroundGray}"
-                               Foreground="White"
-                               BorderThickness="0"
-                               CornerRadius="8"/>
+                        <Button 
+                            Command="{Binding PreviousPageCommand}"
+                            Background="#00000000"
+                            Foreground="White"
+                            Width="40" Height="40"
+                            CornerRadius="20"
+                            BorderThickness="0"
+                            Opacity="0.9">
+                            <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
+                        </Button>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                             <TextBlock Text="{Binding CurrentPage}"
                                       FontSize="16"
@@ -469,17 +474,19 @@
                                       FontSize="16"
                                       Foreground="#666666"/>
                         </StackPanel>
-                        <Button Content="Next"
-                               Command="{Binding NextPageCommand}"
-                               IsEnabled="{Binding CanGoNext}"
-                               Padding="20,10"
-                               Background="{StaticResource BackgroundGray}"
-                               Foreground="White"
-                               BorderThickness="0"
-                               CornerRadius="8"/>
+                        <Button 
+                            Command="{Binding NextPageCommand}"
+                            Background="#00000000"
+                            Foreground="White"
+                            Width="40" Height="40"
+                            CornerRadius="20"
+                            BorderThickness="0"
+                            Opacity="0.9">
+                            <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
+                        </Button>
                     </StackPanel>
 
-                </StackPanel>
+                </Grid>
 
             </StackPanel>
         </ScrollViewer>

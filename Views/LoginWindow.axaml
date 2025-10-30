@@ -49,7 +49,8 @@
                         Command="{Binding ContinueCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
-                        IsVisible="{Binding IsLoggedIn}">
+                        IsVisible="{Binding IsLoggedIn}"
+                        Background="{StaticResource RedColor}">
 					<TextBlock Text="{Binding Username, StringFormat=Continue as {0}}"
 					           HorizontalAlignment="Center"/>
 				</Button>
