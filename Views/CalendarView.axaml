@@ -24,11 +24,11 @@
         </Style>
     </UserControl.Styles>
 
-    <DockPanel x:Name="Root">
+    <DockPanel x:Name="Root" Margin="0,50,0,0" Background="#1A1A1A">
         <!--  Header with navigation  -->
         <Border
             Padding="16,12"
-            Background="{StaticResource Background0}"
+            Background="{StaticResource BackgroundBlack}"
             BorderBrush="#333333"
             BorderThickness="0,0,0,1"
             DockPanel.Dock="Top">
@@ -117,11 +117,16 @@
 
         <!--  Main calendar grid  -->
         <ScrollViewer
-            Background="{StaticResource Background0}"
+            Background="{StaticResource BackgroundBlack}"
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto">
 
-            <ItemsControl Margin="8,0" ItemsSource="{Binding Days}">
+            <ItemsControl Margin="8,0" ItemsSource="{Binding Days}" Background="#1A1A1A">
+                <ItemsControl.Styles>
+                    <Style Selector="ContentPresenter">
+                        <Setter Property="Background" Value="#1A1A1A" />
+                    </Style>
+                </ItemsControl.Styles>
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="7" />
@@ -133,9 +138,10 @@
                         <Border
                             Margin="0,0,0,0"
                             BorderBrush="#2A2A2A"
-                            BorderThickness="0,0,1,0">
+                            BorderThickness="0,0,1,0"
+                            Background="#1A1A1A">
 
-                            <Grid>
+                            <Grid Background="#1A1A1A">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
@@ -145,7 +151,7 @@
                                 <Border
                                     Grid.Row="0"
                                     Padding="12,8"
-                                    Background="{StaticResource Background1}"
+                                    Background="{StaticResource BackgroundBlack}"
                                     BorderBrush="#333333"
                                     BorderThickness="0,0,0,1">
                                     <Grid>
@@ -175,16 +181,20 @@
                                 <ScrollViewer
                                     Grid.Row="1"
                                     HorizontalScrollBarVisibility="Disabled"
-                                    VerticalScrollBarVisibility="Hidden">
+                                    VerticalScrollBarVisibility="Hidden"
+                                    Background="#1A1A1A">
                                     <ListBox DoubleTapped="DoubleClickAnime" ItemsSource="{Binding Items}">
                                         <ListBox.Styles>
+                                            <Style Selector="ListBoxItem">
+                                                <Setter Property="Background" Value="#1A1A1A" />
+                                            </Style>
                                             <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                                                <Setter Property="Background" Value="Transparent" />
+                                                <Setter Property="Background" Value="#1A1A1A" />
                                             </Style>
                                         </ListBox.Styles>
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
-                                                <StackPanel>
+                                                <StackPanel Background="#1A1A1A">
                                                     <!--  Air time  -->
                                                     <TextBlock
                                                         Margin="8,0,0,0"
@@ -196,7 +206,7 @@
                                                         Width="180"
                                                         Margin="8,2"
                                                         Padding="0"
-                                                        Background="{StaticResource Background1}"
+                                                        Background="{StaticResource BackgroundBlack}"
                                                         BorderBrush="{Binding Type, Converter={StaticResource AnimeTypeToColorConverter}}"
                                                         BorderThickness="0,0,3,0"
                                                         ClipToBounds="True"

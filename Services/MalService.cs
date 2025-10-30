@@ -28,7 +28,7 @@ public class MalService : IMalService
     
     private string _accessToken = "";
     
-    private const string MAL_NODE_FIELDS = "pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status";
+    private const string MAL_NODE_FIELDS = "list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status";
 
     public MalService(ISaveService saveService)
     {

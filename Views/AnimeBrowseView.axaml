@@ -37,12 +37,6 @@
                     
                     <!-- Manga/Anime Tabs -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="30">
-                        <Button Content="Manga" 
-                                Foreground="#999999"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                FontSize="15"
-                                Cursor="Hand"/>
                         <StackPanel>
                             <Button Content="Anime" 
                                     Foreground="White"

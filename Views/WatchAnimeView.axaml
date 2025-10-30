@@ -10,8 +10,9 @@
         x:Name="Root"
         Padding="16"
         HorizontalAlignment="Stretch"
+        Margin="30,50,30,0"
         VerticalAlignment="Stretch"
-        Background="{StaticResource Background1}">
+        Background="{StaticResource BackgroundBlack}">
         <Grid VerticalAlignment="Stretch" RowDefinitions="Auto,*">
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
                 <ProgressBar Width="300" IsIndeterminate="True" />
