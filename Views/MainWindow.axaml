@@ -174,7 +174,7 @@
                     <Button
                         Name="YourLibraryButton"
                         Classes="MenuButton"
-                        Command="{Binding OpenSettingsCommand}">
+                        ToolTip.Tip="Coming soon!">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/book_icon.svg}" Width="20" Height="20" />
                             <TextBlock VerticalAlignment="Center" Text="Your Library" Foreground="Gray" />
