@@ -10,7 +10,11 @@
              x:Class="Aniki.Views.AnimeBrowseView"
              x:DataType="vm:AnimeBrowseViewModel">
     
-    <Grid ColumnDefinitions="*,320" Margin="0,0,0,0" Background="{StaticResource BackgroundBlack}" RowDefinitions="*">
+    <Grid Margin="0,0,0,0" Background="{StaticResource BackgroundBlack}" RowDefinitions="*">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
         
         <!-- Main Content Area -->
         <ScrollViewer Grid.Column="0" 
@@ -429,9 +433,7 @@
                     <ItemsControl ItemsSource="{Binding SearchResults}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" 
-                                          HorizontalAlignment="Left"
-                                          ItemWidth="200"/>
+                                <UniformGrid />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -444,6 +446,7 @@
                     <!-- Pagination Bottom -->
                     <StackPanel Orientation="Horizontal" 
                                HorizontalAlignment="Center"
+                               VerticalAlignment="Top"
                                Spacing="16"
                                Margin="0,20,0,0">
                         <Button Content="Previous"
@@ -481,14 +484,14 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Right Sidebar -->
+        <!-- Right Sidebar - Only visible in Main view -->
         <Border Grid.Column="1" 
                 Grid.Row="0"
+                Width="320"
                 Background="#0F0F0F" 
                 BorderBrush="{StaticResource Border}" 
                 BorderThickness="1,0,0,0"
-                Padding="20"
-                IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Main}">
+                Padding="20">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                          AllowAutoHide="True"
                          Margin="0,20,0,0">
