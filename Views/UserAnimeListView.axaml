@@ -1,0 +1,501 @@
+﻿<UserControl
+    x:Class="Aniki.Views.UserAnimeListView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
+    xmlns:mal="clr-namespace:Aniki.Models.MAL;assembly=Aniki"
+    xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:services="clr-namespace:Aniki.Services"
+    x:DataType="vm:UserAnimeListViewModel">
+    
+    <Border Background="{StaticResource BackgroundBlack}" Padding="0">
+        <Grid RowDefinitions="Auto,*">
+            <!-- Header Section -->
+            <Border Grid.Row="0" 
+                    Background="#111111" 
+                    Padding="50,30,50,25"
+                    BoxShadow="0 2 8 #40000000">
+                <Grid RowDefinitions="Auto,Auto">
+                    <!-- Title and Stats -->
+                    <Grid Grid.Row="0" Margin="0,0,0,25">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="My Anime List"
+                                       FontSize="42"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                            <StackPanel Orientation="Horizontal" Spacing="20">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding TotalCount}"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource RedColor}"/>
+                                    <TextBlock Text="Total"
+                                               FontSize="16"
+                                               Foreground="#999999"/>
+                                </StackPanel>
+                                <TextBlock Text="•" Foreground="#555555" FontSize="16"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding FilteredCount}"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Filtered"
+                                               FontSize="16"
+                                               Foreground="#999999"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                        
+                        <!-- View Toggle -->
+                        <StackPanel Orientation="Horizontal" 
+                                    Spacing="8" 
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <Button Background="{Binding IsGridView, Converter={StaticResource BoolToViewButtonBackgroundConverter}}"
+                                    BorderThickness="0"
+                                    Width="44"
+                                    Height="44"
+                                    CornerRadius="8"
+                                    Command="{Binding SetGridViewCommand}"
+                                    ToolTip.Tip="Grid View">
+                                <PathIcon Data="M4 11h5V5H4v6m0 7h5v-6H4v6m6 0h5v-6h-5v6m6 0h5v-6h-5v6m-6-7h5V5h-5v6m6-6v6h5V5h-5z"
+                                          Width="20"
+                                          Height="20"
+                                          Foreground="White"/>
+                            </Button>
+                            <Button Background="{Binding IsGridView, Converter={StaticResource BoolToViewButtonBackgroundConverter}, ConverterParameter=Inverted}"
+                                    BorderThickness="0"
+                                    Width="44"
+                                    Height="44"
+                                    CornerRadius="8"
+                                    Command="{Binding SetListViewCommand}"
+                                    ToolTip.Tip="List View">
+                                <PathIcon Data="M3 4h18v2H3V4m0 7h18v-2H3v2m0 5h18v-2H3v2m0 5h18v-2H3v2z"
+                                          Width="20"
+                                          Height="20"
+                                          Foreground="White"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Filters and Search Bar -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                            <!-- Status Filter -->
+                            <Button Background="#2A2A2A"
+                                    BorderThickness="0"
+                                    CornerRadius="8"
+                                    Padding="18,12"
+                                    MinWidth="140">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuItem Header="All" Command="{Binding SetStatusFilterCommand}" CommandParameter="All"/>
+                                        <MenuItem Header="Watching" Command="{Binding SetStatusFilterCommand}" CommandParameter="Watching"/>
+                                        <MenuItem Header="Completed" Command="{Binding SetStatusFilterCommand}" CommandParameter="Completed"/>
+                                        <MenuItem Header="On Hold" Command="{Binding SetStatusFilterCommand}" CommandParameter="OnHold"/>
+                                        <MenuItem Header="Dropped" Command="{Binding SetStatusFilterCommand}" CommandParameter="Dropped"/>
+                                        <MenuItem Header="Plan to Watch" Command="{Binding SetStatusFilterCommand}" CommandParameter="PlanToWatch"/>
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <PathIcon Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                                              Width="18"
+                                              Height="18"
+                                              Foreground="#AAAAAA"/>
+                                    <TextBlock Text="{Binding StatusFilterText}"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="White"/>
+                                    <PathIcon Data="M7 10l5 5 5-5z"
+                                              Width="16"
+                                              Height="16"
+                                              Foreground="#AAAAAA"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Genre Filter -->
+                            <Button Background="#2A2A2A"
+                                    BorderThickness="0"
+                                    CornerRadius="8"
+                                    Padding="18,12"
+                                    MinWidth="140">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuItem Header="All Genres" Command="{Binding ClearGenreFilterCommand}"/>
+                                        <Separator/>
+                                        <ScrollViewer MaxHeight="350">
+                                            <ItemsControl ItemsSource="{Binding AvailableGenres}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <MenuItem Header="{Binding}" 
+                                                                  Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).SetGenreFilterCommand}"
+                                                                  CommandParameter="{Binding}"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <PathIcon Data="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                              Width="18"
+                                              Height="18"
+                                              Foreground="#AAAAAA"/>
+                                    <TextBlock Text="{Binding GenreFilterText}"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="White"/>
+                                    <PathIcon Data="M7 10l5 5 5-5z"
+                                              Width="16"
+                                              Height="16"
+                                              Foreground="#AAAAAA"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Sort By -->
+                            <Button Background="#2A2A2A"
+                                    BorderThickness="0"
+                                    CornerRadius="8"
+                                    Padding="18,12"
+                                    MinWidth="160">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuItem Header="Title (A-Z)" Command="{Binding SetSortCommand}" CommandParameter="TitleAsc"/>
+                                        <MenuItem Header="Title (Z-A)" Command="{Binding SetSortCommand}" CommandParameter="TitleDesc"/>
+                                        <MenuItem Header="Rating (High to Low)" Command="{Binding SetSortCommand}" CommandParameter="RatingDesc"/>
+                                        <MenuItem Header="Rating (Low to High)" Command="{Binding SetSortCommand}" CommandParameter="RatingAsc"/>
+                                        <MenuItem Header="My Score (High to Low)" Command="{Binding SetSortCommand}" CommandParameter="MyScoreDesc"/>
+                                        <MenuItem Header="My Score (Low to High)" Command="{Binding SetSortCommand}" CommandParameter="MyScoreAsc"/>
+                                        <MenuItem Header="Popularity" Command="{Binding SetSortCommand}" CommandParameter="Popularity"/>
+                                        <MenuItem Header="Start Date (Newest)" Command="{Binding SetSortCommand}" CommandParameter="DateDesc"/>
+                                        <MenuItem Header="Start Date (Oldest)" Command="{Binding SetSortCommand}" CommandParameter="DateAsc"/>
+                                        <MenuItem Header="Recently Added" Command="{Binding SetSortCommand}" CommandParameter="RecentlyAdded"/>
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <PathIcon Data="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"
+                                              Width="18"
+                                              Height="18"
+                                              Foreground="#AAAAAA"/>
+                                    <TextBlock Text="{Binding SortText}"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="White"/>
+                                    <PathIcon Data="M7 10l5 5 5-5z"
+                                              Width="16"
+                                              Height="16"
+                                              Foreground="#AAAAAA"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Clear Filters -->
+                            <Button Background="Transparent"
+                                    BorderThickness="1"
+                                    BorderBrush="#444444"
+                                    CornerRadius="8"
+                                    Padding="18,12"
+                                    Command="{Binding ClearFiltersCommand}"
+                                    IsVisible="{Binding HasActiveFilters}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                                              Width="16"
+                                              Height="16"
+                                              Foreground="#AAAAAA"/>
+                                    <TextBlock Text="Clear"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="#AAAAAA"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        
+                        <!-- Search Bar -->
+                        <Border Grid.Column="1"
+                                Background="#2A2A2A"
+                                CornerRadius="8"
+                                Padding="16,0"
+                                Width="300">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <PathIcon Grid.Column="0"
+                                          Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                          Width="20"
+                                          Height="20"
+                                          Foreground="#666666"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,12,0"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SearchText, Mode=TwoWay}"
+                                         Watermark="Search anime..."
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="White"
+                                         FontSize="14"
+                                         VerticalAlignment="Center"
+                                         Padding="0,12"/>
+                                <Button Grid.Column="2"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Width="32"
+                                        Height="32"
+                                        Command="{Binding ClearSearchCommand}"
+                                        IsVisible="{Binding SearchText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                        VerticalAlignment="Center">
+                                    <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                                              Width="18"
+                                              Height="18"
+                                              Foreground="#666666"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+            
+            <!-- Anime List Content -->
+            <ScrollViewer Grid.Row="1" Padding="50,30,50,40">
+                <!-- Grid View -->
+                <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
+                              IsVisible="{Binding IsGridView}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" ItemSpacing="20" LineSpacing="30"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="services:AnimeFieldSet">
+                            <Border Width="220"
+                                    Cursor="Hand"
+                                    Background="Transparent">
+                                <Button Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="0"
+                                        Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).OpenAnimeDetailsCommand}"
+                                        CommandParameter="{Binding AnimeId}"
+                                        HorizontalContentAlignment="Stretch"
+                                        VerticalContentAlignment="Stretch">
+                                    <StackPanel Spacing="12">
+                                        <!-- Poster Card -->
+                                        <Border CornerRadius="12"
+                                                ClipToBounds="True"
+                                                BoxShadow="0 8 24 #60000000"
+                                                Height="330">
+                                            <Grid>
+                                                <Image asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Value.Large}"
+                                                       Stretch="UniformToFill"/>
+                                                
+                                                <!-- Hover Overlay -->
+                                                <Border x:Name="hoverOverlay"
+                                                        Background="#CC000000"
+                                                        Opacity="0">
+                                                    <StackPanel VerticalAlignment="Center" 
+                                                                HorizontalAlignment="Center"
+                                                                Spacing="8">
+                                                        <PathIcon Data="M8 5v14l11-7z"
+                                                                  Width="40"
+                                                                  Height="40"
+                                                                  Foreground="White"/>
+                                                        <TextBlock Text="View Details"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="White"
+                                                                   HorizontalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                
+                                                <!-- Rating Badge -->
+                                                <Border Background="#1F1F1F"
+                                                        CornerRadius="6"
+                                                        Padding="8,4"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Top"
+                                                        Margin="10"
+                                                        IsVisible="{Binding Mean, Converter={StaticResource FloatToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                                                                  Width="14"
+                                                                  Height="14"
+                                                                  Foreground="#FFD700"/>
+                                                        <TextBlock Text="{Binding Mean, StringFormat='{}{0:0.0}'}"
+                                                                   FontSize="13"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="White"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                
+                                                <!-- Status Badge -->
+                                                <Border Background="{Binding MyListStatus.Status, Converter={StaticResource StatusToColorConverter}}"
+                                                        CornerRadius="6"
+                                                        Padding="10,5"
+                                                        HorizontalAlignment="Left"
+                                                        VerticalAlignment="Bottom"
+                                                        Margin="10"
+                                                        IsVisible="{Binding MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                    <TextBlock Text="{Binding MyListStatus.Status, Converter={StaticResource StatusToDisplayTextConverter}}"
+                                                               FontSize="11"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                        
+                                        <!-- Title -->
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"
+                                                   TextWrapping="Wrap"
+                                                   MaxHeight="44"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   LineHeight="22"/>
+                                        
+                                        <!-- Metadata -->
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding StartDate, Converter={StaticResource DateToYearConverter}}"
+                                                       FontSize="13"
+                                                       Foreground="#888888"/>
+                                            <TextBlock Text="•" 
+                                                       FontSize="13"
+                                                       Foreground="#555555"/>
+                                            <TextBlock Text="{Binding NumEpisodes, StringFormat='{}{0} eps'}"
+                                                       FontSize="13"
+                                                       Foreground="#888888"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <!-- Hover Animation -->
+                                <Border.Styles>
+                                    <Style Selector="Border:pointerover Border#hoverOverlay">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:0.2" FillMode="Forward">
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="Opacity" Value="1"/>
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                    <Style Selector="Border:not(:pointerover) Border#hoverOverlay">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:0.2" FillMode="Forward">
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="Opacity" Value="0"/>
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </Border.Styles>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                
+                <!-- List View -->
+                <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
+                              IsVisible="{Binding !IsGridView}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="services:AnimeFieldSet">
+                            <Border Background="Transparent"
+                                    CornerRadius="12"
+                                    Margin="0,0,0,15"
+                                    Cursor="Hand">
+                                <Button Background="#1A1A1A"
+                                        BorderThickness="0"
+                                        Padding="0"
+                                        CornerRadius="12"
+                                        Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).OpenAnimeDetailsCommand}"
+                                        CommandParameter="{Binding AnimeId}"
+                                        HorizontalContentAlignment="Stretch"
+                                        VerticalContentAlignment="Stretch">
+                                    <Grid ColumnDefinitions="140,*,Auto" Height="105">
+                                        <!-- Thumbnail -->
+                                        <Border Grid.Column="0"
+                                                CornerRadius="12,0,0,12"
+                                                ClipToBounds="True"
+                                                Width="140">
+                                            <Image asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Large}"
+                                                   Stretch="UniformToFill"/>
+                                        </Border>
+                                        
+                                        <!-- Info Section -->
+                                        <StackPanel Grid.Column="1" 
+                                                    Margin="20,15,20,15"
+                                                    Spacing="8"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="18"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            
+                                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                                                              Width="14"
+                                                              Height="14"
+                                                              Foreground="#FFD700"
+                                                              VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Mean, StringFormat='{}{0:0.0}'}"
+                                                               FontSize="14"
+                                                               Foreground="#AAAAAA"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                
+                                                <TextBlock Text="•" 
+                                                           FontSize="14"
+                                                           Foreground="#555555"/>
+                                                
+                                                <TextBlock Text="{Binding StartDate, Converter={StaticResource DateToYearConverter}}"
+                                                           FontSize="14"
+                                                           Foreground="#AAAAAA"/>
+                                                
+                                                <TextBlock Text="•" 
+                                                           FontSize="14"
+                                                           Foreground="#555555"/>
+                                                
+                                                <TextBlock Text="{Binding NumEpisodes, StringFormat='{}{0} episodes'}"
+                                                           FontSize="14"
+                                                           Foreground="#AAAAAA"/>
+                                                
+                                                <TextBlock Text="•" 
+                                                           FontSize="14"
+                                                           Foreground="#555555"
+                                                           IsVisible="{Binding Studios[0], Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                                
+                                                <TextBlock Text="{Binding Studios[0].Name}"
+                                                           FontSize="14"
+                                                           Foreground="#AAAAAA"
+                                                           IsVisible="{Binding Studios[0], Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        
+                                        <!-- Status Badge -->
+                                        <Border Grid.Column="2"
+                                                Background="{Binding MyListStatus.Status, Converter={StaticResource StatusToColorConverter}}"
+                                                CornerRadius="8"
+                                                Padding="20,12"
+                                                Margin="20,0"
+                                                VerticalAlignment="Center"
+                                                IsVisible="{Binding MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                            <TextBlock Text="{Binding MyListStatus.Status, Converter={StaticResource StatusToDisplayTextConverter}}"
+                                                       FontSize="13"
+                                                       FontWeight="Bold"
+                                                       Foreground="White"/>
+                                        </Border>
+                                    </Grid>
+                                </Button>
+                                
+                                <Border.Styles>
+                                    <Style Selector="Border:pointerover > Button">
+                                        <Setter Property="Background" Value="#252525"/>
+                                    </Style>
+                                </Border.Styles>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>
