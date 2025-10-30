@@ -9,7 +9,7 @@
         <vm:StatsViewModel/>
     </Design.DataContext>
     
-    <ScrollViewer Background="{StaticResource Background0}">
+    <ScrollViewer Background="{StaticResource BackgroundBlack}">
         <StackPanel Spacing="20" Margin="20">
             <Grid ColumnDefinitions="*,*,*,*" Margin="0,10,0,0">
                 <Grid.Styles>

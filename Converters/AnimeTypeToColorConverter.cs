@@ -24,7 +24,6 @@ public class AnimeTypeToColorConverter : IValueConverter
             return Brush.Parse(color);
         }
 
-        // Default color
         return Brush.Parse("#666666");
     }
 

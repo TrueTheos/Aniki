@@ -1,67 +1,38 @@
 using Aniki.Misc;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 
 namespace Aniki.ViewModels;
 
 public partial class AnimeDetailsViewModel : ViewModelBase
 {
-    private AnimeData? _selectedAnime;
-    public AnimeData? SelectedAnime
-    {
-        get => _selectedAnime;
-        set
-        {
-            if (SetProperty(ref _selectedAnime, value))
-            {
-                _ = LoadAnimeDetailsAsync(value);
-            }
-        }
-    }
-
-    [ObservableProperty] private bool _isTorrentsLoading;
-    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
-    private AnimeDetails? _details;
+    private AnimeFieldSet? _details;
 
     public string? ImageUrl => Details?.MainPicture?.Large;
 
     [ObservableProperty]
-    private ObservableCollection<AnimeData> _animeList;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanIncreaseEpisodeCount))]
-    [NotifyPropertyChangedFor(nameof(CanDecreaseEpisodeCount))]
-    private int _episodesWatched;
+    private int _watchedEpisodes;
 
     [ObservableProperty]
     private bool _isLoading;
-
-    private int _nextEpisodeNumber = -1;
-
-    public int NextEpisodeNumber
-    {
-        get => _nextEpisodeNumber == -1 ? EpisodesWatched + 1 : _nextEpisodeNumber;
-        set
-        {
-            if (_nextEpisodeNumber != value) 
-            {
-                _nextEpisodeNumber = value;
-                OnPropertyChanged(nameof(NextEpisodeNumber));
-            }
-        }
-    }
-
-    public bool CanIncreaseEpisodeCount => EpisodesWatched < (Details?.NumEpisodes ?? 0);
-    public bool CanDecreaseEpisodeCount => EpisodesWatched > 0;
+    
+    public bool CanIncreaseEpisodeCount => WatchedEpisodes < (Details?.NumEpisodes ?? 0);
+    public bool CanDecreaseEpisodeCount => WatchedEpisodes > 0;
 
     [ObservableProperty]
-    private string _torrentSearchTerms = string.Empty;
+    private WatchAnimeViewModel _watchAnimeViewModel;
 
     [ObservableProperty]
-    private ObservableCollection<NyaaTorrent> _torrentsList = new();
+    private TorrentSearchViewModel _torrentSearchViewModel;
+    
+    private readonly IMalService _malService;
+    
+    public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString();
 
     private int _selectedScore;
     public int SelectedScore
@@ -71,11 +42,12 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedScore, value))
             {
-                _ = UpdateAnimeScore(value.ToString());
+                _ = UpdateAnimeScore(value);
+                OnPropertyChanged(nameof(ScoreText));
             }
         }
     }
-
+    
     private AnimeStatusTranslated _selectedStatus;
     public AnimeStatusTranslated SelectedStatus
     {
@@ -89,183 +61,46 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
     }
 
-    private AnimeStatusTranslated _selectedFilter;
-    public AnimeStatusTranslated SelectedFilter
-    {
-        get => _selectedFilter;
-        set
-        {
-            if (SetProperty(ref _selectedFilter, value))
-            {
-                _ = LoadAnimeListAsync(value);
-                _lastStatus = value;
-            }
-        }
-    }
-
-    public IReadOnlyList<AnimeStatusTranslated> StatusOptions { get; } =
-    [
-        AnimeStatusTranslated.Watching, AnimeStatusTranslated.Completed, AnimeStatusTranslated.OnHold,
-        AnimeStatusTranslated.Dropped, AnimeStatusTranslated.PlanToWatch
-    ];
-
-    public IEnumerable<AnimeStatusTranslated> FilterOptions => [.. Enum.GetValues<AnimeStatusTranslated>()];
-
-    public List<int> ScoreOptions { get; } = new() {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-
-    [ObservableProperty]
-    public ObservableCollection<int> _watchEpisodesOptions = new();
-
-    [ObservableProperty]
-    private WatchAnimeViewModel _watchAnimeViewModel;
-    
-    private readonly IMalService _malService;
-    private readonly INyaaService _nyaaService;
-    
-    private AnimeStatusTranslated _lastStatus = AnimeStatusTranslated.All;
-
-    public AnimeDetailsViewModel(IMalService malService, INyaaService nyaaService, WatchAnimeViewModel watchAnimeViewModel) 
+    public AnimeDetailsViewModel(IMalService malService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
         _malService = malService;
-        _nyaaService = nyaaService;
         
         _watchAnimeViewModel = watchAnimeViewModel;
-        
-        _animeList = new();
-        SelectedFilter = AnimeStatusTranslated.All;
+        _torrentSearchViewModel = torrentSearchViewModel;
     }
 
-    public override async Task Enter()
-    {
-        await LoadAnimeListAsync(_lastStatus);
-    }
-
-    public void Update(AnimeDetails? details)
+    public void Update(AnimeFieldSet? details)
     {
         IsLoading = false;
         Details = details;
-        EpisodesWatched = details?.MyListStatus?.NumEpisodesWatched ?? 0;
-
-        WatchEpisodesOptions = new();
-        for (int i = 0; i < details?.NumEpisodes; i++)
-        {
-            WatchEpisodesOptions.Add(i + 1);
-        }
-            
-        OnPropertyChanged(nameof(EpisodesWatched));
-        OnPropertyChanged(nameof(NextEpisodeNumber));
+        WatchedEpisodes = details?.MyListStatus?.NumEpisodesWatched ?? 0;
+        SelectedScore = details?.MyListStatus?.Score ?? 0;
+        OnPropertyChanged(nameof(ScoreText));
+        SelectedStatus = details?.MyListStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
+        
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
-        SelectedScore = details?.MyListStatus?.Score ?? 1;
-        SelectedStatus = details?.MyListStatus != null ? details.MyListStatus.Status.ApiToTranslated() : AnimeStatusTranslated.All;
         WatchAnimeViewModel.Update(details);
+        TorrentSearchViewModel.Update(details, WatchedEpisodes);
     }
 
-    private async Task LoadAnimeDetailsAsync(AnimeData? animeData)
+    public async Task LoadAnimeDetailsAsync(int id)
     {
-        if (animeData?.Node?.Id != null)
-        {
-            IsLoading = true;
-            AnimeDetails? details = await _malService.GetAnimeDetails(animeData.Node.Id);
-            Update(details);
+        IsLoading = true;
+        AnimeFieldSet? details = await _malService.GetAllFieldsAsync(id);
+        Update(details);
 
-            IsLoading = false;
-        }
-    }
-
-    public async Task LoadAnimeListAsync(AnimeStatusTranslated filter)
-    {
-        try
-        {
-            IsLoading = true;
-            AnimeList.Clear();
-
-            List<AnimeData> animeListData = await _malService.GetUserAnimeList(filter.TranslatedToApi());
-
-            foreach (AnimeData anime in animeListData)
-            {
-                AnimeList.Add(anime);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Information($"Error loading anime list: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    public async Task<List<SearchEntry>> SearchAnimeByTitle(string searchQuery, bool fillList = true, bool showFirstBest = false)
-    {
-        List<SearchEntry> results = await _malService.SearchAnimeOrdered(searchQuery);
-        AnimeList.Clear();
-            
-        if (fillList)
-        {
-            AnimeList.Clear();
-            foreach (SearchEntry entry in results)
-            {
-                AnimeData newAnimeData = new()
-                {
-                    Node = new()
-                    {
-                        Id = entry.Anime.Id,
-                        Title = entry.Anime.Title,
-                        Synopsis = entry.Anime.Synopsis,
-                        Status = entry.Anime.Status,
-                        AlternativeTitles = entry.Anime.AlternativeTitles,
-                    },
-                    ListStatus = null
-                };
-                AnimeList.Add(newAnimeData);
-            }
-        }
-
-        if (showFirstBest) SelectedAnime = AnimeList[0];
-            
-        return results;
-    }
-        
-    public async Task SearchAnimeById(int malId, bool showDetails = true)
-    {
-        try
-        {
-            AnimeDetails? details = await _malService.GetAnimeDetails(malId);
-            AnimeList.Clear();
-
-            if (details == null) return;
-                
-            AnimeData newAnimeData = new()
-            {
-                Node = new()
-                {
-                    Id = details.Id,
-                    Title = details.Title,
-                    Synopsis = details.Synopsis,
-                    Status = details.Status,
-                    MainPicture = details.MainPicture,
-                },
-                ListStatus = details.MyListStatus
-            };
-            AnimeList.Add(newAnimeData);
-            SelectedAnime = newAnimeData;
-        }
-        catch (Exception ex)
-        {
-            Log.Information($"Error searching anime: {ex.Message}");
-        }
+        IsLoading = false;
     }
 
     [RelayCommand]
-    public void IncreaseEpisodeCount()
+    public void IncrementWatchedEpisodes()
     {
         _ = UpdateEpisodeCount(1);
     }
 
     [RelayCommand]
-    public void DecreaseEpisodeCount()
+    public void DecrementWatchedEpisodes()
     {
         _ = UpdateEpisodeCount(-1);
     }
@@ -275,84 +110,106 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await _malService.RemoveFromList(Details.Id);
+        await _malService.RemoveFromList(Details.AnimeId);
             
-        await LoadAnimeDetailsAsync(SelectedAnime);
+        await LoadAnimeDetailsAsync(Details.AnimeId);
     }
 
     [RelayCommand]
     private async Task AddToList()
     {
         if (Details == null) return;
+        if (Details.MyListStatus == null || Details.MyListStatus.Status == AnimeStatusApi.none)
+        {
+            await _malService.UpdateAnimeStatus(Details.AnimeId, AnimeStatusApi.plan_to_watch);
 
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.STATUS, "watching");
-            
-        await LoadAnimeDetailsAsync(SelectedAnime);
+            await LoadAnimeDetailsAsync(Details.AnimeId);
+        }
     }
 
     private async Task UpdateEpisodeCount(int change)
     {
         if (Details?.MyListStatus == null) return;
 
-        int newCount = EpisodesWatched + change;
+        int newCount = WatchedEpisodes + change;
 
         if (newCount < 0) newCount = 0;
 
         if (Details.NumEpisodes > 0 && newCount > Details.NumEpisodes)
         {
-            newCount = Details.NumEpisodes;
+            newCount = Details.NumEpisodes ?? 0;
         }
 
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.EPISODES_WATCHED, newCount.ToString());
-        EpisodesWatched = newCount;
+        await _malService.UpdateEpisodesWatched(Details.AnimeId, newCount);
+        WatchedEpisodes = newCount;
     }
 
-    private async Task UpdateAnimeScore(string score)
+    
+    [RelayCommand]
+    private void UpdateStatus(string status)
+    {
+        if (Details == null) return;
+    
+        SelectedStatus = status.ToAnimeStatus();
+    }
+
+    [RelayCommand]
+    private void UpdateScore(string scoreStr)
+    {
+        if (Details == null) return;
+        if (int.TryParse(scoreStr, out int score))
+        {
+            SelectedScore = score;
+        }
+    }
+    private async Task UpdateAnimeScore(int score)
     {
         if (Details?.MyListStatus == null) return;
-        if (score == null) return;
 
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.SCORE, score);
-        Details.MyListStatus.Score = int.Parse(score);
+        await _malService.UpdateAnimeScore(Details.AnimeId, score);
+        Details.MyListStatus.Score = score;
     }
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
         if(Details == null) return;
-        await _malService.UpdateAnimeStatus(Details.Id, MalService.AnimeStatusField.STATUS, status.TranslatedToApi().ToString());
+        await _malService.UpdateAnimeStatus(Details.AnimeId, status.TranslatedToApi());
         if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
     }
-
-    [RelayCommand]
-    public async Task SearchTorrents()
-    {
-        if (Details == null) return;
-        
-        IsTorrentsLoading = true;
-
-        TorrentsList.Clear();
-
-        List<NyaaTorrent> list = await _nyaaService.SearchAsync(Details.Title, NextEpisodeNumber);
-
-        foreach (NyaaTorrent t in list)
-        {
-            TorrentsList.Add(t);
-        }
-        
-        IsTorrentsLoading = false;
-    }
-
-    [RelayCommand]
-    public void DownloadTorrent(string magnet)
-    {
-        Process.Start(new ProcessStartInfo(magnet) { UseShellExecute = true });
-    }
-
+    
     [RelayCommand]
     private void OpenMalPage()
     {
         if (Details == null) return;
-        string url = $"https://myanimelist.net/anime/{Details.Id}";
+        string url = $"https://myanimelist.net/anime/{Details.AnimeId}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+    
+    [RelayCommand]
+    private void CopyMalPageUrl()
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+            desktop.MainWindow?.Clipboard is not { } provider)
+            return;
+        
+        if (Details == null) return;
+
+        _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.AnimeId}");
+    }
+
+    [RelayCommand]
+    private void OpenUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return;
+        
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+
+    public override async Task Enter()
+    {
+        if (Details == null)
+        {
+            await LoadAnimeDetailsAsync(1);
+        }
     }
 }

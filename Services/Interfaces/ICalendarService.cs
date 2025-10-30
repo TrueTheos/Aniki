@@ -8,6 +8,5 @@ public interface ICalendarService
         DateTime endDate,
         int perPage = 150);
 
-    public Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date,
-        IEnumerable<string> watchingList);
+    public Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date);
 }

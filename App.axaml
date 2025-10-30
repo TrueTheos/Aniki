@@ -3,10 +3,8 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:conv="clr-namespace:Aniki.Converters"
-    RequestedThemeVariant="Dark">
-    <Application.Styles>
-        <FluentTheme />
-    </Application.Styles>
+    RequestedThemeVariant="Dark"
+    xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -19,8 +17,59 @@
                     <conv:AnimeTypeToColorConverter x:Key="AnimeTypeToColorConverter" />
                     <conv:ValueToGridLengthConverter  x:Key="ValueToGridLengthConverter" />
                     <conv:BooleanInverterConverter x:Key="BooleanInverterConverter" />
+                    <conv:EqualToZeroConverter x:Key="EqualToZeroConverter" />
+                    <conv:EnumMatchConverter x:Key="EnumMatchConverter" />
+                    <conv:BoolToColorConverter x:Key="BoolToColorConverter" />
+                    <conv:StringToFormattedIntConverter x:Key="StringToFormattedIntConverter" />
+                    <conv:YoutubeEmbedUrlToWatchUrlConverter x:Key="YoutubeEmbedUrlToWatchUrlConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
+    <Application.Styles>
+        <FluentTheme />
+        <Style Selector="ScrollBar">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="MinWidth" Value="8" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="Transparent">
+                        <Track Name="PART_Track" 
+                              IsDirectionReversed="true" 
+                              Orientation="{TemplateBinding Orientation}">
+                            <Thumb Name="PART_Thumb" 
+                                  Background="{StaticResource PrimaryDarker}" 
+                                  CornerRadius="4" />
+                        </Track>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ScrollBar[Orientation=Horizontal]">
+            <Setter Property="Height" Value="8" />
+            <Setter Property="MinHeight" Value="8" />
+        </Style>
+        
+        <Style Selector="Button.nav-button">
+            <Setter Property="Background" Value="{StaticResource Background0}" />
+            <Setter Property="Foreground" Value="{StaticResource White}" />
+            <Setter Property="BorderBrush" Value="#333333" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="4,0" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="MinWidth" Value="40" />
+            <Setter Property="Height" Value="32" />
+        </Style>
+
+        <Style Selector="Button.nav-button:pointerover">
+            <Setter Property="Background" Value="{StaticResource Background1}" />
+            <Setter Property="BorderBrush" Value="#555555" />
+        </Style>
+
+        <Style Selector="Button.nav-button:pressed">
+            <Setter Property="Background" Value="#333333" />
+        </Style>
+    </Application.Styles>
 </Application>

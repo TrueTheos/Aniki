@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Aniki.ViewModels"
+             xmlns:local="clr-namespace:Aniki.Views"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200"
+             x:Class="Aniki.Views.AnimeListStatusButton">
+    
+    <UserControl.Styles>
+        <Style Selector="Button.SmallButton">
+            <Setter Property="Width" Value="25"/>
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="RenderTransform" Value="scale(0)"/>
+            <Setter Property="ClipToBounds" Value="False"/>
+            <Setter Property="Opacity" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.SmallButton:pointerover  /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="RenderTransform" Value="scale(1.2)"/>
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
+        </Style>
+        
+        <Style Selector="Button.SmallButton.visible">
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+        </Style>
+
+        <Style Selector="UserControl Button#MainButton">
+            <Setter Property="RenderTransform" Value="scale(0)"/>
+            <Setter Property="Opacity" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="UserControl:pointerover Button#MainButton">
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+        </Style>
+        
+        <Style Selector="Button#MainButton:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.2)"/>
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
+        </Style>
+        
+        <Style Selector="Button#MainButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Background1}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid x:Name="Root" Background="#00000000">
+        <StackPanel x:Name="StatusPanel" Orientation="Vertical"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,10,50"
+                    Spacing="5">
+            <Button Classes="SmallButton" x:Name="PlannedToWatchButton" CornerRadius="25" ToolTip.Tip="Add to Planned To Watch"
+                    Click="OnStatusButtonClick"
+                    Tag="plan_to_watch">
+                <Image Source="{SvgImage /Resources/Icons/calendarAdd_icon.svg}" Width="15" Height="15"/>
+            </Button>
+            <Button Classes="SmallButton" x:Name="WatchingButton" CornerRadius="25" ToolTip.Tip="Add to Watching"
+                    Click="OnStatusButtonClick"
+                    Tag="watching">
+                <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="15" Height="15"/>
+            </Button>
+            <Button Classes="SmallButton" x:Name="CompletedButton" CornerRadius="25" ToolTip.Tip="Add to Completed"
+                    Click="OnStatusButtonClick"
+                    Tag="completed">
+                <Image Source="{SvgImage /Resources/Icons/check_icon.svg}" Width="15" Height="15"/>
+            </Button>
+            <Button Classes="SmallButton" x:Name="RemoveButton" CornerRadius="25" ToolTip.Tip="Remove from the list"
+                    Click="OnStatusButtonClick"
+                    Tag="none">
+                <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}" Width="15" Height="15"/>
+            </Button>
+        </StackPanel>
+
+        <Button x:Name="MainButton"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Width="30"
+                Height="30"
+                Margin="10"
+                CornerRadius="25"
+                Background="{StaticResource Background1}">
+            <Image Source="{SvgImage /Resources/Icons/add_icon.svg}" Width="15" Height="15"/>
+        </Button>
+    </Grid>
+</UserControl>

@@ -2,5 +2,5 @@
 
 public interface INyaaService
 {
-    public Task<List<NyaaTorrent>> SearchAsync(string animeName, int episodeNumber);
+    public Task<List<NyaaTorrent>> SearchAsync(string animeName, string episodeNumber);
 }

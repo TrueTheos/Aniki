@@ -16,6 +16,7 @@
     <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
     <PackageReference Include="Avalonia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
@@ -39,6 +40,9 @@
     <Compile Update="Views\LoginWindow.axaml.cs">
       <DependentUpon>LoginWindow.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\TorrentSearchView.axaml.cs">
+      <DependentUpon>TorrentSearchView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -48,5 +52,43 @@
   <ItemGroup>
     <None Remove="Resources\icon.ico" />
     <AvaloniaResource Include="Resources\icon.ico" />
+    <None Remove="Resources\nothingtoseehere.png" />
+    <AvaloniaResource Include="Resources\nothingtoseehere.png" />
+    <None Remove="Resources\nothingtoseehere_transparent.png" />
+    <AvaloniaResource Include="Resources\nothingtoseehere_transparent.png" />
+    <None Remove="Resources\nothingtoseehere_transparent_small.png" />
+    <AvaloniaResource Include="Resources\nothingtoseehere_transparent_small.png" />
+    <AvaloniaResource Include="Resources\Icons\add_icon.svg" />
+    <None Remove="Resources\Icons\logout_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\logout_icon.svg" />
+    <None Remove="Resources\Icons\book_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\book_icon.svg" />
+    <None Remove="Resources\Icons\info_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\info_icon.svg" />
+    <None Remove="Resources\Icons\person_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\person_icon.svg" />
+    <None Remove="Resources\Icons\minus_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\minus_icon.svg" />
+    <None Remove="Resources\Icons\swap_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\swap_icon.svg" />
+    <None Remove="Resources\Icons\download_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\download_icon.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Resources\Icons\calendarAdd_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\calendar_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\check_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\chevronLeft_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\chevronRight_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\delete_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\doubleChevronLeft_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\doubleChevronRight_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\globe_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\home_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\play_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\search_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\settings_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\stats_icon.svg" />
   </ItemGroup>
 </Project>

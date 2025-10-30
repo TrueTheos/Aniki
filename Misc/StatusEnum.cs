@@ -1,10 +1,28 @@
 ﻿namespace Aniki.Misc;
 
 public enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
-public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } //todo to wyjebac i uzywac tylko API enumow
+public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } 
 
 public static class StatusEnum
 {
+    public static AnimeStatusTranslated ToAnimeStatus(this string status)
+    {
+        return status switch
+        {
+            "Watching" => AnimeStatusTranslated.Watching,
+            "watching" => AnimeStatusTranslated.Watching,
+            "Completed" => AnimeStatusTranslated.Completed,
+            "completed" => AnimeStatusTranslated.Completed,
+            "OnHold" => AnimeStatusTranslated.OnHold,
+            "on_hold" => AnimeStatusTranslated.OnHold,
+            "Dropped" => AnimeStatusTranslated.Dropped,
+            "dropped" => AnimeStatusTranslated.Dropped,
+            "PlanToWatch" => AnimeStatusTranslated.PlanToWatch,
+            "plan_to_watch" => AnimeStatusTranslated.PlanToWatch,
+            _ => AnimeStatusTranslated.Watching
+        };
+    }
+
     public static AnimeStatusTranslated StringToTranslated(string text)
     {
         return text switch
@@ -43,6 +61,20 @@ public static class StatusEnum
             AnimeStatusTranslated.PlanToWatch => AnimeStatusApi.plan_to_watch,
             AnimeStatusTranslated.All => AnimeStatusApi.none,
             _ => throw new ArgumentOutOfRangeException(nameof(translated), translated, null)
+        };
+    }
+    
+    public static string ApiToString(AnimeStatusApi api)
+    {
+        return api switch
+        {
+            AnimeStatusApi.watching => "watching",
+            AnimeStatusApi.completed => "completed",
+            AnimeStatusApi.on_hold => "on_hold",
+            AnimeStatusApi.dropped => "dropped",
+            AnimeStatusApi.plan_to_watch => "plan_to_watch",
+            AnimeStatusApi.none => "none",
+            _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
         };
     }
 

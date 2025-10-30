@@ -12,6 +12,6 @@ public interface ISaveService
     public void SaveSeasonCache(SeasonCache cache);
     public void SaveSettings(SettingsConfig config);
     public SettingsConfig? GetSettingsConfig();
-    public Bitmap? TryGetAnimeImage(int id);
+    public bool TryGetAnimeImage(int id, out Bitmap? picture);
     public void SaveImage(int id, Bitmap image);
 }

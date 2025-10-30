@@ -1,0 +1,143 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Aniki.ViewModels"
+             xmlns:models="clr-namespace:Aniki.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Aniki.Views.TorrentSearchView"
+             x:DataType="vm:TorrentSearchViewModel">
+    <Grid Margin="0,16,0,0" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Search Controls -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal">
+                <TextBox Width="500"
+                         Text="{Binding TorrentSearchTerms}" 
+                         Watermark="Additional search terms..."
+                         Margin="20,0"
+                         VerticalContentAlignment="Center"/>
+                <Button
+                        Command="{Binding SearchTorrentsCommand}"
+                        Background="#E50914"
+                        CornerRadius="6"
+                        Padding="20,12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="Search" FontWeight="SemiBold" FontSize="15" Foreground="White" Margin="0,0,15,0"/>
+                        <Image Grid.Column="1" Source="{SvgImage /Resources/Icons/search_icon.svg}" Width="16" Height="16" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Button>
+            </StackPanel>
+            
+        </Grid>
+
+        <!-- Torrent Results -->
+        <Grid Grid.Row="2" Margin="20,0,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,20,10" IsVisible="{Binding TorrentsList.Count, Converter={StaticResource GreaterThanZeroConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="2" Command="{Binding SortByReleaseDateCommand}"
+                        Background="#2A2A2A"
+                        CornerRadius="6"
+                        Padding="12,8"
+                        ToolTip.Tip="Sort by Release Date">
+                    <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="16" Height="16">
+                        <Image.RenderTransform>
+                            <RotateTransform Angle="{Binding DateSortDirection, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Descending:180;Ascending:0}" />
+                        </Image.RenderTransform>
+                    </Image>
+                </Button>
+
+                <Button Grid.Column="3" Command="{Binding SortBySeedersCommand}"
+                        Background="#2A2A2A"
+                        CornerRadius="6"
+                        Padding="12,8"
+                        ToolTip.Tip="Sort by Seeders">
+                    <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="16" Height="16">
+                        <Image.RenderTransform>
+                            <RotateTransform Angle="{Binding SeedersSortDirection, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Descending:180;Ascending:0}" />
+                        </Image.RenderTransform>
+                    </Image>
+                </Button>
+            </Grid>
+
+            <ProgressBar Grid.Row="0" Grid.RowSpan="2" IsIndeterminate="True" 
+                         IsVisible="{Binding IsTorrentsLoading}" 
+                         VerticalAlignment="Top" 
+                         Margin="0,20,0,0"/>
+
+            <ListBox Grid.Row="1" Background="Transparent" 
+                     ItemsSource="{Binding TorrentsList}"
+                     IsVisible="{Binding !IsTorrentsLoading}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="models:NyaaTorrent">
+                        <Border Background="#1A1A1A" CornerRadius="8" Padding="15" Margin="0,0,0,10">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                                <TextBlock Grid.Column="0" 
+                                           Text="{Binding FileName}" 
+                                           Foreground="#E0E0E0" 
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" Margin="20,0">
+                                    <TextBlock Text="{Binding Size}" 
+                                               Foreground="#999999" 
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" Margin="20,0">
+                                    <TextBlock Text="{Binding PublishDate, StringFormat='{}{0:yyyy-MM-dd}'}" 
+                                               Foreground="#999999" 
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="5" Margin="20,0">
+                                    <PathIcon Width="16" Height="16" Foreground="#4CAF50" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                    <TextBlock Text="{Binding Seeders}" 
+                                               Foreground="#4CAF50" 
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Button Grid.Column="4" 
+                                        Command="{Binding $parent[UserControl].((vm:TorrentSearchViewModel)DataContext).DownloadTorrentCommand}"
+                                        CommandParameter="{Binding TorrentLink}"
+                                        Background="#3A3A3A"
+                                        CornerRadius="20"
+                                        Width="40" Height="40">
+                                    <Image Source="{SvgImage /Resources/Icons/download_icon.svg}" Width="20" Height="20"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" 
+                        HorizontalAlignment="Center" 
+                        IsVisible="{Binding TorrentsList.Count, Converter={StaticResource EqualToZeroConverter}}" 
+                        Spacing="20">
+                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
+                       Width="200" 
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <TextBlock Text="No torrents found. Try a different search!" 
+                           Foreground="#888888" 
+                           FontSize="16" 
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

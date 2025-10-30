@@ -24,6 +24,12 @@ public partial class LoginWindow : Window
         DataContext = _viewModel;
 
         Loaded += LoginWindow_Loaded;
+        Closing += OnClosing;
+    }
+
+    private void OnClosing(object? sender, WindowClosingEventArgs e)
+    {
+        _viewModel.NavigateToMainRequested -= OnNavigateToMainRequested;
     }
 
     private void InitializeComponent()

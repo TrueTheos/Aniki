@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
@@ -190,7 +191,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
         AnimeGroups.Insert(insertIndex, newGroup);
     }
 
-    public void Update(AnimeDetails? details)
+    public void Update(AnimeFieldSet? details)
     {
         AnimeTitleFilter = details?.Title;
         _ = LoadEpisodesFromFolder();
@@ -298,7 +299,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
     private void MarkEpisodeCompleted(Episode ep)
     {
         int episodeToMark = ep.EpisodeNumber;
-        _ = _malService.UpdateAnimeStatus(ep.Id, MalService.AnimeStatusField.EPISODES_WATCHED, episodeToMark.ToString());
+        _ = _malService.UpdateEpisodesWatched(ep.Id,  episodeToMark);
     }
 }
 

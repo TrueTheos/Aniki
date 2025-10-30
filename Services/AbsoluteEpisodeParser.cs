@@ -1,3 +1,4 @@
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -64,7 +65,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         var searchResult = await _malService.SearchAnimeOrdered(animeTitle);
         if (searchResult.Count == 0) return null;
             
-        int animeId = searchResult.First().Anime.Id;
+        int animeId = searchResult.First().MalAnime.Id;
 
         var newMap = await BuildSeasonMap(animeId);
         if (newMap != null && newMap.Count > 0)
@@ -83,7 +84,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             var seasonMap = new Dictionary<int, SeasonData>();
             var visitedIds = new HashSet<int>();
             
-            var seasonChain = new List<(int id, AnimeDetails details)>();
+            var seasonChain = new List<(int id, AnimeFieldSet details)>();
             int currentId = animeId;
             
             while (true)
@@ -91,12 +92,12 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 if (visitedIds.Contains(currentId)) break;
                 visitedIds.Add(currentId);
                 
-                AnimeDetails? details = await _malService.GetAnimeDetails(currentId, true);
+                AnimeFieldSet? details = await _malService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
                 if (details == null) break;
                 
                 seasonChain.Insert(0, (currentId, details));
                 
-                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
+                MAL_RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
                 if (prequel?.Node != null)
                 {
                     currentId = prequel.Node.Id;
@@ -106,18 +107,17 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     break; 
                 }
             }
-            
-            currentId = animeId;
-            AnimeDetails? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
+
+            AnimeFieldSet? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
             
             while (currentDetails != null)
             {
-                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
+                MAL_RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
                 if (sequel?.Node != null && !visitedIds.Contains(sequel.Node.Id))
                 {
                     currentId = sequel.Node.Id;
                     visitedIds.Add(currentId);
-                    currentDetails = await _malService.GetAnimeDetails(currentId, true);
+                    currentDetails = await _malService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
                     if (currentDetails != null)
                     {
                         seasonChain.Add((currentId, currentDetails));
@@ -131,10 +131,10 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             
             for (int i = 0; i < seasonChain.Count; i++)
             {
-                (int id, AnimeDetails details) = seasonChain[i];
+                (int id, AnimeFieldSet details) = seasonChain[i];
                 seasonMap[i + 1] = new SeasonData 
                 { 
-                    Episodes = details.NumEpisodes, 
+                    Episodes = details.NumEpisodes ?? 0, 
                     MalId = id 
                 };
             }

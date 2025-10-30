@@ -1,0 +1,84 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:local="clr-namespace:Aniki.Views"
+             xmlns:vm="clr-namespace:Aniki.ViewModels"
+             xmlns:models="clr-namespace:Aniki.Models"
+             mc:Ignorable="d"
+             d:DesignWidth="160"
+             d:DesignHeight="260"
+             x:Class="Aniki.Views.AnimeCard"
+             x:DataType="models:AnimeCardData">
+
+    <UserControl.Styles>
+        <Style Selector="local|AnimeCard local|AnimeListStatusButton">
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform X="0" Y="0"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="local|AnimeCard:pointerover local|AnimeListStatusButton">
+            <Setter Property="Opacity" Value="1"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform X="0" Y="0"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="Transparent"
+            Cursor="Hand"
+            DoubleTapped="OnDoubleTapped">
+        <StackPanel Spacing="8" Width="160">
+            <Border x:Name="ImageContainer"
+                    CornerRadius="8"
+                    ClipToBounds="True"
+                    Background="#1E1E1E">
+
+                <Grid Width="160" Height="225">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Image x:Name="AnimeImage"
+                           Grid.ColumnSpan="2"
+                           Stretch="UniformToFill"
+                           asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}"
+                           ToolTip.Tip="Double click to show details"/>
+
+                    <Border Grid.Column="1"
+                            Background="Transparent"
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,5">
+                        <local:AnimeListStatusButton x:Name="StatusButton"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <TextBlock x:Name="AnimeTitle"
+                       TextWrapping="Wrap"
+                       MaxHeight="60"
+                       TextTrimming="CharacterEllipsis"
+                       FontSize="13"
+                       FontWeight="Medium"
+                       TextAlignment="Center"
+                       Text="{Binding Title}"
+                       ToolTip.Tip="{Binding #AnimeTitle.Text}"/>
+        </StackPanel>
+    </Border>
+</UserControl>

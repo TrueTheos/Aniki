@@ -3,6 +3,7 @@ using Aniki.Services.Interfaces;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -52,9 +53,7 @@ public partial class MainWindow : Window
 
     private void OnLogoutRequested(object? sender, EventArgs e)
     {
-        LoginWindow loginWindow = new();
-        loginWindow.Show();
-        Close();
+        LogOut(sender, new RoutedEventArgs());
     }
 
     private async void OnSettingsRequested(object? sender, EventArgs e)
@@ -66,17 +65,18 @@ public partial class MainWindow : Window
         };
         await settingsWindow.ShowDialog(this);
     }
-
-    private void TodayAnime_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    
+    public void LogOut(object? sender, RoutedEventArgs routedEventArgs)
     {
-        if (e.AddedItems.Count <= 0) return;
-            
-        AnimeScheduleItem? anime = e.AddedItems[0] as AnimeScheduleItem;
-        if (anime != null) _viewModel.GoToAnime(anime.MalId ?? 0);
-
-        if (sender is ListBox listBox)
+        if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            listBox.SelectedItem = null;
+            var loginViewModel = App.ServiceProvider.GetRequiredService<LoginViewModel>();
+            loginViewModel.Logout();
+            
+            desktop.MainWindow = new LoginWindow();
+            desktop.MainWindow.Show();
+            
+            Close();
         }
     }
 }

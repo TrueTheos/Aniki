@@ -1,6 +1,7 @@
 ﻿using Aniki.Misc;
 using Avalonia.Media.Imaging;
 using System.Collections.ObjectModel;
+using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -16,9 +17,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoading;
 
-    [ObservableProperty]
-    private string _searchQuery = string.Empty;
-
     public event EventHandler? LogoutRequested;
     public event EventHandler? SettingsRequested;
 
@@ -33,6 +31,8 @@ public partial class MainViewModel : ViewModelBase
     private CalendarViewModel _calendarViewModel;
     [ObservableProperty]
     private StatsViewModel _statsViewModel;
+    [ObservableProperty]
+    private AnimeBrowseViewModel _animeBrowseViewModel;
     #endregion
 
     [ObservableProperty]
@@ -41,7 +41,8 @@ public partial class MainViewModel : ViewModelBase
     private readonly ICalendarService _calendarService;
     private readonly IMalService _malService;
 
-    public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel, WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel) 
+    public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel,
+        WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel) 
     {
         _calendarService = calendarService;
         _malService = malService;
@@ -49,10 +50,18 @@ public partial class MainViewModel : ViewModelBase
         _watchViewModel = watchViewModel;
         _calendarViewModel = calendarViewModel;
         _statsViewModel = statsViewModel;
+        _animeBrowseViewModel = animeBrowseViewModel;
     }
 
     [RelayCommand]
-    public async Task ShowMainPage()
+    public async Task ShowAnimeBrowsePage()
+    {
+        CurrentViewModel = AnimeBrowseViewModel;
+        await CurrentViewModel.Enter();
+    }
+
+    [RelayCommand]
+    public async Task ShowAnimeDetailsPage()
     {
         CurrentViewModel = AnimeDetailsViewModel;
         await CurrentViewModel.Enter();
@@ -81,7 +90,7 @@ public partial class MainViewModel : ViewModelBase
 
     public void GoToAnime(string title)
     {
-        _ = SearchForAnime(title.Replace('-', ' '), true);
+        _ = SearchForAnime(title.Replace('-', ' '));
     }
 
     public void GoToAnime(int malId)
@@ -98,7 +107,7 @@ public partial class MainViewModel : ViewModelBase
     private async Task LoadTodayAnimeAsync()
     {
         var watchingList = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
-        var animes = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today, watchingList.Select(x => x.Node.Title).ToList());
+        var animes = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
 
         TodayAnime.Clear();
         foreach (AnimeScheduleItem anime in animes)
@@ -113,7 +122,7 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             IsLoading = true;
-            MALUserData malUserData = await _malService.GetUserDataAsync();
+            MAL_UserData malUserData = await _malService.GetUserDataAsync();
             Username = malUserData.Name;
             ProfileImage = await _malService.GetUserPicture();
         }
@@ -123,7 +132,7 @@ public partial class MainViewModel : ViewModelBase
         }
         finally
         {
-            _ = ShowMainPage();
+            _ = ShowAnimeBrowsePage();
             IsLoading = false;
         }
     }
@@ -134,27 +143,15 @@ public partial class MainViewModel : ViewModelBase
         LogoutRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    [RelayCommand]
-    public async Task Search()
+    private async Task SearchForAnime(string searchQuery)
     {
-        await SearchForAnime(SearchQuery);
-    }
-
-    private async Task SearchForAnime(string searchQuery, bool showFirstBest = false)
-    {
-        if (string.IsNullOrWhiteSpace(searchQuery))
-        {
-            await AnimeDetailsViewModel.LoadAnimeListAsync(AnimeStatusTranslated.All);
-            return;
-        }
-
         IsLoading = true;
 
-        _ = ShowMainPage();
+        _ = ShowAnimeBrowsePage();
 
         try
         {
-            await AnimeDetailsViewModel.SearchAnimeByTitle(searchQuery, true, showFirstBest);
+            await AnimeBrowseViewModel.SearchAnimeByTitle(searchQuery);
         }
         catch (Exception ex)
         {
@@ -170,11 +167,11 @@ public partial class MainViewModel : ViewModelBase
     {
         IsLoading = true;
 
-        _ = ShowMainPage();
+        _ = ShowAnimeDetailsPage();
 
         try
         {
-            await AnimeDetailsViewModel.SearchAnimeById(malId);
+            await AnimeDetailsViewModel.LoadAnimeDetailsAsync(malId);
         }
         catch (Exception ex)
         {
