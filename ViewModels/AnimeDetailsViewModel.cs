@@ -204,12 +204,4 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
-
-    public override async Task Enter()
-    {
-        if (Details == null)
-        {
-            await LoadAnimeDetailsAsync(1);
-        }
-    }
 }

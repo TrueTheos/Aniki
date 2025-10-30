@@ -92,8 +92,15 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             foreach (var anime in airingToday)
             {
                 if(anime.MalId == null) continue;
-                AnimeFieldSet? details = await _malService.GetFieldsAsync(anime.MalId.Value,  AnimeField.TITLE, AnimeField.MAIN_PICTURE, AnimeField.MEAN, AnimeField.MY_LIST_STATUS);
-                if(details != null) AiringToday.Add(details.ToCardData());
+                //AnimeFieldSet? details = await _malService.GetFieldsAsync(anime.MalId.Value,  AnimeField.TITLE, AnimeField.MAIN_PICTURE, AnimeField.MEAN, AnimeField.MY_LIST_STATUS);
+                AiringToday.Add(new AnimeCardData
+                {
+                    AnimeId = anime.MalId.Value,
+                    Title = anime.Title,
+                    ImageUrl = anime.ImageUrl,
+                    Score = anime.Mean,
+                    MyListStatus = null
+                });
             }
         }
         catch (Exception ex)
@@ -238,7 +245,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             {
                 AnimeId = result.MalAnime.Id,
                 Title = result.MalAnime.Title,
-                Status = null,
+                MyListStatus  = null,
                 ImageUrl = picture!.Large != null ? picture.Large : picture.Medium
             };
             

@@ -51,6 +51,8 @@ public partial class MainViewModel : ViewModelBase
         _calendarViewModel = calendarViewModel;
         _statsViewModel = statsViewModel;
         _animeBrowseViewModel = animeBrowseViewModel;
+        
+        _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
 
     [RelayCommand]

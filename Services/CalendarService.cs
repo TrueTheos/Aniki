@@ -36,6 +36,7 @@ public class CalendarService : ICalendarService
                       }
                       format
                       type
+                      meanScore
                     }
                     episode
                     airingAt
@@ -197,7 +198,13 @@ public class CalendarService : ICalendarService
 
         string format = media["format"]?.ToString() ?? "TV";
         int? malId = media["idMal"]?.ToObject<int?>();
+        
+        int? meanScore = media["meanScore"]?.ToObject<int?>();
 
+        float? meanScoreScaled = meanScore.HasValue
+            ? meanScore.Value / 10f
+            : null;
+        
         return new()
         {
             Title = title,
@@ -207,7 +214,8 @@ public class CalendarService : ICalendarService
             Type = format,
             MalId = malId,
             IsBookmarked = watchSet.Contains(title),
-            ImageUrl = imageUrl
+            ImageUrl = imageUrl,
+            Mean = meanScoreScaled ?? 0
         };
     }
 

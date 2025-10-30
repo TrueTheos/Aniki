@@ -47,7 +47,7 @@ public class MAL_AnimeNode
             Title = Title,
             ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
             Score = Mean,
-            Status = MyListStatus?.Status ?? AnimeStatusApi.none
+            MyListStatus = MyListStatus?.Status ?? AnimeStatusApi.none
         };
     }
 }

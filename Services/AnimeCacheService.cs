@@ -276,7 +276,7 @@ public class AnimeFieldSet
             Title = Title,
             ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
             Score = Mean ?? 0,
-            Status = MyListStatus?.Status ?? AnimeStatusApi.none
+            MyListStatus = MyListStatus?.Status ?? AnimeStatusApi.none
         };
     }
 }

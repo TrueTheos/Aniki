@@ -48,6 +48,9 @@ public partial class AnimeScheduleItem : ObservableObject
 
     [ObservableProperty]
     private bool _isAiringNow;
+    
+    [ObservableProperty] 
+    private float _mean;
 
     public string EpisodeText => Episode > 0 ? $"EP{Episode}" : "";
 
@@ -71,4 +74,5 @@ public partial class AnimeScheduleItem : ObservableObject
             return TimeSpan.Zero;
         }
     }
+
 }
