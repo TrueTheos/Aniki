@@ -179,7 +179,7 @@
                                                          Value="{Binding WatchedEpisodes}"
                                                          Maximum="{Binding Details.NumEpisodes}"
                                                          Background="#333333"
-                                                         Foreground="#E50914"
+                                                         Foreground="{StaticResource RedColor}"
                                                          CornerRadius="4"/>
                                             <Grid Margin="0, 8, 0, 0">
                                                 <TextBlock HorizontalAlignment="Left"
@@ -491,13 +491,13 @@
                                                    Foreground="White"
                                                    FontWeight="Bold"
                                                    Margin="0,0,0,20"
-                                                   IsVisible="{Binding Details.Videos, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                                        <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+                                                   IsVisible="{Binding Details.Videos[0], Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" 
                                                       VerticalScrollBarVisibility="Disabled">
                                             <ItemsControl ItemsSource="{Binding Details.Videos}">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Horizontal" Spacing="20"/>
+                                                        <WrapPanel Orientation="Horizontal" ItemSpacing="15" LineSpacing="15"/>
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>

@@ -80,6 +80,8 @@
             <ProgressBar Grid.Row="0" Grid.RowSpan="2" IsIndeterminate="True" 
                          IsVisible="{Binding IsTorrentsLoading}" 
                          VerticalAlignment="Top" 
+                         Background="{StaticResource Background0}"
+                         Foreground="{StaticResource RedColor}"
                          Margin="0,20,0,0"/>
 
             <ListBox Grid.Row="1" Background="Transparent" 

@@ -15,7 +15,8 @@
         Background="{StaticResource BackgroundBlack}">
         <Grid VerticalAlignment="Stretch" RowDefinitions="Auto,*">
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
-                <ProgressBar Width="300" IsIndeterminate="True" />
+                <ProgressBar Width="300" IsIndeterminate="True" Background="{StaticResource Background0}"
+                             Foreground="{StaticResource RedColor}" />
                 <TextBlock
                     Margin="0,5,0,5"
                     HorizontalAlignment="Center"

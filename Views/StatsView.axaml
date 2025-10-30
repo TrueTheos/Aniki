@@ -9,9 +9,9 @@
         <vm:StatsViewModel/>
     </Design.DataContext>
     
-    <ScrollViewer Background="{StaticResource BackgroundBlack}">
+    <ScrollViewer Background="{StaticResource BackgroundBlack}" Margin="30,50,30,0">
         <StackPanel Spacing="20" Margin="20">
-            <Grid ColumnDefinitions="*,*,*,*" Margin="0,10,0,0">
+            <Grid ColumnDefinitions="*,*,*,*" >
                 <Grid.Styles>
                     <Style Selector="Border.stat-card">
                         <Setter Property="Background" Value="{StaticResource Background1}"/>
@@ -33,28 +33,28 @@
                     </Style>
                 </Grid.Styles>
 
-                <Border Grid.Column="0" Classes="stat-card">
+                <Border Grid.Column="0" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="{Binding AnimeStats.DaysWatched, StringFormat='{}{0:F1}'}" Classes="stat-value"/>
                         <TextBlock Text="Days Watched" Classes="stat-label"/>
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="1" Classes="stat-card">
+                <Border Grid.Column="1" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="{Binding AnimeStats.MeanScore, StringFormat='{}{0:F1}'}" Classes="stat-value"/>
                         <TextBlock Text="Mean Score" Classes="stat-label"/>
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="2" Classes="stat-card">
+                <Border Grid.Column="2" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="{Binding AnimeStats.TotalEntries}" Classes="stat-value"/>
                         <TextBlock Text="Total Entries" Classes="stat-label"/>
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="3" Classes="stat-card">
+                <Border Grid.Column="3" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
                     <StackPanel>
                         <TextBlock Text="{Binding AnimeStats.Episodes}" Classes="stat-value"/>
                         <TextBlock Text="Episodes" Classes="stat-label"/>

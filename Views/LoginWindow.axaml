@@ -64,6 +64,8 @@
 				</Button>
 				<ProgressBar IsIndeterminate="True"
                              HorizontalAlignment="Stretch"
+                             Background="{StaticResource Background0}"
+                             Foreground="{StaticResource RedColor}"
                              IsVisible="{Binding IsLoading}"/>
 			</StackPanel>
 		</Panel>
