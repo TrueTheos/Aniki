@@ -79,6 +79,8 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         {
             var airing = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.AIRING);
             LoadAnimeCards(airing, PopularThisSeason);
+            
+            await LoadHeroAnimeAsync(airing);
 
             var upcoming = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.UPCOMING);
             LoadAnimeCards(upcoming, PopularUpcoming);
@@ -93,8 +95,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                 AnimeFieldSet? details = await _malService.GetFieldsAsync(anime.MalId.Value,  AnimeField.TITLE, AnimeField.MAIN_PICTURE, AnimeField.MEAN, AnimeField.MY_LIST_STATUS);
                 if(details != null) AiringToday.Add(details.ToCardData());
             }
-            
-            await LoadHeroAnimeAsync(airing);
         }
         catch (Exception ex)
         {

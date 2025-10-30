@@ -119,7 +119,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
             animeMalIds.TryAdd(parsedFile.AnimeName, malId);
             if (malId != null)
             {
-                Episode newEpisode = new(parsedFile.FileName, int.Parse(parsedFile.EpisodeNumber ?? "0"),
+                Episode newEpisode = new(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                     parsedFile.AbsoluteEpisodeNumber,
                     parsedFile.AnimeName, malId.Value, parsedFile.Season);
                 
@@ -246,12 +246,19 @@ public partial class WatchAnimeViewModel : ViewModelBase
     private string GetAssociatedProgram(string extension)
     {
         uint length = 0;
-        AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, null, ref length);
+        uint ret = AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, null, ref length);
 
-        StringBuilder? sb = new((int)length);
-        AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, sb, ref length);
+        if (ret != 1 && length > 0)
+        {
+            StringBuilder sb = new((int)length);
+            ret = AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, sb, ref length);
 
-        return sb.ToString();
+            if (ret == 0)
+            {
+                return sb.ToString();
+            }
+        }
+        return "explorer.exe";
     }
 
     private void LaunchAndTrack(string appPath, string filePath)
