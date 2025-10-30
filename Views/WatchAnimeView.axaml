@@ -90,7 +90,6 @@
                                                                 Width="36"
                                                                 Height="36"
                                                                 HorizontalAlignment="Right"
-                                                                Cursor="Hand"
                                                                 VerticalAlignment="Center"
                                                                 Background="#3A3A4A"
                                                                 CornerRadius="6"
@@ -110,9 +109,8 @@
                                                                 Margin="8,0,0,0"
                                                                 HorizontalAlignment="Right"
                                                                 VerticalAlignment="Center"
-                                                                Background="#FF4444"
+                                                                Background="{StaticResource RedColor}"
                                                                 CornerRadius="6"
-                                                                Cursor="Hand"
                                                                 Command="{Binding #Root.((vm:WatchAnimeViewModel)DataContext).DeleteEpisodeCommand}"
                                                                 CommandParameter="{Binding}"
                                                                 ToolTip.Tip="Delete">

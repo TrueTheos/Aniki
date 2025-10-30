@@ -8,9 +8,9 @@
     <UserControl.Styles>
         <!--  Today button special styling  -->
         <Style Selector="Button.today-button">
-            <Setter Property="Background" Value="{StaticResource Primary}" />
+            <Setter Property="Background" Value="{StaticResource RedColor}" />
             <Setter Property="Foreground" Value="{StaticResource White}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Primary}" />
+            <Setter Property="BorderBrush" Value="{StaticResource RedColor}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="12,6" />
@@ -18,13 +18,9 @@
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="Height" Value="32" />
         </Style>
-
-        <Style Selector="Button.today-button:pointerover">
-            <Setter Property="Background" Value="{StaticResource PrimaryDarker}" />
-        </Style>
     </UserControl.Styles>
 
-    <DockPanel x:Name="Root" Margin="0,50,0,0" Background="#1A1A1A">
+    <DockPanel x:Name="Root" Margin="0,50,0,0" Background="{StaticResource BackgroundGray}">
         <!--  Header with navigation  -->
         <Border
             Padding="16,12"
@@ -111,7 +107,7 @@
             <ProgressBar
                 Height="4"
                 Background="Transparent"
-                Foreground="{StaticResource Primary}"
+                Foreground="{StaticResource RedColor}"
                 IsIndeterminate="True" />
         </Border>
 
@@ -121,10 +117,10 @@
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto">
 
-            <ItemsControl Margin="8,0" ItemsSource="{Binding Days}" Background="#1A1A1A">
+            <ItemsControl Margin="8,0" ItemsSource="{Binding Days}" Background="{StaticResource BackgroundGray}">
                 <ItemsControl.Styles>
                     <Style Selector="ContentPresenter">
-                        <Setter Property="Background" Value="#1A1A1A" />
+                        <Setter Property="Background" Value="{StaticResource BackgroundGray}" />
                     </Style>
                 </ItemsControl.Styles>
                 <ItemsControl.ItemsPanel>
@@ -139,9 +135,9 @@
                             Margin="0,0,0,0"
                             BorderBrush="#2A2A2A"
                             BorderThickness="0,0,1,0"
-                            Background="#1A1A1A">
+                            Background="{StaticResource BackgroundGray}">
 
-                            <Grid Background="#1A1A1A">
+                            <Grid Background="{StaticResource BackgroundGray}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
@@ -182,19 +178,19 @@
                                     Grid.Row="1"
                                     HorizontalScrollBarVisibility="Disabled"
                                     VerticalScrollBarVisibility="Hidden"
-                                    Background="#1A1A1A">
-                                    <ListBox DoubleTapped="DoubleClickAnime" ItemsSource="{Binding Items}">
+                                    Background="{StaticResource BackgroundGray}">
+                                    <ListBox DoubleTapped="DoubleClickAnime" ItemsSource="{Binding Items}" Background="{StaticResource BackgroundGray}">
                                         <ListBox.Styles>
                                             <Style Selector="ListBoxItem">
-                                                <Setter Property="Background" Value="#1A1A1A" />
+                                                <Setter Property="Background" Value="{StaticResource BackgroundGray}" />
                                             </Style>
                                             <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                                                <Setter Property="Background" Value="#1A1A1A" />
+                                                <Setter Property="Background" Value="{StaticResource BackgroundGray}" />
                                             </Style>
                                         </ListBox.Styles>
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
-                                                <StackPanel Background="#1A1A1A">
+                                                <StackPanel Background="{StaticResource BackgroundGray}">
                                                     <!--  Air time  -->
                                                     <TextBlock
                                                         Margin="8,0,0,0"
@@ -245,7 +241,9 @@
                                                             <StackPanel
                                                                 Grid.Column="1"
                                                                 Margin="12,6"
-                                                                VerticalAlignment="Center">
+                                                                VerticalAlignment="Center"
+                                                                Cursor="Hand"
+                                                                ToolTip.Tip="Double click to show details">
 
                                                                 <!--  Title  -->
                                                                 <TextBlock
@@ -275,14 +273,14 @@
                                                                 <Border
                                                                     Width="8"
                                                                     Height="8"
-                                                                    Background="#FF4444"
+                                                                    Background="{StaticResource RedColor}"
                                                                     CornerRadius="4"
                                                                     IsVisible="{Binding IsAiringNow}">
                                                                     <Border.Effect>
                                                                         <DropShadowEffect
                                                                             BlurRadius="6"
                                                                             Opacity="0.8"
-                                                                            Color="#FF4444" />
+                                                                            Color="{StaticResource RedColor}" />
                                                                     </Border.Effect>
                                                                 </Border>
                                                             </StackPanel>

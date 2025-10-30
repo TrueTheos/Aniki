@@ -87,7 +87,7 @@
                      IsVisible="{Binding !IsTorrentsLoading}">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="models:NyaaTorrent">
-                        <Border Background="#1A1A1A" CornerRadius="8" Padding="15" Margin="0,0,0,10">
+                        <Border Background="{StaticResource BackgroundGray}" CornerRadius="8" Padding="15" Margin="0,0,0,10">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
                                 <TextBlock Grid.Column="0" 
                                            Text="{Binding FileName}" 

@@ -38,7 +38,7 @@
                               IsDirectionReversed="true" 
                               Orientation="{TemplateBinding Orientation}">
                             <Thumb Name="PART_Thumb" 
-                                  Background="{StaticResource PrimaryDarker}" 
+                                  Background="{StaticResource RedColor}" 
                                   CornerRadius="4" />
                         </Track>
                     </Border>
@@ -70,6 +70,10 @@
 
         <Style Selector="Button.nav-button:pressed">
             <Setter Property="Background" Value="#333333" />
+        </Style>
+        
+        <Style Selector="Button">
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </Application.Styles>
 </Application>

@@ -26,7 +26,7 @@
                         IsVisible="{Binding IsLoading}">
                     <ProgressBar Height="4"
                                 Background="Transparent"
-                                Foreground="{StaticResource Red}"
+                                Foreground="{StaticResource RedColor}"
                                 IsIndeterminate="True" />
                 </Border>
 
@@ -43,9 +43,8 @@
                                     Background="Transparent"
                                     BorderThickness="0"
                                     FontSize="15"
-                                    FontWeight="Medium"
-                                    Cursor="Hand"/>
-                            <Border Height="2" Background="{StaticResource Red}" Margin="0,8,0,0"/>
+                                    FontWeight="Medium"/>
+                            <Border Height="2" Background="{StaticResource RedColor}" Margin="0,8,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -56,7 +55,7 @@
                     <!-- Hero Section -->
                     <Border CornerRadius="16" 
                             Height="450"
-                            Background="#1A1A1A"
+                            Background="{StaticResource BackgroundGray}"
                             ClipToBounds="True"
                             IsVisible="{Binding HeroAnime, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <Grid>
@@ -106,7 +105,7 @@
                                                 CornerRadius="12"
                                                 Padding="14,6">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="★" Foreground="{StaticResource Red}" FontSize="13"/>
+                                                <TextBlock Text="★" Foreground="{StaticResource RedColor}" FontSize="13"/>
                                                 <TextBlock Text="{Binding HeroAnime.Score}" Foreground="White" FontSize="13"/>
                                             </StackPanel>
                                         </Border>
@@ -143,7 +142,6 @@
                                         Width="40" Height="40"
                                         CornerRadius="20"
                                         BorderThickness="0"
-                                        Cursor="Hand"
                                         Opacity="0.9">
                                     <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
                                 </Button>
@@ -155,7 +153,6 @@
                                         Width="40" Height="40"
                                         CornerRadius="20"
                                         BorderThickness="0"
-                                        Cursor="Hand"
                                         Opacity="0.9">
                                     <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
                                 </Button>
@@ -166,11 +163,10 @@
                                     Background="Transparent"
                                     BorderThickness="0"
                                     HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Cursor="Hand">
+                                    VerticalAlignment="Center">
                                 <Grid>
                                     <Ellipse Width="80" Height="80"
-                                            Fill="{StaticResource Red}"
+                                            Fill="{StaticResource RedColor}"
                                             Opacity="0.95"/>
                                     <PathIcon Data="M8 5v14l11-7z"
                                              Width="28" Height="28"
@@ -225,8 +221,7 @@
                                     VerticalAlignment="Center"
                                     Margin="-40,0,0,30"
                                     ZIndex="10"
-                                    BorderThickness="0"
-                                    Cursor="Hand">
+                                    BorderThickness="0">
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
@@ -259,8 +254,7 @@
                                     VerticalAlignment="Center"
                                     Margin="0,0,-40,30"
                                     ZIndex="10"
-                                    BorderThickness="0"
-                                    Cursor="Hand">
+                                    BorderThickness="0">
                                 <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="30" Height="30" />
                             </Button>
                         </Grid>
@@ -287,8 +281,7 @@
                                     VerticalAlignment="Center"
                                     Margin="-40,0,0,30"
                                     ZIndex="10"
-                                    BorderThickness="0"
-                                    Cursor="Hand">
+                                    BorderThickness="0">
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
@@ -319,8 +312,7 @@
                                     VerticalAlignment="Center"
                                     Margin="0,0,-40,30"
                                     ZIndex="10"
-                                    BorderThickness="0"
-                                    Cursor="Hand">
+                                    BorderThickness="0">
                                 <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="30" Height="30" />
                             </Button>
                         </Grid>
@@ -347,8 +339,7 @@
                                     VerticalAlignment="Center"
                                     Margin="-40,0,0,30"
                                     ZIndex="10"
-                                    BorderThickness="0"
-                                    Cursor="Hand">
+                                    BorderThickness="0">
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
@@ -380,8 +371,7 @@
                                     Margin="0,0,-40,0"
                                     ZIndex="10"
                                     BorderThickness="0"
-                                    Opacity="0.9"
-                                    Cursor="Hand">
+                                    Opacity="0.9">
                                 <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
                             </Button>
                         </Grid>
@@ -399,8 +389,7 @@
                             Foreground="#999999"
                             BorderThickness="0"
                             HorizontalAlignment="Left"
-                            FontSize="15"
-                            Cursor="Hand"/>
+                            FontSize="15"/>
                     
                     <!-- Pagination Top -->
                     <StackPanel Orientation="Horizontal" 
@@ -410,11 +399,10 @@
                                Command="{Binding PreviousPageCommand}"
                                IsEnabled="{Binding CanGoPrevious}"
                                Padding="20,10"
-                               Background="#1A1A1A"
+                               Background="{StaticResource BackgroundGray}"
                                Foreground="White"
                                BorderThickness="0"
-                               CornerRadius="8"
-                               Cursor="Hand"/>
+                               CornerRadius="8"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                             <TextBlock Text="{Binding CurrentPage}"
                                       FontSize="16"
@@ -431,11 +419,10 @@
                                Command="{Binding NextPageCommand}"
                                IsEnabled="{Binding CanGoNext}"
                                Padding="20,10"
-                               Background="#1A1A1A"
+                               Background="{StaticResource BackgroundGray}"
                                Foreground="White"
                                BorderThickness="0"
-                               CornerRadius="8"
-                               Cursor="Hand"/>
+                               CornerRadius="8"/>
                     </StackPanel>
 
                     <!-- Search Results Grid -->
@@ -463,11 +450,10 @@
                                Command="{Binding PreviousPageCommand}"
                                IsEnabled="{Binding CanGoPrevious}"
                                Padding="20,10"
-                               Background="#1A1A1A"
+                               Background="{StaticResource BackgroundGray}"
                                Foreground="White"
                                BorderThickness="0"
-                               CornerRadius="8"
-                               Cursor="Hand"/>
+                               CornerRadius="8"/>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
                             <TextBlock Text="{Binding CurrentPage}"
                                       FontSize="16"
@@ -484,11 +470,10 @@
                                Command="{Binding NextPageCommand}"
                                IsEnabled="{Binding CanGoNext}"
                                Padding="20,10"
-                               Background="#1A1A1A"
+                               Background="{StaticResource BackgroundGray}"
                                Foreground="White"
                                BorderThickness="0"
-                               CornerRadius="8"
-                               Cursor="Hand"/>
+                               CornerRadius="8"/>
                     </StackPanel>
 
                 </StackPanel>
@@ -511,7 +496,7 @@
                     
                     <!-- Search Box -->
                     <Border
-                            Background="#1A1A1A"
+                            Background="{StaticResource BackgroundGray}"
                             CornerRadius="12"
                             Padding="12,8"
                             Margin="10,5">
@@ -549,12 +534,11 @@
                         <ItemsControl ItemsSource="{Binding AiringToday}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="models:AnimeCardData">
-                                    <Border Background="#1A1A1A" 
+                                    <Border Background="{StaticResource BackgroundGray}" 
                                             CornerRadius="12" 
                                             Padding="12"
                                             Margin="0,0,0,10"
-                                            DoubleTapped="OnDoubleTapped"
-                                            Cursor="Hand">
+                                            DoubleTapped="OnDoubleTapped">
                                         <Grid ColumnDefinitions="60,*">
                                             <Border Grid.Column="0" 
                                                     Width="60" Height="85" 
@@ -577,11 +561,11 @@
                                                           TextWrapping="Wrap"/>
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="★"
-                                                              Foreground="{StaticResource Red}"
+                                                              Foreground="{StaticResource RedColor}"
                                                               FontSize="12"
                                                               VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding Score}"
-                                                              Foreground="{StaticResource Red}"
+                                                              Foreground="{StaticResource RedColor}"
                                                               FontSize="11"
                                                               VerticalAlignment="Center"/>
                                                 </StackPanel>

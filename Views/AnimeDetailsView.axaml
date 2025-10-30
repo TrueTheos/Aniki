@@ -111,8 +111,7 @@
                                                     Foreground="White"
                                                     Width="40" Height="40"
                                                     CornerRadius="20"
-                                                    BorderThickness="0"
-                                                    Cursor="Hand">
+                                                    BorderThickness="0">
                                                     <Image Source="{SvgImage /Resources/Icons/minus_icon.svg}" Width="20" Height="20" />
                                                 </Button>
                                                 <TextBlock Text="{Binding WatchedEpisodes}" VerticalAlignment="Center" Margin="8,0"/>
@@ -122,8 +121,7 @@
                                                     Foreground="White"
                                                     Width="40" Height="40"
                                                     CornerRadius="20"
-                                                    BorderThickness="0"
-                                                    Cursor="Hand">
+                                                    BorderThickness="0">
                                                     <Image Source="{SvgImage /Resources/Icons/add_icon.svg}" Width="20" Height="20" />
                                                 </Button>
                                             </StackPanel>
@@ -254,7 +252,6 @@
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
-                                                        Cursor="Hand"
                                                         IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                     <Button.Flyout>
                                                         <MenuFlyout Placement="Bottom">
@@ -281,7 +278,6 @@
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
-                                                        Cursor="Hand"
                                                         IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNull}}"
                                                         Command="{Binding AddToListCommand}">
                                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -300,8 +296,7 @@
                                                 <Button Background="#3A3A3A"
                                                         BorderThickness="0"
                                                         CornerRadius="6"
-                                                        Padding="28,13"
-                                                        Cursor="Hand">
+                                                        Padding="28,13">
                                                     <Button.Flyout>
                                                         <MenuFlyout Placement="Bottom">
                                                             <MenuItem Header="1" Command="{Binding UpdateScoreCommand}" CommandParameter="1"/>
@@ -336,7 +331,6 @@
                                                         Width="50"
                                                         Height="50"
                                                         CornerRadius="25"
-                                                        Cursor="Hand"
                                                         Command="{Binding OpenMalPageCommand}">
                                                     <ToolTip.Tip>
                                                         <TextBlock Text="Open page in browser"/>
@@ -351,7 +345,6 @@
                                                         Width="50"
                                                         Height="50"
                                                         CornerRadius="25"
-                                                        Cursor="Hand"
                                                         Command="{Binding CopyMalPageUrlCommand}">
                                                     <PathIcon Data="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" 
                                                               Width="22" 
@@ -365,7 +358,6 @@
                                                         Width="50"
                                                         Height="50"
                                                         CornerRadius="25"
-                                                        Cursor="Hand"
                                                         Command="{Binding RemoveFromListCommand}"
                                                         IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull} }">
                                                     <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}"  Width="22" 
@@ -396,9 +388,8 @@
                                                         Height="68" 
                                                         CornerRadius="8"
                                                         Padding="0"
-                                                        Background="#FF4444"
+                                                        Background="{StaticResource RedColor}"
                                                         ClipToBounds="True"
-                                                        Cursor="Hand"
                                                         Command="{Binding OpenUrlCommand}"
                                                         CommandParameter="{Binding Details.TrailerURL, Converter={StaticResource YoutubeEmbedUrlToWatchUrlConverter}}">
                                                     <Grid ToolTip.Tip="Play Trailer">
@@ -414,7 +405,7 @@
                                                         <PathIcon Data="M10 8v8l6-4z"
                                                                   Width="16"
                                                                   Height="16"
-                                                                  Foreground="#E50914"
+                                                                  Foreground="{StaticResource RedColor}"
                                                                   HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center"/>
                                                     </Grid>

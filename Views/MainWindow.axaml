@@ -34,23 +34,10 @@
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Background" Value="{StaticResource Background1}" />
-            <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.Basic:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource Background0}" />
         </Style>
-
-        <Style Selector="Button.Purple">
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Background" Value="{StaticResource PrimaryDarker}" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-        <Style Selector="Button.Purple:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource Primary}" />
-        </Style>
-
         <Style Selector="ComboBox">
             <Setter Property="Background" Value="#3E3E3E" />
             <Setter Property="Foreground" Value="{StaticResource White}" />
