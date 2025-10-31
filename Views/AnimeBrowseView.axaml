@@ -19,7 +19,7 @@
         <!-- Main Content Area -->
         <ScrollViewer Grid.Column="0" 
                      Grid.Row="0"
-                     VerticalScrollBarVisibility="Auto"
+                     VerticalScrollBarVisibility="Hidden"
                      HorizontalScrollBarVisibility="Disabled"
                      Background="{StaticResource BackgroundBlack}">
             <StackPanel Spacing="40" Margin="50,20" Background="{StaticResource BackgroundBlack}">

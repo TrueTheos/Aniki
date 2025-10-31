@@ -93,41 +93,50 @@ public partial class WatchAnimeViewModel : ViewModelBase
             return;
         }
 
-        string[] videoExtensions = { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
-        List<string> filePaths = Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
-                                     .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower()))
-                                     .ToList();
+        var videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
 
-        int processedFilesCount = 0;
-        Dictionary<string, int?> animeMalIds = new();
+        var filePaths = Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
+            .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower()))
+            .ToList();
 
-        foreach (string filePath in filePaths)
+        int total = filePaths.Count;
+        int processed = 0;
+        ProcessingProgress = $"Processing files: 0/{total}";
+
+        var options = new ParallelOptions { MaxDegreeOfParallelism = 8 };
+
+        await Parallel.ForEachAsync(filePaths, options, async (filePath, _) =>
         {
             string fileName = Path.GetFileName(filePath);
-            ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
-            processedFilesCount++;
-            ProcessingProgress = $"Processing files: {processedFilesCount}/{filePaths.Count}";
-            
-            if (parsedFile.EpisodeNumber == null) continue;
+            var parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
 
-            if (!string.IsNullOrEmpty(AnimeTitleFilter) && !parsedFile.AnimeName.Contains(AnimeTitleFilter, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
+            if (parsedFile.EpisodeNumber == null)
+                return;
+
+            if (!string.IsNullOrEmpty(AnimeTitleFilter) &&
+                !parsedFile.AnimeName.Contains(AnimeTitleFilter, StringComparison.OrdinalIgnoreCase))
+                return;
 
             int? malId = await _absoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
-            animeMalIds.TryAdd(parsedFile.AnimeName, malId);
-            if (malId != null)
-            {
-                Episode newEpisode = new(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
-                    parsedFile.AbsoluteEpisodeNumber,
-                    parsedFile.AnimeName, malId.Value, parsedFile.Season);
-                
-                AddEpisodeToGroup(newEpisode);
-                UpdateView();
-            }
-        }
+            if (malId == null)
+                return;
 
+            var animeName = await _malService.GetFieldsAsync(malId.Value, AnimeField.TITLE);
+
+            var episode = new Episode(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
+                parsedFile.AbsoluteEpisodeNumber,
+                animeName.Title!, malId.Value, parsedFile.Season);
+
+            lock (AnimeGroups)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => AddEpisodeToGroup(episode));
+            }
+
+            int current = Interlocked.Increment(ref processed);
+            ProcessingProgress = $"Processing files: {current}/{total}";
+        });
+
+        UpdateView();
         IsLoading = false;
     }
 
