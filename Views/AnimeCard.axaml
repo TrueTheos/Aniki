@@ -39,7 +39,7 @@
 
     <Border Background="Transparent"
             Cursor="Hand"
-            Tapped="OnDoubleTapped">
+            DoubleTapped="OnDoubleTapped">
         <StackPanel Spacing="8" Width="160">
             <Border x:Name="ImageContainer"
                     CornerRadius="8"
