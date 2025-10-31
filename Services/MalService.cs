@@ -51,7 +51,7 @@ public class MalService : IMalService
     private async Task<HttpResponseMessage> GetAsync(string url, string message)
     {
         _requestTimestamps.Enqueue(DateTime.Now);
-        while (_requestTimestamps.Count > 3 && _requestTimestamps.Peek() > DateTime.Now.Subtract(TimeSpan.FromSeconds(1)))
+        while (_requestTimestamps.Count > 3 && (DateTime.Now - _requestTimestamps.Peek()).TotalSeconds < 1)
         {
             await Task.Delay(500);
         }
