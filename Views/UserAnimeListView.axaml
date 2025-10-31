@@ -215,7 +215,7 @@
             </Border>
             
             <!-- Anime List Content -->
-            <ScrollViewer Grid.Row="1" Margin="50,30,50,40" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1" Margin="30,30,30,40" VerticalScrollBarVisibility="Visible">
                 <!-- Grid View -->
                 <StackPanel>
                     <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
