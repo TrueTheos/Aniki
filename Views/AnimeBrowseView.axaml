@@ -549,7 +549,8 @@
                                             CornerRadius="12" 
                                             Padding="12"
                                             Margin="0,0,0,10"
-                                            DoubleTapped="OnDoubleTapped">
+                                            Cursor="Hand"
+                                            Tapped="OnDoubleTapped">
                                         <Grid ColumnDefinitions="60,*">
                                             <Border Grid.Column="0" 
                                                     Width="60" Height="85" 
@@ -587,7 +588,6 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
-
                 </StackPanel>
             </ScrollViewer>
         </Border>

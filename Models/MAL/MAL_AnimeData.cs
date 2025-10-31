@@ -17,14 +17,14 @@ public class MAL_AnimeData
 public class MAL_AnimeNode
 {
     public int Id { get; init; }
-    public required string Title { get; init; }
+    public string? Title { get; init; }
     [JsonPropertyName("alternative_titles")]
     public MAL_AlternativeTitles? AlternativeTitles { get; set; }
     public MAL_Genre[]? Genres { get; set; }
     [JsonPropertyName("my_list_status")]
     public MAL_MyListStatus? MyListStatus { get; set; }
-    public required string Synopsis { get; set; }
-    public required string Status { get; set; }
+    public string? Synopsis { get; set; }
+    public string? Status { get; set; }
     [JsonPropertyName("main_picture")]
     public MAL_MainPicture? MainPicture { get; set; }
     [JsonPropertyName("num_episodes")]

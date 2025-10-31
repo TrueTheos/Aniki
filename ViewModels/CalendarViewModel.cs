@@ -70,11 +70,11 @@ public partial class CalendarViewModel : ViewModelBase
 
         foreach (MAL_AnimeData anime in watching)
         {
-            _watchingList.Add(anime.Node.Title);
+            if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
         }
         foreach (MAL_AnimeData anime in planToWatch)
         {
-            _watchingList.Add(anime.Node.Title);
+            if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
         }
     }
 

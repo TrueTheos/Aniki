@@ -31,28 +31,6 @@
     </Application.Resources>
     <Application.Styles>
         <FluentTheme />
-        <Style Selector="ScrollBar">
-            <Setter Property="Width" Value="8" />
-            <Setter Property="MinWidth" Value="8" />
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Border Background="Transparent">
-                        <Track Name="PART_Track" 
-                              IsDirectionReversed="true" 
-                              Orientation="{TemplateBinding Orientation}">
-                            <Thumb Name="PART_Thumb" 
-                                  Background="{StaticResource RedColor}" 
-                                  CornerRadius="4" />
-                        </Track>
-                    </Border>
-                </ControlTemplate>
-            </Setter>
-        </Style>
-        <Style Selector="ScrollBar[Orientation=Horizontal]">
-            <Setter Property="Height" Value="8" />
-            <Setter Property="MinHeight" Value="8" />
-        </Style>
-        
         <Style Selector="Button.nav-button">
             <Setter Property="Background" Value="{StaticResource Background0}" />
             <Setter Property="Foreground" Value="{StaticResource White}" />

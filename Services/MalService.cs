@@ -6,13 +6,11 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
-using Microsoft.VisualBasic.FileIO;
 
 namespace Aniki.Services;
 
 public class MalService : IMalService
 {
-    public enum AnimeStatusField { STATUS, SCORE, EPISODES_WATCHED }
     public enum AnimeRankingCategory { AIRING, UPCOMING, ALLTIME, BYPOPULARITY }
     
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
@@ -378,7 +376,7 @@ public class MalService : IMalService
         
         int score = FuzzySharp.Fuzz.TokenSortRatio(anime.Title, query);
         
-        if (anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+        if (anime.Title != null && anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
         {
             score += 50;
         }

@@ -19,7 +19,7 @@
                     BoxShadow="0 2 8 #40000000">
                 <Grid RowDefinitions="Auto,Auto">
                     <!-- Title and Stats -->
-                    <Grid Grid.Row="0" Margin="0,0,0,25">
+                    <Grid Grid.Row="0" Margin="0,0,0,25">   
                         <StackPanel Spacing="10">
                             <TextBlock Text="My Anime List"
                                        FontSize="42"
@@ -125,17 +125,43 @@
                                     <MenuFlyout Placement="Bottom">
                                         <MenuItem Header="All Genres" Command="{Binding ClearGenreFilterCommand}"/>
                                         <Separator/>
-                                        <ScrollViewer MaxHeight="350">
-                                            <ItemsControl ItemsSource="{Binding AvailableGenres}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <MenuItem Header="{Binding}" 
-                                                                  Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).SetGenreFilterCommand}"
-                                                                  CommandParameter="{Binding}"/>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </ScrollViewer>
+                                        <Border Background="Transparent" MaxHeight="350">
+                                            <Border.Styles>
+                                                <Style Selector="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                </Style>
+                                                <Style Selector="Border:pointerover">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                </Style>
+                                            </Border.Styles>
+                                            <ScrollViewer>
+                                                <ScrollViewer.Styles>
+                                                    <Style Selector="ScrollViewer">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                    </Style>
+                                                    <Style Selector="ScrollViewer:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                    </Style>
+                                                </ScrollViewer.Styles>
+                                                <ItemsControl ItemsSource="{Binding AvailableGenres}">
+                                                    <ItemsControl.Styles>
+                                                        <Style Selector="ItemsControl">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                        </Style>
+                                                        <Style Selector="ItemsControl:pointerover">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                        </Style>
+                                                    </ItemsControl.Styles>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <MenuItem Header="{Binding}" 
+                                                                      Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).SetGenreFilterCommand}"
+                                                                      CommandParameter="{Binding}"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ScrollViewer>
+                                        </Border>
                                     </MenuFlyout>
                                 </Button.Flyout>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -215,18 +241,16 @@
             </Border>
             
             <!-- Anime List Content -->
-            <ScrollViewer Grid.Row="1" Margin="30,30,30,40" VerticalScrollBarVisibility="Visible">
+            <ScrollViewer Grid.Row="1" Margin="30,30,30,40" VerticalScrollBarVisibility="Visible" AllowAutoHide="False"> 
                 <!-- Grid View -->
                 <StackPanel>
-                    <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
-                              IsVisible="{Binding IsGridView}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" ItemSpacing="20" LineSpacing="30" HorizontalAlignment="Center"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="services:AnimeFieldSet">
+                    <ItemsRepeater ItemsSource="{Binding FilteredAnimeList}" IsVisible="{Binding IsGridView}"
+                                   HorizontalAlignment="Center">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout MinColumnSpacing="20" MinRowSpacing="20" Orientation="Horizontal" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate DataType="services:AnimeFieldSet">
                             <Border Width="220"
                                     Cursor="Hand"
                                     Background="Transparent">
@@ -307,12 +331,16 @@
                                 </Button>
                             </Border>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
                 <!-- List View -->
                 <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
                               IsVisible="{Binding !IsGridView}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="services:AnimeFieldSet">
                             <Border Background="Transparent"

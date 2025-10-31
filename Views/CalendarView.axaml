@@ -236,7 +236,7 @@
                                                             Margin="12,6"
                                                             VerticalAlignment="Center"
                                                             Cursor="Hand"
-                                                            ToolTip.Tip="Double click to show details">
+                                                            ToolTip.Tip="Click click to show details">
 
                                                             <!--  Title  -->
                                                             <TextBlock
