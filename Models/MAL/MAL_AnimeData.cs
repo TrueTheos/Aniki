@@ -31,6 +31,9 @@ public class MAL_AnimeNode
     public int NumEpisodes { get; set; }
     public int Popularity { get; set; }
     public MAL_Video[]? Videos { get; set; }
+    [JsonPropertyName("start_date")]
+    public string? StartDate { get; set; }
+    public MAL_Studio[]? Studios { get; set; } 
     private float _mean;
     [JsonPropertyName("mean")]
     public float Mean 
@@ -67,7 +70,7 @@ public class MAL_AnimeSearchListResponse
 public class MAL_SearchEntry
 {
     [JsonPropertyName("node")]
-    public required MAL_AnimeNode MalAnime { get; set; }
+    public required MAL_AnimeNode Node { get; set; }
 }
 
 public class MAL_Paging

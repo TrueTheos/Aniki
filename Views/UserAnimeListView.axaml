@@ -256,7 +256,8 @@
             <!-- Anime List Content -->
             <ScrollViewer Grid.Row="1" Padding="50,30,50,40">
                 <!-- Grid View -->
-                <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
                               IsVisible="{Binding IsGridView}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -282,7 +283,7 @@
                                                 BoxShadow="0 8 24 #60000000"
                                                 Height="330">
                                             <Grid>
-                                                <Image asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Value.Large}"
+                                                <Image asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Large}"
                                                        Stretch="UniformToFill"/>
                                                 
                                                 <!-- Hover Overlay -->
@@ -310,8 +311,7 @@
                                                         Padding="8,4"
                                                         HorizontalAlignment="Right"
                                                         VerticalAlignment="Top"
-                                                        Margin="10"
-                                                        IsVisible="{Binding Mean, Converter={StaticResource FloatToVisibilityConverter}}">
+                                                        Margin="10">
                                                     <StackPanel Orientation="Horizontal" Spacing="4">
                                                         <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
                                                                   Width="14"
@@ -332,7 +332,7 @@
                                                         VerticalAlignment="Bottom"
                                                         Margin="10"
                                                         IsVisible="{Binding MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                    <TextBlock Text="{Binding MyListStatus.Status, Converter={StaticResource StatusToDisplayTextConverter}}"
+                                                    <TextBlock Text="{Binding MyListStatus.Status}"
                                                                FontSize="11"
                                                                FontWeight="Bold"
                                                                Foreground="White"/>
@@ -478,7 +478,7 @@
                                                 Margin="20,0"
                                                 VerticalAlignment="Center"
                                                 IsVisible="{Binding MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                            <TextBlock Text="{Binding MyListStatus.Status, Converter={StaticResource StatusToDisplayTextConverter}}"
+                                            <TextBlock Text="{Binding MyListStatus.Status}"
                                                        FontSize="13"
                                                        FontWeight="Bold"
                                                        Foreground="White"/>
@@ -495,6 +495,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                </StackPanel>
             </ScrollViewer>
         </Grid>
     </Border>

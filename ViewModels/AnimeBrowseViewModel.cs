@@ -240,11 +240,11 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
         foreach (var result in pageResults)
         {
-            MAL_MainPicture? picture = result.MalAnime.MainPicture;
+            MAL_MainPicture? picture = result.Node.MainPicture;
             var card = new AnimeCardData
             {
-                AnimeId = result.MalAnime.Id,
-                Title = result.MalAnime.Title,
+                AnimeId = result.Node.Id,
+                Title = result.Node.Title,
                 MyListStatus  = null,
                 ImageUrl = picture!.Large != null ? picture.Large : picture.Medium
             };

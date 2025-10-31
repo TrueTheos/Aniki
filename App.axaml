@@ -22,6 +22,9 @@
                     <conv:BoolToColorConverter x:Key="BoolToColorConverter" />
                     <conv:StringToFormattedIntConverter x:Key="StringToFormattedIntConverter" />
                     <conv:YoutubeEmbedUrlToWatchUrlConverter x:Key="YoutubeEmbedUrlToWatchUrlConverter" />
+                    <conv:BoolToViewButtonBackgroundConverter x:Key="BoolToViewButtonBackgroundConverter" />
+                    <conv:StatusToColorConverter x:Key="StatusToColorConverter" />
+                    <conv:DateToYearConverter x:Key="DateToYearConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

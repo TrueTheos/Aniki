@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
@@ -33,19 +34,26 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     [ObservableProperty]
     private ObservableCollection<string> _availableGenres;
+
+    private IMalService _malService;
     
-    public UserAnimeListViewModel()
+    public UserAnimeListViewModel(IMalService malService)
     {
+        _malService = malService;
         AvailableGenres = new ObservableCollection<string>
         {
             "Action", "Adventure", "Comedy", "Drama", "Fantasy",
             "Horror", "Mystery", "Psychological", "Romance", "Sci-Fi",
             "Slice of Life", "Sports", "Supernatural", "Thriller"
         };
-        
-        _ = LoadAnimeListAsync();
     }
-    
+
+    public override Task Enter()
+    {
+        _ = LoadAnimeListAsync();
+        return base.Enter();
+    }
+
     public string StatusFilterText => StatusFilter == "All" ? "All Status" : FormatStatusDisplay(StatusFilter);
     
     public string GenreFilterText => GenreFilter;
@@ -148,23 +156,17 @@ public partial class UserAnimeListViewModel : ViewModelBase
     [RelayCommand]
     private void OpenAnimeDetails(int animeId)
     {
-        // TODO: Navigate to anime details page
-        // Example:
-        // _navigationService.NavigateTo(new AnimeDetailsViewModel(animeId));
         Console.WriteLine($"Opening anime details for ID: {animeId}");
     }
     
     // Methods
     private async Task LoadAnimeListAsync()
     {
-        // TODO: Load from your anime cache/service
-        // This is a placeholder - replace with your actual data loading logic
-        // Example:
-        // var animeData = await _animeService.GetUserAnimeListAsync();
-        // AnimeList = new ObservableCollection<AnimeCacheEntry>(animeData);
-        
-        // For now, simulate loading
-        await Task.Delay(100);
+        var list = await _malService.GetUserAnimeList();
+        foreach (var element in list)
+        {
+            AnimeList.Add(await _malService.GetFieldsAsync(element.Node.Id, AnimeField.MAIN_PICTURE, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.TITLE, AnimeField.START_DATE, AnimeField.EPISODES));
+        }
         
         TotalCount = AnimeList.Count;
         ApplyFiltersAndSort();
@@ -178,7 +180,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         if (StatusFilter != "All")
         {
             filtered = filtered.Where(a => 
-                a.MyListStatus?.Status.Equals(StatusFilter, StringComparison.OrdinalIgnoreCase) == true);
+                a.MyListStatus?.Status.ToString().Equals(StatusFilter, StringComparison.OrdinalIgnoreCase) == true);
         }
         
         // Apply genre filter

@@ -65,7 +65,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         var searchResult = await _malService.SearchAnimeOrdered(animeTitle);
         if (searchResult.Count == 0) return null;
             
-        int animeId = searchResult.First().MalAnime.Id;
+        int animeId = searchResult.First().Node.Id;
 
         var newMap = await BuildSeasonMap(animeId);
         if (newMap != null && newMap.Count > 0)

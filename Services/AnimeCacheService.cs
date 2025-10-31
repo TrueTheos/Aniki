@@ -296,12 +296,38 @@ public class AnimeCacheService
         return _cache.GetOrAdd(animeId, id => new AnimeCacheEntry { Id = id });
     }
 
+    public void AddOrUpdate(MAL_AnimeNode node, params AnimeField[] fields)
+    {
+        var entry = GetOrCreateEntry(node.Id);
+
+        entry.Id = node.Id;
+        
+        foreach (var field in fields)
+        {
+            switch (field)
+            {
+                case AnimeField.TITLE: entry.Title.Set(node.Title); break;
+                case AnimeField.MAIN_PICTURE: entry.MainPicture.Set(node.MainPicture); break;
+                case AnimeField.STATUS: entry.Status.Set(node.Status); break;
+                case AnimeField.SYNOPSIS: entry.Synopsis.Set(node.Synopsis); break;
+                case AnimeField.ALTER_TITLES: entry.AlternativeTitles.Set(node.AlternativeTitles); break;
+                case AnimeField.MY_LIST_STATUS: entry.MyListStatus.Set(node.MyListStatus); break;
+                case AnimeField.EPISODES: entry.NumEpisodes.Set(node.NumEpisodes); break;
+                case AnimeField.POPULARITY: entry.Popularity.Set(node.Popularity); break;
+                case AnimeField.START_DATE: entry.StartDate.Set(node.StartDate); break;
+                case AnimeField.STUDIOS: entry.Studios.Set(node.Studios); break;
+                case AnimeField.MEAN: entry.Mean.Set(node.Mean); break;
+                case AnimeField.GENRES: entry.Genres.Set(node.Genres); break;
+                case AnimeField.VIDEOS: entry.Videos.Set(node.Videos); break;
+            };
+        }
+    }
+
     public void AddOrUpdate(MAL_AnimeDetails anime, params AnimeField[] fields)
     {
         var entry = GetOrCreateEntry(anime.Id);
 
         entry.Id = anime.Id;
-        
         
         foreach (var field in fields)
         {

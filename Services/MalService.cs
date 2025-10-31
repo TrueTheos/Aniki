@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
+using Microsoft.VisualBasic.FileIO;
 
 namespace Aniki.Services;
 
@@ -28,7 +29,13 @@ public class MalService : IMalService
     
     private string _accessToken = "";
     
-    private const string MAL_NODE_FIELDS = "list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status";
+    private const string MAL_NODE_FIELDS = "title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
+
+    private static readonly AnimeField[] MAL_NODE_FIELD_TYPES = new[]
+    {
+        AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
+        AnimeField.MEAN, AnimeField.POPULARITY, AnimeField.START_DATE, AnimeField.STUDIOS, AnimeField.TITLE, AnimeField.EPISODES
+    };
 
     public MalService(ISaveService saveService)
     {
@@ -119,6 +126,11 @@ public class MalService : IMalService
                 if (response?.Data != null)
                 {
                     animeList.AddRange(response.Data);
+                    
+                    foreach (var data in response.Data)
+                    {
+                        _cache.AddOrUpdate(data.Node, MAL_NODE_FIELD_TYPES);
+                    }
                 }
 
                 nextPageUrl = response?.Paging?.Next;
@@ -340,8 +352,16 @@ public class MalService : IMalService
 
         var responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, "SearchAnimeOrdered");
 
+        if (responseData != null)
+        {
+            foreach (var data in responseData.Data)
+            {
+                _cache.AddOrUpdate(data.Node, MAL_NODE_FIELD_TYPES);
+            }
+        }   
+
         var results = responseData?.Data?
-            .Select(x => new { Entry = x, Score = CalculateSearchScore(x.MalAnime, query) })
+            .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
             .OrderByDescending(x => x.Score)
             .Select(x => x.Entry)
             .ToList() ?? new List<MAL_SearchEntry>();
@@ -408,6 +428,11 @@ public class MalService : IMalService
         
         if (response?.Data != null)
         {
+            foreach (var data in response.Data)
+            {
+                _cache.AddOrUpdate(data.Node, MAL_NODE_FIELD_TYPES);
+            }
+            
             return response.Data.ToList();
         }
 

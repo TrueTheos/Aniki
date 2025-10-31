@@ -161,7 +161,7 @@
                     <Button
                         Name="YourLibraryButton"
                         Classes="MenuButton"
-                        ToolTip.Tip="Coming soon!">
+                        Command="{Binding ShowUserAnimeListPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/book_icon.svg}" Width="20" Height="20" />
                             <TextBlock VerticalAlignment="Center" Text="Your Library" Foreground="Gray" />
@@ -247,6 +247,9 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:AnimeBrowseViewModel">
                                     <views:AnimeBrowseView />
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:UserAnimeListViewModel">
+                                    <views:UserAnimeListView />
                                 </DataTemplate>
                             </UserControl.DataTemplates>
                             <ContentControl Content="{Binding CurrentViewModel}" />

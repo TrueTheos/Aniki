@@ -33,6 +33,8 @@ public partial class MainViewModel : ViewModelBase
     private StatsViewModel _statsViewModel;
     [ObservableProperty]
     private AnimeBrowseViewModel _animeBrowseViewModel;
+    [ObservableProperty]
+    private UserAnimeListViewModel _userAnimeListViewModel;
     #endregion
 
     [ObservableProperty]
@@ -42,7 +44,8 @@ public partial class MainViewModel : ViewModelBase
     private readonly IMalService _malService;
 
     public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel,
-        WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel) 
+        WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
+        UserAnimeListViewModel userAnimeListViewModel) 
     {
         _calendarService = calendarService;
         _malService = malService;
@@ -51,6 +54,7 @@ public partial class MainViewModel : ViewModelBase
         _calendarViewModel = calendarViewModel;
         _statsViewModel = statsViewModel;
         _animeBrowseViewModel = animeBrowseViewModel;
+        _userAnimeListViewModel = userAnimeListViewModel;
         
         _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
@@ -87,6 +91,13 @@ public partial class MainViewModel : ViewModelBase
     public async Task ShowStatsPage()
     {
         CurrentViewModel = StatsViewModel; 
+        await CurrentViewModel.Enter();
+    }
+    
+    [RelayCommand]
+    public async Task ShowUserAnimeListPage()
+    {
+        CurrentViewModel = UserAnimeListViewModel; 
         await CurrentViewModel.Enter();
     }
 
