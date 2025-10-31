@@ -29,9 +29,9 @@ public class MalService : IMalService
     
     private string _accessToken = "";
     
-    private const string MAL_NODE_FIELDS = "title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
+    public const string MAL_NODE_FIELDS = "title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
 
-    private static readonly AnimeField[] MAL_NODE_FIELD_TYPES = new[]
+    public static readonly AnimeField[] MAL_NODE_FIELD_TYPES = new[]
     {
         AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
         AnimeField.MEAN, AnimeField.POPULARITY, AnimeField.START_DATE, AnimeField.STUDIOS, AnimeField.TITLE, AnimeField.EPISODES

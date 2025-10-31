@@ -81,7 +81,7 @@
                     </Grid>
                     
                     <!-- Filters and Search Bar -->
-                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto"> 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
                             <!-- Status Filter -->
                             <Button Background="#2A2A2A"
@@ -210,58 +210,19 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
-                        
-                        <!-- Search Bar -->
-                        <Border Grid.Column="1"
-                                Background="#2A2A2A"
-                                CornerRadius="8"
-                                Padding="16,0"
-                                Width="300">
-                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                <PathIcon Grid.Column="0"
-                                          Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
-                                          Width="20"
-                                          Height="20"
-                                          Foreground="#666666"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,12,0"/>
-                                <TextBox Grid.Column="1"
-                                         Text="{Binding SearchText, Mode=TwoWay}"
-                                         Watermark="Search anime..."
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         Foreground="White"
-                                         FontSize="14"
-                                         VerticalAlignment="Center"
-                                         Padding="0,12"/>
-                                <Button Grid.Column="2"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Width="32"
-                                        Height="32"
-                                        Command="{Binding ClearSearchCommand}"
-                                        IsVisible="{Binding SearchText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                        VerticalAlignment="Center">
-                                    <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-                                              Width="18"
-                                              Height="18"
-                                              Foreground="#666666"/>
-                                </Button>
-                            </Grid>
-                        </Border>
                     </Grid>
                 </Grid>
             </Border>
             
             <!-- Anime List Content -->
-            <ScrollViewer Grid.Row="1" Padding="50,30,50,40">
+            <ScrollViewer Grid.Row="1" Margin="50,30,50,40" VerticalScrollBarVisibility="Auto">
                 <!-- Grid View -->
                 <StackPanel>
                     <ItemsControl ItemsSource="{Binding FilteredAnimeList}"
                               IsVisible="{Binding IsGridView}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" ItemSpacing="20" LineSpacing="30"/>
+                            <WrapPanel Orientation="Horizontal" ItemSpacing="20" LineSpacing="30" HorizontalAlignment="Center"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
@@ -272,8 +233,7 @@
                                 <Button Background="Transparent"
                                         BorderThickness="0"
                                         Padding="0"
-                                        Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).OpenAnimeDetailsCommand}"
-                                        CommandParameter="{Binding AnimeId}"
+                                        Click="GoToAnime"
                                         HorizontalContentAlignment="Stretch"
                                         VerticalContentAlignment="Stretch">
                                     <StackPanel Spacing="12">
@@ -285,25 +245,6 @@
                                             <Grid>
                                                 <Image asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Large}"
                                                        Stretch="UniformToFill"/>
-                                                
-                                                <!-- Hover Overlay -->
-                                                <Border x:Name="hoverOverlay"
-                                                        Background="#CC000000"
-                                                        Opacity="0">
-                                                    <StackPanel VerticalAlignment="Center" 
-                                                                HorizontalAlignment="Center"
-                                                                Spacing="8">
-                                                        <PathIcon Data="M8 5v14l11-7z"
-                                                                  Width="40"
-                                                                  Height="40"
-                                                                  Foreground="White"/>
-                                                        <TextBlock Text="View Details"
-                                                                   FontSize="14"
-                                                                   FontWeight="SemiBold"
-                                                                   Foreground="White"
-                                                                   HorizontalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </Border>
                                                 
                                                 <!-- Rating Badge -->
                                                 <Border Background="#1F1F1F"
@@ -364,28 +305,6 @@
                                         </StackPanel>
                                     </StackPanel>
                                 </Button>
-                                
-                                <!-- Hover Animation -->
-                                <Border.Styles>
-                                    <Style Selector="Border:pointerover Border#hoverOverlay">
-                                        <Style.Animations>
-                                            <Animation Duration="0:0:0.2" FillMode="Forward">
-                                                <KeyFrame Cue="100%">
-                                                    <Setter Property="Opacity" Value="1"/>
-                                                </KeyFrame>
-                                            </Animation>
-                                        </Style.Animations>
-                                    </Style>
-                                    <Style Selector="Border:not(:pointerover) Border#hoverOverlay">
-                                        <Style.Animations>
-                                            <Animation Duration="0:0:0.2" FillMode="Forward">
-                                                <KeyFrame Cue="100%">
-                                                    <Setter Property="Opacity" Value="0"/>
-                                                </KeyFrame>
-                                            </Animation>
-                                        </Style.Animations>
-                                    </Style>
-                                </Border.Styles>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -404,8 +323,7 @@
                                         BorderThickness="0"
                                         Padding="0"
                                         CornerRadius="12"
-                                        Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).OpenAnimeDetailsCommand}"
-                                        CommandParameter="{Binding AnimeId}"
+                                        Click="GoToAnime"
                                         HorizontalContentAlignment="Stretch"
                                         VerticalContentAlignment="Stretch">
                                     <Grid ColumnDefinitions="140,*,Auto" Height="105">

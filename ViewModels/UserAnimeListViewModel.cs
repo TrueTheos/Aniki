@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
+using Aniki.Misc;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -10,9 +12,6 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     [ObservableProperty]
     private ObservableCollection<AnimeFieldSet> _filteredAnimeList = new();
-    
-    [ObservableProperty]
-    private string _searchText = string.Empty;
     
     [ObservableProperty]
     private string _statusFilter = "All";
@@ -74,13 +73,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     public bool HasActiveFilters => 
         StatusFilter != "All" || 
-        GenreFilter != "All Genres" || 
-        !string.IsNullOrEmpty(SearchText);
-    
-    partial void OnSearchTextChanged(string value)
-    {
-        ApplyFiltersAndSort();
-    }
+        GenreFilter != "All Genres";
     
     partial void OnStatusFilterChanged(string value)
     {
@@ -102,7 +95,6 @@ public partial class UserAnimeListViewModel : ViewModelBase
         ApplyFiltersAndSort();
     }
     
-    // Commands
     [RelayCommand]
     private void SetStatusFilter(string status)
     {
@@ -132,13 +124,6 @@ public partial class UserAnimeListViewModel : ViewModelBase
     {
         StatusFilter = "All";
         GenreFilter = "All Genres";
-        SearchText = string.Empty;
-    }
-    
-    [RelayCommand]
-    private void ClearSearch()
-    {
-        SearchText = string.Empty;
     }
     
     [RelayCommand]
@@ -153,54 +138,44 @@ public partial class UserAnimeListViewModel : ViewModelBase
         IsGridView = false;
     }
     
-    [RelayCommand]
-    private void OpenAnimeDetails(int animeId)
-    {
-        Console.WriteLine($"Opening anime details for ID: {animeId}");
-    }
-    
-    // Methods
     private async Task LoadAnimeListAsync()
     {
         var list = await _malService.GetUserAnimeList();
         foreach (var element in list)
         {
-            AnimeList.Add(await _malService.GetFieldsAsync(element.Node.Id, AnimeField.MAIN_PICTURE, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.TITLE, AnimeField.START_DATE, AnimeField.EPISODES));
+            if(AnimeList.Any(x => x.AnimeId == element.Node.Id)) continue;
+            AnimeList.Add(await _malService.GetFieldsAsync(element.Node.Id, MalService.MAL_NODE_FIELD_TYPES));
         }
         
         TotalCount = AnimeList.Count;
         ApplyFiltersAndSort();
+    }
+
+    private bool CompareStatus(AnimeStatusApi? api, string statusFilter)
+    {
+        if (!api.HasValue) return false;
+        
+        string apiStatus = Regex.Replace(api!.Value.ToString().ToLower(), @"[^a-z0-9]", "");
+        string filterStatus = Regex.Replace(statusFilter.ToLower(), @"[^a-z0-9]", "");
+
+        return apiStatus == filterStatus;
     }
     
     private void ApplyFiltersAndSort()
     {
         var filtered = AnimeList.AsEnumerable();
         
-        // Apply status filter
         if (StatusFilter != "All")
         {
-            filtered = filtered.Where(a => 
-                a.MyListStatus?.Status.ToString().Equals(StatusFilter, StringComparison.OrdinalIgnoreCase) == true);
+            filtered = filtered.Where(a => CompareStatus(a.MyListStatus!.Status, StatusFilter));
         }
         
-        // Apply genre filter
         if (GenreFilter != "All Genres")
         {
             filtered = filtered.Where(a => 
                 a.Genres?.Any(g => g.Name.Equals(GenreFilter, StringComparison.OrdinalIgnoreCase)) == true);
         }
         
-        // Apply search filter
-        if (!string.IsNullOrWhiteSpace(SearchText))
-        {
-            var searchLower = SearchText.ToLower();
-            filtered = filtered.Where(a =>
-                a.Title?.ToLower().Contains(searchLower) == true ||
-                a.AlternativeTitles?.Ja?.ToLower().Contains(searchLower) == true ||
-                a.AlternativeTitles?.En?.ToLower().Contains(searchLower) == true);
-        }
-        
-        // Apply sorting
         filtered = SortBy switch
         {
             "TitleAsc" => filtered.OrderBy(a => a.Title),
