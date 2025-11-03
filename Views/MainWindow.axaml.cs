@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -54,6 +55,14 @@ public partial class MainWindow : Window
     private void OnLogoutRequested(object? sender, EventArgs e)
     {
         LogOut(sender, new RoutedEventArgs());
+    }
+    
+    private void OnBeginDrag(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            BeginMoveDrag(e);
+        }
     }
 
     private async void OnSettingsRequested(object? sender, EventArgs e)
