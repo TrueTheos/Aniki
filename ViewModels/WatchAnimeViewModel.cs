@@ -88,8 +88,8 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
         if (!Directory.Exists(episodesFolder))
         {
-            UpdateView();
             IsLoading = false;
+            UpdateView();
             return;
         }
 
@@ -112,11 +112,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
 
             if (parsedFile.EpisodeNumber == null)
                 return;
-
-            if (!string.IsNullOrEmpty(AnimeTitleFilter) &&
-                !parsedFile.AnimeName.Contains(AnimeTitleFilter, StringComparison.OrdinalIgnoreCase))
-                return;
-
+    
             int? malId = await _absoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
             if (malId == null)
                 return;
@@ -127,17 +123,14 @@ public partial class WatchAnimeViewModel : ViewModelBase
                 parsedFile.AbsoluteEpisodeNumber,
                 animeName.Title!, malId.Value, parsedFile.Season);
 
-            lock (AnimeGroups)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => AddEpisodeToGroup(episode));
-            }
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode));
 
             int current = Interlocked.Increment(ref processed);
             ProcessingProgress = $"Processing files: {current}/{total}";
         });
 
-        UpdateView();
         IsLoading = false;
+        UpdateView();
     }
 
     private void AddEpisodeToGroup(Episode episode)
@@ -198,13 +191,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
         }
         
         AnimeGroups.Insert(insertIndex, newGroup);
-    }
-
-    public void Update(AnimeFieldSet? details)
-    {
-        AnimeTitleFilter = details?.Title;
-        _ = LoadEpisodesFromFolder();
-        UpdateView();
+        OnPropertyChanged(nameof(AnimeGroups));
     }
         
     private void UpdateView()
