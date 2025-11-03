@@ -179,7 +179,7 @@
 
                                 <ListBox 
                                     Grid.Row="1"
-                                    DoubleTapped="DoubleClickAnime" 
+                                    Tapped="DoubleClickAnime" 
                                     ItemsSource="{Binding Items}" 
                                     Background="{StaticResource BackgroundGray}"
                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"

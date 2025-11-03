@@ -80,7 +80,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
-        WatchAnimeViewModel.Update(details);
         TorrentSearchViewModel.Update(details, WatchedEpisodes);
     }
 

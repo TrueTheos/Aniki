@@ -75,6 +75,15 @@
                 <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            
+            <Border Grid.Column="0" 
+                    Grid.ColumnSpan="2"
+                    Height="30" 
+                    VerticalAlignment="Top"
+                    Background="Transparent"
+                    IsHitTestVisible="True"
+                    ZIndex="100"
+                    PointerPressed="OnBeginDrag"/>
 
             <!-- Left Bar -->
             <Grid Grid.Column="0" Margin="10,35,5,10">
