@@ -89,6 +89,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             LoadAnimeCards(allTime, TrendingAllTime);
 
             var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
+            AiringToday.Clear();
             foreach (var anime in airingToday)
             {
                 if(anime.MalId == null) continue;
