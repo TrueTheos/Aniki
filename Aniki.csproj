@@ -37,6 +37,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.4" />
     <PackageReference Include="Velopack" Version="0.0.1053" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" />
   </ItemGroup>
 
   <ItemGroup>
@@ -93,5 +94,9 @@
     <AvaloniaResource Include="Resources\Icons\search_icon.svg" />
     <AvaloniaResource Include="Resources\Icons\settings_icon.svg" />
     <AvaloniaResource Include="Resources\Icons\stats_icon.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="publish\" />
   </ItemGroup>
 </Project>
