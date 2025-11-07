@@ -1,0 +1,182 @@
+using System.Collections.ObjectModel;
+using Aniki.Services.Interfaces;
+
+namespace Aniki.ViewModels;
+
+using LibVLCSharp.Shared;
+
+public partial class OnlineViewModel : ViewModelBase, IDisposable
+{
+    private readonly IAllMangaScraperService _scraperService;
+    private LibVLC? _libVLC;
+    private MediaPlayer? _mediaPlayer;
+
+    [ObservableProperty]
+    private string _searchQuery = "";
+
+    [ObservableProperty]
+    private string _statusText = "Ready";
+
+    [ObservableProperty]
+    private ObservableCollection<AllMangaSearchResult> _animeResults = new();
+
+    [ObservableProperty]
+    private AllMangaSearchResult? _selectedAnime;
+
+    [ObservableProperty]
+    private ObservableCollection<AllManagaEpisode> _episodes = new();
+
+    private AllManagaEpisode? _selectedEpisode;
+    
+    public AllManagaEpisode? SelectedEpisode
+    {
+        get => _selectedEpisode;
+        set
+        {
+            if (SetProperty(ref _selectedEpisode, value))
+            {
+                OnSelectedEpisodeChanged(value);
+            }
+        }
+    }
+
+    [ObservableProperty]
+    private bool _isLoading;
+
+    public MediaPlayer? MediaPlayer => _mediaPlayer;
+
+    public OnlineViewModel(IAllMangaScraperService scraperService)
+    {
+        _scraperService = scraperService;
+        InitializeVLC();
+    }
+
+    private void InitializeVLC()
+    {
+        Core.Initialize();
+        _libVLC = new LibVLC();
+        _mediaPlayer = new MediaPlayer(_libVLC);
+    }
+
+    [RelayCommand]
+    private async Task SearchAnimeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SearchQuery))
+            return;
+
+        IsLoading = true;
+        StatusText = "Searching AllManga...";
+
+        try
+        {
+            var results = await _scraperService.SearchAnimeAsync(SearchQuery);
+            AnimeResults.Clear();
+            
+            foreach (var result in results)
+            {
+                AnimeResults.Add(result);
+            }
+
+            StatusText = $"Found {results.Count} results";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    partial void OnSelectedAnimeChanged(AllMangaSearchResult? value)
+    {
+        if (value != null)
+        {
+            _ = LoadEpisodesAsync(value);
+        }
+    }
+
+    private async Task LoadEpisodesAsync(AllMangaSearchResult anime)
+    {
+        IsLoading = true;
+        StatusText = "Loading episodes...";
+
+        try
+        {
+            var episodes = await _scraperService.GetEpisodesAsync(anime.Url);
+            Episodes.Clear();
+            
+            foreach (var episode in episodes)
+            {
+                Episodes.Add(episode);
+            }
+
+            StatusText = $"Loaded {episodes.Count} episodes";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void OnSelectedEpisodeChanged(AllManagaEpisode? value)
+    {
+        if (value != null)
+        {
+            _ = PlayEpisodeAsync(value);
+        }
+    }
+
+    private async Task PlayEpisodeAsync(AllManagaEpisode episode)
+    {
+        IsLoading = true;
+        StatusText = "Loading video...";
+
+        try
+        {
+            var videoUrl = await _scraperService.GetVideoUrlAsync(episode.Url!);
+            
+            var media = new Media(_libVLC!, new Uri(videoUrl));
+            _mediaPlayer?.Play(media);
+            
+            StatusText = $"Playing Episode {episode.Number}";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private void Play()
+    {
+        _mediaPlayer?.Play();
+    }
+
+    [RelayCommand]
+    private void Pause()
+    {
+        _mediaPlayer?.Pause();
+    }
+
+    [RelayCommand]
+    private void Stop()
+    {
+        _mediaPlayer?.Stop();
+    }
+
+    public void Dispose()
+    {
+        _mediaPlayer?.Dispose();
+        _libVLC?.Dispose();
+    }
+}

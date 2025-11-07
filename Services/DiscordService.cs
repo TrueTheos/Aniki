@@ -16,7 +16,7 @@ public class DiscordService : IDiscordService
         AppDomain.CurrentDomain.ProcessExit += (sender, e) => Reset();
     }
 
-    public void SetPresenceEpisode(Episode ep)
+    public void SetPresenceEpisode(DownloadedEpisode ep)
     {
         if (_isDisposed)
         {

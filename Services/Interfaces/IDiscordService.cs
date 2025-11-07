@@ -2,6 +2,6 @@
 
 public interface IDiscordService
 {
-    public void SetPresenceEpisode(Episode ep);
+    public void SetPresenceEpisode(DownloadedEpisode ep);
     public void Reset();
 }

@@ -1,0 +1,75 @@
+<UserControl
+    x:Class="Aniki.Views.OnlineView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:avalonia="clr-namespace:LibVLCSharp.Avalonia;assembly=LibVLCSharp.Avalonia"
+    x:DataType="vm:OnlineViewModel">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="10">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+            <TextBox Text="{Binding SearchQuery}" 
+                     Width="300" 
+                     Watermark="Search anime on AllManga..." />
+            <Button Content="Search" 
+                    Command="{Binding SearchAnimeCommand}"
+                    IsEnabled="{Binding !IsLoading}" />
+        </StackPanel>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" ColumnDefinitions="200,200,*">
+            <!-- Anime List -->
+            <Border Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="0,0,5,0">
+                <StackPanel>
+                    <TextBlock Text="Anime" FontWeight="Bold" Margin="5" />
+                    <ListBox ItemsSource="{Binding AnimeResults}"
+                             SelectedItem="{Binding SelectedAnime}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Episode List -->
+            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Margin="5,0">
+                <StackPanel>
+                    <TextBlock Text="Episodes" FontWeight="Bold" Margin="5" />
+                    <ListBox ItemsSource="{Binding Episodes}"
+                             SelectedItem="{Binding SelectedEpisode}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Number}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
+            <!-- Video Player -->
+            <Border Grid.Column="2" BorderBrush="Gray" BorderThickness="1" Margin="5,0,0,0">
+                <avalonia:VideoView MediaPlayer="{Binding MediaPlayer}" />
+            </Border>
+        </Grid>
+
+        <!-- Controls -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+            <Button Content="▶ Play" 
+                    Command="{Binding PlayCommand}" 
+                    Width="80" />
+            <Button Content="⏸ Pause" 
+                    Command="{Binding PauseCommand}" 
+                    Width="80" />
+            <Button Content="⏹ Stop" 
+                    Command="{Binding StopCommand}" 
+                    Width="80" />
+            <TextBlock Text="{Binding StatusText}" 
+                       VerticalAlignment="Center" 
+                       Margin="20,0,0,0" />
+            <TextBlock Text="Loading..." 
+                       IsVisible="{Binding IsLoading}"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</UserControl>

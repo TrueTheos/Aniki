@@ -1,0 +1,151 @@
+<UserControl
+    x:Class="Aniki.Views.DownloadedView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:views="clr-namespace:Aniki.Views"
+    xmlns:models="clr-namespace:Aniki.Models"
+    x:DataType="vm:DownloadedViewModel">
+    <Grid>
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
+            <ProgressBar Width="300" IsIndeterminate="True" Background="{StaticResource Background0}"
+                            Foreground="{StaticResource RedColor}" />
+            <TextBlock
+                Margin="0,5,0,5"
+                HorizontalAlignment="Center"
+                FontSize="16"
+                Foreground="{StaticResource White}"
+                Text="{Binding ProcessingProgress}" />
+        </StackPanel>
+
+        <ScrollViewer IsVisible="{Binding IsEpisodesViewVisible}" VerticalScrollBarVisibility="Visible">
+            <ItemsControl ItemsSource="{Binding AnimeGroups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="models:AnimeGroup">
+                        <Border Margin="0,0,0,16" Background="{StaticResource Background0}" CornerRadius="8" Padding="16">
+                            <StackPanel>
+                                <!-- Anime Title Header -->
+                                <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        FontSize="20"
+                                        FontWeight="Bold"
+                                        Foreground="{StaticResource White}"
+                                        Text="{Binding Title}" />
+                                    <Border
+                                        Grid.Column="1"
+                                        Background="#4A4A5A"
+                                        CornerRadius="12"
+                                        Padding="8,4">
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{StaticResource White}"
+                                            Text="{Binding TotalEpisodes}" />
+                                    </Border>
+                                </Grid>
+                                
+                                <!-- Episodes List -->
+                                <ItemsControl ItemsSource="{Binding Episodes}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="models:DownloadedEpisode">
+                                            <Border
+                                                Margin="0,2,0,2"
+                                                Padding="12"
+                                                Background="{StaticResource Background1}"
+                                                CornerRadius="6">
+                                                <Grid VerticalAlignment="Center" ColumnDefinitions="*,Auto,Auto">
+                                                    <StackPanel Margin="0,0,12,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock
+                                                                FontSize="14"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="{StaticResource White}"
+                                                                Text="{Binding Season, StringFormat='Season {0}'}" />
+                                                            <TextBlock
+                                                                Margin="8,0,0,0"
+                                                                FontSize="14"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="{StaticResource White}"
+                                                                Text="{Binding EpisodeNumber, StringFormat='Episode {0:00}'}" />
+                                                        </StackPanel>
+                                                        
+                                                        <TextBlock
+                                                            Margin="0,4,0,0"
+                                                            FontSize="10"
+                                                            Foreground="LightGray"
+                                                            Text="{Binding FilePath}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+
+                                                    <!--  Play Button  -->
+                                                    <Button
+                                                        Grid.Column="1"
+                                                        Width="36"
+                                                        Height="36"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        Background="#3A3A4A"
+                                                        CornerRadius="6"
+                                                        Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).LaunchEpisodeCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="Watch!">
+                                                        <Viewbox Width="16" Height="16">
+                                                            <Path Data="M0,0 L0,10 L10,5 Z" Fill="White" />
+                                                        </Viewbox>
+                                                    </Button>
+
+                                                    <!--  Delete Button  -->
+                                                    <Button
+                                                        Grid.Column="2"
+                                                        Width="36"
+                                                        Height="36"
+                                                        Margin="8,0,0,0"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        Background="{StaticResource RedColor}"
+                                                        CornerRadius="6"
+                                                        Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).DeleteEpisodeCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="Delete">
+                                                        <Viewbox
+                                                            Width="16"
+                                                            Height="16"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center">
+                                                            <Canvas Width="24" Height="24">
+                                                                <Path
+                                                                    Data="M3,6 L5,6 L21,6 M19,6 L17.5,20.5 C17.4,21.3 16.7,22 16,22 L8,22 C7.3,22 6.6,21.3 6.5,20.5 L5,6 M8,6 L8,4 C8,3.4 8.4,3 9,3 L15,3 C15.6,3 16,3.4 16,4 L16,6"
+                                                                    Fill="Transparent"
+                                                                    Stroke="White"
+                                                                    StrokeThickness="2" />
+                                                            </Canvas>
+                                                        </Viewbox>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        
+        <StackPanel VerticalAlignment="Center" IsVisible="{Binding IsNoEpisodesViewVisible}">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="24"
+                FontWeight="Bold"
+                Foreground="{StaticResource White}">
+                Nothing to see here!
+            </TextBlock>
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="18"
+                Foreground="{StaticResource White}"
+                Text="{Binding EpisodesFolderMessage}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

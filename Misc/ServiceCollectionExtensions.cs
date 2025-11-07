@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<IOAuthService, OAuthService>();
         collection.AddSingleton<ISaveService, SaveService>();
         collection.AddSingleton<ITokenService, TokenService>();
+        collection.AddSingleton<IAllMangaScraperService, AllMangaScraperService>();
 
         collection.AddSingleton<LoginViewModel>();
         collection.AddSingleton<MainViewModel>();
@@ -29,5 +30,7 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<TorrentSearchViewModel>();
         collection.AddSingleton<WatchAnimeViewModel>();
         collection.AddSingleton<AnimeBrowseViewModel>();
+        collection.AddSingleton<DownloadedViewModel>();
+        collection.AddSingleton<OnlineViewModel>();
     }
 }
