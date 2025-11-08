@@ -88,25 +88,6 @@
                                 Padding="15,10"
                                 IsVisible="True">
                                 <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="Auto,*,Auto">
-                                        <TextBlock Grid.Column="0" 
-                                                   Text="{Binding CurrentTime, StringFormat='{}{0:mm\\:ss}'}"
-                                                   Foreground="White"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,10,0" />
-                                        <Slider Grid.Column="1"
-                                                x:Name="ProgressSlider"
-                                                Minimum="0"
-                                                Maximum="{Binding Duration}"
-                                                Value="{Binding Position}"
-                                                VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="2" 
-                                                   Text="{Binding Duration, StringFormat='{}{0:mm\\:ss}'}"
-                                                   Foreground="White"
-                                                   VerticalAlignment="Center"
-                                                   Margin="10,0,0,0" />
-                                    </Grid>
-                                    
                                     <StackPanel Orientation="Horizontal" 
                                                HorizontalAlignment="Center"
                                                Spacing="10">
