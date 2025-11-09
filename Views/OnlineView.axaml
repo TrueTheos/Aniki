@@ -81,7 +81,7 @@
                         ClipToBounds="True"
                         Background="Black">
                     <Panel x:Name="VideoContainer" Background="Transparent">
-                        <avalonia:VideoView MediaPlayer="{Binding MediaPlayer}">
+                        <avalonia:VideoView x:Name="VideoView" MediaPlayer="{Binding MediaPlayer}">
                             <Border x:Name="VideoControlsOverlay"
                                 VerticalAlignment="Bottom"
                                 Background="#CC000000"
