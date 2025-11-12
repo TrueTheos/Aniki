@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class FullscreenWindow : Window
+public partial class FullscreenVideoPlayer : Window
 {
-    public FullscreenWindow()
+    public FullscreenVideoPlayer()
     {
         InitializeComponent();
     }

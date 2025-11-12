@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Aniki.Services.Interfaces;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using LibVLCSharp.Avalonia;
@@ -13,9 +14,10 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     private LibVLC? _libVLC;
     private MediaPlayer? _mediaPlayer;
     private Window? _fullscreenWindow;
-    private Panel? _originalContainer;
-    private VideoView? _videoView;
 
+    private Panel? _videoPlayerContainer; 
+    private Border? _originalParent;
+    
     [ObservableProperty]
     private string _searchQuery = "";
 
@@ -66,13 +68,10 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         _mediaPlayer = new MediaPlayer(_libVLC);
     }
 
-    /// <summary>
-    /// Call this from the code-behind to register the VideoView for fullscreen management
-    /// </summary>
-    public void RegisterVideoView(VideoView videoView, Panel container)
+    public void RegisterVideoPlayer(Panel videoContainer, Border originalParent)
     {
-        _videoView = videoView;
-        _originalContainer = container;
+        _videoPlayerContainer = videoContainer;
+        _originalParent = originalParent;
     }
 
     [RelayCommand]
@@ -194,9 +193,8 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void ToggleFullscreen()
     {
-        if (_videoView == null || _originalContainer == null)
+        if (_videoPlayerContainer == null || _originalParent == null)
         {
-            // Fallback to old behavior if not properly initialized
             _mediaPlayer?.ToggleFullscreen();
             return;
         }
@@ -213,14 +211,12 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
     private void EnterFullscreen()
     {
-        if (_videoView == null || _originalContainer == null) return;
+        if (_videoPlayerContainer == null || _originalParent == null) return;
 
         try
         {
-            // Remove VideoView from original container
-            _originalContainer.Children.Remove(_videoView);
+            _originalParent.Child = null;
 
-            // Create fullscreen window
             _fullscreenWindow = new Window
             {
                 WindowState = WindowState.FullScreen,
@@ -229,16 +225,10 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                 Title = "Video Player"
             };
 
-            // Create container for video in fullscreen window
-            var fullscreenContainer = new Panel
-            {
-                Background = Avalonia.Media.Brushes.Black
-            };
+            _fullscreenWindow.AttachDevTools();
             
-            fullscreenContainer.Children.Add(_videoView);
-            _fullscreenWindow.Content = fullscreenContainer;
-
-            // Handle window close
+            _fullscreenWindow.Content = _videoPlayerContainer;
+            
             _fullscreenWindow.Closed += (s, e) =>
             {
                 if (_fullscreenWindow != null)
@@ -247,12 +237,18 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                 }
             };
 
-            // Handle Escape key to exit fullscreen
             _fullscreenWindow.KeyDown += (s, e) =>
             {
                 if (e.Key == Key.Escape)
                 {
                     ExitFullscreen();
+                }
+                else if (e.Key == Key.F12)
+                {
+                    if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                    {
+                        desktop.MainWindow?.AttachDevTools();
+                    }
                 }
             };
 
@@ -262,15 +258,14 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             StatusText = $"Fullscreen error: {ex.Message}";
-            // Try to restore if something went wrong
             if (_fullscreenWindow != null)
             {
                 _fullscreenWindow.Close();
                 _fullscreenWindow = null;
             }
-            if (_originalContainer != null && _videoView != null)
+            if (_originalParent != null && _videoPlayerContainer != null)
             {
-                _originalContainer.Children.Add(_videoView);
+                _originalParent.Child = _videoPlayerContainer;
             }
         }
     }
@@ -281,18 +276,15 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            if (_fullscreenWindow.Content is Panel fullscreenContainer)
-            {
-                fullscreenContainer.Children.Remove(_videoView!);
-            }
+            _fullscreenWindow.Content = null;
 
             var windowToClose = _fullscreenWindow;
             _fullscreenWindow = null;
             windowToClose.Close();
 
-            if (_originalContainer != null && _videoView != null)
+            if (_originalParent != null && _videoPlayerContainer != null)
             {
-                _originalContainer.Children.Add(_videoView);
+                _originalParent.Child = _videoPlayerContainer;
             }
 
             IsFullscreen = false;
@@ -305,7 +297,6 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
-        // Exit fullscreen if active
         if (_fullscreenWindow != null)
         {
             ExitFullscreen();
@@ -313,5 +304,8 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         _mediaPlayer?.Dispose();
         _libVLC?.Dispose();
+        
+        _originalParent = null;
+        _videoPlayerContainer = null;
     }
 }

@@ -26,12 +26,12 @@ public partial class OnlineView : UserControl
     {
         if (DataContext is OnlineViewModel viewModel)
         {
-            var videoView = this.FindControl<VideoView>("VideoView");
-            var container = this.FindControl<Panel>("VideoContainer");
-            
-            if (videoView != null && container != null)
+            var videoContainer = this.FindControl<Panel>("VideoContainer");
+            var originalParent = this.FindControl<Border>("VideoHost"); 
+                
+            if (videoContainer != null && originalParent != null)
             {
-                viewModel.RegisterVideoView(videoView, container);
+                viewModel.RegisterVideoPlayer(videoContainer, originalParent);
             }
         }
     }
