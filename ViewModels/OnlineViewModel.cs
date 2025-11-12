@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Aniki.Services.Interfaces;
+using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -217,18 +218,10 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             _originalParent.Child = null;
 
-            _fullscreenWindow = new Window
-            {
-                WindowState = WindowState.FullScreen,
-                Background = Avalonia.Media.Brushes.Black,
-                SystemDecorations = SystemDecorations.None,
-                Title = "Video Player"
-            };
+            FullscreenVideoPlayerViewModel vm = new FullscreenVideoPlayerViewModel();
 
-            _fullscreenWindow.AttachDevTools();
-            
-            _fullscreenWindow.Content = _videoPlayerContainer;
-            
+            _fullscreenWindow = new FullscreenVideoPlayer(vm, MediaPlayer!);
+
             _fullscreenWindow.Closed += (s, e) =>
             {
                 if (_fullscreenWindow != null)

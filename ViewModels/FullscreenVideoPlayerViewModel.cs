@@ -7,6 +7,15 @@ public partial class FullscreenVideoPlayerViewModel : ViewModelBase, IDisposable
 {
     [ObservableProperty]
     private MediaPlayer? _mediaPlayer;
+
+    public FullscreenVideoPlayerViewModel()
+    {
+    }
+
+    public void OnInitialized(MediaPlayer mediaPlayer)
+    {
+        MediaPlayer = mediaPlayer;
+    }
     
     [RelayCommand]
     private void Play()
