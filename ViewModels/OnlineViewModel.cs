@@ -4,6 +4,7 @@ using Aniki.Views;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using LibVLCSharp.Avalonia;
 using LibVLCSharp.Shared;
 
@@ -214,10 +215,10 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     {
         if (_videoPlayerContainer == null || _originalParent == null) return;
 
-        try
-        {
-            _originalParent.Child = null;
+        _originalParent.Child = null;
 
+        Dispatcher.UIThread.Post(() =>
+        {
             FullscreenVideoPlayerViewModel vm = new FullscreenVideoPlayerViewModel();
 
             _fullscreenWindow = new FullscreenVideoPlayer(vm, MediaPlayer!);
@@ -238,54 +239,34 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                 }
                 else if (e.Key == Key.F12)
                 {
-                    if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                    if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.
+                        IClassicDesktopStyleApplicationLifetime desktop)
                     {
                         desktop.MainWindow?.AttachDevTools();
                     }
                 }
             };
-
-            IsFullscreen = true;
             _fullscreenWindow.Show();
-        }
-        catch (Exception ex)
-        {
-            StatusText = $"Fullscreen error: {ex.Message}";
-            if (_fullscreenWindow != null)
+            
+            _fullscreenWindow!.Closing += (sender, e) =>
             {
-                _fullscreenWindow.Close();
-                _fullscreenWindow = null;
-            }
-            if (_originalParent != null && _videoPlayerContainer != null)
-            {
-                _originalParent.Child = _videoPlayerContainer;
-            }
-        }
+                ExitFullscreen();
+            };
+            
+        }, DispatcherPriority.Background);
+            
+        IsFullscreen = true;
     }
 
     private void ExitFullscreen()
     {
-        if (_fullscreenWindow == null) return;
-
-        try
+        if (_originalParent != null && _videoPlayerContainer != null)
         {
-            _fullscreenWindow.Content = null;
-
-            var windowToClose = _fullscreenWindow;
-            _fullscreenWindow = null;
-            windowToClose.Close();
-
-            if (_originalParent != null && _videoPlayerContainer != null)
-            {
-                _originalParent.Child = _videoPlayerContainer;
-            }
-
-            IsFullscreen = false;
+            _originalParent.Child = _videoPlayerContainer;
         }
-        catch (Exception ex)
-        {
-            StatusText = $"Exit fullscreen error: {ex.Message}";
-        }
+        _fullscreenWindow = null;
+
+        IsFullscreen = false;
     }
 
     public void Dispose()
