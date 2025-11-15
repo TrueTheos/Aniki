@@ -34,7 +34,7 @@ public partial class FullscreenVideoPlayerViewModel : ViewModelBase, IDisposable
     {
         MediaPlayer?.Stop();
     }
-    
+
     public void Dispose()
     {
     }

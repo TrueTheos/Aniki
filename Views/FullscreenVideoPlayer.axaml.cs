@@ -29,5 +29,11 @@ public partial class FullscreenVideoPlayer : Window
     private void LoadMediaPlayer(object? sender, RoutedEventArgs routedEventArgs)
     {
         _vm.OnInitialized(_mediaPlayer);
+        WindowState = WindowState.FullScreen;
+    }
+
+    public void OnClose(object? sender, RoutedEventArgs routedEventArgs)
+    {
+        Close();
     }
 }

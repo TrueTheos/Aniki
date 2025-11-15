@@ -33,6 +33,7 @@
                                     ToolTip.Tip="Play" />
                             <Button Content="⏸" 
                                     Command="{Binding PauseCommand}"
+                                    Click="OnClose"
                                     Width="40"
                                     Height="40"
                                     FontSize="16"
