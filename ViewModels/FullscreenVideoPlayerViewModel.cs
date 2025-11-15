@@ -29,12 +29,6 @@ public partial class FullscreenVideoPlayerViewModel : ViewModelBase, IDisposable
         MediaPlayer?.Pause();
     }
 
-    [RelayCommand]
-    private void Stop()
-    {
-        MediaPlayer?.Stop();
-    }
-
     public void Dispose()
     {
     }
