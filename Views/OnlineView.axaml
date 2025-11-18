@@ -3,138 +3,273 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
-    xmlns:avalonia="clr-namespace:LibVLCSharp.Avalonia;assembly=LibVLCSharp.Avalonia"
     x:DataType="vm:OnlineViewModel">
-    <Grid RowDefinitions="Auto,*" Margin="10">
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
-            <TextBox Text="{Binding SearchQuery}" 
-                     Width="300" 
-                     Watermark="Search anime on AllManga..." />
-            <Button Content="Search" 
-                    Command="{Binding SearchAnimeCommand}"
-                    IsEnabled="{Binding !IsLoading}" />
-        </StackPanel>
-
-        <Grid Grid.Row="1" ColumnDefinitions="250,*">
-            <Border Grid.Column="0" 
-                    BorderBrush="Gray" 
-                    BorderThickness="1" 
-                    Margin="0,0,10,0"
-                    CornerRadius="4">
-                <StackPanel>
-                    <TextBlock Text="Anime Results" 
+    
+    <UserControl.Styles>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="#3E3E42"/>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="Background" Value="#007ACC"/>
+        </Style>
+        <Style Selector="Button:disabled">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Foreground" Value="#666666"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
+        
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="TextBox:focus">
+            <Setter Property="BorderBrush" Value="#007ACC"/>
+        </Style>
+        
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Margin" Value="4,2"/>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2D2D30"/>
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#007ACC"/>
+        </Style>
+        
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+    </UserControl.Styles>
+    
+    <Grid RowDefinitions="Auto,*" ColumnDefinitions="300,*" ColumnSpacing="20"> 
+        <!-- Search Bar -->
+        <Border
+            Background="{StaticResource BackgroundGray}"
+            CornerRadius="12"
+            Padding="12,8"
+            Margin="10,5"
+            Cursor="Hand"
+            Width="300">
+            <Grid ColumnDefinitions="Auto,*">
+                <PathIcon Grid.Column="0"
+                          Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                          Width="16" Height="16"
+                          Foreground="#666666"
+                          Margin="0,0,10,0"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding SearchQuery, Mode=TwoWay}"
+                         Watermark="Type to Search..."
+                         Foreground="#999999"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         MinWidth="200"
+                         VerticalContentAlignment="Center">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchAnimeCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+            </Grid>
+        </Border>
+        
+        <!-- Left Panel - Search Results -->
+        <Border Grid.Column="0" 
+                Grid.Row="1"
+                Background="#1E1E1E"
+                CornerRadius="8"
+                BoxShadow="0 2 8 0 #20000000">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0"
+                        Background="#2D2D30"
+                        CornerRadius="8,8,0,0"
+                        Padding="16,12">
+                    <TextBlock Text="Search Results" 
                                FontWeight="Bold" 
-                               FontSize="14"
-                               Margin="10,10,10,5" />
-                    <Separator Margin="10,0,10,5" />
+                               FontSize="15"
+                               Foreground="White" />
+                </Border>
+                    
+                <ScrollViewer Grid.Row="1" 
+                              VerticalScrollBarVisibility="Auto"
+                              Padding="8">
                     <ListBox ItemsSource="{Binding AnimeResults}"
-                             SelectedItem="{Binding SelectedAnime}"
-                             BorderThickness="0"
-                             Background="Transparent">
+                             SelectedItem="{Binding SelectedAnime}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Title}" 
-                                          TextWrapping="Wrap"
-                                          Margin="5" />
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" 
+                                               TextWrapping="NoWrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               FontSize="13"
+                                               Foreground="White" />
+                                    <TextBlock Text="{Binding Episodes, StringFormat='Episodes: {0}'}" 
+                                               FontSize="11"
+                                               Foreground="{StaticResource Green}"
+                                               Margin="0,2,0,0" />
+                                </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </StackPanel>
-            </Border>
-
-            <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
-                
-                <Border Grid.Row="0" 
-                        BorderBrush="Gray" 
-                        BorderThickness="1"
-                        CornerRadius="4"
-                        Padding="10"
-                        Margin="0,0,0,10"
-                        IsVisible="{Binding Episodes.Count}">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <TextBlock Text="Episode:" 
+                </ScrollViewer>
+            </Grid>
+        </Border>
+        <Grid Grid.Column="1" Grid.Row="1" RowDefinitions="Auto,*">
+            <!-- Episode Selection -->
+            <Border Grid.Row="0" 
+                    Background="#1E1E1E"
+                    CornerRadius="8"
+                    BoxShadow="0 2 8 0 #20000000"
+                    Padding="20"
+                    Margin="0,0,0,20"
+                    IsVisible="{Binding Episodes.Count}">
+                <StackPanel Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0"
+                                   Text="Select Episode" 
+                                   FontWeight="Bold"
+                                   FontSize="15"
+                                   Foreground="White"
+                                   VerticalAlignment="Center" />
+                        
+                        <Border Grid.Column="1"
+                                Background="#2D2D30"
+                                CornerRadius="12"
+                                Padding="12,6">
+                            <TextBlock Text="{Binding WatchedEpisodesText}"
+                                       FontSize="12"
+                                       Foreground="#4EC9B0"
+                                       FontWeight="SemiBold" />
+                        </Border>
+                    </Grid>
+                    
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                        <TextBlock Grid.Column="0"
+                                   Text="Player:"
                                    VerticalAlignment="Center"
+                                   Foreground="#A0A0A0"
+                                   FontSize="13"
                                    FontWeight="SemiBold" />
-                        <ComboBox ItemsSource="{Binding Episodes}"
-                                  SelectedItem="{Binding SelectedEpisode}"
-                                  MinWidth="200">
+                        
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding AvailablePlayers}"
+                                  SelectedItem="{Binding SelectedPlayer}"
+                                  MinWidth="150">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Number, StringFormat='Episode {0}'}" />
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               Foreground="White" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <TextBlock Text="{Binding StatusText}" 
-                                   VerticalAlignment="Center"
-                                   Margin="20,0,0,0" />
-                        <TextBlock Text="Loading..." 
-                                   IsVisible="{Binding IsLoading}"
-                                   VerticalAlignment="Center"
-                                   FontStyle="Italic" />
-                    </StackPanel>
-                </Border>
+                        
+                        <Button Grid.Column="2"
+                                Content="▶ Play" 
+                                Command="{Binding PlayInBrowserCommand}"
+                                IsEnabled="{Binding CanPlayVideo}"
+                                MinWidth="120"
+                                Background="#0E7A0D"
+                                FontWeight="SemiBold">
+                            <Button.Styles>
+                                <Style Selector="Button:pointerover">
+                                    <Setter Property="Background" Value="#10830F"/>
+                                </Style>
+                                <Style Selector="Button:pressed">
+                                    <Setter Property="Background" Value="#0C6A0B"/>
+                                </Style>
+                            </Button.Styles>
+                        </Button>
+                        
+                        <ProgressBar Grid.Column="3"
+                                    IsIndeterminate="True"
+                                    IsVisible="{Binding IsLoading}"
+                                    Width="100"
+                                    Height="4"
+                                    VerticalAlignment="Center"
+                                    Foreground="#007ACC" />
+                    </Grid>
+                    
+                    <Border Background="#2D2D30"
+                            CornerRadius="6"
+                            Padding="12,8"
+                            Margin="0,4,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="Episode:"
+                                       VerticalAlignment="Center"
+                                       Foreground="#A0A0A0"
+                                       FontSize="13"
+                                       FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{Binding Episodes}"
+                                      SelectedItem="{Binding SelectedEpisode}"
+                                      MinWidth="200">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Number, StringFormat='Episode {0}'}"
+                                                   Foreground="White" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
 
-                <Border Grid.Row="1" 
-                        x:Name="VideoHost" BorderBrush="Gray"
-                        BorderThickness="1"
-                        CornerRadius="4"
-                        ClipToBounds="True"
-                        Background="Black">
-                    <Panel x:Name="VideoContainer" Background="Transparent">
-                        <avalonia:VideoView x:Name="VideoView" MediaPlayer="{Binding MediaPlayer}">
-                            <Border x:Name="VideoControlsOverlay"
-                                ZIndex="10"
-                                VerticalAlignment="Bottom"
-                                Background="#CC000000"
-                                Padding="15,10"
-                                IsVisible="True">
-                                <StackPanel Spacing="10">
-                                    <StackPanel Orientation="Horizontal" 
-                                               HorizontalAlignment="Center"
-                                               Spacing="10">
-                                        <Button Content="▶" 
-                                                Command="{Binding PlayCommand}"
-                                                Width="40"
-                                                Height="40"
-                                                FontSize="16"
-                                                ToolTip.Tip="Play" />
-                                        <Button Content="⏸" 
-                                                Command="{Binding PauseCommand}"
-                                                Width="40"
-                                                Height="40"
-                                                FontSize="16"
-                                                ToolTip.Tip="Pause" />
-                                        <Button Content="⏹" 
-                                                Command="{Binding StopCommand}"
-                                                Width="40"
-                                                Height="40"
-                                                FontSize="16"
-                                                ToolTip.Tip="Stop" />
-                                        <Button Content="⛶" 
-                                                Command="{Binding ToggleFullscreenCommand}"
-                                                Width="40"
-                                                Height="40"
-                                                FontSize="16"
-                                                ToolTip.Tip="Fullscreen"
-                                                HorizontalAlignment="Right"
-                                                Margin="20,0,0,0" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                        </avalonia:VideoView>
-                    </Panel>
-                </Border>
-
-                <Border Grid.Row="2"
-                        BorderBrush="Gray"
-                        BorderThickness="0,1,0,0"
-                        Padding="10,5"
-                        Margin="0,10,0,0"
-                        IsVisible="{Binding !Episodes.Count}">
-                    <TextBlock Text="{Binding StatusText}"
-                               VerticalAlignment="Center" />
-                </Border>
-            </Grid>
+            <!-- Video Placeholder -->
+            <Border Grid.Row="1" 
+                    Background="#1E1E1E"
+                    CornerRadius="8"
+                    BoxShadow="0 2 8 0 #20000000"
+                    Padding="40">
+                <StackPanel VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="20">
+                    <Path Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"
+                          Fill="#007ACC"
+                          Stretch="Uniform"
+                          Width="80"
+                          Height="80"
+                          Opacity="0.6" />
+                    
+                    <TextBlock Text="Select an episode to watch"
+                               FontSize="16"
+                               Foreground="#808080"
+                               TextAlignment="Center"
+                               IsVisible="{Binding !Episodes.Count}" />
+                    
+                    <TextBlock Text="Click 'Play' to watch"
+                               FontSize="16"
+                               Foreground="#808080"
+                               TextAlignment="Center"
+                               IsVisible="{Binding Episodes.Count}" />
+                    
+                    <TextBlock Text="Video will open in your default video player"
+                               FontSize="13"
+                               Foreground="#606060"
+                               TextAlignment="Center"
+                               FontStyle="Italic"
+                               IsVisible="{Binding Episodes.Count}" />
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

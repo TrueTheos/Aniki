@@ -38,7 +38,8 @@ public class AllMangaScraperService : IAllMangaScraperService
                     edges { 
                         _id 
                         name 
-                        availableEpisodes 
+                        availableEpisodes
+                        malId
                         __typename 
                     } 
                 }
@@ -74,6 +75,29 @@ public class AllMangaScraperService : IAllMangaScraperService
                     var id = edge.GetProperty("_id").GetString();
                     var name = edge.GetProperty("name").GetString();
                     
+                    // Get MAL ID if available
+                    int? malId = null;
+                    if (edge.TryGetProperty("malId", out var malIdProp) && 
+                        malIdProp.ValueKind == JsonValueKind.String)
+                    {
+                        if (malIdProp.ValueKind == JsonValueKind.String)
+                        {
+                            string? malIdString = malIdProp.GetString();
+                            if (malIdString != null)
+                            {
+                                malId = Int32.Parse(malIdString);
+                            }
+                        }
+                        else if (malIdProp.ValueKind == JsonValueKind.Number)
+                        {
+                            malId = malIdProp.GetInt32();
+                        }
+                        else
+                        {
+                            Log.Error($"{name} has wrong malidtype {malIdProp.ValueKind}");
+                        }
+                    }
+                    
                     var episodeCount = 0;
                     if (edge.TryGetProperty("availableEpisodes", out var availableEpisodes) &&
                         availableEpisodes.TryGetProperty("sub", out var subCount))
@@ -86,8 +110,10 @@ public class AllMangaScraperService : IAllMangaScraperService
                         results.Add(new AllMangaSearchResult
                         {
                             Id = id,
-                            Title = $"{name} ({episodeCount} episodes)",
-                            Url = $"{ALLANIME_REFR}/anime/{id}"
+                            Title = $"{name}",
+                            Episodes = episodeCount,
+                            Url = $"{ALLANIME_REFR}/anime/{id}",
+                            MalId = malId
                         });
                     }
                 }
@@ -98,6 +124,83 @@ public class AllMangaScraperService : IAllMangaScraperService
         catch (Exception ex)
         {
             throw new Exception($"Search failed: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<AllMangaAnimeDetails?> GetAnimeDetailsAsync(string animeIdOrUrl)
+    {
+        try
+        {
+            var showId = animeIdOrUrl.Contains("/") 
+                ? animeIdOrUrl.Split('/').Last() 
+                : animeIdOrUrl;
+
+            const string detailsGql = @"query($showId: String!) { 
+                show(_id: $showId) { 
+                    _id
+                    name
+                    malId
+                    aniListId
+                    description
+                    availableEpisodesDetail
+                    thumbnail
+                    __typename
+                }
+            }";
+
+            var variables = new
+            {
+                showId = showId
+            };
+
+            var requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(detailsGql)}";
+            
+            var response = await _httpClient.GetStringAsync(requestUrl);
+            var jsonDoc = JsonDocument.Parse(response);
+            
+            if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
+                data.TryGetProperty("show", out var show))
+            {
+                var details = new AllMangaAnimeDetails
+                {
+                    Id = show.GetProperty("_id").GetString() ?? string.Empty,
+                    Name = show.GetProperty("name").GetString() ?? string.Empty
+                };
+
+                // Get MAL ID
+                if (show.TryGetProperty("malId", out var malIdProp) && 
+                    malIdProp.ValueKind == JsonValueKind.Number)
+                {
+                    details.MalId = malIdProp.GetInt32();
+                }
+
+                // Get AniList ID
+                if (show.TryGetProperty("aniListId", out var aniListIdProp) && 
+                    aniListIdProp.ValueKind == JsonValueKind.Number)
+                {
+                    details.AniListId = aniListIdProp.GetInt32();
+                }
+
+                // Get description
+                if (show.TryGetProperty("description", out var descProp))
+                {
+                    details.Description = descProp.GetString();
+                }
+
+                // Get thumbnail
+                if (show.TryGetProperty("thumbnail", out var thumbProp))
+                {
+                    details.Thumbnail = thumbProp.GetString();
+                }
+
+                return details;
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get anime details: {ex.Message}", ex);
         }
     }
 
@@ -289,5 +392,4 @@ public class AllMangaScraperService : IAllMangaScraperService
             return string.Empty;
         }
     }
-}
-    
+}    

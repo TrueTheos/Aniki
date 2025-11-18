@@ -18,21 +18,5 @@ public partial class OnlineView : UserControl
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
-          this.DataContextChanged += OnDataContextChanged;
-        
-    }
-
-    private void OnDataContextChanged(object? sender, EventArgs e)
-    {
-        if (DataContext is OnlineViewModel viewModel)
-        {
-            var videoContainer = this.FindControl<Panel>("VideoContainer");
-            var originalParent = this.FindControl<Border>("VideoHost"); 
-                
-            if (videoContainer != null && originalParent != null)
-            {
-                viewModel.RegisterVideoPlayer(videoContainer, originalParent);
-            }
-        }
     }
 }
