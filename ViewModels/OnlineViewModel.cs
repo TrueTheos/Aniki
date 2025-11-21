@@ -31,10 +31,18 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             if (SetProperty(ref _selectedAnime, value))
             {
-                OnSelectedAnimeChanged(value);
+                OnPropertyChanged(nameof(SelectionStatusMessage));
+                OnPropertyChanged(nameof(ShowSelectionStatus));
+                _ = OnSelectedAnimeChanged(value);
             }
         }
     }
+
+    [ObservableProperty] 
+    private string? _animeDescription;
+
+    [ObservableProperty] 
+    private string? _animeImageUrl;
 
     [ObservableProperty]
     private ObservableCollection<AllManagaEpisode> _episodes = new();
@@ -48,6 +56,8 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             if (SetProperty(ref _selectedEpisode, value))
             {
+                OnPropertyChanged(nameof(SelectionStatusMessage));
+                OnPropertyChanged(nameof(ShowSelectionStatus));
                 OnSelectedEpisodeChanged(value);
             }
         }
@@ -78,6 +88,25 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         public override string ToString() => DisplayName;
     }
     
+    public string SelectionStatusMessage
+    {
+        get
+        {
+            if (AnimeResults.Count == 0)
+                return "Search anime";
+        
+            if (SelectedAnime == null)
+                return "Select anime";
+        
+            if (SelectedEpisode == null)
+                return "Select episode";
+        
+            return "";
+        }
+    }
+
+    public bool ShowSelectionStatus => !string.IsNullOrEmpty(SelectionStatusMessage);
+    
     public OnlineViewModel(IAllMangaScraperService scraperService, IMalService malService)
     {
         _watchingMalId = null;
@@ -86,6 +115,21 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         DetectAvailablePlayers();
         
         SelectedPlayer = AvailablePlayers.FirstOrDefault();
+    }
+    
+    partial void OnAnimeResultsChanged(ObservableCollection<AllMangaSearchResult> value)
+    {
+        OnPropertyChanged(nameof(SelectionStatusMessage));
+        OnPropertyChanged(nameof(ShowSelectionStatus));
+    
+        if (value != null)
+        {
+            value.CollectionChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(SelectionStatusMessage));
+                OnPropertyChanged(nameof(ShowSelectionStatus));
+            };
+        }
     }
 
     private void DetectAvailablePlayers()
@@ -363,12 +407,25 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OnSelectedAnimeChanged(AllMangaSearchResult? value)
+    private async Task OnSelectedAnimeChanged(AllMangaSearchResult? value)
     {
         if (value != null)
         {
             _ = LoadEpisodesAsync(value);
-            _ = GetEpisodesWatched(value.MalId!.Value);
+
+            var animeField = await _malService.GetFieldsAsync(value.MalId!.Value, AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS);
+
+            if (animeField.MyListStatus != null)
+            {
+                UpdateWatchedEpisodesText(animeField.MyListStatus!.NumEpisodesWatched);
+            }
+            else
+            {
+                UpdateWatchedEpisodesText(0);
+            }
+
+            AnimeDescription = animeField.Synopsis;
+            AnimeImageUrl = value.Banner;
         }
         else
         {
@@ -515,28 +572,13 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         _videoProcess = null;
     }
 
-    private async Task GetEpisodesWatched(int malId)
-    {
-        var animeFieldSet = await _malService.GetFieldsAsync(malId, AnimeField.MY_LIST_STATUS);
-
-        if (animeFieldSet.MyListStatus == null)
-        {
-            UpdateWatchedEpisodesText(0);
-        }
-        else
-        {
-            int episodesWatched = animeFieldSet.MyListStatus.NumEpisodesWatched;
-            UpdateWatchedEpisodesText(episodesWatched);
-        }
-    }
-
     private void UpdateWatchedEpisodesText(int episodes)
     {
         WatchedEpisodesText = episodes switch
         {
             0 => "No episodes watched yet",
-            1 => "1 episode watched",
-            _ => $"{episodes} episodes watched"
+            1 => $"1 episode watched / {SelectedAnime!.Episodes}",
+            _ => $"{episodes} episodes watched / {SelectedAnime!.Episodes}"
         };
     }
 
@@ -549,12 +591,10 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             if (SelectedPlayer == null || SelectedPlayer.IsSystemDefault)
             {
-                // Use Windows "Open With" / System Default
                 return OpenWithSystemDefault(url);
             }
             else
             {
-                // Use specific player
                 return OpenWithSpecificPlayer(url, SelectedPlayer.ExecutablePath);
             }
         }
@@ -571,7 +611,6 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                // Create a temporary .m3u8 file to trigger the file association
                 var tempFile = Path.Combine(Path.GetTempPath(), $"aniki_temp_{Guid.NewGuid()}.m3u8");
                 File.WriteAllText(tempFile, url);
 
@@ -581,7 +620,6 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                     UseShellExecute = true
                 });
 
-                // Clean up temp file after a delay
                 Task.Run(async () =>
                 {
                     await Task.Delay(5000);

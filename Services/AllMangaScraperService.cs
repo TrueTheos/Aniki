@@ -40,6 +40,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                         name 
                         availableEpisodes
                         malId
+                        banner
                         __typename 
                     } 
                 }
@@ -104,6 +105,12 @@ public class AllMangaScraperService : IAllMangaScraperService
                     {
                         episodeCount = subCount.GetInt32();
                     }
+
+                    string? banner = null;
+                    if (edge.TryGetProperty("banner", out var bannerString))
+                    {
+                        banner = bannerString.GetString();
+                    }
                     
                     if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(name))
                     {
@@ -113,7 +120,8 @@ public class AllMangaScraperService : IAllMangaScraperService
                             Title = $"{name}",
                             Episodes = episodeCount,
                             Url = $"{ALLANIME_REFR}/anime/{id}",
-                            MalId = malId
+                            MalId = malId,
+                            Banner = banner
                         });
                     }
                 }

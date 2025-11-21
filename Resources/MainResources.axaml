@@ -7,4 +7,5 @@
     <SolidColorBrush x:Key="Border" Color="#1A1A1A" />
     <SolidColorBrush x:Key="White" Color="#E0E0E0" />
     <Color x:Key="RedColor">#DC143C</Color>
+    <Color x:Key="DarkerRedColor">#850922</Color>
 </ResourceDictionary>

@@ -3,22 +3,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     x:DataType="vm:OnlineViewModel">
     
     <UserControl.Styles>
         <Style Selector="Button">
-            <Setter Property="Background" Value="#2D2D30"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="16,8"/>
             <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button:pointerover">
-            <Setter Property="Background" Value="#3E3E42"/>
-        </Style>
-        <Style Selector="Button:pressed">
-            <Setter Property="Background" Value="#007ACC"/>
         </Style>
         <Style Selector="Button:disabled">
             <Setter Property="Background" Value="#1E1E1E"/>
@@ -41,6 +31,10 @@
         <Style Selector="ListBox">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        
+        <Style Selector="Ellipse.PlayButton:pointerover">
+            <Setter Property="Fill" Value="{StaticResource DarkerRedColor}"/>
         </Style>
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="12,10"/>
@@ -134,7 +128,7 @@
                 </ScrollViewer>
             </Grid>
         </Border>
-        <Grid Grid.Column="1" Grid.Row="1" RowDefinitions="Auto,*">
+        <Grid Grid.Column="1" Grid.Row="1" RowDefinitions="Auto,*" Margin="0,0,20,0">
             <!-- Episode Selection -->
             <Border Grid.Row="0" 
                     Background="#1E1E1E"
@@ -146,7 +140,7 @@
                 <StackPanel Spacing="16">
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Grid.Column="0"
-                                   Text="Select Episode" 
+                                   Text="{Binding SelectedAnime.Title}" 
                                    FontWeight="Bold"
                                    FontSize="15"
                                    Foreground="White"
@@ -183,23 +177,6 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                         
-                        <Button Grid.Column="2"
-                                Content="▶ Play" 
-                                Command="{Binding PlayInBrowserCommand}"
-                                IsEnabled="{Binding CanPlayVideo}"
-                                MinWidth="120"
-                                Background="#0E7A0D"
-                                FontWeight="SemiBold">
-                            <Button.Styles>
-                                <Style Selector="Button:pointerover">
-                                    <Setter Property="Background" Value="#10830F"/>
-                                </Style>
-                                <Style Selector="Button:pressed">
-                                    <Setter Property="Background" Value="#0C6A0B"/>
-                                </Style>
-                            </Button.Styles>
-                        </Button>
-                        
                         <ProgressBar Grid.Column="3"
                                     IsIndeterminate="True"
                                     IsVisible="{Binding IsLoading}"
@@ -209,10 +186,7 @@
                                     Foreground="#007ACC" />
                     </Grid>
                     
-                    <Border Background="#2D2D30"
-                            CornerRadius="6"
-                            Padding="12,8"
-                            Margin="0,4,0,0">
+                    <Grid Margin="0,4,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <TextBlock Text="Episode:"
                                        VerticalAlignment="Center"
@@ -221,7 +195,7 @@
                                        FontWeight="SemiBold" />
                             <ComboBox ItemsSource="{Binding Episodes}"
                                       SelectedItem="{Binding SelectedEpisode}"
-                                      MinWidth="200">
+                                      MinWidth="100">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Number, StringFormat='Episode {0}'}"
@@ -230,46 +204,71 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                         </StackPanel>
-                    </Border>
+                    </Grid>
                 </StackPanel>
             </Border>
 
             <!-- Video Placeholder -->
-            <Border Grid.Row="1" 
-                    Background="#1E1E1E"
-                    CornerRadius="8"
-                    BoxShadow="0 2 8 0 #20000000"
-                    Padding="40">
-                <StackPanel VerticalAlignment="Center"
+            <Grid Grid.Row="1">
+                <Grid ClipToBounds="True" IsVisible="{Binding SelectedEpisode, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Image asyncImageLoader:ImageLoader.Source="{Binding AnimeImageUrl}"
+                           Stretch="UniformToFill">
+                        <Image.Effect>
+                            <BlurEffect Radius="20"/>
+                        </Image.Effect>
+                    </Image>
+                            
+                    <Border>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                <GradientStop Color="#DD000000" Offset="0"/>
+                                <GradientStop Color="#00000000" Offset="0.5"/>
+                                <GradientStop Color="#DD000000" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                            
+                    <Border>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+                                <GradientStop Color="#00000000" Offset="0"/>
+                                <GradientStop Color="#DD000000" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    
+                    <Button Command="{Binding PlayInBrowserCommand}"
+                            Background="Transparent"
+                            BorderThickness="0"
                             HorizontalAlignment="Center"
-                            Spacing="20">
-                    <Path Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"
-                          Fill="#007ACC"
-                          Stretch="Uniform"
-                          Width="80"
-                          Height="80"
-                          Opacity="0.6" />
-                    
-                    <TextBlock Text="Select an episode to watch"
-                               FontSize="16"
-                               Foreground="#808080"
-                               TextAlignment="Center"
-                               IsVisible="{Binding !Episodes.Count}" />
-                    
-                    <TextBlock Text="Click 'Play' to watch"
-                               FontSize="16"
-                               Foreground="#808080"
-                               TextAlignment="Center"
-                               IsVisible="{Binding Episodes.Count}" />
-                    
-                    <TextBlock Text="Video will open in your default video player"
-                               FontSize="13"
-                               Foreground="#606060"
-                               TextAlignment="Center"
-                               FontStyle="Italic"
-                               IsVisible="{Binding Episodes.Count}" />
-                </StackPanel>
-            </Border>
+                            VerticalAlignment="Center">
+                        <Grid>
+                            <Ellipse Width="80" Height="80"
+                                     Classes="PlayButton"
+                                     Fill="{StaticResource RedColor}"
+                                     Opacity="0.95"/>
+                            <PathIcon Data="M8 5v14l11-7z"
+                                      Width="28" Height="28"
+                                      Foreground="White"
+                                      Margin="6,0,0,0"/>
+                        </Grid>
+                    </Button>
+                </Grid>
+                <Grid ClipToBounds="True" IsVisible="{Binding SelectedEpisode, Converter={x:Static ObjectConverters.IsNull}}">
+                    <StackPanel VerticalAlignment="Center" 
+                                HorizontalAlignment="Center" 
+                                Spacing="20">
+                        <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
+                               Width="300" 
+                               RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                        <TextBlock Text="{Binding SelectionStatusMessage}" 
+                                   IsVisible="{Binding ShowSelectionStatus}"
+                                   Foreground="#888888" 
+                                   FontSize="22" 
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

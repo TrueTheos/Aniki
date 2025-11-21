@@ -7,6 +7,7 @@ public class AllMangaSearchResult
     public int Episodes { get; set; } = 0;
     public string Url { get; set; } = string.Empty;
     public int? MalId { get; set; }
+    public string? Banner { get; set; }
 }
 
 public class AllMangaAnimeDetails
