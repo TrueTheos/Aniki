@@ -18,6 +18,7 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 ## Features
 
 - **MyAnimeList Integration**: OAuth login to fetch and sync your anime list.
+- **Watching Epidoes In-App**: You can browse, download and watch episodes in Aniki!
 - **Anime List Management**: View, filter, and search your anime.
 - **Automatic Episode Tracking**: automatically detects the anime videos you watch on your computer and synchronizes your progress.
 - **Episode Search**: Search for episode and download directly from the app.
