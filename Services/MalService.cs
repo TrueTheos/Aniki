@@ -461,11 +461,11 @@ public class MalService : IMalService
             throw new($"Failed to update anime: {response.StatusCode}");
         }
 
-        var myListStatus = _cache.GetMyListStatus(animeId);
+        string responseBody = await response.Content.ReadAsStringAsync();
+        var myListStatus = JsonSerializer.Deserialize<MAL_MyListStatus>(responseBody, _jso);
+
         if (myListStatus != null)
         {
-            updateCacheAction(myListStatus);
-            
             var anime = BuildAnimeFromCache(animeId);
             anime.MyListStatus = myListStatus;
             _cache.AddOrUpdate(anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));

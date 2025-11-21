@@ -149,7 +149,7 @@
                         <Button Background="{StaticResource RedColor}" 
                                 BorderThickness="0"
                                 CornerRadius="6"
-                                Padding="20,4"
+                                Padding="12,4"
                                 ToolTip.Tip="Go to MAL page"
                                 Command="{Binding GoToAnimeDetailsCommand}"
                                 IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}">
