@@ -126,6 +126,12 @@ public class AllMangaScraperService : IAllMangaScraperService
                     }
                 }
             }
+
+            results = results
+                .Select(x => new { Item = x, Score = CalculateAnimeScore(x, query) })
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Item)
+                .ToList();
             
             return results;
         }
@@ -269,6 +275,40 @@ public class AllMangaScraperService : IAllMangaScraperService
         }
     }
 
+    private int CalculateAnimeScore(AllMangaSearchResult anime, string query)
+    {
+        if (DoesTitleMatch(anime, query))
+        {
+            return 1000;
+        }
+        
+        int score = FuzzySharp.Fuzz.TokenSortRatio(anime.Title, query);
+        
+        if (anime.Title != null && anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+        {
+            score += 50;
+        }
+
+        return score;
+    }
+
+    private bool DoesTitleMatch(AllMangaSearchResult malAnime, string query)
+    {
+        string normalizedQuery = NormalizeTitleToLower(query);
+        string normalizedTitle = NormalizeTitleToLower(malAnime.Title);
+
+        return normalizedTitle == normalizedQuery;
+    }
+
+    private string NormalizeTitleToLower(string? title)
+    {
+        if (string.IsNullOrEmpty(title)) return string.Empty;
+    
+        string normalized = title.Replace("-", "").Replace("_", "").Replace(":", "").Trim();
+        normalized = Regex.Replace(normalized, @"\s+", " ");
+        return normalized.ToLower();
+    }
+    
     public async Task<string> GetVideoUrlAsync(string episodeUrl)
     {
         try

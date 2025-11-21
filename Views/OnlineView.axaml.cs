@@ -4,7 +4,6 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Aniki.ViewModels;
-using LibVLCSharp.Avalonia;
 
 namespace Aniki.Views;
 
