@@ -377,7 +377,12 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task SearchAnimeAsync()
     {
-        if (string.IsNullOrWhiteSpace(SearchQuery))
+        await SearchAnimeAsync(SearchQuery);
+    }
+
+    private async Task SearchAnimeAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
             return;
 
         IsLoading = true;
@@ -389,7 +394,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var results = await _scraperService.SearchAnimeAsync(SearchQuery);
+            var results = await _scraperService.SearchAnimeAsync(query);
             
             foreach (var result in results)
             {
@@ -688,6 +693,17 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             Debug.WriteLine($"Failed to open with specific player: {ex}");
             return null;
+        }
+    }
+
+    public async Task GoToAnime(int malId, string title)
+    {
+        await SearchAnimeAsync(title);
+
+        var matchingAnime = AnimeResults.ToList().FirstOrDefault(x => x.MalId != null && x.MalId.Value == malId);
+        if (matchingAnime != null)
+        {
+            SelectedAnime = matchingAnime;
         }
     }
 

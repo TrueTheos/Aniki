@@ -13,9 +13,12 @@ public class AllMangaScraperService : IAllMangaScraperService
     private const string ALLANIME_BASE = "allanime.day";
     private const string ALLANIME_API = "https://api.allanime.day";
     private const string ALLANIME_REFR = "https://allmanga.to";
+
+    private IMalService _malService;
     
-    public AllMangaScraperService()
+    public AllMangaScraperService(IMalService malService)
     {
+        _malService = malService;
         var handler = new HttpClientHandler
         {
             AllowAutoRedirect = true,
@@ -28,7 +31,7 @@ public class AllMangaScraperService : IAllMangaScraperService
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         _httpClient.DefaultRequestHeaders.Add("Referer", ALLANIME_REFR);
     }
-
+    
     public async Task<List<AllMangaSearchResult>> SearchAnimeAsync(string query)
     {
         try
@@ -130,6 +133,7 @@ public class AllMangaScraperService : IAllMangaScraperService
             results = results
                 .Select(x => new { Item = x, Score = CalculateAnimeScore(x, query) })
                 .OrderByDescending(x => x.Score)
+                .ThenByDescending(x => x.Item.Episodes)
                 .Select(x => x.Item)
                 .ToList();
             

@@ -4,6 +4,7 @@ using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
 
@@ -202,5 +203,16 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (string.IsNullOrEmpty(url)) return;
         
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void GoToWatchPage()
+    {
+        if(Details == null) return;
+        if(Details.Title == null) return;
+        
+        var mainViewModel = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        WatchAnimeViewModel.GoToAnimeInOnlineView(Details.AnimeId, Details.Title);
+        _ = mainViewModel.ShowWatchPage();
     }
 }

@@ -106,7 +106,7 @@
                     
                 <ScrollViewer Grid.Row="1" 
                               VerticalScrollBarVisibility="Auto"
-                              Padding="8">
+                              Padding="8,8,8,-20">
                     <ListBox ItemsSource="{Binding AnimeResults}"
                              SelectedItem="{Binding SelectedAnime}">
                         <ListBox.ItemTemplate>
@@ -145,17 +145,21 @@
                                Foreground="White"
                                TextWrapping="Wrap"/>
                     
-                    <StackPanel Orientation="Horizontal">
-                        <Button IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                Command="{Binding GoToAnimeDetailsCommand}" 
-                                ToolTip.Tip="Go to MAL page"
-                                Background="Transparent"
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Background="{StaticResource RedColor}" 
                                 BorderThickness="0"
-                                Padding="6"
-                                VerticalAlignment="Center">
-                            <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}"
-                                   Width="20" 
-                                   Height="20"/>
+                                CornerRadius="6"
+                                Padding="20,4"
+                                ToolTip.Tip="Go to MAL page"
+                                Command="{Binding GoToAnimeDetailsCommand}"
+                                IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="22" Height="22"/>
+                                <TextBlock Text="Details" 
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="White"/>
+                            </StackPanel>
                         </Button>
                         <Border Background="#2D2D30"
                                 CornerRadius="12"

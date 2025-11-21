@@ -33,4 +33,10 @@ public partial class WatchAnimeViewModel : ViewModelBase
         DownloadedViewModel = downloadedViewModel;
         OnlineViewModel = onlineViewModel;
     }
+
+    public void GoToAnimeInOnlineView(int malId, string title)
+    {
+        SelectedTabIndex = 1;
+        _ = OnlineViewModel.GoToAnime(malId, title);
+    }
 }

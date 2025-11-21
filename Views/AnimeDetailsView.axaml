@@ -248,7 +248,7 @@
                                         <Grid Margin="0,0,0,30">
                                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
                                                 <!-- Status Button with Dropdown -->
-                                                <Button Background="#E50914" 
+                                                <Button Background="{StaticResource RedColor}" 
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
@@ -263,18 +263,15 @@
                                                         </MenuFlyout>
                                                     </Button.Flyout>
                                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                                        <PathIcon Data="M8 5v14l11-7z" 
-                                                                  Width="16" 
-                                                                  Height="16"
-                                                                  Foreground="White"/>
                                                         <TextBlock Text="{Binding SelectedStatus}" 
                                                                    FontSize="15"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="White"/>
+                                                        <Image Source="{SvgImage /Resources/Icons/chevronDown_icon.svg}" Width="20" Height="20"/>
                                                     </StackPanel>
                                                 </Button>
                                                 
-                                                <Button Background="#E50914" 
+                                                <Button Background="{StaticResource RedColor}" 
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
@@ -286,6 +283,20 @@
                                                                   Height="16"
                                                                   Foreground="White"/>
                                                         <TextBlock Text="Add to list" 
+                                                                   FontSize="15"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="White"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                
+                                                <Button Background="{StaticResource RedColor}" 
+                                                        BorderThickness="0"
+                                                        CornerRadius="6"
+                                                        Padding="28,13"
+                                                        Command="{Binding GoToWatchPageCommand}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                                        <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="22" Height="22"/>
+                                                        <TextBlock Text="Watch!" 
                                                                    FontSize="15"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="White"/>
