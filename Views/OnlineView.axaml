@@ -131,79 +131,92 @@
         <Grid Grid.Column="1" Grid.Row="1" RowDefinitions="Auto,*" Margin="0,0,20,0">
             <!-- Episode Selection -->
             <Border Grid.Row="0" 
-                    Background="#1E1E1E"
-                    CornerRadius="8"
-                    BoxShadow="0 2 8 0 #20000000"
-                    Padding="20"
-                    Margin="0,0,0,20"
-                    IsVisible="{Binding Episodes.Count}">
-                <StackPanel Spacing="16">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0"
-                                   Text="{Binding SelectedAnime.Title}" 
-                                   FontWeight="Bold"
-                                   FontSize="15"
-                                   Foreground="White"
-                                   VerticalAlignment="Center" />
-                        
-                        <Border Grid.Column="1"
-                                Background="#2D2D30"
+                Background="#1E1E1E"
+                CornerRadius="8"
+                BoxShadow="0 2 8 0 #20000000"
+                Padding="20"
+                Margin="0,0,0,20"
+                IsVisible="{Binding Episodes.Count}">
+                <StackPanel Spacing="10">
+                    
+                    <TextBlock Text="{Binding SelectedAnime.Title}" 
+                               FontWeight="Bold"
+                               FontSize="16"
+                               Foreground="White"
+                               TextWrapping="Wrap"/>
+                    
+                    <StackPanel Orientation="Horizontal">
+                        <Button IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Command="{Binding GoToAnimeDetailsCommand}" 
+                                ToolTip.Tip="Go to MAL page"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="6"
+                                VerticalAlignment="Center">
+                            <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}"
+                                   Width="20" 
+                                   Height="20"/>
+                        </Button>
+                        <Border Background="#2D2D30"
                                 CornerRadius="12"
-                                Padding="12,6">
+                                Padding="12,4"
+                                HorizontalAlignment="Left">
                             <TextBlock Text="{Binding WatchedEpisodesText}"
-                                       FontSize="12"
+                                       FontSize="11"
+                                       VerticalAlignment="Center"
                                        Foreground="#4EC9B0"
                                        FontWeight="SemiBold" />
                         </Border>
-                    </Grid>
-                    
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,Auto, 15, Auto,Auto, 10, Auto, *, Auto" 
+                          Margin="0,8,0,0">
+                        
                         <TextBlock Grid.Column="0"
                                    Text="Player:"
                                    VerticalAlignment="Center"
                                    Foreground="#A0A0A0"
                                    FontSize="13"
-                                   FontWeight="SemiBold" />
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,8,0"/>
                         
                         <ComboBox Grid.Column="1"
                                   ItemsSource="{Binding AvailablePlayers}"
                                   SelectedItem="{Binding SelectedPlayer}"
-                                  MinWidth="150">
+                                  MinWidth="140">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayName}"
-                                               Foreground="White" />
+                                    <TextBlock Text="{Binding DisplayName}" Foreground="White" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
+
+                        <TextBlock Grid.Column="3"
+                                   Text="Episode:"
+                                   VerticalAlignment="Center"
+                                   Foreground="#A0A0A0"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,8,0"/>
                         
-                        <ProgressBar Grid.Column="3"
-                                    IsIndeterminate="True"
-                                    IsVisible="{Binding IsLoading}"
-                                    Width="100"
-                                    Height="4"
-                                    VerticalAlignment="Center"
-                                    Foreground="#007ACC" />
-                    </Grid>
-                    
-                    <Grid Margin="0,4,0,0">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <TextBlock Text="Episode:"
-                                       VerticalAlignment="Center"
-                                       Foreground="#A0A0A0"
-                                       FontSize="13"
-                                       FontWeight="SemiBold" />
-                            <ComboBox ItemsSource="{Binding Episodes}"
-                                      SelectedItem="{Binding SelectedEpisode}"
-                                      MinWidth="100">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Number, StringFormat='Episode {0}'}"
-                                                   Foreground="White" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
+                        <ComboBox Grid.Column="4"
+                                  ItemsSource="{Binding Episodes}"
+                                  SelectedItem="{Binding SelectedEpisode}"
+                                  MinWidth="100">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Number, StringFormat='Episode {0}'}" Foreground="White" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <ProgressBar Grid.Column="8"
+                                     IsIndeterminate="True"
+                                     IsVisible="{Binding IsLoading}"
+                                     Width="100"
+                                     Height="4"
+                                     VerticalAlignment="Center"
+                                     Foreground="#007ACC" />
                     </Grid>
                 </StackPanel>
             </Border>

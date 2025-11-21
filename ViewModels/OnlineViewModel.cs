@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
 using Avalonia.Controls.ApplicationLifetimes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
 
@@ -577,9 +578,19 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         WatchedEpisodesText = episodes switch
         {
             0 => "No episodes watched yet",
-            1 => $"1 episode watched / {SelectedAnime!.Episodes}",
-            _ => $"{episodes} episodes watched / {SelectedAnime!.Episodes}"
+            1 => $"1 / {SelectedAnime!.Episodes} episode watched",
+            _ => $"{episodes} / {SelectedAnime!.Episodes} episodes watched"
         };
+    }
+
+    [RelayCommand]
+    private void GoToAnimeDetails()
+    {
+        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        if (_selectedAnime != null && _selectedAnime.MalId != null)
+        {
+            vm.GoToAnime(_selectedAnime.MalId.Value);
+        }
     }
 
     private Process? OpenVideoWithPlayer(string url)
