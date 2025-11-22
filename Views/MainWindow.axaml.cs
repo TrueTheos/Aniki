@@ -40,6 +40,8 @@ public partial class MainWindow : Window
         {
             Title = "Aniki";
         }
+
+        WindowState = WindowState.Maximized;
     }
 
     private void InitializeComponent()

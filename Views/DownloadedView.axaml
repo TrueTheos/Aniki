@@ -48,18 +48,22 @@
                                         Background="Transparent"
                                         CornerRadius="12"
                                         Padding="8,4">
-                                        <StackPanel Orientation="Horizontal" Spacing="10"> 
-                                            <Button VerticalAlignment="Center"
-                                                    HorizontalAlignment="Right"
-                                                    CornerRadius="12"
-                                                    Background="Transparent"
-                                                    Margin="0"
-                                                    Padding="0"
-                                                    ToolTip.Tip="Go to anime details"
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Button Background="{StaticResource RedColor}" 
+                                                    BorderThickness="0"
+                                                    CornerRadius="6"
+                                                    Padding="12,4"
+                                                    ToolTip.Tip="Go to MAL page"
                                                     Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).OpenAnimeDetailsCommand}"
                                                     CommandParameter="{Binding MalId}">
-                                                <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="22" Height="22"/>
-                                            </Button>
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="22" Height="22"/>
+                                                    <TextBlock Text="Details" 
+                                                               FontSize="15"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="White"/>
+                                                </StackPanel>
+                                            </Button> 
                                             <ProgressBar
                                                          Minimum="0" 
                                                          Maximum="{Binding MaxEpisodes}" 

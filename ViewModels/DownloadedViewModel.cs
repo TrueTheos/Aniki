@@ -142,6 +142,8 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     public override async Task Enter()
     {
         ClearFilter();
+        if (AnimeGroups.Any())
+            return;
         await LoadEpisodesFromFolder();
     }
 
