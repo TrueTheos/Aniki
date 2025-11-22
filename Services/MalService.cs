@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
+using Tmds.DBus.Protocol;
 
 namespace Aniki.Services;
 
@@ -24,7 +25,7 @@ public class MalService : IMalService
     
     private readonly ISaveService _saveService;
     private readonly AnimeCacheService _cache;
-    
+
     private string _accessToken = "";
     
     public const string MAL_NODE_FIELDS = "title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
@@ -46,6 +47,16 @@ public class MalService : IMalService
         _accessToken = accessToken;
         _client = new();
         _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+    }
+
+    public void SubscribeToFieldChange(int animeId, AnimeField field, EventHandler<AnimeFieldSet> handler)
+    {
+        _cache.SubscribeToFieldChange(animeId, field, handler);
+    }
+
+    public void UnsubscribeFromFieldChange(int animeId, AnimeField field, EventHandler<AnimeFieldSet> handler)
+    {
+        _cache.UnsubscribeFromFieldChange(animeId, field, handler);
     }
     
     private async Task<HttpResponseMessage> GetAsync(string url, string message)

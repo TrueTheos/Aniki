@@ -1,35 +1,66 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.Models;
 
-public class AnimeGroup
+public partial class AnimeGroup : ObservableObject
 {
     public string Title { get; }
     public ObservableCollection<DownloadedEpisode> Episodes { get; }
-    public int TotalEpisodes => Episodes.Count;
-    
-    public AnimeGroup(string title, ObservableCollection<DownloadedEpisode> episodes)
+    public int MaxEpisodes { get; }
+    [ObservableProperty] private int _watchedEpisodes = 0;
+    public int MalId { get; }
+    public string EpisodesProgressText => $"{WatchedEpisodes} / {MaxEpisodes} watched";
+
+    public AnimeGroup(string title, ObservableCollection<DownloadedEpisode> episodes, int maxEp, int malId,
+        IMalService malService)
     {
         Title = title;
         Episodes = episodes;
+        MaxEpisodes = maxEp;
+        MalId = malId;
+
+        Episodes.CollectionChanged += (_, _) => UpdateEpisodes();
+
+        malService.SubscribeToFieldChange(MalId, AnimeField.MY_LIST_STATUS, OnEpisodesCompletedCollectionChanged);
+    }
+
+    private void UpdateEpisodes()
+    {
+        foreach (var ep in Episodes)
+        {
+            ep.Watched = ep.EpisodeNumber <= WatchedEpisodes;
+        }
+    }
+
+    private void OnEpisodesCompletedCollectionChanged(object? sender, AnimeFieldSet e)
+    {
+        WatchedEpisodes = e.MyListStatus?.NumEpisodesWatched ?? 0;
+        UpdateEpisodes();
+
+        OnPropertyChanged(nameof(EpisodesProgressText));
     }
 }
 
-public class DownloadedEpisode
+public partial class DownloadedEpisode : ObservableObject
 {
     public string FilePath { get; }
     public int EpisodeNumber { get; }
     public int? AbsoluteEpisodeNumber { get; }
     public int Season { get; }
-    public string Title { get; }
+    public string AnimeTitle { get; }
     public int Id { get;  }
+    [ObservableProperty] 
+    private bool _watched = false; 
 
-    public DownloadedEpisode(string filePath, int episodeNumber, int? absoluteEpisodeNumber, string title, int id, int season)
+    public DownloadedEpisode(string filePath, int episodeNumber, int? absoluteEpisodeNumber, string animeTitle, int id, int season)
     {
         FilePath = filePath;
         EpisodeNumber = episodeNumber;
         AbsoluteEpisodeNumber = absoluteEpisodeNumber;
-        Title = title;
+        AnimeTitle = animeTitle;
         Id = id;
         Season = season;    
     }

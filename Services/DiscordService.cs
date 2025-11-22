@@ -29,7 +29,7 @@ public class DiscordService : IDiscordService
 
         _client.SetPresence(new()
         {
-            Details = $"Watching: {ep.Title}",
+            Details = $"Watching: {ep.AnimeTitle}",
             State = $"Episode {ep.EpisodeNumber}",
             Assets = new()
             {

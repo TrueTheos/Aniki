@@ -6,8 +6,19 @@
     xmlns:views="clr-namespace:Aniki.Views"
     xmlns:models="clr-namespace:Aniki.Models"
     x:DataType="vm:DownloadedViewModel">
-    <Grid>
-        <StackPanel Grid.Row="0" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
+    <Grid RowDefinitions="38,*">
+        <Button VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                CornerRadius="12"
+                ToolTip.Tip="Open folder with episodes"
+                Margin="0,0,0,10"
+                Width="34"
+                Height="34"
+                Command="{Binding OpenEpisodesFolderCommand}">
+            <Image Source="{SvgImage /Resources/Icons/folderOpen_icon.svg}" Width="22" Height="22"/>
+        </Button>
+        
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
             <ProgressBar Width="300" IsIndeterminate="True" Background="{StaticResource Background0}"
                             Foreground="{StaticResource RedColor}" />
             <TextBlock
@@ -18,7 +29,7 @@
                 Text="{Binding ProcessingProgress}" />
         </StackPanel>
 
-        <ScrollViewer IsVisible="{Binding IsEpisodesViewVisible}" VerticalScrollBarVisibility="Visible">
+        <ScrollViewer Grid.Row="1" IsVisible="{Binding IsEpisodesViewVisible}" VerticalScrollBarVisibility="Visible">
             <ItemsControl ItemsSource="{Binding AnimeGroups}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="models:AnimeGroup">
@@ -34,13 +45,32 @@
                                         Text="{Binding Title}" />
                                     <Border
                                         Grid.Column="1"
-                                        Background="#4A4A5A"
+                                        Background="Transparent"
                                         CornerRadius="12"
                                         Padding="8,4">
-                                        <TextBlock
-                                            FontSize="12"
-                                            Foreground="{StaticResource White}"
-                                            Text="{Binding TotalEpisodes}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="10"> 
+                                            <Button VerticalAlignment="Center"
+                                                    HorizontalAlignment="Right"
+                                                    CornerRadius="12"
+                                                    Background="Transparent"
+                                                    Margin="0"
+                                                    Padding="0"
+                                                    ToolTip.Tip="Go to anime details"
+                                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).OpenAnimeDetailsCommand}"
+                                                    CommandParameter="{Binding MalId}">
+                                                <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="22" Height="22"/>
+                                            </Button>
+                                            <ProgressBar
+                                                         Minimum="0" 
+                                                         Maximum="{Binding MaxEpisodes}" 
+                                                         Width="100"
+                                                         Value="{Binding WatchedEpisodes}"
+                                                         ShowProgressText="True"
+                                                         ProgressTextFormat="{}{0}/{3}"
+                                                         Background="{StaticResource Background1}"
+                                                         Foreground="{StaticResource RedColor}"/>
+                                        </StackPanel>
+                                       
                                     </Border>
                                 </Grid>
                                 
@@ -67,6 +97,20 @@
                                                                 FontWeight="SemiBold"
                                                                 Foreground="{StaticResource White}"
                                                                 Text="{Binding EpisodeNumber, StringFormat='Episode {0:00}'}" />
+                                                            
+                                                            <Border Background="{StaticResource DarkerRedColor}"
+                                                                    CornerRadius="12"
+                                                                    Padding="8,4"
+                                                                    Margin="8,0,0,0"
+                                                                    VerticalAlignment="Center"
+                                                                    IsEnabled="{Binding Watched}">
+                                                                <TextBlock Text="Watched"
+                                                                           FontSize="11"
+                                                                           VerticalAlignment="Center"
+                                                                           Foreground="{StaticResource White}"
+                                                                           FontWeight="SemiBold" />
+                                                            </Border>
+                                                            
                                                         </StackPanel>
                                                         
                                                         <TextBlock
@@ -133,19 +177,27 @@
             </ItemsControl>
         </ScrollViewer>
         
-        <StackPanel VerticalAlignment="Center" IsVisible="{Binding IsNoEpisodesViewVisible}">
-            <TextBlock
-                HorizontalAlignment="Center"
-                FontSize="24"
-                FontWeight="Bold"
-                Foreground="{StaticResource White}">
-                Nothing to see here!
-            </TextBlock>
-            <TextBlock
-                HorizontalAlignment="Center"
-                FontSize="18"
-                Foreground="{StaticResource White}"
-                Text="{Binding EpisodesFolderMessage}" />
-        </StackPanel>
+        <Grid Grid.Row="1" ClipToBounds="True"
+              IsVisible="{Binding IsNoEpisodesViewVisible}">
+            <StackPanel VerticalAlignment="Center" 
+                        HorizontalAlignment="Center" 
+                        Spacing="20">
+                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
+                       Width="300" 
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Foreground="{StaticResource White}">
+                    Nothing to see here!
+                </TextBlock>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    Foreground="{StaticResource White}"
+                    Text="{Binding EpisodesFolderMessage}" />
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>

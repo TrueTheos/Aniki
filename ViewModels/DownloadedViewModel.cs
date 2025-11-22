@@ -7,12 +7,16 @@ using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
 
-public partial class DownloadedViewModel : ViewModelBase
+public partial class DownloadedViewModel : ViewModelBase, IDisposable
 {
     private DownloadedEpisode? _lastPlayedEpisode;
+    private FileSystemWatcher? _fileWatcher;
+    private System.Timers.Timer? _debounceTimer;
+    private readonly object _debounceLock = new();
 
     [ObservableProperty]
     private bool _isEpisodesViewVisible;
@@ -60,11 +64,79 @@ public partial class DownloadedViewModel : ViewModelBase
         IsNoEpisodesViewVisible = true;
 
         _ = LoadEpisodesFromFolder();
+        SetupFileWatcher();
         
         WeakReferenceMessenger.Default.Register<SettingsChangedMessage>(this, (r, m) =>
         {
+            SetupFileWatcher();
             _ = LoadEpisodesFromFolder();
         });
+    }
+
+    private void SetupFileWatcher()
+    {
+        _fileWatcher?.Dispose();
+        _debounceTimer?.Dispose();
+
+        SettingsConfig? config = _saveService.GetSettingsConfig();
+        string episodesFolder = config?.EpisodesFolder ?? _saveService.DefaultEpisodesFolder;
+
+        if (!Directory.Exists(episodesFolder))
+        {
+            try
+            {
+                Directory.CreateDirectory(episodesFolder);
+            }
+            catch
+            {
+                return;
+            }
+        }
+
+        _debounceTimer = new System.Timers.Timer(500);
+        _debounceTimer.AutoReset = false;
+        _debounceTimer.Elapsed += async (s, e) => await LoadEpisodesFromFolder();
+
+        _fileWatcher = new FileSystemWatcher(episodesFolder)
+        {
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.CreationTime,
+            Filter = "*.*",
+            IncludeSubdirectories = true,
+            EnableRaisingEvents = true
+        };
+
+        _fileWatcher.Created += OnFileChanged;
+        _fileWatcher.Deleted += OnFileChanged;
+        _fileWatcher.Renamed += OnFileChanged;
+        _fileWatcher.Changed += OnFileChanged;
+        _fileWatcher.Error += OnWatcherError;
+    }
+
+    [RelayCommand]
+    public void OpenAnimeDetails(int malId)
+    {
+        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        vm.GoToAnime(malId);
+    }
+
+    private void OnFileChanged(object sender, FileSystemEventArgs e)
+    {
+        var videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
+        if (!videoExtensions.Contains(Path.GetExtension(e.Name)?.ToLower()))
+            return;
+
+        lock (_debounceLock)
+        {
+            _debounceTimer?.Stop();
+            _debounceTimer?.Start();
+        }
+    }
+
+    private void OnWatcherError(object sender, ErrorEventArgs e)
+    {
+        Log.Error(e.GetException(), "FileSystemWatcher error occurred");
+        
+        Task.Delay(2000).ContinueWith(_ => SetupFileWatcher());
     }
 
     public override async Task Enter()
@@ -119,13 +191,13 @@ public partial class DownloadedViewModel : ViewModelBase
             if (malId == null)
                 return;
 
-            var animeName = await _malService.GetFieldsAsync(malId.Value, AnimeField.TITLE);
+            var animeFieldSet = await _malService.GetFieldsAsync(malId.Value, AnimeField.TITLE, AnimeField.EPISODES);
 
             var episode = new DownloadedEpisode(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                 parsedFile.AbsoluteEpisodeNumber,
-                animeName.Title!, malId.Value, parsedFile.Season);
+                animeFieldSet.Title!, malId.Value, parsedFile.Season);
 
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode));
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, animeFieldSet.Title!, animeFieldSet.NumEpisodes ?? 0, malId.Value));
 
             int current = Interlocked.Increment(ref processed);
             ProcessingProgress = $"Processing files: {current}/{total}";
@@ -135,9 +207,9 @@ public partial class DownloadedViewModel : ViewModelBase
         UpdateView();
     }
 
-    private void AddEpisodeToGroup(DownloadedEpisode downloadedEpisode)
+    private void AddEpisodeToGroup(DownloadedEpisode downloadedEpisode, string animeName, int animeTotalEpisodes, int malId)
     {
-        AnimeGroup? existingGroup = AnimeGroups.FirstOrDefault(g => g.Title == downloadedEpisode.Title);
+        AnimeGroup? existingGroup = AnimeGroups.FirstOrDefault(g => g.Title == animeName);
         
         if (existingGroup != null)
         {
@@ -145,7 +217,7 @@ public partial class DownloadedViewModel : ViewModelBase
         }
         else
         {
-            AnimeGroup newGroup = new(downloadedEpisode.Title, new ObservableCollection<DownloadedEpisode> { downloadedEpisode });
+            AnimeGroup newGroup = new(downloadedEpisode.AnimeTitle, new ObservableCollection<DownloadedEpisode> { downloadedEpisode }, animeTotalEpisodes, malId, _malService);
             InsertGroupInSortedOrder(newGroup);
         }
     }
@@ -241,6 +313,26 @@ public partial class DownloadedViewModel : ViewModelBase
         UpdateView();
     }
 
+    [RelayCommand]
+    private void OpenEpisodesFolder()
+    {
+        SettingsConfig? config = _saveService.GetSettingsConfig();
+        string episodesFolder = config?.EpisodesFolder ?? _saveService.DefaultEpisodesFolder;
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Process.Start("explorer.exe", episodesFolder.Replace("/", "\\"));
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Process.Start("open", episodesFolder);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Process.Start("xdg-open", episodesFolder);
+        }
+    }
+
     private string GetAssociatedProgram(string extension)
     {
         uint length = 0;
@@ -305,5 +397,11 @@ public partial class DownloadedViewModel : ViewModelBase
     {
         int episodeToMark = ep.EpisodeNumber;
         _ = _malService.UpdateEpisodesWatched(ep.Id,  episodeToMark);
+    }
+
+    public void Dispose()
+    {
+        _fileWatcher?.Dispose();
+        _debounceTimer?.Dispose();
     }
 }

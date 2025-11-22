@@ -168,7 +168,7 @@
                             <TextBlock Text="{Binding WatchedEpisodesText}"
                                        FontSize="11"
                                        VerticalAlignment="Center"
-                                       Foreground="#4EC9B0"
+                                       Foreground="{StaticResource Green}"
                                        FontWeight="SemiBold" />
                         </Border>
                     </StackPanel>

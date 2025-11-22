@@ -285,10 +285,76 @@ public class AnimeCacheService
 {
     private readonly ConcurrentDictionary<int, AnimeCacheEntry> _cache = new();
     private readonly Func<int, AnimeField[], Task<MAL_AnimeDetails?>>? _batchFetchFunc;
+    
+    private readonly ConcurrentDictionary<int, Dictionary<AnimeField, EventHandler<AnimeFieldSet>>> _fieldSubscriptions = new();
+    private readonly object _subscriptionLock = new();
 
     public AnimeCacheService(Func<int, AnimeField[], Task<MAL_AnimeDetails?>>? batchFetchFunc)
     {
         _batchFetchFunc = batchFetchFunc;
+    }
+    
+    public void SubscribeToFieldChange(int animeId, AnimeField field, EventHandler<AnimeFieldSet> handler)
+    {
+        lock (_subscriptionLock)
+        {
+            if (!_fieldSubscriptions.ContainsKey(animeId))
+                _fieldSubscriptions[animeId] = new Dictionary<AnimeField, EventHandler<AnimeFieldSet>>();
+
+            var fieldHandlers = _fieldSubscriptions[animeId];
+            
+            if (fieldHandlers.ContainsKey(field))
+                fieldHandlers[field] += handler;
+            else
+                fieldHandlers[field] = handler;
+        }
+    }
+
+    public void UnsubscribeFromFieldChange(int animeId, AnimeField field, EventHandler<AnimeFieldSet> handler)
+    {
+        lock (_subscriptionLock)
+        {
+            if (!_fieldSubscriptions.TryGetValue(animeId, out var fieldHandlers))
+                return;
+
+            if (!fieldHandlers.ContainsKey(field))
+                return;
+
+            var currentHandler = fieldHandlers[field] - handler;
+            
+            if (currentHandler == null)
+            {
+                fieldHandlers.Remove(field);
+                
+                // Clean up empty anime entry
+                if (fieldHandlers.Count == 0)
+                    _fieldSubscriptions.TryRemove(animeId, out _);
+            }
+            else
+            {
+                fieldHandlers[field] = currentHandler;
+            }
+        }
+    }
+    
+    private void NotifyFieldChanged(int animeId, AnimeField field)
+    {
+        EventHandler<AnimeFieldSet>? handler = null;
+        
+        lock (_subscriptionLock)
+        {
+            if (_fieldSubscriptions.TryGetValue(animeId, out var fieldHandlers))
+            {
+                if (fieldHandlers.TryGetValue(field, out handler))
+                { /*Copy to avoid holding lock during invocation*/ }
+            }
+        }
+
+        if (handler != null)
+        {
+            var fieldSet = new AnimeFieldSet(animeId, this, new[] { field });
+            handler.Invoke(this, fieldSet);
+        }
     }
 
     private AnimeCacheEntry GetOrCreateEntry(int animeId)
@@ -320,13 +386,14 @@ public class AnimeCacheService
                 case AnimeField.GENRES: entry.Genres.Set(node.Genres); break;
                 case AnimeField.VIDEOS: entry.Videos.Set(node.Videos); break;
             };
+            
+            NotifyFieldChanged(node.Id, field);
         }
     }
 
     public void AddOrUpdate(MAL_AnimeDetails anime, params AnimeField[] fields)
     {
         var entry = GetOrCreateEntry(anime.Id);
-
         entry.Id = anime.Id;
         
         foreach (var field in fields)
@@ -352,15 +419,17 @@ public class AnimeCacheService
                 case AnimeField.STATS: entry.Statistics.Set(anime.Statistics); break;
                 case AnimeField.TRAILER_URL: entry.TrailerURL.Set(anime.TrailerURL); break;
             };
+            
+            NotifyFieldChanged(anime.Id, field);
         }
     }
 
-    private T? GetOrFetchStruct<T>(int animeId, AnimeField field, ref FieldCacheEntry<T> cacheEntry) where T : struct
+    private T? GetStruct<T>(int animeId, AnimeField field, ref FieldCacheEntry<T> cacheEntry) where T : struct
     {
         return cacheEntry.HasData ? cacheEntry.Value : null;
     }
 
-    private T? GetOrFetchClass<T>(int animeId, AnimeField field, ref FieldCacheEntry<T> cacheEntry) where T : class
+    private T? GetClass<T>(int animeId, AnimeField field, ref FieldCacheEntry<T> cacheEntry) where T : class
     {
         return cacheEntry.HasData ? cacheEntry.Value : null;
     }
@@ -397,109 +466,109 @@ public class AnimeCacheService
     public string? GetTitle(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.TITLE, ref entry.Title);
+        return GetClass(animeId, AnimeField.TITLE, ref entry.Title);
     }
 
     public MAL_MainPicture? GetMainPicture(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.MAIN_PICTURE, ref entry.MainPicture);
+        return GetClass(animeId, AnimeField.MAIN_PICTURE, ref entry.MainPicture);
     }
 
     public string? GetStatus(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.STATUS, ref entry.Status);
+        return GetClass(animeId, AnimeField.STATUS, ref entry.Status);
     }
 
     public string? GetSynopsis(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.SYNOPSIS, ref entry.Synopsis);
+        return GetClass(animeId, AnimeField.SYNOPSIS, ref entry.Synopsis);
     }
 
     public MAL_AlternativeTitles? GetAlternativeTitles(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.ALTER_TITLES, ref entry.AlternativeTitles);
+        return GetClass(animeId, AnimeField.ALTER_TITLES, ref entry.AlternativeTitles);
     }
 
     public MAL_MyListStatus? GetMyListStatus(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.MY_LIST_STATUS, ref entry.MyListStatus);
+        return GetClass(animeId, AnimeField.MY_LIST_STATUS, ref entry.MyListStatus);
     }
 
     public int? GetNumEpisodes(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchStruct(animeId, AnimeField.EPISODES, ref entry.NumEpisodes);
+        return GetStruct(animeId, AnimeField.EPISODES, ref entry.NumEpisodes);
     }
 
     public int? GetPopularity(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchStruct(animeId, AnimeField.POPULARITY, ref entry.Popularity);
+        return GetStruct(animeId, AnimeField.POPULARITY, ref entry.Popularity);
     }
 
     public Bitmap? GetPicture(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.PICTURE, ref entry.Picture);
+        return GetClass(animeId, AnimeField.PICTURE, ref entry.Picture);
     }
 
     public MAL_Studio[]? GetStudios(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.STUDIOS, ref entry.Studios);
+        return GetClass(animeId, AnimeField.STUDIOS, ref entry.Studios);
     }
 
     public string? GetStartDate(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.START_DATE, ref entry.StartDate);
+        return GetClass(animeId, AnimeField.START_DATE, ref entry.StartDate);
     }
 
     public float? GetMean(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchStruct(animeId, AnimeField.MEAN, ref entry.Mean);
+        return GetStruct(animeId, AnimeField.MEAN, ref entry.Mean);
     }
 
     public MAL_Genre[]? GetGenres(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.GENRES, ref entry.Genres);
+        return GetClass(animeId, AnimeField.GENRES, ref entry.Genres);
     }
 
     public MAL_RelatedAnime[]? GetRelatedAnime(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.RELATED_ANIME, ref entry.RelatedAnime);
+        return GetClass(animeId, AnimeField.RELATED_ANIME, ref entry.RelatedAnime);
     }
 
     public MAL_Video[]? GetVideos(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.VIDEOS, ref entry.Videos);
+        return GetClass(animeId, AnimeField.VIDEOS, ref entry.Videos);
     }
 
     public int? GetNumFavorites(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchStruct(animeId, AnimeField.NUM_FAV, ref entry.NumFavorites);
+        return GetStruct(animeId, AnimeField.NUM_FAV, ref entry.NumFavorites);
     }
 
     public MAL_Statistics? GetStats(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.STATS, ref entry.Statistics);
+        return GetClass(animeId, AnimeField.STATS, ref entry.Statistics);
     }
 
     public string? GetTrailerUrl(int animeId)
     {
         var entry = GetOrCreateEntry(animeId);
-        return GetOrFetchClass(animeId, AnimeField.TRAILER_URL, ref entry.TrailerURL);
+        return GetClass(animeId, AnimeField.TRAILER_URL, ref entry.TrailerURL);
     }
 
     public void ClearCache() => _cache.Clear();

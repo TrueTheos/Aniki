@@ -77,6 +77,8 @@
     <AvaloniaResource Include="Resources\Icons\download_icon.svg" />
     <None Remove="Resources\Icons\chevronDown_icon.svg" />
     <AvaloniaResource Include="Resources\Icons\chevronDown_icon.svg" />
+    <None Remove="Resources\Icons\folderOpen_icon.svg" />
+    <AvaloniaResource Include="Resources\Icons\folderOpen_icon.svg" />
   </ItemGroup>
 
   <ItemGroup>
