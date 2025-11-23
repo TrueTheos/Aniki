@@ -23,6 +23,7 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 - **Automatic Episode Tracking**: automatically detects the anime videos you watch on your computer and synchronizes your progress.
 - **Episode Search**: Search for episode and download directly from the app.
 - [WIP] **Notification System**: Be automatically notified whenever a new anime or episode releases.
+- [WIP] **AniList Integration**: AniList will soon be supported.
 
 ## Usage
 
