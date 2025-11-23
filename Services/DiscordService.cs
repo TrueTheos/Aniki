@@ -1,55 +1,83 @@
 ﻿using Aniki.Services.Interfaces;
 using DiscordRPC;
+using DiscordRPC.Logging;
 
 namespace Aniki.Services;
 
-public class DiscordService : IDiscordService
+public class DiscordService : IDiscordService, IDisposable
 {
     private const string ClientId = "1371263147792535592"; 
-
-    private DiscordRpcClient _client;
-    private bool _isDisposed = false;
+    private DiscordRpcClient? _client;
 
     public DiscordService()
     {
-        _client = new(ClientId);
-        AppDomain.CurrentDomain.ProcessExit += (sender, e) => Reset();
+        InitializeClient();
     }
 
-    public void SetPresenceEpisode(DownloadedEpisode ep)
+    private void InitializeClient()
     {
-        if (_isDisposed)
+        try 
         {
-            _client = new(ClientId);
-            _isDisposed = false;
+            _client = new DiscordRpcClient(ClientId);
+
+            _client.Logger = new ConsoleLogger { Level = LogLevel.Warning };
+
+            _client.OnReady += (sender, e) => 
+            {
+                Log.Information($"Discord RPC Ready. Connected to user: {e.User.Username}");
+            };
+
+            _client.OnError += (sender, e) =>
+            {
+                Log.Error($"Discord RPC Error: {e.Code} - {e.Message}");
+            };
+            
+            _client.OnConnectionFailed += (sender, e) =>
+            {
+                Log.Error($"Discord RPC Connection Failed: {e}");
+            };
+
+            _client.Initialize();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Failed to initialize Discord RPC: {ex.Message}");
+        }
+    }
+
+    public void SetPresenceEpisode(string animeTitle, int episodeNumber)
+    {
+        if (_client == null || _client.IsDisposed)
+        {
+            InitializeClient();
         }
 
-        if (!_client.IsInitialized)
-            _client.Initialize();
-
-        _client.SetPresence(new()
+        var assets = new Assets
         {
-            Details = $"Watching: {ep.AnimeTitle}",
-            State = $"Episode {ep.EpisodeNumber}",
-            Assets = new()
-            {
-                LargeImageKey = "default",
-                LargeImageText = "Use Aniki"
-            },
+            LargeImageKey = "aniki_logo",
+            LargeImageText = "Aniki Player"
+        };
+
+        _client?.SetPresence(new RichPresence
+        {
+            Details = $"Watching: {animeTitle}",
+            State = $"Episode {episodeNumber}",
+            Timestamps = Timestamps.Now,
+            Assets = assets,
             Buttons = new DiscordRPC.Button[]
             {
-                new() { Label = "Use Aniki", Url = "https://github.com/TrueTheos/Aniki" }
+                new() { Label = "Get Aniki", Url = "https://github.com/TrueTheos/Aniki" }
             }
         });
-        Log.Information("Presence set. Press any key to exit...");
     }
 
     public void Reset()
     {
-        if (!_isDisposed && _client != null)
-        {
-            _client.Dispose();
-            _isDisposed = true;
-        }
+        _client?.ClearPresence();
+    }
+
+    public void Dispose()
+    {
+        _client?.Dispose();
     }
 }

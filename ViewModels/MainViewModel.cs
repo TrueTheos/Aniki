@@ -42,10 +42,11 @@ public partial class MainViewModel : ViewModelBase
     
     private readonly ICalendarService _calendarService;
     private readonly IMalService _malService;
+    private readonly IVideoPlayerService _videoPlayerService;
 
     public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
-        UserAnimeListViewModel userAnimeListViewModel) 
+        UserAnimeListViewModel userAnimeListViewModel, IVideoPlayerService videoPlayerService) 
     {
         _calendarService = calendarService;
         _malService = malService;
@@ -55,6 +56,7 @@ public partial class MainViewModel : ViewModelBase
         _statsViewModel = statsViewModel;
         _animeBrowseViewModel = animeBrowseViewModel;
         _userAnimeListViewModel = userAnimeListViewModel;
+        _videoPlayerService = videoPlayerService;
         
         _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
@@ -115,6 +117,7 @@ public partial class MainViewModel : ViewModelBase
     {
         await LoadUserDataAsync();
         await LoadTodayAnimeAsync();
+        await _videoPlayerService.RefreshPlayersAsync();
     }
 
     private async Task LoadTodayAnimeAsync()

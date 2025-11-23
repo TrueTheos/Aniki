@@ -51,14 +51,32 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private readonly ISaveService  _saveService;
     private readonly IAbsoluteEpisodeParser  _absoluteEpisodeParser;
     private readonly IAnimeNameParser  _animeNameParser;
+    private readonly IVideoPlayerService _videoPlayerService;
 
-    public DownloadedViewModel(IDiscordService discordService, IMalService malService, ISaveService saveService, IAbsoluteEpisodeParser absoluteEpisodeParser, IAnimeNameParser animeNameParser)
+    public VideoPlayerOption? SelectedPlayer
+    {
+        get => _videoPlayerService.SelectedPlayer;
+        set
+        {
+            if (_videoPlayerService.SelectedPlayer != value)
+            {
+                _videoPlayerService.SelectedPlayer = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public ObservableCollection<VideoPlayerOption> AvailablePlayers => _videoPlayerService.AvailablePlayers;
+
+    public DownloadedViewModel(IDiscordService discordService, IMalService malService, ISaveService saveService, 
+        IAbsoluteEpisodeParser absoluteEpisodeParser, IAnimeNameParser animeNameParser, IVideoPlayerService videoPlayerService)
     {
         _discordService = discordService;
         _malService = malService;
         _saveService = saveService;
         _absoluteEpisodeParser = absoluteEpisodeParser;
         _animeNameParser = animeNameParser;
+        _videoPlayerService = videoPlayerService;
         
         IsEpisodesViewVisible = false;
         IsNoEpisodesViewVisible = true;
@@ -287,13 +305,23 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void LaunchEpisode(DownloadedEpisode ep)
     {
-        string defaultApp = GetAssociatedProgram(Path.GetExtension(ep.FilePath));
-
         _lastPlayedEpisode = ep;
+        _discordService.SetPresenceEpisode(ep.AnimeTitle, ep.EpisodeNumber);
 
-        _discordService.SetPresenceEpisode(ep);
-
-        LaunchAndTrack(defaultApp, ep.FilePath);
+        try
+        {
+            var process = _videoPlayerService.OpenVideo(ep.FilePath);
+            
+            if (process != null)
+            {
+                process.EnableRaisingEvents = true;
+                process.Exited += (_, _) => OnVideoPlayerClosed();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error launching video player");
+        }
     }
 
     [RelayCommand]
@@ -333,40 +361,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         {
             Process.Start("xdg-open", episodesFolder);
         }
-    }
-
-    private string GetAssociatedProgram(string extension)
-    {
-        uint length = 0;
-        uint ret = AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, null, ref length);
-
-        if (ret != 1 && length > 0)
-        {
-            StringBuilder sb = new((int)length);
-            ret = AssocQueryString(AssocF.None, AssocStr.Executable, extension, null, sb, ref length);
-
-            if (ret == 0)
-            {
-                return sb.ToString();
-            }
-        }
-        return "explorer.exe";
-    }
-
-    private void LaunchAndTrack(string appPath, string filePath)
-    {
-        Process process = new()
-        {
-            StartInfo =
-            {
-                FileName = appPath,
-                Arguments = $"\"{filePath}\""
-            },
-            EnableRaisingEvents = true
-        };
-        process.Exited += (_, _) => { OnVideoPlayerClosed(); };
-
-        process.Start();
     }
 
     private void OnVideoPlayerClosed()

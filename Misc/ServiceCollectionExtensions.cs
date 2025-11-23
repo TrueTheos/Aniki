@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<ISaveService, SaveService>();
         collection.AddSingleton<ITokenService, TokenService>();
         collection.AddSingleton<IAllMangaScraperService, AllMangaScraperService>();
+        collection.AddSingleton<IVideoPlayerService, VideoPlayerService>();
 
         collection.AddSingleton<LoginViewModel>();
         collection.AddSingleton<MainViewModel>();
