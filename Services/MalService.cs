@@ -119,7 +119,7 @@ public class MalService : IMalService
         try
         {
             List<MAL_AnimeData> animeList = new();
-            string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={MAL_NODE_FIELDS}&limit=1000";
+            string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={MAL_NODE_FIELDS}&limit=1000&nsfw=true";
             
             if (status != AnimeStatusApi.none)
             {
@@ -208,7 +208,7 @@ public class MalService : IMalService
             }
         }
         
-        string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={urlFields}";
+        string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={urlFields}&nsfw=true";
         
         var animeResponse = await GetAndDeserializeAsync<MAL_AnimeDetails>(url, $"FetchFields {urlFields}");
 
@@ -357,7 +357,7 @@ public class MalService : IMalService
 
     public async Task<List<MAL_SearchEntry>> SearchAnimeOrdered(string query)
     {
-        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={MAL_NODE_FIELDS}";
+        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={MAL_NODE_FIELDS}&nsfw=true";
 
         var responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, "SearchAnimeOrdered");
 
@@ -431,7 +431,7 @@ public class MalService : IMalService
             _ => "all"
         };
 
-        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields={MAL_NODE_FIELDS}";
+        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields={MAL_NODE_FIELDS}&nsfw=true";
 
         var response = await GetAndDeserializeAsync<MAL_AnimeRankingResponse>(url, "GetTopAnimeInCategory");
         
