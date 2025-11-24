@@ -122,47 +122,27 @@
                                     Padding="18,12"
                                     MinWidth="140">
                                 <Button.Flyout>
-                                    <MenuFlyout Placement="Bottom">
-                                        <MenuItem Header="All Genres" Command="{Binding ClearGenreFilterCommand}"/>
-                                        <Separator/>
-                                        <Border Background="Transparent" MaxHeight="350">
-                                            <Border.Styles>
-                                                <Style Selector="Border">
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                </Style>
-                                                <Style Selector="Border:pointerover">
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                </Style>
-                                            </Border.Styles>
-                                            <ScrollViewer>
-                                                <ScrollViewer.Styles>
-                                                    <Style Selector="ScrollViewer">
-                                                        <Setter Property="Background" Value="Transparent"/>
-                                                    </Style>
-                                                    <Style Selector="ScrollViewer:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-                                                        <Setter Property="Background" Value="Transparent"/>
-                                                    </Style>
-                                                </ScrollViewer.Styles>
+                                    <Flyout Placement="Bottom">
+                                        <StackPanel Width="170">
+                                            <Button Command="{Binding ClearGenreFilterCommand}"
+                                                    Content="All Genres"
+                                                    Background="Transparent"
+                                                    HorizontalContentAlignment="Left"
+                                                    Padding="12, 8"/>
+                                            <Separator Margin="0, 5" />
+                                            <ScrollViewer MaxHeight="350">
                                                 <ItemsControl ItemsSource="{Binding AvailableGenres}">
-                                                    <ItemsControl.Styles>
-                                                        <Style Selector="ItemsControl">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                        </Style>
-                                                        <Style Selector="ItemsControl:pointerover">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                        </Style>
-                                                    </ItemsControl.Styles>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <MenuItem Header="{Binding}" 
-                                                                      Command="{Binding $parent[UserControl].((vm:UserAnimeListViewModel)DataContext).SetGenreFilterCommand}"
-                                                                      CommandParameter="{Binding}"/>
+                                                            <CheckBox Content="{Binding Name}" 
+                                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                      Margin="12, 5"/>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                             </ScrollViewer>
-                                        </Border>
-                                    </MenuFlyout>
+                                        </StackPanel>
+                                    </Flyout>
                                 </Button.Flyout>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <PathIcon Data="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
