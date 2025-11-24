@@ -17,9 +17,6 @@ public partial class UserAnimeListViewModel : ViewModelBase
     private string _statusFilter = "All";
     
     [ObservableProperty]
-    private string _genreFilter = "All Genres";
-    
-    [ObservableProperty]
     private string _sortBy = "TitleAsc";
     
     [ObservableProperty]
@@ -32,19 +29,34 @@ public partial class UserAnimeListViewModel : ViewModelBase
     private int _filteredCount;
     
     [ObservableProperty]
-    private ObservableCollection<string> _availableGenres;
+    private ObservableCollection<GenreViewModel> _availableGenres;
 
     private IMalService _malService;
     
     public UserAnimeListViewModel(IMalService malService)
     {
         _malService = malService;
-        AvailableGenres = new ObservableCollection<string>
+        var genres = new List<string>
         {
             "Action", "Adventure", "Comedy", "Drama", "Fantasy",
             "Horror", "Mystery", "Psychological", "Romance", "Sci-Fi",
             "Slice of Life", "Sports", "Supernatural", "Thriller"
         };
+        AvailableGenres = new ObservableCollection<GenreViewModel>();
+        foreach (var genreName in genres)
+        {
+            var genreVm = new GenreViewModel(genreName);
+            genreVm.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(GenreViewModel.IsSelected))
+                {
+                    ApplyFiltersAndSort();
+                    OnPropertyChanged(nameof(GenreFilterText));
+                    OnPropertyChanged(nameof(HasActiveFilters));
+                }
+            };
+            AvailableGenres.Add(genreVm);
+        }
     }
 
     public override Task Enter()
@@ -54,8 +66,17 @@ public partial class UserAnimeListViewModel : ViewModelBase
     }
 
     public string StatusFilterText => StatusFilter == "All" ? "All Status" : FormatStatusDisplay(StatusFilter);
-    
-    public string GenreFilterText => GenreFilter;
+
+    public string GenreFilterText
+    {
+        get
+        {
+            var selectedGenres = AvailableGenres.Where(g => g.IsSelected).ToList();
+            if (!selectedGenres.Any()) return "All Genres";
+            if (selectedGenres.Count > 2) return $"{selectedGenres.Count} genres selected";
+            return string.Join(", ", selectedGenres.Select(g => g.Name));
+        }
+    }
     
     public string SortText => SortBy switch
     {
@@ -73,18 +94,11 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     public bool HasActiveFilters => 
         StatusFilter != "All" || 
-        GenreFilter != "All Genres";
+        AvailableGenres.Any(g => g.IsSelected);
     
     partial void OnStatusFilterChanged(string value)
     {
         OnPropertyChanged(nameof(StatusFilterText));
-        OnPropertyChanged(nameof(HasActiveFilters));
-        ApplyFiltersAndSort();
-    }
-    
-    partial void OnGenreFilterChanged(string value)
-    {
-        OnPropertyChanged(nameof(GenreFilterText));
         OnPropertyChanged(nameof(HasActiveFilters));
         ApplyFiltersAndSort();
     }
@@ -102,15 +116,12 @@ public partial class UserAnimeListViewModel : ViewModelBase
     }
     
     [RelayCommand]
-    private void SetGenreFilter(string genre)
-    {
-        GenreFilter = genre;
-    }
-    
-    [RelayCommand]
     private void ClearGenreFilter()
     {
-        GenreFilter = "All Genres";
+        foreach (var genre in AvailableGenres)
+        {
+            genre.IsSelected = false;
+        }
     }
     
     [RelayCommand]
@@ -123,7 +134,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
     private void ClearFilters()
     {
         StatusFilter = "All";
-        GenreFilter = "All Genres";
+        ClearGenreFilter();
     }
     
     [RelayCommand]
@@ -169,11 +180,15 @@ public partial class UserAnimeListViewModel : ViewModelBase
         {
             filtered = filtered.Where(a => CompareStatus(a.MyListStatus!.Status, StatusFilter));
         }
-        
-        if (GenreFilter != "All Genres")
+
+        var selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
+        if (selectedGenres.Any())
         {
             filtered = filtered.Where(a => 
-                a.Genres?.Any(g => g.Name.Equals(GenreFilter, StringComparison.OrdinalIgnoreCase)) == true);
+                a.Genres != null && selectedGenres.All(sg => 
+                    a.Genres.Any(ag => ag.Name.Equals(sg, StringComparison.OrdinalIgnoreCase))
+                )
+            );
         }
         
         filtered = SortBy switch
