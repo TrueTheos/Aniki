@@ -4,7 +4,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
-public class LoginViewModel : ViewModelBase
+public partial class LoginViewModel : ViewModelBase
 {
     private readonly IOAuthService _oauthService;
     private readonly ITokenService _tokenService;
@@ -14,9 +14,6 @@ public class LoginViewModel : ViewModelBase
     private string _statusMessage = "";
     private bool _isLoggedIn;
     private string _username = "";
-    private ICommand? _loginCommand;
-    private ICommand? _continueCommand;
-    private ICommand? _logoutCommand;
 
     public bool IsLoading
     {
@@ -41,10 +38,6 @@ public class LoginViewModel : ViewModelBase
         get => _username;
         set => SetProperty(ref _username, value);
     }
-
-    public ICommand LoginCommand => _loginCommand ??= new RelayCommand(async () => await LoginAsync());
-    public ICommand ContinueCommand => _continueCommand ??= new RelayCommand(async () => await ContinueAsync());
-    public ICommand LogoutCommand => _logoutCommand ??= new RelayCommand(Logout);
 
     public event EventHandler<string>? NavigateToMainRequested;
     
@@ -74,6 +67,7 @@ public class LoginViewModel : ViewModelBase
                         Username = userData.Name;
                         IsLoggedIn = true;
                         StatusMessage = $"Welcome back, {userData.Name}!";
+                        await ContinueAsync();
                         return;
                     }
                 }
@@ -92,6 +86,7 @@ public class LoginViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
     private async Task LoginAsync()
     {
         IsLoading = true;
@@ -114,6 +109,7 @@ public class LoginViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
     private Task ContinueAsync()
     {
         if (_tokenService.HasValidToken())
@@ -129,31 +125,11 @@ public class LoginViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
+    [RelayCommand]
     public void Logout()
     {
         _tokenService.ClearTokens();
         IsLoggedIn = false;
         StatusMessage = "Logged out. Ready to log in.";
-    }
-}
-
-public class RelayCommand : ICommand
-{
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public RelayCommand(Action execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
-    }
-
-    public bool CanExecute(object? parameter) => _canExecute == null || _canExecute();
-    public void Execute(object? parameter) => _execute();
-    public event EventHandler? CanExecuteChanged;
-
-    protected virtual void OnCanExecuteChanged()
-    {
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 }
