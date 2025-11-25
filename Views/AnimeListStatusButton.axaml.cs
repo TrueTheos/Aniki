@@ -126,11 +126,11 @@ public partial class AnimeListStatusButton : UserControl
             {
                 if (status == AnimeStatusApi.none)
                 {
-                    _malService.RemoveFromList(_data!.AnimeId);
+                    _malService.RemoveFromUserList(_data!.AnimeId);
                 }
                 else
                 {
-                    _malService.UpdateAnimeStatus(_data!.AnimeId, status);
+                    _malService.SetAnimeStatus(_data!.AnimeId, status);
                 }
 
                 _data!.MyListStatus = status;

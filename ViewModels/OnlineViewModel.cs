@@ -323,7 +323,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                     {
                         if (SelectedEpisode != null)
                         {
-                            _ = _malService.UpdateEpisodesWatched(_watchingMalId!.Value, SelectedEpisode.Number);
+                            _ = _malService.SetEpisodesWatched(_watchingMalId!.Value, SelectedEpisode.Number);
                             UpdateWatchedEpisodesText(SelectedEpisode.Number);
                         }
                     }

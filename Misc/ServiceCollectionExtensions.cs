@@ -12,9 +12,9 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<IAnimeNameParser, AnimeNameParser>();
         collection.AddSingleton<ICalendarService, CalendarService>();
         collection.AddSingleton<IDiscordService, DiscordService>();
+        collection.AddSingleton<IOAuthService, OAuthService>();
         collection.AddSingleton<IMalService, MalService>();
         collection.AddSingleton<INyaaService, NyaaService>();
-        collection.AddSingleton<IOAuthService, OAuthService>();
         collection.AddSingleton<ISaveService, SaveService>();
         collection.AddSingleton<ITokenService, TokenService>();
         collection.AddSingleton<IAllMangaScraperService, AllMangaScraperService>();

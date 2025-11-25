@@ -65,6 +65,9 @@ public partial class CalendarViewModel : ViewModelBase
     private async Task LoadUserAnimeList()
     {
         _watchingList.Clear();
+        
+        if(!MalService.IS_LOGGED_IN) return;
+        
         List<MAL_AnimeData> watching = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
         List<MAL_AnimeData> planToWatch = await _malService.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
 

@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:Aniki.Views"
              xmlns:vm="clr-namespace:Aniki.ViewModels"
              xmlns:models="clr-namespace:Aniki.Models"
+             xmlns:services="clr-namespace:Aniki.Services"
              mc:Ignorable="d"
              d:DesignWidth="160"
              d:DesignHeight="260"
@@ -39,7 +40,7 @@
 
     <Border Background="Transparent"
             Cursor="Hand"
-            Tapped="OnDoubleTapped">
+            Tapped="OnTapped">
         <StackPanel Spacing="8" Width="160">
             <Border x:Name="ImageContainer"
                     CornerRadius="8"
@@ -62,7 +63,8 @@
                             Background="Transparent"
                             VerticalAlignment="Bottom"
                             HorizontalAlignment="Center"
-                            Margin="0,0,0,5">
+                            Margin="0,0,0,5"
+                            IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}}">
                         <local:AnimeListStatusButton x:Name="StatusButton"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>

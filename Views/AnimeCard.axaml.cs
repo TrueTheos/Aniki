@@ -38,7 +38,7 @@ public partial class AnimeCard : UserControl
     }
 
     
-    private void OnDoubleTapped(object? sender, TappedEventArgs e)
+    private void OnTapped(object? sender, TappedEventArgs e)
     {
         App.ServiceProvider.GetRequiredService<MainViewModel>().GoToAnime(_data!.AnimeId);
     }

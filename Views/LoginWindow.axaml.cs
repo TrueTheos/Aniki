@@ -42,7 +42,7 @@ public partial class LoginWindow : Window
         await _viewModel.CheckExistingLoginAsync();
     }
 
-    private void OnNavigateToMainRequested(object? sender, string? accessToken)
+    private void OnNavigateToMainRequested(object? sender, EventArgs e)
     {
         var mainViewModel = App.ServiceProvider.GetRequiredService<MainViewModel>();
         MainWindow mainWindow = new(mainViewModel);

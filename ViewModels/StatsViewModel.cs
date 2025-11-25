@@ -31,6 +31,8 @@ public partial class StatsViewModel : ViewModelBase
 
     private async void LoadStats()
     {
+        if(!MalService.IS_LOGGED_IN) return;
+        
         var animeList = await _malService.GetUserAnimeList();
         if (animeList == null || !animeList.Any())
             return;
