@@ -39,7 +39,7 @@ public partial class LoginViewModel : ViewModelBase
         set => SetProperty(ref _username, value);
     }
 
-    public event EventHandler<string>? NavigateToMainRequested;
+    public event EventHandler? NavigateToMainRequested;
     
     public LoginViewModel(IOAuthService oauthService, ITokenService tokenService, IMalService malService)
     {
@@ -114,7 +114,7 @@ public partial class LoginViewModel : ViewModelBase
     {
         if (_tokenService.HasValidToken())
         {
-            NavigateToMainRequested?.Invoke(this, _tokenService.GetAccessToken());
+            NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
         }
         else
         {
@@ -123,6 +123,12 @@ public partial class LoginViewModel : ViewModelBase
         }
 
         return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private void ContinueWithoutLogginIn()
+    {
+        NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]

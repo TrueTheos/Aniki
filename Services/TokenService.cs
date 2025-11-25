@@ -1,22 +1,19 @@
-﻿using System.Security.Cryptography;
+﻿using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Aniki.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Services;
 
 public class TokenService : ITokenService
 {
+    public string ClientId { get; private set; } = "";
+    
     private string _tokenFilePath = "";
     private StoredTokenData? _cachedTokens;
     private readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
-
-    private readonly IMalService _malService;
-    
-    public TokenService(IMalService malService)
-    {
-        _malService = malService;
-    }
 
     public void Init()
     {
@@ -30,18 +27,29 @@ public class TokenService : ITokenService
         }
 
         _tokenFilePath = Path.Combine(appDataFolder, "tokens.dat");
+        
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        using Stream? stream = assembly.GetManifestResourceStream("Aniki.Resources.CLIENTID.txt");
+        if (stream == null)
+            throw new FileNotFoundException("CLIENTID not found.");
+
+        using StreamReader reader = new(stream);
+        ClientId = reader.ReadToEnd();
     }
 
     public async Task<StoredTokenData?> LoadTokensAsync()
     {
+        IMalService malService = App.ServiceProvider.GetRequiredService<IMalService>();
         if (_cachedTokens != null)
         {
-            _malService.Init(_cachedTokens.AccessToken);
+            
+            malService.Init(_cachedTokens.AccessToken);
             return _cachedTokens;
         }
 
         if (!File.Exists(_tokenFilePath))
         {
+            malService.Init(null);
             return null;
         }
 
@@ -56,12 +64,13 @@ public class TokenService : ITokenService
                 return null;
             }
 
-            _malService.Init(_cachedTokens?.AccessToken ?? string.Empty);
+            malService.Init(_cachedTokens?.AccessToken ?? null);
             return _cachedTokens;
         }
         catch (Exception ex)
         {
             Log.Information($"Error loading tokens: {ex.Message}");
+            malService.Init(null);
             return null;
         }
     }

@@ -13,11 +13,9 @@ namespace Aniki.Views;
 public partial class MainWindow : Window
 {
     private MainViewModel _viewModel;
-    private readonly ISaveService _saveService; 
 
     public MainWindow(MainViewModel viewModel)
     {
-        _saveService = App.ServiceProvider.GetRequiredService<ISaveService>();
         InitializeComponent();
 #if DEBUG
         this.AttachDevTools();

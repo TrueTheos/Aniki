@@ -427,6 +427,8 @@
                 </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
+            
+            
         </Grid>
     </Border>
 </UserControl>

@@ -42,6 +42,7 @@
                         Command="{Binding LoginCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
+                        Background="{StaticResource DarkerRedColor}"
                         IsVisible="{Binding !IsLoggedIn}">
 					<TextBlock Text="Login with MyAnimeList" HorizontalAlignment="Center"/>
 				</Button>
@@ -52,6 +53,13 @@
                         IsVisible="{Binding IsLoggedIn}"
                         Background="{StaticResource RedColor}">
 					<TextBlock Text="{Binding Username, StringFormat=Continue as {0}}"
+					           HorizontalAlignment="Center"/>
+				</Button>
+				<Button
+					Command="{Binding ContinueWithoutLogginInCommand}"
+					HorizontalAlignment="Stretch"
+					Padding="10,8">
+					<TextBlock Text="Skip login"
 					           HorizontalAlignment="Center"/>
 				</Button>
 				<Button 

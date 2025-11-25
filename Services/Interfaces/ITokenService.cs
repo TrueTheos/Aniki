@@ -2,6 +2,7 @@
 
 public interface ITokenService
 {
+    public string ClientId { get; }
     public void Init();
     public Task<StoredTokenData?> LoadTokensAsync();
     public Task SaveTokensAsync(TokenResponse tokenResponse);

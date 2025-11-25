@@ -110,7 +110,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await _malService.RemoveFromList(Details.AnimeId);
+        await _malService.RemoveFromUserList(Details.AnimeId);
             
         await LoadAnimeDetailsAsync(Details.AnimeId);
     }
@@ -121,7 +121,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details == null) return;
         if (Details.MyListStatus == null || Details.MyListStatus.Status == AnimeStatusApi.none)
         {
-            await _malService.UpdateAnimeStatus(Details.AnimeId, AnimeStatusApi.plan_to_watch);
+            await _malService.SetAnimeStatus(Details.AnimeId, AnimeStatusApi.plan_to_watch);
 
             await LoadAnimeDetailsAsync(Details.AnimeId);
         }
@@ -140,7 +140,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             newCount = Details.NumEpisodes ?? 0;
         }
 
-        await _malService.UpdateEpisodesWatched(Details.AnimeId, newCount);
+        await _malService.SetEpisodesWatched(Details.AnimeId, newCount);
         WatchedEpisodes = newCount;
     }
 
@@ -166,14 +166,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details?.MyListStatus == null) return;
 
-        await _malService.UpdateAnimeScore(Details.AnimeId, score);
+        await _malService.SetAnimeScore(Details.AnimeId, score);
         Details.MyListStatus.Score = score;
     }
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
         if(Details == null) return;
-        await _malService.UpdateAnimeStatus(Details.AnimeId, status.TranslatedToApi());
+        await _malService.SetAnimeStatus(Details.AnimeId, status.TranslatedToApi());
         if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
     }
     

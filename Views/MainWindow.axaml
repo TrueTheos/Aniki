@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:services="clr-namespace:Aniki.Services"
     Title="Aniki - Anime Client"
     d:DesignHeight="720"
     d:DesignWidth="1080"
@@ -177,7 +178,6 @@
                         </StackPanel>
                     </Button>
                     
-                    
                     <TextBlock
                         Margin="30,20,0,10"
                         VerticalAlignment="Center"
@@ -251,14 +251,56 @@
                                 <DataTemplate DataType="vm:CalendarViewModel">
                                     <views:CalendarView />
                                 </DataTemplate>
-                                <DataTemplate DataType="vm:StatsViewModel">
-                                    <views:StatsView />
-                                </DataTemplate>
                                 <DataTemplate DataType="vm:AnimeBrowseViewModel">
                                     <views:AnimeBrowseView />
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:UserAnimeListViewModel">
-                                    <views:UserAnimeListView />
+                                    <Panel>
+                                        <views:UserAnimeListView IsVisible="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                        <Grid IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}, 
+                                            Converter={x:Static BoolConverters.Not}}" 
+                                              ClipToBounds="True">
+                                            <StackPanel VerticalAlignment="Center" 
+                                                        HorizontalAlignment="Center" 
+                                                        Spacing="20">
+                                                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
+                                                       Width="300" 
+                                                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                                <TextBlock Text="You are not logged in!"
+                                                           Foreground="White"
+                                                           FontSize="28"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Please log in to view your list!" 
+                                                           Foreground="#888888" 
+                                                           FontSize="22" 
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Panel>
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:StatsViewModel">
+                                    <Panel>
+                                        <views:StatsView IsVisible="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                        <Grid IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}, 
+                                            Converter={x:Static BoolConverters.Not}}" 
+                                              ClipToBounds="True">
+                                            <StackPanel VerticalAlignment="Center" 
+                                                        HorizontalAlignment="Center" 
+                                                        Spacing="20">
+                                                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
+                                                       Width="300" 
+                                                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                                <TextBlock Text="You are not logged in!"
+                                                           Foreground="White"
+                                                           FontSize="28"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Please log in to view your stats!" 
+                                                           Foreground="#888888" 
+                                                           FontSize="22" 
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Panel>
                                 </DataTemplate>
                             </UserControl.DataTemplates>
                             <ContentControl Content="{Binding CurrentViewModel}" />

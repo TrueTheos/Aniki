@@ -392,7 +392,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private void MarkEpisodeCompleted(DownloadedEpisode ep)
     {
         int episodeToMark = ep.EpisodeNumber;
-        _ = _malService.UpdateEpisodesWatched(ep.Id,  episodeToMark);
+        _ = _malService.SetEpisodesWatched(ep.Id,  episodeToMark);
     }
 
     public void Dispose()

@@ -9,7 +9,6 @@ namespace Aniki.Services;
 
 public class OAuthService : IOAuthService
 {
-    private string ClientId = "";
     private const string RedirectUri = "http://localhost:8000/callback";
 
     private string _codeVerifier = "";
@@ -24,14 +23,6 @@ public class OAuthService : IOAuthService
 
     public async Task<bool> StartOAuthFlowAsync(IProgress<string> progressReporter)
     {
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        using Stream? stream = assembly.GetManifestResourceStream("Aniki.Resources.CLIENTID.txt");
-        if (stream == null)
-            throw new FileNotFoundException("CLIENTID not found.");
-
-        using StreamReader reader = new(stream);
-        ClientId = reader.ReadToEnd();
-
         try
         {
             _codeVerifier = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -44,7 +35,7 @@ public class OAuthService : IOAuthService
 
             string authUrl = "https://myanimelist.net/v1/oauth2/authorize" +
                              $"?response_type=code" +
-                             $"&client_id={ClientId}" +
+                             $"&client_id={_tokenService.ClientId}" +
                              $"&code_challenge={_codeVerifier}" +
                              $"&code_challenge_method=plain" +
                              $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
@@ -97,7 +88,7 @@ public class OAuthService : IOAuthService
             using HttpClient client = new();
             FormUrlEncodedContent content = new(new[]
             {
-                new KeyValuePair<string, string>("client_id", ClientId),
+                new KeyValuePair<string, string>("client_id", _tokenService.ClientId),
                 new KeyValuePair<string, string>("code", code),
                 new KeyValuePair<string, string>("code_verifier", _codeVerifier),
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),

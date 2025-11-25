@@ -12,9 +12,6 @@ public partial class MainViewModel : ViewModelBase
     private string? _username;
 
     [ObservableProperty]
-    private Bitmap? _profileImage;
-
-    [ObservableProperty]
     private bool _isLoading;
 
     public event EventHandler? LogoutRequested;
@@ -37,13 +34,10 @@ public partial class MainViewModel : ViewModelBase
     private UserAnimeListViewModel _userAnimeListViewModel;
     #endregion
 
-    [ObservableProperty]
-    private ObservableCollection<AnimeScheduleItem> _todayAnime = new();
-    
     private readonly ICalendarService _calendarService;
     private readonly IMalService _malService;
     private readonly IVideoPlayerService _videoPlayerService;
-
+    
     public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
         UserAnimeListViewModel userAnimeListViewModel, IVideoPlayerService videoPlayerService) 
@@ -116,41 +110,20 @@ public partial class MainViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         await LoadUserDataAsync();
-        await LoadTodayAnimeAsync();
         await _videoPlayerService.RefreshPlayersAsync();
-    }
-
-    private async Task LoadTodayAnimeAsync()
-    {
-        var watchingList = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
-        var animes = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
-
-        TodayAnime.Clear();
-        foreach (AnimeScheduleItem anime in animes)
-        {
-            if(watchingList.Any(x => x.Node.Id == anime.MalId))
-                TodayAnime.Add(anime);
-        }
     }
 
     private async Task LoadUserDataAsync()
     {
-        try
+        if (MalService.IS_LOGGED_IN)
         {
             IsLoading = true;
             MAL_UserData malUserData = await _malService.GetUserDataAsync();
             Username = malUserData.Name;
-            ProfileImage = await _malService.GetUserPicture();
         }
-        catch (Exception ex)
-        {
-            Log.Information($"Error loading user data: {ex.Message}");
-        }
-        finally
-        {
-            _ = ShowAnimeBrowsePage();
-            IsLoading = false;
-        }
+        
+        _ = ShowAnimeBrowsePage();
+        IsLoading = false;
     }
         
     [RelayCommand]

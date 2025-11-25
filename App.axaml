@@ -25,6 +25,8 @@
                     <conv:BoolToViewButtonBackgroundConverter x:Key="BoolToViewButtonBackgroundConverter" />
                     <conv:StatusToColorConverter x:Key="StatusToColorConverter" />
                     <conv:DateToYearConverter x:Key="DateToYearConverter" />
+                    <conv:BoolToLoginTooltipConverter x:Key="BoolToLoginTooltipConverter" />
+                    <conv:AllTrueMultiValueConverter x:Key="AllTrueMultiValueConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

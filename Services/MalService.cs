@@ -12,6 +12,8 @@ namespace Aniki.Services;
 
 public class MalService : IMalService
 {
+    public static bool IS_LOGGED_IN { get; private set; }
+    
     public enum AnimeRankingCategory { AIRING, UPCOMING, ALLTIME, BYPOPULARITY }
     
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
@@ -25,6 +27,7 @@ public class MalService : IMalService
     
     private readonly ISaveService _saveService;
     private readonly AnimeCacheService _cache;
+    private readonly ITokenService _tokenService;
 
     private string _accessToken = "";
     
@@ -36,17 +39,29 @@ public class MalService : IMalService
         AnimeField.MEAN, AnimeField.POPULARITY, AnimeField.START_DATE, AnimeField.STUDIOS, AnimeField.TITLE, AnimeField.EPISODES
     };
 
-    public MalService(ISaveService saveService)
+    public MalService(ISaveService saveService, ITokenService tokenService)
     {
+        _tokenService = tokenService;
         _saveService = saveService;
         _cache = new AnimeCacheService(FetchFields);
     }
     
-    public void Init(string accessToken)
+    public void Init(string? accessToken)
     {
-        _accessToken = accessToken;
         _client = new();
-        _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+        
+        if (accessToken != null)
+        {
+            _accessToken = accessToken;
+            IS_LOGGED_IN = true;
+            _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+        }
+        else
+        {
+            _accessToken = string.Empty;
+            IS_LOGGED_IN = false;
+            _client.DefaultRequestHeaders.Add("X-MAL-Client-ID", _tokenService.ClientId);
+        }
     }
 
     public void SubscribeToFieldChange(int animeId, AnimeField field, EventHandler<AnimeFieldSet> handler)
@@ -96,19 +111,20 @@ public class MalService : IMalService
         return JsonSerializer.Deserialize<T>(responseBody, _jso);
     }
 
+    #region Require Login
+
     public async Task<MAL_UserData> GetUserDataAsync()
     {
-        if (string.IsNullOrEmpty(_accessToken))
-        {
-            throw new InvalidOperationException("No access token available");
-        }
-
+        if (!IS_LOGGED_IN) return new();
+        
         var userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
         return userData ?? throw new InvalidOperationException("Failed to deserialize user data");
     }
 
     public async Task<List<MAL_AnimeData>> GetUserAnimeList(AnimeStatusApi status = AnimeStatusApi.none)
     {
+        if (!IS_LOGGED_IN) return new();
+        
         if (_userAnimeList != null)
         {
             return status == AnimeStatusApi.none 
@@ -127,21 +143,18 @@ public class MalService : IMalService
             }
 
             string? nextPageUrl = baseUrl;
-
+            
             while (nextPageUrl != null)
             {
                 var response = await GetAndDeserializeAsync<MAL_UserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
-                
                 if (response?.Data != null)
                 {
                     animeList.AddRange(response.Data);
-                    
                     foreach (var data in response.Data)
                     {
                         _cache.AddOrUpdate(data.Node, MAL_NODE_FIELD_TYPES);
                     }
                 }
-
                 nextPageUrl = response?.Paging?.Next;
             }
 
@@ -149,7 +162,6 @@ public class MalService : IMalService
             {
                 _userAnimeList = animeList;
             }
-            
             return animeList;
         }
         catch (Exception ex)
@@ -157,6 +169,56 @@ public class MalService : IMalService
             throw new($"Error loading anime list: {ex.Message}", ex);
         }
     }
+    
+    private async Task SetMyListStatusField(int  animeId, string fieldName, string value)
+    {
+        if (!IS_LOGGED_IN)
+        {
+            return;
+        }
+        
+        var formData = new Dictionary<string, string> { [fieldName] = value };
+        
+        var content = new FormUrlEncodedContent(formData);
+        var response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new($"Failed to update anime: {response.StatusCode}");
+        }
+
+        string responseBody = await response.Content.ReadAsStringAsync();
+        var myListStatus = JsonSerializer.Deserialize<MAL_MyListStatus>(responseBody, _jso);
+
+        if (myListStatus != null)
+        {
+            var anime = BuildAnimeFromCache(animeId);
+            anime.MyListStatus = myListStatus;
+            _cache.AddOrUpdate(anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        }
+
+        _userAnimeList = null;
+    }
+    
+    public async Task RemoveFromUserList(int animeId)
+    {
+        if(!IS_LOGGED_IN) return;
+        
+        var response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status");
+
+        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
+        {
+            throw new($"Failed to remove anime from list: {response.StatusCode}");
+        }
+
+        var anime = BuildAnimeFromCache(animeId);
+        anime.MyListStatus = null;
+        _cache.AddOrUpdate(anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
+
+        _userAnimeList = null;
+    }
+
+    #endregion
     
     private MAL_AnimeDetails BuildAnimeFromCache(int id)
     {
@@ -274,53 +336,6 @@ public class MalService : IMalService
                 _saveService.SaveImage(id, downloadedImage);
                 return downloadedImage;
             }
-        }
-
-        return null;
-    }
-
-    public async Task<string> GetAnimeNameById(int id)
-    {
-        var cachedTitle = _cache.GetTitle(id);
-        if (!string.IsNullOrEmpty(cachedTitle))
-        {
-            return cachedTitle;
-        }
-
-        try
-        {
-            var animeResponse = await GetAndDeserializeAsync<MAL_AnimeDetails>(
-                $"https://api.myanimelist.net/v2/anime/{id}?fields=title", 
-                "GetAnimeNameById");
-            
-            if (animeResponse != null)
-            {
-                _cache.AddOrUpdate(animeResponse, AnimeField.TITLE);
-                return animeResponse.Title ?? "";
-            }
-        }
-        catch (Exception) { }
-
-        return "";
-    }
-
-    public async Task<Bitmap?> GetUserPicture()
-    {
-        try
-        {
-            var response = await GetAndDeserializeAsync<JsonDocument>(
-                "https://api.myanimelist.net/v2/users/@me?fields=picture", 
-                "GetUserPicture");
-
-            if (response?.RootElement.TryGetProperty("picture", out JsonElement pictureElement) == true)
-            {
-                string pictureUrl = pictureElement.GetString() ?? "";
-                return await DownloadImageAsync(pictureUrl);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Information($"Error getting profile picture: {ex.Message}");
         }
 
         return null;
@@ -448,58 +463,14 @@ public class MalService : IMalService
         return new List<MAL_RankingEntry>();
     }
 
-    public Task UpdateAnimeStatus(int animeId, AnimeStatusApi status) 
-        => UpdateAnimeField(animeId, "status", status.ToString(), 
-            cached => cached.Status = status);
+    public Task SetAnimeStatus(int animeId, AnimeStatusApi status) 
+        => SetMyListStatusField(animeId, "status", status.ToString());
 
-    public Task UpdateAnimeScore(int animeId, int score) 
-        => UpdateAnimeField(animeId, "score", score.ToString(), 
-            cached => cached.Score = score);
+    public Task SetAnimeScore(int animeId, int score) 
+        => SetMyListStatusField(animeId, "score", score.ToString());
 
-    public Task UpdateEpisodesWatched(int animeId, int episodes) 
-        => UpdateAnimeField(animeId, "num_watched_episodes", episodes.ToString(), 
-            cached => cached.NumEpisodesWatched = episodes);
-
-    private async Task UpdateAnimeField(int animeId, string fieldName, string value, Action<MAL_MyListStatus> updateCacheAction)
-    {
-        var formData = new Dictionary<string, string> { [fieldName] = value };
-        
-        var content = new FormUrlEncodedContent(formData);
-        var response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new($"Failed to update anime: {response.StatusCode}");
-        }
-
-        string responseBody = await response.Content.ReadAsStringAsync();
-        var myListStatus = JsonSerializer.Deserialize<MAL_MyListStatus>(responseBody, _jso);
-
-        if (myListStatus != null)
-        {
-            var anime = BuildAnimeFromCache(animeId);
-            anime.MyListStatus = myListStatus;
-            _cache.AddOrUpdate(anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
-        }
-
-        _userAnimeList = null;
-    }
-
-    public async Task RemoveFromList(int animeId)
-    {
-        var response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status");
-
-        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
-        {
-            throw new($"Failed to remove anime from list: {response.StatusCode}");
-        }
-
-        var anime = BuildAnimeFromCache(animeId);
-        anime.MyListStatus = null;
-        _cache.AddOrUpdate(anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
-
-        _userAnimeList = null;
-    }
+    public Task SetEpisodesWatched(int animeId, int episodes) 
+        => SetMyListStatusField(animeId, "num_watched_episodes", episodes.ToString());
     
     private async Task<string?> GetAnimeTrailerUrlJikan(int animeId)
     {
@@ -536,7 +507,7 @@ public class MalService : IMalService
                     {
                         return urlElem.GetString();
                     }
-                    else if (trailerElem.TryGetProperty("youtube_id", out var youtubeIdElem))
+                    if (trailerElem.TryGetProperty("youtube_id", out var youtubeIdElem))
                     {
                         string youtubeId = youtubeIdElem.GetString() ?? "";
                         return string.IsNullOrEmpty(youtubeId) ? null : $"https://www.youtube.com/watch?v={youtubeId}";
