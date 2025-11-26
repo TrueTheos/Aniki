@@ -12,11 +12,8 @@
                 <ResourceDictionary>
                     <conv:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
                     <conv:SeederColorConverter x:Key="SeederColorConverter" />
-                    <conv:StringToIntConverter x:Key="StringToIntConverter" />
-                    <conv:TimeToOffsetConverter x:Key="TimeToOffsetConverter" />
                     <conv:AnimeTypeToColorConverter x:Key="AnimeTypeToColorConverter" />
                     <conv:ValueToGridLengthConverter  x:Key="ValueToGridLengthConverter" />
-                    <conv:BooleanInverterConverter x:Key="BooleanInverterConverter" />
                     <conv:EqualToZeroConverter x:Key="EqualToZeroConverter" />
                     <conv:EnumMatchConverter x:Key="EnumMatchConverter" />
                     <conv:BoolToColorConverter x:Key="BoolToColorConverter" />
@@ -25,7 +22,6 @@
                     <conv:BoolToViewButtonBackgroundConverter x:Key="BoolToViewButtonBackgroundConverter" />
                     <conv:StatusToColorConverter x:Key="StatusToColorConverter" />
                     <conv:DateToYearConverter x:Key="DateToYearConverter" />
-                    <conv:BoolToLoginTooltipConverter x:Key="BoolToLoginTooltipConverter" />
                     <conv:AllTrueMultiValueConverter x:Key="AllTrueMultiValueConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>

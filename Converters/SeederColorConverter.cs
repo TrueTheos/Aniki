@@ -17,7 +17,7 @@ public class SeederColorConverter : IValueConverter
                 _ => "#66BB6A"
             };
         }
-        return "#E0E0E0"; // Default gray
+        return "#E0E0E0";
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
