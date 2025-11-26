@@ -265,7 +265,8 @@ public class AllMangaScraperService : IAllMangaScraperService
                             Number = (int)epNum,
                             Url = $"{ALLANIME_REFR}/anime/{showId}/episodes/sub/{epString}",
                             ShowId = showId,
-                            EpisodeString = epString
+                            EpisodeString = epString,
+                            TotalEpisodes = subEpisodes.GetArrayLength()
                         });
                     }
                 }

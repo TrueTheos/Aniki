@@ -1,15 +1,22 @@
-﻿
+﻿using System.Collections.ObjectModel;
+
+namespace Aniki.ViewModels;
 
 public partial class ConfirmEpisodeViewModel : ViewModelBase
 {
-    public int EpisodeNumber { get; }
+    [ObservableProperty] 
+    private int _episodeNumber;
+    
+    public int MaxEpisodes { get; }
 
-    public string Message => $"Mark Episode {EpisodeNumber} as completed?";
+    [ObservableProperty]
+    private ObservableCollection<int> _episodeNumbers;
 
-    public ConfirmEpisodeViewModel() { }
-
-    public ConfirmEpisodeViewModel(int episodeNumber)
+    public ConfirmEpisodeViewModel(int episodeNumber, int maxEpisodes)
     {
         EpisodeNumber = episodeNumber;
+        MaxEpisodes = Math.Max(maxEpisodes, episodeNumber);
+
+        EpisodeNumbers = new ObservableCollection<int>(Enumerable.Range(1, MaxEpisodes));
     }
 }

@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<AnimeDetailsViewModel>();
         collection.AddSingleton<UserAnimeListViewModel>();
         collection.AddSingleton<CalendarViewModel>();
-        collection.AddSingleton<ConfirmEpisodeViewModel>();
+        collection.AddSingleton<ViewModels.ConfirmEpisodeViewModel>();
         collection.AddSingleton<SettingsViewModel>();
         collection.AddSingleton<StatsViewModel>();
         collection.AddSingleton<TorrentSearchViewModel>();

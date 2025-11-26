@@ -27,4 +27,5 @@ public class AllManagaEpisode
     public string Url { get; set; } = string.Empty;
     public string ShowId { get; set; } = string.Empty;
     public string EpisodeString { get; set; } = string.Empty;
+    public int TotalEpisodes { get; set; }
 }

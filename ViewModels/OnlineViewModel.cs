@@ -314,8 +314,9 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                 {
                     ConfirmEpisodeWindow dialog = new() 
                     {
-                        DataContext = new ConfirmEpisodeViewModel(SelectedEpisode.Number)
+                        DataContext = new ConfirmEpisodeViewModel(SelectedEpisode.Number, SelectedEpisode.TotalEpisodes)
                     };
+
 
                     bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
 
