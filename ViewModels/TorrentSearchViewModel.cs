@@ -1,13 +1,6 @@
-using Aniki.Models;
 using Aniki.Services.Interfaces;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using Aniki.Models.MAL;
 
 namespace Aniki.ViewModels;
 
@@ -23,7 +16,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] private string _torrentSearchTerms = string.Empty;
     [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = new();
     
-    private AnimeFieldSet? _details;
+    private MalAnimeDetails? _details;
 
     [ObservableProperty]
     private SortDirection _seedersSortDirection = SortDirection.Descending;
@@ -38,7 +31,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
         _nyaaService = nyaaService;
     }
 
-    public void Update(AnimeFieldSet? details, int episodesWatched)
+    public void Update(MalAnimeDetails? details, int episodesWatched)
     {
         _details = details;
         

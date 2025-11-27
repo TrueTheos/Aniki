@@ -1,9 +1,6 @@
-using Avalonia;
 using Avalonia.Controls;
-using Aniki.Misc;
 using Aniki.Services.Interfaces;
 using Avalonia.Interactivity;
-using Avalonia.Media.Transformation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;

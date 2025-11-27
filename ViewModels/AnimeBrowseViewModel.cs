@@ -1,8 +1,6 @@
 using Aniki.Services.Interfaces;
 using System.Collections.ObjectModel;
-using Aniki.Models.MAL;
 using System.Diagnostics;
-using Aniki.Misc;
 
 namespace Aniki.ViewModels;
 
@@ -58,7 +56,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canGoPrevious;
 
-    private List<MAL_SearchEntry> _allSearchResults = new();
+    private List<MalSearchEntry> _allSearchResults = new();
     private const int PageSize = 20;
 
     public AnimeBrowseViewModel(IMalService malService, ICalendarService calendarService)
@@ -125,7 +123,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             {
                 var heroData = new HeroAnimeData
                 {
-                    AnimeId = details.AnimeId,
+                    AnimeId = details.Id,
                     Title = details.Title!,
                     Synopsis = details.Synopsis!,
                     Score = details.Mean!.Value,
@@ -241,7 +239,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
         foreach (var result in pageResults)
         {
-            MAL_MainPicture? picture = result.Node.MainPicture;
+            MalMainPicture? picture = result.Node.MainPicture;
             var card = new AnimeCardData
             {
                 AnimeId = result.Node.Id,

@@ -1,6 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Models;
@@ -34,8 +32,8 @@ public partial class AnimeGroup : ObservableObject
             ep.Watched = ep.EpisodeNumber <= WatchedEpisodes;
         }
     }
-
-    private void OnEpisodesCompletedCollectionChanged(object? sender, AnimeFieldSet e)
+    
+    private void OnEpisodesCompletedCollectionChanged(MalAnimeDetails e)
     {
         WatchedEpisodes = e.MyListStatus?.NumEpisodesWatched ?? 0;
         UpdateEpisodes();

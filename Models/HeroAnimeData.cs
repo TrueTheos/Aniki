@@ -1,6 +1,4 @@
-﻿using Aniki.Misc;
-
-namespace Aniki.Models;
+﻿namespace Aniki.Models;
 
 public partial class HeroAnimeData : ObservableObject
 {

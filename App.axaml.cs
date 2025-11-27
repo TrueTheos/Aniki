@@ -1,4 +1,3 @@
-using Aniki.Misc;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
 using Avalonia;

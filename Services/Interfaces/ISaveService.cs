@@ -1,5 +1,4 @@
-﻿using Aniki.Misc;
-using Avalonia.Media.Imaging;
+﻿using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Interfaces;
 

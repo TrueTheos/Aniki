@@ -410,7 +410,7 @@
                                             </Grid.ColumnDefinitions>
                                             
                                             <!-- Trailer -->
-                                            <StackPanel Grid.Column="0" Spacing="12" IsVisible="{Binding Details.TrailerURL, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                            <StackPanel Grid.Column="0" Spacing="12" IsVisible="{Binding Details.TrailerUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                 <TextBlock Text="Trailer" 
                                                            FontSize="12"
                                                            Foreground="#888888"
@@ -423,7 +423,7 @@
                                                         Background="{StaticResource RedColor}"
                                                         ClipToBounds="True"
                                                         Command="{Binding OpenUrlCommand}"
-                                                        CommandParameter="{Binding Details.TrailerURL, Converter={StaticResource YoutubeEmbedUrlToWatchUrlConverter}}">
+                                                        CommandParameter="{Binding Details.TrailerUrl, Converter={StaticResource YoutubeEmbedUrlToWatchUrlConverter}}">
                                                     <Grid ToolTip.Tip="Play Trailer">
                                                         <Image Stretch="UniformToFill" ClipToBounds="True"
                                                                asyncImageLoader:ImageLoader.Source="{Binding Details.Videos[0].Thumbnail}"/>
@@ -504,7 +504,7 @@
                                                 </ItemsPanelTemplate>
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="mal:MAL_Genre">
+                                                <DataTemplate DataType="mal:MalGenre">
                                                     <Border Background="#44E50914"
                                                             CornerRadius="16"
                                                             Padding="16,8"
@@ -533,7 +533,7 @@
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
-                                                    <DataTemplate DataType="mal:MAL_Video">
+                                                    <DataTemplate DataType="mal:MalVideo">
                                                         <Border x:Name="thumbnailCard"
                                                                 Width="380"
                                                                 Height="214"

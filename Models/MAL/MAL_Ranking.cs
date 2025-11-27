@@ -5,13 +5,13 @@ namespace Aniki.Models.MAL;
 public class MAL_AnimeRankingResponse
 {
     public required MAL_RankingEntry[] Data { get; set; }
-    public MAL_Paging? Paging { get; set; }
+    public MalPaging? Paging { get; set; }
 }
 
 public class MAL_RankingEntry
 {
     [JsonPropertyName("node")]
-    public required MAL_AnimeNode Node { get; set; }
+    public required MalAnimeNode Node { get; set; }
     
     [JsonPropertyName("ranking")]
     public MAL_RankingInfo? Ranking { get; set; }
