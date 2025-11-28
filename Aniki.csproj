@@ -79,6 +79,8 @@
     <AvaloniaResource Include="Resources\Icons\chevronDown_icon.svg" />
     <None Remove="Resources\Icons\folderOpen_icon.svg" />
     <AvaloniaResource Include="Resources\Icons\folderOpen_icon.svg" />
+    <None Remove="..\..\..\..\Users\loiuy\.nuget\packages\skiasharp.nativeassets.linux\3.116.0\contentFiles\any\net8.0\libSkiaSharp.so" />
+    <None Remove="..\..\..\..\Users\loiuy\.nuget\packages\skiasharp.nativeassets.linux\3.116.0\contentFiles\any\net8.0\libSkiaSharp.so.116.0.0" />
   </ItemGroup>
 
   <ItemGroup>

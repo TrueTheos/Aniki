@@ -1,7 +1,5 @@
 ﻿using Avalonia.Controls;
-using Aniki.Misc;
 using Avalonia;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 

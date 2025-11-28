@@ -22,7 +22,7 @@ public class NyaaService : INyaaService
         string url = $"https://nyaa.si/?page=rss&f=0&c=1_2&q={term} {searchTerm}";
 
         string rssContent = await _http.GetStringAsync(url);
-        List<NyaaTorrent> results = new List<NyaaTorrent>();
+        List<NyaaTorrent> results = new();
 
         XmlDocument doc = new();
         doc.LoadXml(rssContent);

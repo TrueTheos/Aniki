@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
-using Aniki.Misc;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -8,10 +7,10 @@ namespace Aniki.ViewModels;
 public partial class UserAnimeListViewModel : ViewModelBase
 {
 [ObservableProperty]
-    private ObservableCollection<AnimeFieldSet> _animeList = new();
+    private ObservableCollection<MalAnimeDetails> _animeList = new();
     
     [ObservableProperty]
-    private ObservableCollection<AnimeFieldSet> _filteredAnimeList = new();
+    private ObservableCollection<MalAnimeDetails> _filteredAnimeList = new();
     
     [ObservableProperty]
     private string _statusFilter = "All";
@@ -154,7 +153,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         var list = await _malService.GetUserAnimeList();
         foreach (var element in list)
         {
-            if(AnimeList.Any(x => x.AnimeId == element.Node.Id)) continue;
+            if(AnimeList.Any(x => x.Id == element.Node.Id)) continue;
             AnimeList.Add(await _malService.GetFieldsAsync(element.Node.Id, MalService.MAL_NODE_FIELD_TYPES));
         }
         
@@ -206,7 +205,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         };
         
         var result = filtered.ToList();
-        FilteredAnimeList = new ObservableCollection<AnimeFieldSet>(result);
+        FilteredAnimeList = new ObservableCollection<MalAnimeDetails>(result);
         FilteredCount = result.Count;
     }
     

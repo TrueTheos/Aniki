@@ -1,8 +1,4 @@
-﻿using Aniki.Misc;
-using Avalonia.Media.Imaging;
-using System.Collections.ObjectModel;
-using Aniki.Models.MAL;
-using Aniki.Services.Interfaces;
+﻿using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 

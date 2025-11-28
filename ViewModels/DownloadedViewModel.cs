@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
-using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
@@ -372,9 +371,10 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (_lastPlayedEpisode == null) return;
             if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
+                var animeData = await _malService.GetFieldsAsync(_lastPlayedEpisode.Id, AnimeField.EPISODES);
                 ConfirmEpisodeWindow dialog = new() 
                 {
-                    DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber)
+                    DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
                 };
 
                 bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);

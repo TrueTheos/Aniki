@@ -3,7 +3,7 @@
 		xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
 		xmlns:global="clr-namespace:"
 		x:Class="Aniki.Views.ConfirmEpisodeWindow"
-		x:DataType="global:ConfirmEpisodeViewModel"
+		x:DataType="vm:ConfirmEpisodeViewModel"
         Width="320" Height="160"
         CanResize="False"
 		SystemDecorations="None"
@@ -13,7 +13,7 @@
         Background="Transparent">
 
 	<Design.DataContext>
-		<global:ConfirmEpisodeViewModel/>
+		<vm:ConfirmEpisodeViewModel/>
 	</Design.DataContext>
 
 	<Border CornerRadius="8" Padding="16" Background="#2A2A2A">
@@ -28,11 +28,24 @@
 				</ExperimentalAcrylicBorder.Material>
 			</ExperimentalAcrylicBorder>
 
-			<TextBlock Text="{Binding Message}"
-					   Foreground="White"
-					   FontSize="16"
-					   TextWrapping="Wrap"
-					   HorizontalAlignment="Center"/>
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Text="Mark episode "
+				           Foreground="White"
+				           FontSize="16"
+				           TextWrapping="Wrap"
+				           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				
+				<ComboBox ItemsSource="{Binding EpisodeNumbers}"
+				          SelectedItem="{Binding EpisodeNumber}"
+				          MinWidth="60"
+				          VerticalAlignment="Center"/>
+				
+				<TextBlock Text=" as completed?"
+				           Foreground="White"
+				           FontSize="16"
+				           TextWrapping="Wrap"
+				           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+			</StackPanel>
 			<StackPanel Orientation="Horizontal"
 						HorizontalAlignment="Center"
 						Spacing="16">

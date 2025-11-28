@@ -1,6 +1,4 @@
-using Aniki.Misc;
 using System.Diagnostics;
-using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -12,7 +10,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
-    private AnimeFieldSet? _details;
+    private MalAnimeDetails? _details;
 
     public string? ImageUrl => Details?.MainPicture?.Large;
 
@@ -70,7 +68,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         _torrentSearchViewModel = torrentSearchViewModel;
     }
 
-    public void Update(AnimeFieldSet? details)
+    public void Update(MalAnimeDetails? details)
     {
         IsLoading = false;
         Details = details;
@@ -87,7 +85,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public async Task LoadAnimeDetailsAsync(int id)
     {
         IsLoading = true;
-        AnimeFieldSet? details = await _malService.GetAllFieldsAsync(id);
+        MalAnimeDetails? details = await _malService.GetAllFieldsAsync(id);
         Update(details);
 
         IsLoading = false;
@@ -110,9 +108,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await _malService.RemoveFromUserList(Details.AnimeId);
+        await _malService.RemoveFromUserList(Details.Id);
             
-        await LoadAnimeDetailsAsync(Details.AnimeId);
+        await LoadAnimeDetailsAsync(Details.Id);
     }
 
     [RelayCommand]
@@ -121,9 +119,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details == null) return;
         if (Details.MyListStatus == null || Details.MyListStatus.Status == AnimeStatusApi.none)
         {
-            await _malService.SetAnimeStatus(Details.AnimeId, AnimeStatusApi.plan_to_watch);
+            await _malService.SetAnimeStatus(Details.Id, AnimeStatusApi.plan_to_watch);
 
-            await LoadAnimeDetailsAsync(Details.AnimeId);
+            await LoadAnimeDetailsAsync(Details.Id);
         }
     }
 
@@ -140,7 +138,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             newCount = Details.NumEpisodes ?? 0;
         }
 
-        await _malService.SetEpisodesWatched(Details.AnimeId, newCount);
+        await _malService.SetEpisodesWatched(Details.Id, newCount);
         WatchedEpisodes = newCount;
     }
 
@@ -166,14 +164,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details?.MyListStatus == null) return;
 
-        await _malService.SetAnimeScore(Details.AnimeId, score);
+        await _malService.SetAnimeScore(Details.Id, score);
         Details.MyListStatus.Score = score;
     }
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
         if(Details == null) return;
-        await _malService.SetAnimeStatus(Details.AnimeId, status.TranslatedToApi());
+        await _malService.SetAnimeStatus(Details.Id, status.TranslatedToApi());
         if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
     }
     
@@ -181,7 +179,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     private void OpenMalPage()
     {
         if (Details == null) return;
-        string url = $"https://myanimelist.net/anime/{Details.AnimeId}";
+        string url = $"https://myanimelist.net/anime/{Details.Id}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
     
@@ -194,7 +192,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         
         if (Details == null) return;
 
-        _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.AnimeId}");
+        _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.Id}");
     }
 
     [RelayCommand]
@@ -212,7 +210,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if(Details.Title == null) return;
         
         var mainViewModel = App.ServiceProvider.GetRequiredService<MainViewModel>();
-        WatchAnimeViewModel.GoToAnimeInOnlineView(Details.AnimeId, Details.Title);
+        WatchAnimeViewModel.GoToAnimeInOnlineView(Details.Id, Details.Title);
         _ = mainViewModel.ShowWatchPage();
     }
 }

@@ -1,11 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
-using Aniki.Misc;
-using Aniki.Models.MAL;
 using Aniki.Services.Interfaces;
-using Avalonia.Media.Imaging;
 using Microsoft.Extensions.DependencyInjection;
-using Tmds.DBus.Protocol;
 
 namespace Aniki.ViewModels;
 
@@ -68,14 +64,14 @@ public partial class CalendarViewModel : ViewModelBase
         
         if(!MalService.IS_LOGGED_IN) return;
         
-        List<MAL_AnimeData> watching = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
-        List<MAL_AnimeData> planToWatch = await _malService.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
+        List<MalAnimeData> watching = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
+        List<MalAnimeData> planToWatch = await _malService.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
 
-        foreach (MAL_AnimeData anime in watching)
+        foreach (MalAnimeData anime in watching)
         {
             if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
         }
-        foreach (MAL_AnimeData anime in planToWatch)
+        foreach (MalAnimeData anime in planToWatch)
         {
             if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
         }
@@ -170,7 +166,7 @@ public partial class CalendarViewModel : ViewModelBase
 
     private void ShowWindow()
     {
-        List<DaySchedule> newDays = new List<DaySchedule>();
+        List<DaySchedule> newDays = new();
 
         for (int i = 0; i < 7; i++)
         {

@@ -25,47 +25,19 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string? _episodesFolder;
 
-    private bool _notifyAboutEpisodes;
-    public bool NotifyAboutEpisodes
-    {
-        get => _notifyAboutEpisodes;
-        set
-        {
-            if (SetProperty(ref _notifyAboutEpisodes, value))
-            {
-                ChangeNotifyAboutEpisodes(value);
-            }
-        }
-    }
-
     [ObservableProperty]
     private long _cacheSize;
 
     private readonly ISaveService _saveService;
-    private readonly CacheManager _cacheManager;
 
     public SettingsViewModel(ISaveService saveService)
     {
         _saveService = saveService;
         
         LoadSettings();
-        _cacheManager = _saveService.ImageCache!;
-        UpdateCacheSize();
     }
 
-    private void UpdateCacheSize()
-    {
-        CacheSize = _cacheManager.GetCacheSize();
-    }
-
-    [RelayCommand]
-    private void ClearCache()
-    {
-        _cacheManager.ClearCache();
-        UpdateCacheSize();
-    }
-
-    private void LoadSettings()
+    public void LoadSettings()
     {
         SettingsConfig? config = _saveService.GetSettingsConfig();
 
@@ -78,7 +50,6 @@ public partial class SettingsViewModel : ViewModelBase
         {
             AutoStart = config.AutoStart;
             EpisodesFolder = config.EpisodesFolder;
-            NotifyAboutEpisodes = config.NotifyAboutEpisodes;
         }
     }
 
@@ -97,11 +68,6 @@ public partial class SettingsViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(result))
                 EpisodesFolder = result;
         }
-    }
-
-    private void ChangeNotifyAboutEpisodes(bool newValue)
-    {
-
     }
 
     private void ChangeAutoStart(bool newValue)
@@ -129,8 +95,7 @@ public partial class SettingsViewModel : ViewModelBase
         SettingsConfig config = new()
         {
             AutoStart = AutoStart,
-            EpisodesFolder = EpisodesFolder,
-            NotifyAboutEpisodes = NotifyAboutEpisodes
+            EpisodesFolder = EpisodesFolder
         };
 
         _saveService.SaveSettings(config);
@@ -141,9 +106,8 @@ public partial class SettingsViewModel : ViewModelBase
 
 public class SettingsConfig
 {
-    public bool AutoStart { get; set; }
-    public string? EpisodesFolder { get; set; }
-    public bool NotifyAboutEpisodes { get; set; }
+    public bool AutoStart;
+    public string? EpisodesFolder;
 }
 
 public class SettingsChangedMessage { }

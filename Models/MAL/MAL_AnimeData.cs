@@ -1,41 +1,57 @@
 ﻿using System.Text.Json.Serialization;
 using Aniki.Converters;
-using Aniki.Misc;
-using Aniki.Views;
 using Avalonia.Media.Imaging;
 
 namespace Aniki.Models.MAL;
 
-public class MAL_AnimeData
+public enum AnimeField 
 {
-    public required MAL_AnimeNode Node { get; set; }
-    [JsonPropertyName("list_status")] public MAL_MyListStatus? ListStatus { get; set; }
+    ID,
+    TITLE, 
+    MAIN_PICTURE, 
+    STATUS, 
+    SYNOPSIS, 
+    ALTER_TITLES, 
+    MY_LIST_STATUS, 
+    EPISODES,
+    POPULARITY, 
+    PICTURE, 
+    STUDIOS, 
+    START_DATE, 
+    MEAN, 
+    GENRES, 
+    RELATED_ANIME, 
+    VIDEOS, 
+    NUM_FAV, 
+    STATS, 
+    TRAILER_URL
+}
+
+public class MalAnimeData
+{
+    public required MalAnimeNode Node { get; set; }
+    [JsonPropertyName("list_status")] public MalMyListStatus? ListStatus { get; set; }
     [JsonIgnore]
     public bool IsOnList => ListStatus != null;
 }
 
-public class MAL_AnimeNode
+public class MalAnimeNode
 {
-    public int Id { get; init; }
-    public string? Title { get; init; }
-    [JsonPropertyName("alternative_titles")]
-    public MAL_AlternativeTitles? AlternativeTitles { get; set; }
-    public MAL_Genre[]? Genres { get; set; }
-    [JsonPropertyName("my_list_status")]
-    public MAL_MyListStatus? MyListStatus { get; set; }
-    public string? Synopsis { get; set; }
-    public string? Status { get; set; }
-    [JsonPropertyName("main_picture")]
-    public MAL_MainPicture? MainPicture { get; set; }
-    [JsonPropertyName("num_episodes")]
-    public int NumEpisodes { get; set; }
-    public int Popularity { get; set; }
-    public MAL_Video[]? Videos { get; set; }
-    [JsonPropertyName("start_date")]
-    public string? StartDate { get; set; }
-    public MAL_Studio[]? Studios { get; set; } 
+    [CacheField(AnimeField.ID)] public int Id { get; init; }
+    [CacheField(AnimeField.TITLE)] public string? Title { get; init; }
+    [CacheField(AnimeField.ALTER_TITLES)][JsonPropertyName("alternative_titles")] public MalAlternativeTitles? AlternativeTitles { get; set; }
+    [CacheField(AnimeField.GENRES)] public MalGenre[]? Genres { get; set; }
+    [CacheField(AnimeField.MY_LIST_STATUS)] [JsonPropertyName("my_list_status")] public MalMyListStatus? MyListStatus { get; set; }
+    [CacheField(AnimeField.SYNOPSIS)] public string? Synopsis { get; set; }
+    [CacheField(AnimeField.STATUS)] public string? Status { get; set; }
+    [CacheField(AnimeField.MAIN_PICTURE)] [JsonPropertyName("main_picture")] public MalMainPicture? MainPicture { get; set; }
+    [CacheField(AnimeField.EPISODES)] [JsonPropertyName("num_episodes")] public int NumEpisodes { get; set; }
+    [CacheField(AnimeField.POPULARITY)] int Popularity { get; set; }
+    [CacheField(AnimeField.VIDEOS)] public MalVideo[]? Videos { get; set; }
+    [CacheField(AnimeField.START_DATE)] [JsonPropertyName("start_date")] public string? StartDate { get; set; }
+    [CacheField(AnimeField.STUDIOS)] public MalStudio[]? Studios { get; set; } 
     private float _mean;
-    [JsonPropertyName("mean")]
+    [CacheField(AnimeField.MEAN)] [JsonPropertyName("mean")]
     public float Mean 
     { 
         get => _mean;
@@ -55,80 +71,72 @@ public class MAL_AnimeNode
     }
 }
 
-public class MAL_UserAnimeListResponse
+public class MalUserAnimeListResponse
 {
-    public required MAL_AnimeData[] Data {get; set;}
-    public MAL_Paging? Paging { get; set; }
+    public required MalAnimeData[] Data {get; set;}
+    public MalPaging? Paging { get; set; }
 }
 
-public class MAL_AnimeSearchListResponse
+public class MalAnimeSearchListResponse
 {
-    public required MAL_SearchEntry[] Data { get; set; }
-    public MAL_Paging? Paging { get; set; }
+    public required MalSearchEntry[] Data { get; set; }
+    public MalPaging? Paging { get; set; }
 }
 
-public class MAL_SearchEntry
+public class MalSearchEntry
 {
     [JsonPropertyName("node")]
-    public required MAL_AnimeNode Node { get; set; }
+    public required MalAnimeNode Node { get; set; }
 }
 
-public class MAL_Paging
+public class MalPaging
 {
     public string? Next { get; set; }
 }
 
-public class MAL_AnimeDetails
+public class MalAnimeDetails
 {
-    public int Id { get; set; }
-    public string? Title { get; set; }
-    [JsonPropertyName("main_picture")]
-    public MAL_MainPicture? MainPicture { get; set; }
-    public string? Status { get; set; }
-    public string? Synopsis { get; set; }
-    [JsonPropertyName("alternative_titles")]
-    public MAL_AlternativeTitles? AlternativeTitles { get; set; }
+    [CacheField(AnimeField.ID)] public int Id { get; set; }
+    [CacheField(AnimeField.TITLE)] public string? Title { get; set; }
+    [CacheField(AnimeField.MAIN_PICTURE)][JsonPropertyName("main_picture")] public MalMainPicture? MainPicture { get; set; }
+    [CacheField(AnimeField.STATUS)]public string? Status { get; set; }
+    [CacheField(AnimeField.SYNOPSIS)]public string? Synopsis { get; set; }
+    [CacheField(AnimeField.ALTER_TITLES)][JsonPropertyName("alternative_titles")] public MalAlternativeTitles? AlternativeTitles { get; set; }
     
-    [JsonPropertyName("my_list_status")]
-    public MAL_MyListStatus? MyListStatus { get; set; }
-    [JsonPropertyName("num_episodes")]
-    public int? NumEpisodes { get; set; }
-    public int? Popularity { get; set; }
-    public Bitmap? Picture { get; set; }
-    public MAL_Studio[]? Studios { get; set; } 
-    [JsonPropertyName("start_date")]
-    public string? StartDate { get; set; }
-    public float? Mean { get; set; }
-    public MAL_Genre[]? Genres { get; set; }
-    [JsonPropertyName("related_anime")]
-    public MAL_RelatedAnime[]? RelatedAnime { get; set; }
-    public MAL_Video[]? Videos { get; set; }
-    [JsonPropertyName("num_favorites")]
-    public int? NumFavorites { get; set; }
-    public MAL_Statistics? Statistics { get; set; }
-    
-    public string? TrailerURL { get; set; }
+    [CacheField(AnimeField.MY_LIST_STATUS)][JsonPropertyName("my_list_status")] public MalMyListStatus? MyListStatus { get; set; }
+    [CacheField(AnimeField.EPISODES)][JsonPropertyName("num_episodes")] public int? NumEpisodes { get; set; }
+    [CacheField(AnimeField.POPULARITY)] public int? Popularity { get; set; }
+    [CacheField(AnimeField.PICTURE)] public Bitmap? Picture { get; set; }
+    [CacheField(AnimeField.STUDIOS)] public MalStudio[]? Studios { get; set; } 
+    [CacheField(AnimeField.START_DATE)][JsonPropertyName("start_date")] public string? StartDate { get; set; }
+    [CacheField(AnimeField.MEAN)] public float? Mean { get; set; }
+    [CacheField(AnimeField.GENRES)] public MalGenre[]? Genres { get; set; }
+    [CacheField(AnimeField.RELATED_ANIME)][JsonPropertyName("related_anime")] public MalRelatedAnime[]? RelatedAnime { get; set; }
+    [CacheField(AnimeField.VIDEOS)] public MalVideo[]? Videos { get; set; }
+    [CacheField(AnimeField.NUM_FAV)][JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
+    [CacheField(AnimeField.STATS)] public MalStatistics? Statistics { get; set; }
+    [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
 }
 
-public class MAL_Studio
+public class MalStudio
 {
     public int Id { get; set; }
     public required string Name { get; set; }
 }
 
-public class MAL_MainPicture
+public class MalMainPicture
 {
     public required string Medium { get; set; }
     public required string Large { get; set; }
 }
 
-public class MAL_Genre
+public class MalGenre
 {
     public int Id { get; set; }
     public required string Name { get; set; }
 }
 
-public class MAL_AlternativeTitles
+public class MalAlternativeTitles
 {
     [JsonPropertyName("synonyms")]
     public string[]? Synonyms { get; set; }
@@ -138,7 +146,7 @@ public class MAL_AlternativeTitles
     public string? Ja { get; set; }
 }
 
-public class MAL_MyListStatus
+public class MalMyListStatus
 {
     [JsonPropertyName("status")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -151,16 +159,16 @@ public class MAL_MyListStatus
     public int NumEpisodesWatched { get; set; }
 }
 
-public class MAL_RelatedAnime
+public class MalRelatedAnime
 {
     [JsonPropertyName("node")]
-    public MAL_AnimeNode? Node { get; set; }
+    public MalAnimeNode? Node { get; set; }
 
     [JsonPropertyName("relation_type")]
     public required string RelationType { get; set; }
 }
 
-public class MAL_Video
+public class MalVideo
 {
     public int Id { get; set; }
     public required string Title { get; set; }
@@ -172,14 +180,14 @@ public class MAL_Video
     public required string Thumbnail { get; set; }
 }
 
-public class MAL_Statistics
+public class MalStatistics
 {
     [JsonPropertyName("num_list_users")]
     public int NumListUsers { get; set; }
-    public MAL_StatusStatistics? Status { get; set; }
+    public MalStatusStatistics? Status { get; set; }
 }
 
-public class MAL_StatusStatistics
+public class MalStatusStatistics
 {
     [JsonConverter(typeof(IntToStringConverter))]
     public string? Watching { get; set; }

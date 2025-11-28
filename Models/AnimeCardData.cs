@@ -1,7 +1,4 @@
-﻿using Aniki.Misc;
-using Avalonia.Media.Imaging;
-
-namespace Aniki.Models;
+﻿namespace Aniki.Models;
 
 public partial class AnimeCardData : ObservableObject
 {

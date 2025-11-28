@@ -3,7 +3,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
 using Aniki.Services.Interfaces;
-using HtmlAgilityPack;
 
 namespace Aniki.Services;
 
@@ -265,7 +264,8 @@ public class AllMangaScraperService : IAllMangaScraperService
                             Number = (int)epNum,
                             Url = $"{ALLANIME_REFR}/anime/{showId}/episodes/sub/{epString}",
                             ShowId = showId,
-                            EpisodeString = epString
+                            EpisodeString = epString,
+                            TotalEpisodes = subEpisodes.GetArrayLength()
                         });
                     }
                 }

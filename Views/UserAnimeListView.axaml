@@ -230,7 +230,7 @@
                             <UniformGridLayout MinColumnSpacing="20" MinRowSpacing="20" Orientation="Horizontal" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
-                            <DataTemplate DataType="services:AnimeFieldSet">
+                            <DataTemplate DataType="mal:MalAnimeDetails">
                             <Border Width="220"
                                     Cursor="Hand"
                                     Background="Transparent">
@@ -322,7 +322,7 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="services:AnimeFieldSet">
+                        <DataTemplate DataType="mal:MalAnimeDetails">
                             <Border Background="Transparent"
                                     CornerRadius="12"
                                     Margin="0,0,0,15"

@@ -1,5 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace Aniki.ViewModels;
 
 public partial class GenreViewModel : ObservableObject

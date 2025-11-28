@@ -1,9 +1,6 @@
 ﻿using System.ComponentModel;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Media.Imaging;
-using Aniki.Misc;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 
