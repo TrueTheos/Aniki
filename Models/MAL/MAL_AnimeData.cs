@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using Aniki.Converters;
 using Avalonia.Media.Imaging;
 
@@ -94,16 +96,30 @@ public class MalPaging
     public string? Next { get; set; }
 }
 
-public class MalAnimeDetails
+public class MalAnimeDetails : ObservableObject
 {
     [CacheField(AnimeField.ID)] public int Id { get; set; }
     [CacheField(AnimeField.TITLE)] public string? Title { get; set; }
     [CacheField(AnimeField.MAIN_PICTURE)][JsonPropertyName("main_picture")] public MalMainPicture? MainPicture { get; set; }
-    [CacheField(AnimeField.STATUS)]public string? Status { get; set; }
-    [CacheField(AnimeField.SYNOPSIS)]public string? Synopsis { get; set; }
+    [CacheField(AnimeField.STATUS)] public string? Status { get; set; }
+    [CacheField(AnimeField.SYNOPSIS)] public string? Synopsis { get; set; }
     [CacheField(AnimeField.ALTER_TITLES)][JsonPropertyName("alternative_titles")] public MalAlternativeTitles? AlternativeTitles { get; set; }
     
-    [CacheField(AnimeField.MY_LIST_STATUS)][JsonPropertyName("my_list_status")] public MalMyListStatus? MyListStatus { get; set; }
+    private MalMyListStatus? _myListStatus;
+    [CacheField(AnimeField.MY_LIST_STATUS)]
+    [JsonPropertyName("my_list_status")]
+    public MalMyListStatus? MyListStatus
+    {
+        get => _myListStatus;
+        set
+        {
+            if (_myListStatus != value)
+            {
+                _myListStatus = value;
+                OnPropertyChanged(nameof(MyListStatus));
+            }
+        }
+    }
     [CacheField(AnimeField.EPISODES)][JsonPropertyName("num_episodes")] public int? NumEpisodes { get; set; }
     [CacheField(AnimeField.POPULARITY)] public int? Popularity { get; set; }
     [CacheField(AnimeField.PICTURE)] public Bitmap? Picture { get; set; }

@@ -301,47 +301,53 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         }
     }
     
-    public void SubscribeToFieldChange(TKey entityId, TFieldEnum field, FieldChangeHandler<TEntity> handler)
+    public void SubscribeToFieldChange(TKey entityId, FieldChangeHandler<TEntity> handler, params TFieldEnum[] fields)
     {
         lock (_subscriptionLock)
         {
             Dictionary<TFieldEnum, FieldChangeHandler<TEntity>> entityHandlers = _fieldSubscriptions.GetOrAdd(entityId, new Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>());
 
-            if (entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
+            foreach (var field in fields)
             {
-                entityHandlers[field] = currentHandler + handler;
-            }
-            else
-            {
-                entityHandlers[field] = handler;
+                if (entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
+                {
+                    entityHandlers[field] = currentHandler + handler;
+                }
+                else
+                {
+                    entityHandlers[field] = handler;
+                }
             }
         }
     }
 
-    public void UnsubscribeFromFieldChange(TKey entityId, TFieldEnum field, FieldChangeHandler<TEntity> handler)
+    public void UnsubscribeFromFieldChange(TKey entityId, FieldChangeHandler<TEntity> handler, params TFieldEnum[] fields)
     {
         lock (_subscriptionLock)
         {
             if (!_fieldSubscriptions.TryGetValue(entityId, out Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>? entityHandlers))
                 return;
 
-            if (!entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
-                return;
+            foreach (var field in fields)
+            {
+                if (!entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
+                    return;
 
-            FieldChangeHandler<TEntity>? updatedHandler = currentHandler - handler;
+                FieldChangeHandler<TEntity>? updatedHandler = currentHandler - handler;
             
-            if (updatedHandler == null)
-            {
-                entityHandlers.Remove(field);
-                
-                if (entityHandlers.Count == 0)
+                if (updatedHandler == null)
                 {
-                    _fieldSubscriptions.TryRemove(entityId, out _);
+                    entityHandlers.Remove(field);
+                
+                    if (entityHandlers.Count == 0)
+                    {
+                        _fieldSubscriptions.TryRemove(entityId, out _);
+                    }
                 }
-            }
-            else
-            {
-                entityHandlers[field] = updatedHandler;
+                else
+                {
+                    entityHandlers[field] = updatedHandler;
+                }
             }
         }
     }

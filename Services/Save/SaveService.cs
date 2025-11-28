@@ -105,4 +105,12 @@ public class SaveService : ISaveService
         string fileName = $"anime_{id}.jpg";
         _imageSaver.Save(fileName, image);
     }
+
+    public async Task FlushAllCaches()
+    {
+        foreach (var cache in _caches)
+        {
+            await cache.Value.FlushAsync();
+        }
+    }
 }

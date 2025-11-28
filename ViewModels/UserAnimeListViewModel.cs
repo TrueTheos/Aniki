@@ -6,8 +6,10 @@ namespace Aniki.ViewModels;
 
 public partial class UserAnimeListViewModel : ViewModelBase
 {
-[ObservableProperty]
+    [ObservableProperty]
     private ObservableCollection<MalAnimeDetails> _animeList = new();
+    
+    private HashSet<int> _loadedIds = new();
     
     [ObservableProperty]
     private ObservableCollection<MalAnimeDetails> _filteredAnimeList = new();
@@ -153,8 +155,11 @@ public partial class UserAnimeListViewModel : ViewModelBase
         var list = await _malService.GetUserAnimeList();
         foreach (var element in list)
         {
+            if(_loadedIds.Contains(element.Node.Id)) continue;
+            
             if(AnimeList.Any(x => x.Id == element.Node.Id)) continue;
             AnimeList.Add(await _malService.GetFieldsAsync(element.Node.Id, MalService.MAL_NODE_FIELD_TYPES));
+            _loadedIds.Add(element.Node.Id);
         }
         
         TotalCount = AnimeList.Count;

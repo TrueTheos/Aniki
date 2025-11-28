@@ -29,11 +29,11 @@ public class MalService : IMalService
 
     private string _accessToken = "";
     
-    public const string MAL_NODE_FIELDS = "title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
+    public const string MAL_NODE_FIELDS = "id,title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
 
     public static readonly AnimeField[] MAL_NODE_FIELD_TYPES = new[]
     {
-        AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
+        AnimeField.ID, AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
         AnimeField.MEAN, AnimeField.POPULARITY, AnimeField.START_DATE, AnimeField.STUDIOS, AnimeField.TITLE, AnimeField.EPISODES
     };
 
@@ -51,7 +51,8 @@ public class MalService : IMalService
         _tokenService = tokenService;
         _saveService = saveService;
     }
-    
+
+
     public void Init(string? accessToken)
     {
         _client = new();
@@ -70,14 +71,14 @@ public class MalService : IMalService
         }
     }
 
-    public void SubscribeToFieldChange(int animeId, AnimeField field, FieldChangeHandler<MalAnimeDetails> handler)
+    public void SubscribeToFieldChange(int animeId, FieldChangeHandler<MalAnimeDetails> handler, params AnimeField[] fields)
     {
-        _cache.SubscribeToFieldChange(animeId, field, handler);
+        _cache.SubscribeToFieldChange(animeId, handler, fields);
     }
 
-    public void UnsubscribeFromFieldChange(int animeId, AnimeField field, FieldChangeHandler<MalAnimeDetails> handler)
+    public void UnsubscribeFromFieldChange(int animeId, FieldChangeHandler<MalAnimeDetails> handler, params AnimeField[] fields)
     {
-        _cache.UnsubscribeFromFieldChange(animeId, field, handler);
+        _cache.UnsubscribeFromFieldChange(animeId, handler, fields);
     }
     
     private async Task<HttpResponseMessage> GetAsync(string url, string message)
@@ -217,6 +218,7 @@ public class MalService : IMalService
             throw new($"Failed to remove anime from list: {response.StatusCode}");
         }
 
+        //TODO IMPORTANT ADD A WAY TO ONLY UPDATE ONE FIELD, BY PASSING ID AND ENUM
         var anime = await BuildAnimeFromCache(animeId);
         anime.MyListStatus = null;
         _cache.Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
