@@ -166,7 +166,7 @@ public partial class CalendarViewModel : ViewModelBase
 
     private void ShowWindow()
     {
-        List<DaySchedule> newDays = new List<DaySchedule>();
+        List<DaySchedule> newDays = new();
 
         for (int i = 0; i < 7; i++)
         {

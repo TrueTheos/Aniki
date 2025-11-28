@@ -67,6 +67,7 @@ public partial class MainWindow : Window
     private async void OnSettingsRequested(object? sender, EventArgs e)
     {
         var settingsViewModel = App.ServiceProvider.GetRequiredService<SettingsViewModel>();
+        settingsViewModel.LoadSettings();
         SettingsWindow settingsWindow = new()
         {
             DataContext = settingsViewModel
@@ -86,5 +87,11 @@ public partial class MainWindow : Window
             
             Close();
         }
+    }
+    
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        
     }
 }

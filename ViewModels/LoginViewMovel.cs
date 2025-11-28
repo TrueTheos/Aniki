@@ -89,7 +89,7 @@ public partial class LoginViewModel : ViewModelBase
     {
         IsLoading = true;
 
-        Progress<string> progress = new Progress<string>(message => StatusMessage = message);
+        Progress<string> progress = new(message => StatusMessage = message);
         bool success = _oauthService != null && await _oauthService.StartOAuthFlowAsync(progress);
 
         if (success)

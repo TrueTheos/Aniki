@@ -11,4 +11,5 @@ global using CommunityToolkit.Mvvm.Input;
 global using Serilog;
 global using Aniki.Misc;
 
+//(string)Anime Title -> Dictionary<(int)MalId, (int)Episodes>
 global using SeasonCache = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<int, Aniki.Services.SeasonData>>;

@@ -17,16 +17,12 @@ public class TokenService : ITokenService
 
     public void Init()
     {
-        string appDataFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Aniki");
-
-        if (!Directory.Exists(appDataFolder))
+        if (!Directory.Exists(SaveService.MAIN_DIRECTORY))
         {
-            Directory.CreateDirectory(appDataFolder);
+            Directory.CreateDirectory(SaveService.MAIN_DIRECTORY);
         }
 
-        _tokenFilePath = Path.Combine(appDataFolder, "tokens.dat");
+        _tokenFilePath = Path.Combine(SaveService.MAIN_DIRECTORY, "tokens.dat");
         
         Assembly assembly = Assembly.GetExecutingAssembly();
         using Stream? stream = assembly.GetManifestResourceStream("Aniki.Resources.CLIENTID.txt");

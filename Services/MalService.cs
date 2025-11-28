@@ -39,7 +39,15 @@ public class MalService : IMalService
 
     public MalService(ISaveService saveService, ITokenService tokenService)
     {
-        _cache = new GenericCacheService<int, MalAnimeDetails, AnimeField>(FetchFields);
+        CacheOptions options = new()
+        {
+            DefaultTimeToLive = TimeSpan.FromHours(8),
+            DiskCachePath = $"{SaveService.MAIN_DIRECTORY}/cache",
+            DiskSyncInterval = TimeSpan.FromMinutes(2),
+            EnableDiskCache = true
+        };
+        
+        _cache = new GenericCacheService<int, MalAnimeDetails, AnimeField>(FetchFields, options);
         _tokenService = tokenService;
         _saveService = saveService;
     }
@@ -220,22 +228,22 @@ public class MalService : IMalService
     
     private async Task<MalAnimeDetails> BuildAnimeFromCache(int id)
     {
-        return await _cache.GetAsync(id, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        return await _cache.GetOrFetchFieldsAsync(id, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
     }
 
     public async Task<MalAnimeDetails> GetFieldsAsync(int animeId, params AnimeField[] fields)
     {
-        return await _cache.GetAsync(animeId, fields: fields);
+        return await _cache.GetOrFetchFieldsAsync(animeId, fields: fields);
     }
 
     public async Task<MalAnimeDetails> GetAllFieldsAsync(int animeId)
     {
-        return await _cache.GetAsync(animeId, fields: (AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        return await _cache.GetOrFetchFieldsAsync(animeId, fields: (AnimeField[])Enum.GetValues(typeof(AnimeField)));
     }
 
     private async Task<MalAnimeDetails?> FetchFields(int id, params AnimeField[] fields)
     {
-        StringBuilder urlFields = new StringBuilder();
+        StringBuilder urlFields = new();
         Bitmap? picture = null;
         foreach (var field in fields)
         {
