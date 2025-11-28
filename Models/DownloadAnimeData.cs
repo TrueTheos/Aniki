@@ -22,7 +22,7 @@ public partial class AnimeGroup : ObservableObject
 
         Episodes.CollectionChanged += (_, _) => UpdateEpisodes();
 
-        malService.SubscribeToFieldChange(MalId, AnimeField.MY_LIST_STATUS, OnEpisodesCompletedCollectionChanged);
+        malService.SubscribeToFieldChange(MalId, OnEpisodesCompletedCollectionChanged, AnimeField.MY_LIST_STATUS);
     }
 
     private void UpdateEpisodes()

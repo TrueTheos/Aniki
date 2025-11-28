@@ -51,7 +51,8 @@ public class MalService : IMalService
         _tokenService = tokenService;
         _saveService = saveService;
     }
-    
+
+
     public void Init(string? accessToken)
     {
         _client = new();
@@ -70,14 +71,14 @@ public class MalService : IMalService
         }
     }
 
-    public void SubscribeToFieldChange(int animeId, AnimeField field, FieldChangeHandler<MalAnimeDetails> handler)
+    public void SubscribeToFieldChange(int animeId, FieldChangeHandler<MalAnimeDetails> handler, params AnimeField[] fields)
     {
-        _cache.SubscribeToFieldChange(animeId, field, handler);
+        _cache.SubscribeToFieldChange(animeId, handler, fields);
     }
 
-    public void UnsubscribeFromFieldChange(int animeId, AnimeField field, FieldChangeHandler<MalAnimeDetails> handler)
+    public void UnsubscribeFromFieldChange(int animeId, FieldChangeHandler<MalAnimeDetails> handler, params AnimeField[] fields)
     {
-        _cache.UnsubscribeFromFieldChange(animeId, field, handler);
+        _cache.UnsubscribeFromFieldChange(animeId, handler, fields);
     }
     
     private async Task<HttpResponseMessage> GetAsync(string url, string message)

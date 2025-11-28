@@ -13,6 +13,6 @@ public interface IMalService
     public Task SetEpisodesWatched(int animeId, int episodes);
     public Task RemoveFromUserList(int animeId);
     public Task<List<MAL_RankingEntry>> GetTopAnimeInCategory(MalService.AnimeRankingCategory category, int limit = 10);
-    public void SubscribeToFieldChange(int animeId, AnimeField field, FieldChangeHandler<MalAnimeDetails> handler);
-    public void UnsubscribeFromFieldChange(int animeId, AnimeField field, FieldChangeHandler<MalAnimeDetails> handler);
+    public void SubscribeToFieldChange(int animeId, FieldChangeHandler<MalAnimeDetails> handler, params AnimeField[] fields);
+    public void UnsubscribeFromFieldChange(int animeId, FieldChangeHandler<MalAnimeDetails> handler, params AnimeField[] fields);
 }
