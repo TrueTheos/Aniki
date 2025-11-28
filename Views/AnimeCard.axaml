@@ -39,8 +39,7 @@
     </UserControl.Styles>
 
     <Border Background="Transparent"
-            Cursor="Hand"
-            Tapped="OnTapped">
+            Cursor="Hand">
         <StackPanel Spacing="8" Width="160">
             <Border x:Name="ImageContainer"
                     CornerRadius="8"
@@ -57,7 +56,8 @@
                            Grid.ColumnSpan="2"
                            Stretch="UniformToFill"
                            asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}"
-                           ToolTip.Tip="Double click to show details"/>
+                           ToolTip.Tip="Click to show details"
+                           Tapped="OnTapped"/>
 
                     <Border Grid.Column="1"
                             Background="Transparent"

@@ -29,11 +29,11 @@ public class MalService : IMalService
 
     private string _accessToken = "";
     
-    public const string MAL_NODE_FIELDS = "title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
+    public const string MAL_NODE_FIELDS = "id,title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
 
     public static readonly AnimeField[] MAL_NODE_FIELD_TYPES = new[]
     {
-        AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
+        AnimeField.ID, AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
         AnimeField.MEAN, AnimeField.POPULARITY, AnimeField.START_DATE, AnimeField.STUDIOS, AnimeField.TITLE, AnimeField.EPISODES
     };
 
@@ -217,6 +217,7 @@ public class MalService : IMalService
             throw new($"Failed to remove anime from list: {response.StatusCode}");
         }
 
+        //TODO IMPORTANT ADD A WAY TO ONLY UPDATE ONE FIELD, BY PASSING ID AND ENUM
         var anime = await BuildAnimeFromCache(animeId);
         anime.MyListStatus = null;
         _cache.Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));

@@ -13,6 +13,7 @@ namespace Aniki;
 public partial class App : Application
 {
     private ServiceProvider _serviceProvider = null!;
+    public static ServiceProvider ServiceProvider => ((App)Current!)._serviceProvider;
     
     public override void Initialize()
     {
@@ -31,6 +32,8 @@ public partial class App : Application
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            desktop.ShutdownRequested += OnShutdownRequested;
+            
             desktop.MainWindow = new LoginWindow();
 
             CheckForUpdates();
@@ -63,5 +66,23 @@ public partial class App : Application
         }
     }
     
-    public static ServiceProvider ServiceProvider => ((App)Current!)._serviceProvider;
+    private async void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
+    {
+        e.Cancel = true;
+        
+        try
+        {
+            await _serviceProvider.GetRequiredService<ISaveService>().FlushAllCaches();
+            
+            if (sender is IClassicDesktopStyleApplicationLifetime lifetime)
+            {
+                lifetime.ShutdownRequested -= OnShutdownRequested;
+                lifetime.Shutdown();
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+    }
 }
