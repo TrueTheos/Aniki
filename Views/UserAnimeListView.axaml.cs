@@ -13,7 +13,7 @@ public partial class UserAnimeListView : UserControl
     
     private void GoToAnime(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.DataContext is MalAnimeDetails anime)
+        if (sender is Button button && button.DataContext is AnimeDetails anime)
         {
             App.ServiceProvider.GetRequiredService<MainViewModel>().GoToAnime(anime!.Id);
         }

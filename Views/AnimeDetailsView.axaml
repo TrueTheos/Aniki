@@ -504,7 +504,7 @@
                                                 </ItemsPanelTemplate>
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="mal:MalGenre">
+                                                <DataTemplate DataType="models:Genre">
                                                     <Border Background="#44E50914"
                                                             CornerRadius="16"
                                                             Padding="16,8"

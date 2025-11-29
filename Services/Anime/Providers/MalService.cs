@@ -590,7 +590,8 @@ public class MalService : IAnimeProvider
             Mean = mal.Mean,
             Genres = mal.Genres?.Select(g => new Genre { Id = g.Id, Name = g.Name }).ToArray(),
             TrailerUrl = mal.TrailerUrl,
-            NumFavorites = mal.NumFavorites
+            NumFavorites = mal.NumFavorites,
+            Videos = mal.Videos
         };
     }
 }

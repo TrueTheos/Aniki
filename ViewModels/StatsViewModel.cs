@@ -41,25 +41,26 @@ public partial class StatsViewModel : ViewModelBase
 
     private void CalculateAnimeStats(List<AnimeData> animeList)
     {
-        var stats = new AnimeStats();
-        var scoredAnime = animeList.Where(a => a.UserStatus != null && a.UserStatus.Score > 0).ToList();
-            
-        animeList = animeList.Where(a => a.UserStatus != null).ToList();
+        AnimeStats stats = new AnimeStats();
+    
+        var validAnime = animeList.Where(a => a.UserStatus != null).ToList();
+        var scoredAnime = validAnime.Where(a => a.UserStatus!.Score > 0).ToList();
+    
         if (!scoredAnime.Any())
         {
             AnimeStats = stats;
             return;
         }
             
-        stats.DaysWatched =  animeList.Sum(a => a.UserStatus!.EpisodesWatched * 24.0) / (24.0 * 60.0);
+        stats.DaysWatched =  validAnime.Sum(a => a.UserStatus!.EpisodesWatched * 24.0) / (24.0 * 60.0);
         stats.MeanScore = scoredAnime.Any() ? scoredAnime.Average(a => a.UserStatus!.Score) : 0;
-        stats.Watching = animeList.Count(a => a.UserStatus!.Status == AnimeStatus.Watching);
-        stats.Completed = animeList.Count(a => a.UserStatus!.Status == AnimeStatus.Completed);
-        stats.OnHold = animeList.Count(a => a.UserStatus!.Status == AnimeStatus.OnHold);
-        stats.Dropped = animeList.Count(a => a.UserStatus!.Status == AnimeStatus.Dropped);
-        stats.PlanToWatch = animeList.Count(a => a.UserStatus!.Status == AnimeStatus.PlanToWatch);
-        stats.TotalEntries = animeList.Count;
-        stats.Episodes = animeList.Sum(a => a.UserStatus!.EpisodesWatched);
+        stats.Watching = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.Watching);
+        stats.Completed = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.Completed);
+        stats.OnHold = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.OnHold);
+        stats.Dropped = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.Dropped);
+        stats.PlanToWatch = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.PlanToWatch);
+        stats.TotalEntries = validAnime.Count;
+        stats.Episodes = validAnime.Sum(a => a.UserStatus!.EpisodesWatched);
 
         AnimeStats = stats;
     }

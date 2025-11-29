@@ -101,6 +101,7 @@ public class MalAnimeDetails : ObservableObject
     [CacheField(AnimeField.NUM_FAV)][JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
     [CacheField(AnimeField.STATS)] public MalStatistics? Statistics { get; set; }
     [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
+    [CacheField(AnimeField.VIDEOS)] public AnimeVideo[]? Videos { get; set; }
 }
 
 public class MalStudio
