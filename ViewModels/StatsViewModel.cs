@@ -1,4 +1,5 @@
-﻿using Aniki.Services.Anime;
+﻿using System.Diagnostics;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -31,7 +32,9 @@ public partial class StatsViewModel : ViewModelBase
     {
         if(!MalService.IS_LOGGED_IN) return;
         
+        Console.WriteLine("awake GetUserAnimeListAsync");
         var animeList = await _malService.GetUserAnimeListAsync();
+        Console.WriteLine("end GetUserAnimeListAsync");
         if (animeList == null || !animeList.Any())
             return;
 

@@ -196,6 +196,7 @@ public class MalService : IAnimeProvider
     {
         if (!IS_LOGGED_IN) return new();
         
+        Console.WriteLine("Started GetUserAnimeListAsync");
         if (_userAnimeList != null)
         {
             return status == AnimeStatus.None 
@@ -206,6 +207,7 @@ public class MalService : IAnimeProvider
         try
         {
             List<AnimeData> animeList = new();
+            Console.WriteLine("2 GetUserAnimeListAsync");
             string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={_allFields}&limit=1000&nsfw=true";
             
             if (status != AnimeStatus.None)
@@ -223,7 +225,7 @@ public class MalService : IAnimeProvider
                     animeList.AddRange(response.Data.Select(mal => new AnimeData
                     {
                         Details = ConvertMalToUnified(mal.Node),
-                        UserStatus = ConvertMalListStatus(mal.ListStatus)
+                        UserStatus = ConvertMalListStatus(mal.Node.MyListStatus)
                     }).ToList());
                 }
                 nextPageUrl = response?.Paging?.Next;
@@ -564,34 +566,36 @@ public class MalService : IAnimeProvider
     
     private AnimeDetails ConvertMalToUnified(MalAnimeDetails mal)
     {
-        return new AnimeDetails
-        {
-            Id = mal.Id,
-            Title = mal.Title,
-            MainPicture = mal.MainPicture != null ? new AnimePicture
-            {
-                Medium = mal.MainPicture.Medium,
-                Large = mal.MainPicture.Large
-            } : null,
-            Status = mal.Status,
-            Synopsis = mal.Synopsis,
-            AlternativeTitles = mal.AlternativeTitles != null ? new AlternativeTitles
-            {
-                Synonyms = mal.AlternativeTitles.Synonyms,
-                English = mal.AlternativeTitles.En,
-                Japanese = mal.AlternativeTitles.Ja
-            } : null,
-            UserStatus = ConvertMalListStatus(mal.MyListStatus),
-            NumEpisodes = mal.NumEpisodes,
-            Popularity = mal.Popularity,
-            Picture = mal.Picture,
-            Studios = mal.Studios?.Select(s => new Studio { Id = s.Id, Name = s.Name }).ToArray(),
-            StartDate = mal.StartDate,
-            Mean = mal.Mean,
-            Genres = mal.Genres?.Select(g => new Genre { Id = g.Id, Name = g.Name }).ToArray(),
-            TrailerUrl = mal.TrailerUrl,
-            NumFavorites = mal.NumFavorites,
-            Videos = mal.Videos
-        };
+        return new AnimeDetails(
+            id: mal.Id,
+            title: mal.Title,
+            mainPicture: mal.MainPicture != null
+                ? new AnimePicture
+                {
+                    Medium = mal.MainPicture.Medium,
+                    Large = mal.MainPicture.Large
+                } : null,
+            status: mal.Status,
+            synopsis: mal.Synopsis,
+            alternativeTitles: mal.AlternativeTitles != null
+                ? new AlternativeTitles
+                {
+                    Synonyms = mal.AlternativeTitles.Synonyms,
+                    English = mal.AlternativeTitles.En,
+                    Japanese = mal.AlternativeTitles.Ja
+                } : null,
+            userStatus: ConvertMalListStatus(mal.MyListStatus),
+            numEpisodes: mal.NumEpisodes,
+            popularity: mal.Popularity,
+            picture: mal.Picture,
+            studios: mal.Studios?.Select(s => new Studio { Id = s.Id, Name = s.Name }).ToArray(),
+            startDate: mal.StartDate,
+            mean: mal.Mean,
+            genres: mal.Genres?.Select(g => new Genre { Id = g.Id, Name = g.Name }).ToArray(),
+            trailerUrl: mal.TrailerUrl,
+            numFavorites: mal.NumFavorites,
+            videos: mal.Videos,
+            statistics: mal.Statistics?.ToAnimeStatistics() ?? new AnimeStatistics(),
+            relatedAnime: mal.RelatedAnime);
     }
 }

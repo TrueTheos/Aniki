@@ -29,18 +29,15 @@ public enum AnimeField
     TRAILER_URL
 }
 
-public class MalAnimeData
-{
-    public required MalAnimeDetails Node { get; set; }
-    [JsonPropertyName("list_status")] public MalMyListStatus? ListStatus { get; set; }
-    [JsonIgnore]
-    public bool IsOnList => ListStatus != null;
-}
-
 public class MalUserAnimeListResponse
 {
-    public required MalAnimeData[] Data {get; set;}
+    public required MalAnimeListItem[] Data { get; set; }
     public MalPaging? Paging { get; set; }
+}
+
+public class MalAnimeListItem
+{
+    public required MalAnimeDetails Node { get; set; }
 }
 
 public class MalAnimeSearchListResponse
@@ -154,13 +151,27 @@ public class MalRelatedAnime
     public required string RelationType { get; set; }
 }
 
-
-
 public class MalStatistics
 {
     [JsonPropertyName("num_list_users")]
     public int NumListUsers { get; set; }
     public MalStatusStatistics? Status { get; set; }
+
+    public AnimeStatistics ToAnimeStatistics()
+    {
+        return new AnimeStatistics
+        {
+            NumListUsers = NumListUsers,
+            StatusStats = new()
+            {
+                Watching = Status?.Watching ?? "0",
+                Completed = Status?.Completed ?? "0",
+                OnHold = Status?.OnHold ?? "0",
+                Dropped = Status?.Dropped ?? "0",
+                PlanToWatch = Status?.PlanToWatch ?? "0"
+            }
+        };
+    }
 }
 
 public class MalStatusStatistics

@@ -25,6 +25,7 @@ public class AnimeDetails : ObservableObject
     [CacheField(AnimeField.ALTER_TITLES)] public AlternativeTitles? AlternativeTitles { get; set; }
     
     private UserAnimeStatus? _userStatus;
+
     [CacheField(AnimeField.MY_LIST_STATUS, true)]
     public UserAnimeStatus? UserStatus
     {
@@ -51,6 +52,31 @@ public class AnimeDetails : ObservableObject
     [CacheField(AnimeField.NUM_FAV)] public int? NumFavorites { get; set; }
     [CacheField(AnimeField.STATS)] public AnimeStatistics? Statistics { get; set; }
     [CacheField(AnimeField.VIDEOS)] public AnimeVideo[]? Videos { get; set; }
+    
+    public AnimeDetails(int id, string? title, AnimePicture? mainPicture, string? status, string? synopsis, AlternativeTitles? alternativeTitles,
+        UserAnimeStatus? userStatus, int? numEpisodes, int? popularity, Bitmap? picture, Studio[]? studios, string? startDate,
+        float mean, Genre[]? genres, string? trailerUrl, int? numFavorites, AnimeVideo[]? videos, RelatedAnime[] relatedAnime, AnimeStatistics statistics)
+    {
+        Id = id;
+        Title = title;
+        MainPicture = mainPicture;
+        Status = status;
+        Synopsis = synopsis;
+        AlternativeTitles = alternativeTitles;
+        UserStatus = userStatus;
+        NumEpisodes = numEpisodes;
+        Popularity = popularity;
+        Picture = picture;
+        Studios = studios;
+        StartDate = startDate;
+        Mean = mean;
+        Genres = genres;
+        RelatedAnime = relatedAnime;
+        TrailerUrl = trailerUrl;
+        NumFavorites = numFavorites;
+        Statistics = statistics;
+        Videos = videos;
+    }
     
     public AnimeCardData ToCardData()
     {
@@ -111,11 +137,11 @@ public class AnimeStatistics
 
 public class StatusStatistics
 {
-    public int Watching { get; set; }
-    public int Completed { get; set; }
-    public int OnHold { get; set; }
-    public int Dropped { get; set; }
-    public int PlanToWatch { get; set; }
+    public string? Watching { get; set; }
+    public string? Completed { get; set; }
+    public string? OnHold { get; set; }
+    public string? Dropped { get; set; }
+    public string? PlanToWatch { get; set; }
 }
 
 public class AnimeSearchResult
