@@ -15,8 +15,6 @@ public class MalService : IAnimeProvider
     
     public static bool IS_LOGGED_IN { get; private set; }
 
-    //TODO IMPORTANT ADD A WAY TO ONLY UPDATE ONE FIELD, BY PASSING ID AND ENUM
-    
     public enum AnimeRankingCategory { AIRING, UPCOMING, ALLTIME, BYPOPULARITY }
     
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
@@ -427,7 +425,6 @@ public class MalService : IAnimeProvider
         return results.Select(mal => new AnimeSearchResult
         {
             Details = ConvertMalToUnified(mal.Node),
-            SearchScore = 0 //todo is this correctly sorted?
         }).ToList();
     }
 

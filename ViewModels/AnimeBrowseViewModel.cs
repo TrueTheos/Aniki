@@ -25,7 +25,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty] 
     private ObservableCollection<AnimeCardData> _airingToday = new();
     
-    // Hero Carousel Properties
     [ObservableProperty]
     private ObservableCollection<HeroAnimeData> _heroAnimeList = new();
     
@@ -92,7 +91,6 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             foreach (var anime in airingToday)
             {
                 if(anime.MalId == null) continue;
-                //AnimeFieldSet? details = await _malService.GetFieldsAsync(anime.MalId.Value,  AnimeField.TITLE, AnimeField.MAIN_PICTURE, AnimeField.MEAN, AnimeField.MY_LIST_STATUS);
                 AiringToday.Add(new AnimeCardData
                 {
                     AnimeId = anime.MalId.Value,

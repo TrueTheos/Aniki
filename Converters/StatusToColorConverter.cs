@@ -13,11 +13,11 @@ public class StatusToColorConverter : IValueConverter
         
         return status switch
         {
-            AnimeStatus.Watching => new SolidColorBrush(Color.Parse("#4CAF50")), // Green
-            AnimeStatus.Completed => new SolidColorBrush(Color.Parse("#2196F3")), // Blue
-            AnimeStatus.OnHold => new SolidColorBrush(Color.Parse("#FF9800")), // Orange
-            AnimeStatus.Dropped => new SolidColorBrush(Color.Parse("#F44336")), // Red
-            AnimeStatus.PlanToWatch => new SolidColorBrush(Color.Parse("#9C27B0")), // Purple
+            AnimeStatus.Watching => new SolidColorBrush(Color.Parse("#4CAF50")),
+            AnimeStatus.Completed => new SolidColorBrush(Color.Parse("#2196F3")),
+            AnimeStatus.OnHold => new SolidColorBrush(Color.Parse("#FF9800")),
+            AnimeStatus.Dropped => new SolidColorBrush(Color.Parse("#F44336")),
+            AnimeStatus.PlanToWatch => new SolidColorBrush(Color.Parse("#9C27B0")),
             _ => new SolidColorBrush(Color.Parse("#3A3A3A"))
         };
     }

@@ -99,7 +99,6 @@ public class MalLoginProvider : ILoginProvider
     
     public Task SaveTokenAsync(string token)
     {
-        // Not used in this provider, the token is saved during the code exchange
         return Task.CompletedTask;
     }
 

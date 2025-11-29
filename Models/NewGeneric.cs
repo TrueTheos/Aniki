@@ -155,7 +155,6 @@ public class StatusStatistics
 public class AnimeSearchResult
 {
     public required AnimeDetails Details { get; set; }
-    public int SearchScore { get; set; }
 }
 
 public class RankingEntry

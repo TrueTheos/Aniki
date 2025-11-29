@@ -76,7 +76,6 @@ public class AllMangaScraperService : IAllMangaScraperService
                     var id = edge.GetProperty("_id").GetString();
                     var name = edge.GetProperty("name").GetString();
                     
-                    // Get MAL ID if available
                     int? malId = null;
                     if (edge.TryGetProperty("malId", out var malIdProp) && 
                         malIdProp.ValueKind == JsonValueKind.String)
@@ -182,27 +181,23 @@ public class AllMangaScraperService : IAllMangaScraperService
                     Name = show.GetProperty("name").GetString() ?? string.Empty
                 };
 
-                // Get MAL ID
                 if (show.TryGetProperty("malId", out var malIdProp) && 
                     malIdProp.ValueKind == JsonValueKind.Number)
                 {
                     details.MalId = malIdProp.GetInt32();
                 }
 
-                // Get AniList ID
                 if (show.TryGetProperty("aniListId", out var aniListIdProp) && 
                     aniListIdProp.ValueKind == JsonValueKind.Number)
                 {
                     details.AniListId = aniListIdProp.GetInt32();
                 }
 
-                // Get description
                 if (show.TryGetProperty("description", out var descProp))
                 {
                     details.Description = descProp.GetString();
                 }
-
-                // Get thumbnail
+                
                 if (show.TryGetProperty("thumbnail", out var thumbProp))
                 {
                     details.Thumbnail = thumbProp.GetString();

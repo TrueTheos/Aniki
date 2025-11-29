@@ -113,7 +113,6 @@ public class AnimeService : IAnimeService
     {
         List<AnimeData> animeList = await GetCurrentProvider().GetUserAnimeListAsync(status);
         
-        // Update cache with user list data
         foreach (AnimeData anime in animeList)
         {
             _cache.UpdatePartial(
