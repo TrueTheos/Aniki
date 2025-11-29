@@ -25,19 +25,17 @@
             <StackPanel Spacing="40" Margin="50,20" Background="{StaticResource BackgroundBlack}">
                 
                 <!-- Loading Indicator -->
-                <Border Height="4"
-                        Background="Transparent"
-                        IsVisible="{Binding IsLoading}">
+                <Border Height="4" Background="Transparent">
                     <ProgressBar Height="4"
-                                Background="Transparent"
-                                Foreground="{StaticResource RedColor}"
-                                IsIndeterminate="True" />
+                                 Background="Transparent"
+                                 Foreground="{StaticResource RedColor}"
+                                 IsIndeterminate="{Binding IsLoading}"
+                                 IsVisible="{Binding IsLoading}" />
                 </Border>
 
                 <!-- Header with Search -->
                 <Grid ColumnDefinitions="Auto,*" 
-                      Margin="0,10,0,0"
-                      IsVisible="{Binding !IsLoading}">
+                      Margin="0,-30,0,0">
                     
                     <!-- Manga/Anime Tabs -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="30">

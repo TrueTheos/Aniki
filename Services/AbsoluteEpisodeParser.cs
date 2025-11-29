@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -8,16 +9,21 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     private readonly IMalService _malService;
     
     private GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> _animeSeasonCache;
+    private static readonly ConcurrentDictionary<int, AnimeSeasonsMap> _malIdToMapIndex = new();
 
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> _buildLocks = new();
+    
     public AbsoluteEpisodeParser(ISaveService saveService, IMalService malService)
     {
         _saveService = saveService;
         _malService = malService;
-        
         _animeSeasonCache = _saveService.GetSeasonCache();
+        
+        // todo If your _animeSeasonCache is persistent across restarts, 
+        // you might want to populate _idToMapIndex from it here on startup.
     }
 
-    public  async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode)
+    public async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode)
     {
         AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle);
 
@@ -43,7 +49,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         return (lastKnownSeason + 1, absoluteEpisode - accumulatedEpisodes);
     }
 
-    public  async Task<int?> GetMalIdForSeason(string animeTitle, int seasonNumber)
+    public async Task<int?> GetMalIdForSeason(string animeTitle, int seasonNumber)
     {
         var seasonMap = await GetOrCreateSeasonMap(animeTitle);
         if (seasonMap != null && seasonMap.Seasons.TryGetValue(seasonNumber, out SeasonData seasonData))
@@ -53,26 +59,72 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         return null;
     }
 
-    public  async Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle)
+    public async Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle)
     {
-        var seasonMap = _animeSeasonCache.GetWithoutFetching(animeTitle);
-        if (seasonMap != null) return seasonMap;
-
-        var searchResult = await _malService.SearchAnimeOrdered(animeTitle);
-        if (searchResult.Count == 0) return null;
-            
-        int animeId = searchResult.First().Node.Id;
-
-        AnimeSeasonsMap? newMap = await BuildSeasonMap(animeId);
-        if (newMap?.Seasons != null && newMap.Seasons.Count > 0)
+        try
         {
-            _animeSeasonCache.Update(animeTitle, newMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
-        }
+            var cachedMap = _animeSeasonCache.GetWithoutFetching(animeTitle);
+            if (cachedMap != null)
+            {
+                IndexMap(cachedMap);
+                return cachedMap;
+            }
             
-        return newMap;
+            var lockObj = _buildLocks.GetOrAdd(animeTitle, _ => new SemaphoreSlim(1, 1));
+            await lockObj.WaitAsync();
+
+            try
+            {
+                cachedMap = _animeSeasonCache.GetWithoutFetching(animeTitle);
+                if (cachedMap != null)
+                {
+                    IndexMap(cachedMap);
+                    return cachedMap;
+                }
+
+                var searchResult = await _malService.SearchAnimeOrdered(animeTitle);
+                if (searchResult.Count == 0) return null;
+
+                int foundAnimeId = searchResult.First().Node.Id;
+
+                if (_malIdToMapIndex.TryGetValue(foundAnimeId, out var existingMap))
+                {
+                    _animeSeasonCache.Update(animeTitle, existingMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+                    return existingMap;
+                }
+
+                AnimeSeasonsMap? newMap = await BuildSeasonMap(foundAnimeId);
+
+                if (newMap?.Seasons != null && newMap.Seasons.Count > 0)
+                {
+                    _animeSeasonCache.Update(animeTitle, newMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+                    IndexMap(newMap);
+                }
+
+                return newMap;
+            }
+            finally
+            {
+                lockObj.Release();
+            }
+        }
+        catch
+        {
+            return null;
+        }
     }
 
-    private  async Task<AnimeSeasonsMap?> BuildSeasonMap(int animeId)
+    private void IndexMap(AnimeSeasonsMap map)
+    {
+        if (map.Seasons == null) return;
+
+        foreach (var season in map.Seasons.Values)
+        {
+            _malIdToMapIndex.TryAdd(season.MalId, map);
+        }
+    }
+
+    private async Task<AnimeSeasonsMap?> BuildSeasonMap(int animeId)
     {
         try
         {
@@ -92,17 +144,14 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 seasonChain.Insert(0, (currentId, details));
                 
                 MalRelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
-                if (prequel?.Node != null)
-                {
-                    currentId = prequel.Node.Id;
-                }
-                else
-                {
-                    break; 
-                }
+                if (prequel?.Node != null) currentId = prequel.Node.Id;
+                else break;
             }
 
-            MalAnimeDetails? currentDetails = seasonChain.LastOrDefault(x => x.id == animeId).details;
+            MalAnimeDetails? currentDetails = seasonChain.FirstOrDefault(x => x.id == animeId).details;
+            
+            if (currentDetails == null) currentDetails = seasonChain.Last().details; 
+            currentId = seasonChain.Last().id;
             
             while (currentDetails != null)
             {

@@ -126,7 +126,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                     AnimeId = details.Id,
                     Title = details.Title!,
                     Synopsis = details.Synopsis!,
-                    Score = details.Mean!.Value,
+                    Score = details.Mean,
                     Status = details.MyListStatus?.Status ?? AnimeStatusApi.none,
                     VideoUrl = details.Videos[0].Url,
                     VideoThumbnail = details.Videos[0].Thumbnail,

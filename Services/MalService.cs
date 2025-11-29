@@ -22,15 +22,19 @@ public class MalService : IMalService
 
     private readonly Stopwatch _sw = new();
     private int _requestCounter;
+    
+    private const int RateLimit = 100;
+    private const int RateLimitWindowMs = 1000;
+    private readonly SemaphoreSlim _rateLimitLock = new(1, 1);
     private readonly Queue<DateTime> _requestTimestamps = new();
     
     private readonly ISaveService _saveService;
     private readonly ITokenService _tokenService;
 
     private string _accessToken = "";
-    
-    public const string MAL_NODE_FIELDS = "id,title,num_episodes,list_status,pictures,status,genres,synopsis,main_picture,mean,popularity,my_list_status,start_date,studios";
 
+    private string _allFields = "";
+    
     public static readonly AnimeField[] MAL_NODE_FIELD_TYPES = new[]
     {
         AnimeField.ID, AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
@@ -39,6 +43,14 @@ public class MalService : IMalService
 
     public MalService(ISaveService saveService, ITokenService tokenService)
     {
+        StringBuilder urlFields = new();
+        foreach (AnimeField field in (AnimeField[])Enum.GetValues(typeof(AnimeField)))
+        {
+            urlFields.Append($"{FieldToString(field)},");
+        }
+
+        _allFields = urlFields.ToString();
+        
         CacheOptions options = new()
         {
             DefaultTimeToLive = TimeSpan.FromHours(8),
@@ -83,24 +95,57 @@ public class MalService : IMalService
     
     private async Task<HttpResponseMessage> GetAsync(string url, string message)
     {
-        _requestTimestamps.Enqueue(DateTime.Now);
-        while (_requestTimestamps.Count > 3 && (DateTime.Now - _requestTimestamps.Peek()).TotalSeconds < 1)
+        await _rateLimitLock.WaitAsync();
+
+        try
         {
-            await Task.Delay(500);
+            DateTime now = DateTime.UtcNow;
+
+            while (_requestTimestamps.Count > 0 &&
+                   (now - _requestTimestamps.Peek()).TotalMilliseconds >= RateLimitWindowMs)
+            {
+                _requestTimestamps.Dequeue();
+            }
+
+            if (_requestTimestamps.Count >= RateLimit)
+            {
+                DateTime oldestRequest = _requestTimestamps.Peek();
+                double timePassed = (now - oldestRequest).TotalMilliseconds;
+                int timeToWait = (int)(RateLimitWindowMs - timePassed);
+
+                if (timeToWait > 0)
+                {
+                    await Task.Delay(timeToWait + 20);
+                }
+
+                while (_requestTimestamps.Count > 0 &&
+                       (DateTime.UtcNow - _requestTimestamps.Peek()).TotalMilliseconds >= RateLimitWindowMs)
+                {
+                    _requestTimestamps.Dequeue();
+                }
+            }
+
+            _requestTimestamps.Enqueue(DateTime.UtcNow);
         }
-        if (_requestTimestamps.Count > 3)
+        catch(Exception ex)
         {
-            _requestTimestamps.Dequeue();
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            _rateLimitLock.Release();
         }
 
-#if DEBUG
+    #if DEBUG
         _sw.Restart();
-#endif
+    #endif
+        
         HttpResponseMessage result = await _client.GetAsync(url);
-#if DEBUG
+
+    #if DEBUG
         _sw.Stop();
         Console.WriteLine($"{_requestCounter}: {message} took: {_sw.ElapsedMilliseconds}ms");
-#endif
+    #endif
         _requestCounter++;
         return result;
     }
@@ -124,7 +169,7 @@ public class MalService : IMalService
     {
         if (!IS_LOGGED_IN) return new();
         
-        var userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
+        MAL_UserData? userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
         return userData ?? throw new InvalidOperationException("Failed to deserialize user data");
     }
 
@@ -142,7 +187,7 @@ public class MalService : IMalService
         try
         {
             List<MalAnimeData> animeList = new();
-            string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={MAL_NODE_FIELDS}&limit=1000&nsfw=true";
+            string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={_allFields}&limit=1000&nsfw=true";
             
             if (status != AnimeStatusApi.none)
             {
@@ -153,11 +198,11 @@ public class MalService : IMalService
             
             while (nextPageUrl != null)
             {
-                var response = await GetAndDeserializeAsync<MalUserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
+                MalUserAnimeListResponse? response = await GetAndDeserializeAsync<MalUserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
                 if (response?.Data != null)
                 {
                     animeList.AddRange(response.Data);
-                    foreach (var data in response.Data)
+                    foreach (MalAnimeData data in response.Data)
                     {
                         _cache.UpdatePartial(data.Node.Id, data.Node, MAL_NODE_FIELD_TYPES);
                     }
@@ -184,10 +229,10 @@ public class MalService : IMalService
             return;
         }
         
-        var formData = new Dictionary<string, string> { [fieldName] = value };
+        Dictionary<string, string> formData = new Dictionary<string, string> { [fieldName] = value };
         
-        var content = new FormUrlEncodedContent(formData);
-        var response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
+        FormUrlEncodedContent content = new FormUrlEncodedContent(formData);
+        HttpResponseMessage response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -195,11 +240,11 @@ public class MalService : IMalService
         }
 
         string responseBody = await response.Content.ReadAsStringAsync();
-        var myListStatus = JsonSerializer.Deserialize<MalMyListStatus>(responseBody, _jso);
+        MalMyListStatus? myListStatus = JsonSerializer.Deserialize<MalMyListStatus>(responseBody, _jso);
 
         if (myListStatus != null)
         {
-            var anime = await BuildAnimeFromCache(animeId);
+            MalAnimeDetails anime = await BuildAnimeFromCache(animeId);
             anime.MyListStatus = myListStatus;
             _cache.Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
         }
@@ -211,7 +256,7 @@ public class MalService : IMalService
     {
         if(!IS_LOGGED_IN) return;
         
-        var response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status");
+        HttpResponseMessage response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status");
 
         if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
         {
@@ -219,7 +264,7 @@ public class MalService : IMalService
         }
 
         //TODO IMPORTANT ADD A WAY TO ONLY UPDATE ONE FIELD, BY PASSING ID AND ENUM
-        var anime = await BuildAnimeFromCache(animeId);
+        MalAnimeDetails anime = await BuildAnimeFromCache(animeId);
         anime.MyListStatus = null;
         _cache.Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
 
@@ -247,7 +292,7 @@ public class MalService : IMalService
     {
         StringBuilder urlFields = new();
         Bitmap? picture = null;
-        foreach (var field in fields)
+        foreach (AnimeField field in fields)
         {
             if (field is AnimeField.MAIN_PICTURE && _saveService.TryGetAnimeImage(id, out picture)) {}
             else if (field is not (AnimeField.PICTURE or AnimeField.TRAILER_URL or AnimeField.ID))
@@ -258,7 +303,7 @@ public class MalService : IMalService
         
         string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={urlFields}&nsfw=true";
         
-        var animeResponse = await GetAndDeserializeAsync<MalAnimeDetails>(url, $"FetchFields {urlFields}");
+        MalAnimeDetails? animeResponse = await GetAndDeserializeAsync<MalAnimeDetails>(url, $"FetchFields {id} {urlFields}");
 
         if (animeResponse != null)
         {
@@ -277,6 +322,7 @@ public class MalService : IMalService
                 animeResponse.Picture = await LoadAndCacheAnimeImage(id, animeResponse.MainPicture);
             }
                 
+            _cache.Update(id, animeResponse, fields);
             return animeResponse;
         }
 
@@ -306,7 +352,7 @@ public class MalService : IMalService
             AnimeField.NUM_FAV => "num_favorites",
             AnimeField.STATS => "statistics",
             AnimeField.TRAILER_URL => "",
-            _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
+            _ => ""
         };
     }
 
@@ -318,7 +364,7 @@ public class MalService : IMalService
         }
         else
         {
-            var downloadedImage = await GetAnimeImage(mainPicture);
+            Bitmap? downloadedImage = await GetAnimeImage(mainPicture);
             if (downloadedImage != null)
             {
                 _saveService.SaveImage(id, downloadedImage);
@@ -360,19 +406,19 @@ public class MalService : IMalService
 
     public async Task<List<MalSearchEntry>> SearchAnimeOrdered(string query)
     {
-        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={MAL_NODE_FIELDS}&nsfw=true";
+        string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={_allFields}&nsfw=true";
 
-        var responseData = await GetAndDeserializeAsync<MalAnimeSearchListResponse>(url, "SearchAnimeOrdered");
+        MalAnimeSearchListResponse? responseData = await GetAndDeserializeAsync<MalAnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}");
 
         if (responseData != null)
         {
-            foreach (var data in responseData.Data)
+            foreach (MalSearchEntry data in responseData.Data)
             {
                 _cache.UpdatePartial(data.Node.Id, data.Node, MAL_NODE_FIELD_TYPES);
             }
         }   
 
-        var results = responseData?.Data?
+        List<MalSearchEntry> results = responseData?.Data?
             .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
             .OrderByDescending(x => x.Score)
             .Select(x => x.Entry)
@@ -381,7 +427,7 @@ public class MalService : IMalService
         return results;
     }
 
-    private int CalculateSearchScore(MalAnimeNode anime, string query)
+    private int CalculateSearchScore(MalAnimeDetails anime, string query)
     {
         if (DoesTitleMatch(anime, query))
         {
@@ -398,7 +444,7 @@ public class MalService : IMalService
         return score;
     }
 
-    private bool DoesTitleMatch(MalAnimeNode malAnime, string query)
+    private bool DoesTitleMatch(MalAnimeDetails malAnime, string query)
     {
         string normalizedQuery = NormalizeTitleToLower(query);
         string normalizedTitle = NormalizeTitleToLower(malAnime.Title);
@@ -434,13 +480,13 @@ public class MalService : IMalService
             _ => "all"
         };
 
-        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields={MAL_NODE_FIELDS}&nsfw=true";
+        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields={_allFields}&nsfw=true";
 
-        var response = await GetAndDeserializeAsync<MAL_AnimeRankingResponse>(url, "GetTopAnimeInCategory");
+        MAL_AnimeRankingResponse? response = await GetAndDeserializeAsync<MAL_AnimeRankingResponse>(url, "GetTopAnimeInCategory");
         
         if (response?.Data != null)
         {
-            foreach (var data in response.Data)
+            foreach (MAL_RankingEntry data in response.Data)
             {
                 _cache.UpdatePartial(data.Node.Id, data.Node, MAL_NODE_FIELD_TYPES);
             }
@@ -466,7 +512,7 @@ public class MalService : IMalService
         {
             string url = $"https://api.jikan.moe/v4/anime/{animeId}/videos";
 
-            var response = await GetAsync(url, "GetAnimeTrailerUrlJikan");
+            HttpResponseMessage response = await GetAsync(url, "GetAnimeTrailerUrlJikan");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -475,21 +521,21 @@ public class MalService : IMalService
             }
 
             string json = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
+            using JsonDocument doc = JsonDocument.Parse(json);
 
-            if (doc.RootElement.TryGetProperty("data", out var dataElem) &&
-                dataElem.TryGetProperty("promo", out var promoArray) &&
+            if (doc.RootElement.TryGetProperty("data", out JsonElement dataElem) &&
+                dataElem.TryGetProperty("promo", out JsonElement promoArray) &&
                 promoArray.ValueKind == JsonValueKind.Array &&
                 promoArray.GetArrayLength() > 0)
             {
-                var firstPromo = promoArray[0];
-                if (firstPromo.TryGetProperty("trailer", out var trailerElem))
+                JsonElement firstPromo = promoArray[0];
+                if (firstPromo.TryGetProperty("trailer", out JsonElement trailerElem))
                 {
-                    if (trailerElem.TryGetProperty("embed_url", out var urlElem))
+                    if (trailerElem.TryGetProperty("embed_url", out JsonElement urlElem))
                     {
                         return urlElem.GetString();
                     }
-                    if (trailerElem.TryGetProperty("youtube_id", out var youtubeIdElem))
+                    if (trailerElem.TryGetProperty("youtube_id", out JsonElement youtubeIdElem))
                     {
                         string youtubeId = youtubeIdElem.GetString() ?? "";
                         return string.IsNullOrEmpty(youtubeId) ? null : $"https://www.youtube.com/watch?v={youtubeId}";
