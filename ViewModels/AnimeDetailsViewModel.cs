@@ -63,8 +63,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     private int? _currentSubscribedId;
     
-    //TODO WE HAVE A WAY TO SUBSCRIBE TO FIELD CHANGES. SUBSCIRE TO MYLISTSTATUS CHANGE TO DETECT DELETION ETC
-    
     public AnimeDetailsViewModel(IMalService malService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
         _malService = malService;

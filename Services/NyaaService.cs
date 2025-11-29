@@ -34,8 +34,6 @@ public class NyaaService : INyaaService
         {
             string? title = item.SelectSingleNode("title")?.InnerText;
             if(title == null) continue;
-            ParseResult parsed = await _animeNameParser.ParseAnimeFilename(title);
-            string? episode = parsed.EpisodeNumber;
                 
             string torrentLink = "";
 
@@ -72,8 +70,6 @@ public class NyaaService : INyaaService
                 results.Add(new()
                 {
                     FileName = HttpUtility.HtmlDecode(title),
-                    AnimeTitle = parsed.AnimeName,
-                    EpisodeNumber = episode,
                     TorrentLink = torrentLink,
                     Size = size,
                     Seeders = seeders,

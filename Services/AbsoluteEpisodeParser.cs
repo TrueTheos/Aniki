@@ -19,8 +19,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         _malService = malService;
         _animeSeasonCache = _saveService.GetSeasonCache();
         
-        // todo If your _animeSeasonCache is persistent across restarts, 
-        // you might want to populate _idToMapIndex from it here on startup.
+        // todo we might want to populate _idToMapIndex with _animeSeasonCache across restarts, 
+        // make the map invalid after like 1 day or something
     }
 
     public async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode)

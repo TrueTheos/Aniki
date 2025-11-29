@@ -60,9 +60,6 @@ public class MalPaging
     public string? Next { get; set; }
 }
 
-//TODO IMPORTANT, DO I EVEN NEED MAL_NODE? LIKE, I CAN JUST DESERIALIZE INTO MAL ANIME DETAILS WITH SOME FIELDS MISSING?
-//MY_LIST_STATUS should only be cached in memory!
-
 public class MalAnimeDetails : ObservableObject
 {
     [CacheField(AnimeField.ID)] public int Id { get; set; }
@@ -73,7 +70,7 @@ public class MalAnimeDetails : ObservableObject
     [CacheField(AnimeField.ALTER_TITLES)][JsonPropertyName("alternative_titles")] public MalAlternativeTitles? AlternativeTitles { get; set; }
     
     private MalMyListStatus? _myListStatus;
-    [CacheField(AnimeField.MY_LIST_STATUS)]
+    [CacheField(AnimeField.MY_LIST_STATUS, true)]
     [JsonPropertyName("my_list_status")]
     public MalMyListStatus? MyListStatus
     {
