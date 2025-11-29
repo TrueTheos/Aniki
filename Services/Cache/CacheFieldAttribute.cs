@@ -1,8 +1,8 @@
 ﻿namespace Aniki.Services;
 
 [AttributeUsage(AttributeTargets.Property)]
-public class CacheFieldAttribute : Attribute
+public class CacheFieldAttribute(object fieldId, bool cacheInMemory = false) : Attribute
 {
-    public object FieldId { get; }
-    public CacheFieldAttribute(object fieldId) => FieldId = fieldId;
+    public object FieldId { get; } = fieldId;
+    public bool CacheInMemory { get; } = cacheInMemory;
 }

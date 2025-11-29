@@ -11,6 +11,7 @@ public class MalService : IMalService
 {
     public static bool IS_LOGGED_IN { get; private set; }
 
+    //TODO IMPORTANT ADD A WAY TO ONLY UPDATE ONE FIELD, BY PASSING ID AND ENUM
     private readonly GenericCacheService<int, MalAnimeDetails, AnimeField> _cache;
     
     public enum AnimeRankingCategory { AIRING, UPCOMING, ALLTIME, BYPOPULARITY }
@@ -263,7 +264,6 @@ public class MalService : IMalService
             throw new($"Failed to remove anime from list: {response.StatusCode}");
         }
 
-        //TODO IMPORTANT ADD A WAY TO ONLY UPDATE ONE FIELD, BY PASSING ID AND ENUM
         MalAnimeDetails anime = await BuildAnimeFromCache(animeId);
         anime.MyListStatus = null;
         _cache.Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));

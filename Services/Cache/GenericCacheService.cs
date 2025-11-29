@@ -35,6 +35,8 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     private readonly HashSet<TKey> _dirtyKeys = new();
     private readonly object _dirtyKeysLock = new();
     
+    private readonly HashSet<TFieldEnum> _memoryOnlyFields = new();
+    
     private class StoredCacheEntry
     {
         public string? Key { get; set; }
@@ -59,12 +61,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             EnsureCacheDirectory();
             _ = LoadFromDiskAsync();
             
-            _diskSyncTimer = new Timer(
-                async _ => await SyncToDiskAsync(),
-                null,
-                _options.DiskSyncInterval,
-                _options.DiskSyncInterval
-            );
+            _diskSyncTimer = new Timer(async _ => await SyncToDiskAsync(), null, _options.DiskSyncInterval, _options.DiskSyncInterval);
         }
     }
 
@@ -200,11 +197,14 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         
         foreach (KeyValuePair<TFieldEnum, PropertyInfo> prop in _propertyMap)
         {
+            if (_memoryOnlyFields.Contains(prop.Key))
+                continue;
+            
             object? val = prop.Value.GetValue(entry.Data);
             if (val == null) continue;
 
             Type propType = prop.Value.PropertyType;
-
+            
             if (_options.CustomTypeHandlers.TryGetValue(propType, out ICacheTypeHandler? handler))
             {
                 string sidecarFileName = $"{safeKey}_{prop.Key}.bin";
@@ -228,6 +228,9 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         
         foreach (TFieldEnum field in Enum.GetValues(typeof(TFieldEnum)))
         {
+            if (_memoryOnlyFields.Contains(field))
+                continue;
+            
             if (entry.IsFieldFetched(field))
             {
                 fetchedFields.Add(field.ToString()!);
@@ -297,6 +300,11 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             if (attribute != null && attribute.FieldId is TFieldEnum fieldEnum)
             {
                 _propertyMap[fieldEnum] = prop;
+                
+                if (attribute.CacheInMemory)
+                {
+                    _memoryOnlyFields.Add(fieldEnum);
+                }
             }
         }
     }
