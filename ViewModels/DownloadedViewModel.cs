@@ -211,7 +211,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (malId == null)
                 return;
 
-            var animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, AnimeField.TITLE, AnimeField.EPISODES);
+            var animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, fields:[AnimeField.TITLE, AnimeField.EPISODES]);
 
             var episode = new DownloadedEpisode(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                 parsedFile.AbsoluteEpisodeNumber,
@@ -372,7 +372,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (_lastPlayedEpisode == null) return;
             if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, AnimeField.EPISODES);
+                var animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.EPISODES);
                 ConfirmEpisodeWindow dialog = new() 
                 {
                     DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)

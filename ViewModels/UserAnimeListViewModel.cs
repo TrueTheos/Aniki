@@ -159,7 +159,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
             if(_loadedIds.Contains(element.Details.Id)) continue;
             
             if(AnimeList.Any(x => x.Id == element.Details.Id)) continue;
-            AnimeList.Add(await _animeService.GetFieldsAsync(element.Details.Id, AnimeService.MAL_NODE_FIELD_TYPES));
+            AnimeList.Add(await _animeService.GetFieldsAsync(element.Details.Id, fields: AnimeService.MAL_NODE_FIELD_TYPES));
             _loadedIds.Add(element.Details.Id);
         }
         

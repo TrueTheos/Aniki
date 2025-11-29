@@ -3,7 +3,7 @@
 public interface IAnimeService
 {
     public Task<List<AnimeData>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None);
-    public Task<AnimeDetails> GetFieldsAsync(int animeId, params AnimeField[] fields);
+    public Task<AnimeDetails> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields);
     public void RegisterProvider(string name, IAnimeProvider provider);
     public Task<List<AnimeSearchResult>> SearchAnimeAsync(string query);
 

@@ -243,24 +243,40 @@ public class MalService : IAnimeProvider
         }
     }
     
-    private async Task SetMyListStatusField(int  animeId, string fieldName, string value)
+    public Task SetAnimeStatusAsync(int animeId, AnimeStatus status) 
+        => SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString());
+
+    public Task SetAnimeScoreAsync(int animeId, int score) 
+        => SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString());
+
+    public Task SetEpisodesWatchedAsync(int animeId, int episodes) 
+        => SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString());
+
+    
+    private async Task SetMyListStatusField(int  animeId, UserAnimeStatus.UserAnimeStatusField field, string value)
     {
         if (!IS_LOGGED_IN)
         {
             return;
         }
+
+        string fieldName = field switch
+        {
+            UserAnimeStatus.UserAnimeStatusField.Status => "status",
+            UserAnimeStatus.UserAnimeStatusField.Score => "score",
+            UserAnimeStatus.UserAnimeStatusField.EpisodesWatched => "num_watched_episodes",
+            _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
+        };
         
-        Dictionary<string, string> formData = new Dictionary<string, string> { [fieldName] = value };
+        Dictionary<string, string> formData = new() { [fieldName] = value };
         
-        FormUrlEncodedContent content = new FormUrlEncodedContent(formData);
+        FormUrlEncodedContent content = new(formData);
         HttpResponseMessage response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
 
         if (!response.IsSuccessStatusCode)
         {
             throw new($"Failed to update anime: {response.StatusCode}");
         }
-
-        _userAnimeList = null;
     }
     
     public async Task RemoveFromUserListAsync(int animeId)
@@ -508,15 +524,6 @@ public class MalService : IAnimeProvider
             _ => AnimeStatusApi.none
         };
     }
-
-    public Task SetAnimeStatusAsync(int animeId, AnimeStatus status) 
-        => SetMyListStatusField(animeId, "status", ConvertToMalStatus(status).ToString());
-
-    public Task SetAnimeScoreAsync(int animeId, int score) 
-        => SetMyListStatusField(animeId, "score", score.ToString());
-
-    public Task SetEpisodesWatchedAsync(int animeId, int episodes) 
-        => SetMyListStatusField(animeId, "num_watched_episodes", episodes.ToString());
     
     private async Task<string?> GetAnimeTrailerUrlJikan(int animeId)
     {
@@ -596,6 +603,12 @@ public class MalService : IAnimeProvider
             numFavorites: mal.NumFavorites,
             videos: mal.Videos,
             statistics: mal.Statistics?.ToAnimeStatistics() ?? new AnimeStatistics(),
-            relatedAnime: mal.RelatedAnime);
+            relatedAnime: mal.RelatedAnime?
+                .Select(r => new Models.RelatedAnime
+                {
+                    Details = r.Node != null ? ConvertMalToUnified(r.Node) : null,
+                    RelationType = r.RelationType
+                })
+                .ToArray() ?? []);
     }
 }

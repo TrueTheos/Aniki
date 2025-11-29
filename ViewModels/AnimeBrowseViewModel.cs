@@ -119,7 +119,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         
         foreach (var anime in animeList.Take(10))
         {
-            var details = await _animeService.GetFieldsAsync(anime.Details.Id, AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS);
+            var details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS]);
             if (details?.Videos != null && details.Videos.Length > 0)
             {
                 var heroData = new HeroAnimeData

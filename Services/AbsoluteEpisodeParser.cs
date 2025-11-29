@@ -139,7 +139,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             {
                 if (!visitedIds.Add(currentId)) break;
 
-                AnimeDetails? details = await _animeService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
+                AnimeDetails? details = await _animeService.GetFieldsAsync(currentId,  fields: [AnimeField.ALTER_TITLES, AnimeField.START_DATE,
+                    AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME]);
                 if (details == null) break;
                 
                 seasonChain.Insert(0, (currentId, details));
@@ -161,7 +162,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 {
                     currentId = sequel.Details.Id;
                     visitedIds.Add(currentId);
-                    currentDetails = await _animeService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
+                    currentDetails = await _animeService.GetFieldsAsync(currentId, fields:[AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE,
+                        AnimeField.EPISODES, AnimeField.RELATED_ANIME]);
                     if (currentDetails != null)
                     {
                         seasonChain.Add((currentId, currentDetails));

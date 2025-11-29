@@ -61,10 +61,6 @@ public class AnimeService : IAnimeService
         }
         return _currentProvider;
     }
-
-    // ========================================================================
-    // Cache & Field Management
-    // ========================================================================
     
     public void SubscribeToFieldChange(int animeId, FieldChangeHandler<AnimeDetails> handler, params AnimeField[] fields)
     {
@@ -76,9 +72,9 @@ public class AnimeService : IAnimeService
         _cache.UnsubscribeFromFieldChange(animeId, handler, fields);
     }
 
-    public async Task<AnimeDetails> GetFieldsAsync(int animeId, params AnimeField[] fields)
+    public async Task<AnimeDetails> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields)
     {
-        return await _cache.GetOrFetchFieldsAsync(animeId, fields: fields);
+        return await _cache.GetOrFetchFieldsAsync(animeId, forceFetch, fields: fields);
     }
 
     public async Task<AnimeDetails> GetAllFieldsAsync(int animeId)
@@ -101,10 +97,6 @@ public class AnimeService : IAnimeService
         
         return details;
     }
-
-    // ========================================================================
-    // User Operations
-    // ========================================================================
 
     public async Task<UserData> GetUserDataAsync()
     {
@@ -147,24 +139,24 @@ public class AnimeService : IAnimeService
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
         await GetCurrentProvider().SetAnimeStatusAsync(animeId, status);
-        
-        // Update cache
-        AnimeDetails anime = await GetFieldsAsync(animeId, AnimeField.MY_LIST_STATUS);
-        if (anime.UserStatus != null)
-        {
-            anime.UserStatus.Status = status;
-            _cache.Update(animeId, anime, AnimeField.MY_LIST_STATUS);
-        }
+        await AfterUserStatusChange(animeId);
     }
-
+    
     public async Task SetAnimeScoreAsync(int animeId, int score)
     {
         await GetCurrentProvider().SetAnimeScoreAsync(animeId, score);
+        await AfterUserStatusChange(animeId);
     }
 
     public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
     {
         await GetCurrentProvider().SetEpisodesWatchedAsync(animeId, episodes);
+        await AfterUserStatusChange(animeId);
+    }
+    
+    private async Task AfterUserStatusChange(int animeId)
+    {
+        await GetFieldsAsync(animeId, true, AnimeField.MY_LIST_STATUS);
     }
 
     // ========================================================================

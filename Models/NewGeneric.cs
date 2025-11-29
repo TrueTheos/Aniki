@@ -53,6 +53,8 @@ public class AnimeDetails : ObservableObject
     [CacheField(AnimeField.STATS)] public AnimeStatistics? Statistics { get; set; }
     [CacheField(AnimeField.VIDEOS)] public AnimeVideo[]? Videos { get; set; }
     
+    public AnimeDetails(){}
+    
     public AnimeDetails(int id, string? title, AnimePicture? mainPicture, string? status, string? synopsis, AlternativeTitles? alternativeTitles,
         UserAnimeStatus? userStatus, int? numEpisodes, int? popularity, Bitmap? picture, Studio[]? studios, string? startDate,
         float mean, Genre[]? genres, string? trailerUrl, int? numFavorites, AnimeVideo[]? videos, RelatedAnime[] relatedAnime, AnimeStatistics statistics)
@@ -118,6 +120,12 @@ public class AlternativeTitles
 
 public class UserAnimeStatus
 {
+    public enum UserAnimeStatusField
+    {
+        Status,
+        Score,
+        EpisodesWatched
+    };
     public AnimeStatus Status { get; set; }
     public int Score { get; set; }
     public int EpisodesWatched { get; set; }

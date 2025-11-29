@@ -181,7 +181,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             _ = LoadEpisodesAsync(value);
 
-            var animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS);
+            var animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields:[AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS]);
 
             if (animeField.UserStatus != null)
             {
