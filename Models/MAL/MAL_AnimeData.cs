@@ -98,22 +98,9 @@ public class MalAnimeDetails : ObservableObject
     }
     [CacheField(AnimeField.GENRES)] public MalGenre[]? Genres { get; set; }
     [CacheField(AnimeField.RELATED_ANIME)][JsonPropertyName("related_anime")] public MalRelatedAnime[]? RelatedAnime { get; set; }
-    [CacheField(AnimeField.VIDEOS)] public MalVideo[]? Videos { get; set; }
     [CacheField(AnimeField.NUM_FAV)][JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
     [CacheField(AnimeField.STATS)] public MalStatistics? Statistics { get; set; }
     [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
-    
-    public AnimeCardData ToCardData()
-    {
-        return new AnimeCardData()
-        {
-            AnimeId = Id,
-            Title = Title,
-            ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
-            Score = Mean,
-            MyListStatus = MyListStatus?.Status ?? AnimeStatusApi.none
-        };
-    }
 }
 
 public class MalStudio
@@ -166,17 +153,7 @@ public class MalRelatedAnime
     public required string RelationType { get; set; }
 }
 
-public class MalVideo
-{
-    public int Id { get; set; }
-    public required string Title { get; set; }
-    public required string Url { get; set; }
-    [JsonPropertyName("created_at")]
-    public long CreatedAt { get; set; }
-    [JsonPropertyName("updated_at")]
-    public long UpdatedAt { get; set; }
-    public required string Thumbnail { get; set; }
-}
+
 
 public class MalStatistics
 {

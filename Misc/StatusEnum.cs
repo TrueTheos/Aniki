@@ -64,6 +64,20 @@ public static class StatusEnum
         };
     }
     
+    public static AnimeStatus TranslatedToAnimeStatus(this AnimeStatusTranslated translated)
+    {
+        return translated switch
+        {
+            AnimeStatusTranslated.Watching => AnimeStatus.Watching,
+            AnimeStatusTranslated.Completed => AnimeStatus.Completed,
+            AnimeStatusTranslated.OnHold => AnimeStatus.OnHold,
+            AnimeStatusTranslated.Dropped => AnimeStatus.Dropped,
+            AnimeStatusTranslated.PlanToWatch => AnimeStatus.PlanToWatch,
+            AnimeStatusTranslated.All => AnimeStatus.None,
+            _ => throw new ArgumentOutOfRangeException(nameof(translated), translated, null)
+        };
+    }
+    
     public static string ApiToString(AnimeStatusApi api)
     {
         return api switch
@@ -78,16 +92,16 @@ public static class StatusEnum
         };
     }
 
-    public static AnimeStatusTranslated ApiToTranslated(this AnimeStatusApi api)
+    public static AnimeStatusTranslated ApiToTranslated(this AnimeStatus api)
     {
         return api switch
         {
-            AnimeStatusApi.watching => AnimeStatusTranslated.Watching,
-            AnimeStatusApi.completed => AnimeStatusTranslated.Completed,
-            AnimeStatusApi.on_hold => AnimeStatusTranslated.OnHold,
-            AnimeStatusApi.dropped => AnimeStatusTranslated.Dropped,
-            AnimeStatusApi.plan_to_watch => AnimeStatusTranslated.PlanToWatch,
-            AnimeStatusApi.none => AnimeStatusTranslated.All,
+            AnimeStatus.Watching => AnimeStatusTranslated.Watching,
+            AnimeStatus.Completed => AnimeStatusTranslated.Completed,
+            AnimeStatus.OnHold => AnimeStatusTranslated.OnHold,
+            AnimeStatus.Dropped => AnimeStatusTranslated.Dropped,
+            AnimeStatus.PlanToWatch => AnimeStatusTranslated.PlanToWatch,
+            AnimeStatus.None => AnimeStatusTranslated.All,
             _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
         };
     }

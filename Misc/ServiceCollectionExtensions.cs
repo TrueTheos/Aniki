@@ -1,4 +1,5 @@
 ﻿using Aniki.Services;
+using Aniki.Services.Anime;
 using Aniki.Services.Auth;
 using Aniki.Services.Auth.Providers;
 using Aniki.Services.Interfaces;
@@ -16,14 +17,16 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<IAnimeNameParser, AnimeNameParser>();
         collection.AddSingleton<ICalendarService, CalendarService>();
         collection.AddSingleton<IDiscordService, DiscordService>();
-        collection.AddSingleton<IMalService, MalService>();
-        collection.AddSingleton<IAnilistService, AnilistService>();
+        collection.AddSingleton<IAnimeService, AnimeService>();
         collection.AddSingleton<INyaaService, NyaaService>();
         collection.AddSingleton<ISaveService, SaveService>();
         collection.AddSingleton<ITokenService, TokenService>();
         collection.AddSingleton<IAllMangaScraperService, AllMangaScraperService>();
         collection.AddSingleton<IVideoPlayerService, VideoPlayerService>();
 
+        collection.AddSingleton<AnilistService>();
+        collection.AddSingleton<MalService>();
+        
         collection.AddSingleton<ILoginProvider, AnilistLoginProvider>();
         collection.AddSingleton<ILoginProvider, MalLoginProvider>();
 

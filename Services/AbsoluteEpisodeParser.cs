@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -6,17 +7,17 @@ namespace Aniki.Services;
 public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 {
     private readonly ISaveService _saveService;
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
     
     private GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> _animeSeasonCache;
     private static readonly ConcurrentDictionary<int, AnimeSeasonsMap> _malIdToMapIndex = new();
 
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> _buildLocks = new();
     
-    public AbsoluteEpisodeParser(ISaveService saveService, IMalService malService)
+    public AbsoluteEpisodeParser(ISaveService saveService, IAnimeService animeService)
     {
         _saveService = saveService;
-        _malService = malService;
+        _animeService = animeService;
         _animeSeasonCache = _saveService.GetSeasonCache();
         
         // todo we might want to populate _idToMapIndex with _animeSeasonCache across restarts, 
@@ -82,10 +83,10 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     return cachedMap;
                 }
 
-                var searchResult = await _malService.SearchAnimeOrdered(animeTitle);
+                var searchResult = await _animeService.SearchAnimeAsync(animeTitle);
                 if (searchResult.Count == 0) return null;
 
-                int foundAnimeId = searchResult.First().Node.Id;
+                int foundAnimeId = searchResult.First().Details.Id;
 
                 if (_malIdToMapIndex.TryGetValue(foundAnimeId, out var existingMap))
                 {
@@ -131,36 +132,36 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             AnimeSeasonsMap seasonMap = new();
             HashSet<int> visitedIds = new();
             
-            List<(int id, MalAnimeDetails details)> seasonChain = new();
+            List<(int id, AnimeDetails details)> seasonChain = new();
             int currentId = animeId;
             
             while (true)
             {
                 if (!visitedIds.Add(currentId)) break;
 
-                MalAnimeDetails? details = await _malService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
+                AnimeDetails? details = await _animeService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
                 if (details == null) break;
                 
                 seasonChain.Insert(0, (currentId, details));
                 
-                MalRelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
-                if (prequel?.Node != null) currentId = prequel.Node.Id;
+                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
+                if (prequel?.Details != null) currentId = prequel.Details.Id;
                 else break;
             }
 
-            MalAnimeDetails? currentDetails = seasonChain.FirstOrDefault(x => x.id == animeId).details;
+            AnimeDetails? currentDetails = seasonChain.FirstOrDefault(x => x.id == animeId).details;
             
             if (currentDetails == null) currentDetails = seasonChain.Last().details; 
             currentId = seasonChain.Last().id;
             
             while (currentDetails != null)
             {
-                MalRelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
-                if (sequel?.Node != null && !visitedIds.Contains(sequel.Node.Id))
+                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
+                if (sequel?.Details != null && !visitedIds.Contains(sequel.Details.Id))
                 {
-                    currentId = sequel.Node.Id;
+                    currentId = sequel.Details.Id;
                     visitedIds.Add(currentId);
-                    currentDetails = await _malService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
+                    currentDetails = await _animeService.GetFieldsAsync(currentId, AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME);
                     if (currentDetails != null)
                     {
                         seasonChain.Add((currentId, currentDetails));
@@ -174,7 +175,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             
             for (int i = 0; i < seasonChain.Count; i++)
             {
-                (int id, MalAnimeDetails details) = seasonChain[i];
+                (int id, AnimeDetails details) = seasonChain[i];
                 seasonMap.Seasons[i + 1] = new SeasonData 
                 { 
                     Episodes = details.NumEpisodes ?? 0, 

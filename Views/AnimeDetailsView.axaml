@@ -88,7 +88,7 @@
                                             </Border>
                                         </Grid>
                                         
-                                        <StackPanel Grid.Row="1" Margin="0,50,0,0" IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                        <StackPanel Grid.Row="1" Margin="0,50,0,0" IsVisible="{Binding Details.UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
                                             <ProgressBar Height="8"
                                                          Value="{Binding WatchedEpisodes}"
                                                          Maximum="{Binding Details.NumEpisodes}"
@@ -137,7 +137,7 @@
                                             <UniformGrid Columns="3" Rows="2" HorizontalAlignment="Center" RowSpacing="20">
                                                 <!-- Watching -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.Watching, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Watching, Converter={StaticResource StringToFormattedIntConverter}}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -150,7 +150,7 @@
                                                 
                                                 <!-- Completed -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.Completed, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Completed, Converter={StaticResource StringToFormattedIntConverter}}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -163,7 +163,7 @@
 
                                                 <!-- Plan to Watch -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.PlanToWatch, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.PlanToWatch, Converter={StaticResource StringToFormattedIntConverter}}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -176,7 +176,7 @@
 
                                                 <!-- On Hold -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.OnHold, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.OnHold, Converter={StaticResource StringToFormattedIntConverter}}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -189,7 +189,7 @@
 
                                                 <!-- Dropped -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.Dropped, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Dropped, Converter={StaticResource StringToFormattedIntConverter}}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -227,7 +227,7 @@
                                         
                                         <!-- Japanese Title + Metadata -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,20" Spacing="10">
-                                            <TextBlock Text="{Binding Details.AlternativeTitles.Ja}"
+                                            <TextBlock Text="{Binding Details.AlternativeTitles.Japanese}"
                                                        FontSize="14"
                                                        Foreground="#AAAAAA"/>
                                             <TextBlock Text="•" 
@@ -255,7 +255,7 @@
                                                         Padding="28,13">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
-                                                            <Binding Path="Details.MyListStatus"
+                                                            <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNotNull}"/>
                                                             <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
                                                         </MultiBinding>
@@ -286,7 +286,7 @@
                                                         Command="{Binding AddToListCommand}">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
-                                                            <Binding Path="Details.MyListStatus"
+                                                            <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNull}"/>
                                                             <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
                                                         </MultiBinding>
@@ -387,7 +387,7 @@
                                                         Command="{Binding RemoveFromListCommand}">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
-                                                            <Binding Path="Details.MyListStatus"
+                                                            <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNotNull}"/>
                                                             <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
                                                         </MultiBinding>
@@ -533,7 +533,7 @@
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
-                                                    <DataTemplate DataType="mal:MalVideo">
+                                                    <DataTemplate DataType="models:AnimeVideo">
                                                         <Border x:Name="thumbnailCard"
                                                                 Width="380"
                                                                 Height="214"

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
@@ -46,7 +47,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     enum AssocStr { Executable = 2 }
     
     private readonly IDiscordService _discordService;
-    private readonly IMalService  _malService;
+    private readonly IAnimeService  _animeService;
     private readonly ISaveService  _saveService;
     private readonly IAbsoluteEpisodeParser  _absoluteEpisodeParser;
     private readonly IAnimeNameParser  _animeNameParser;
@@ -67,11 +68,11 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<VideoPlayerOption> AvailablePlayers => _videoPlayerService.AvailablePlayers;
 
-    public DownloadedViewModel(IDiscordService discordService, IMalService malService, ISaveService saveService, 
+    public DownloadedViewModel(IDiscordService discordService, IAnimeService animeService, ISaveService saveService, 
         IAbsoluteEpisodeParser absoluteEpisodeParser, IAnimeNameParser animeNameParser, IVideoPlayerService videoPlayerService)
     {
         _discordService = discordService;
-        _malService = malService;
+        _animeService = animeService;
         _saveService = saveService;
         _absoluteEpisodeParser = absoluteEpisodeParser;
         _animeNameParser = animeNameParser;
@@ -210,7 +211,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (malId == null)
                 return;
 
-            var animeFieldSet = await _malService.GetFieldsAsync(malId.Value, AnimeField.TITLE, AnimeField.EPISODES);
+            var animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, AnimeField.TITLE, AnimeField.EPISODES);
 
             var episode = new DownloadedEpisode(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                 parsedFile.AbsoluteEpisodeNumber,
@@ -236,7 +237,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
         else
         {
-            AnimeGroup newGroup = new(downloadedEpisode.AnimeTitle, new ObservableCollection<DownloadedEpisode> { downloadedEpisode }, animeTotalEpisodes, malId, _malService);
+            AnimeGroup newGroup = new(downloadedEpisode.AnimeTitle, new ObservableCollection<DownloadedEpisode> { downloadedEpisode }, animeTotalEpisodes, malId, _animeService);
             InsertGroupInSortedOrder(newGroup);
         }
     }
@@ -371,7 +372,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (_lastPlayedEpisode == null) return;
             if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var animeData = await _malService.GetFieldsAsync(_lastPlayedEpisode.Id, AnimeField.EPISODES);
+                var animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, AnimeField.EPISODES);
                 ConfirmEpisodeWindow dialog = new() 
                 {
                     DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
@@ -392,7 +393,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private void MarkEpisodeCompleted(DownloadedEpisode ep)
     {
         int episodeToMark = ep.EpisodeNumber;
-        _ = _malService.SetEpisodesWatched(ep.Id,  episodeToMark);
+        _ = _animeService.SetEpisodesWatchedAsync(ep.Id,  episodeToMark);
     }
 
     public void Dispose()

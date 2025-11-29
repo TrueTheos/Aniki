@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -11,7 +12,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
-    private MalAnimeDetails? _details;
+    private AnimeDetails? _details;
 
     public string? ImageUrl => Details?.MainPicture?.Large;
 
@@ -30,7 +31,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     [ObservableProperty]
     private TorrentSearchViewModel _torrentSearchViewModel;
     
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
     
     public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString();
 
@@ -63,9 +64,9 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     private int? _currentSubscribedId;
     
-    public AnimeDetailsViewModel(IMalService malService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
+    public AnimeDetailsViewModel(IAnimeService animeService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
-        _malService = malService;
+        _animeService = animeService;
         _watchAnimeViewModel = watchAnimeViewModel;
         _torrentSearchViewModel = torrentSearchViewModel;
     }
@@ -76,7 +77,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         
         ManageSubscriptions(id);
 
-        MalAnimeDetails? details = await _malService.GetAllFieldsAsync(id);
+        AnimeDetails? details = await _animeService.GetAllFieldsAsync(id);
         LoadDetails(details);
 
         IsLoading = false;
@@ -86,14 +87,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (_currentSubscribedId.HasValue && _currentSubscribedId != newId)
         {
-            _malService.UnsubscribeFromFieldChange(_currentSubscribedId.Value, OnAnimeDataChanged, AnimeField.MY_LIST_STATUS);
+            _animeService.UnsubscribeFromFieldChange(_currentSubscribedId.Value, OnAnimeDataChanged, AnimeField.MY_LIST_STATUS);
         }
 
         _currentSubscribedId = newId;
-        _malService.SubscribeToFieldChange(newId, OnAnimeDataChanged, AnimeField.MY_LIST_STATUS);
+        _animeService.SubscribeToFieldChange(newId, OnAnimeDataChanged, AnimeField.MY_LIST_STATUS);
     }
 
-    private void OnAnimeDataChanged(MalAnimeDetails updatedEntity)
+    private void OnAnimeDataChanged(AnimeDetails updatedEntity)
     {
         Dispatcher.UIThread.Invoke(() =>
         {
@@ -105,15 +106,15 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         });
     }
 
-    private void LoadDetails(MalAnimeDetails? details)
+    private void LoadDetails(AnimeDetails? details)
     {
         Details = details;
         
-        WatchedEpisodes = details?.MyListStatus?.NumEpisodesWatched ?? 0;
-        SelectedScore = details?.MyListStatus?.Score ?? 0;
+        WatchedEpisodes = details?.UserStatus?.EpisodesWatched ?? 0;
+        SelectedScore = details?.UserStatus?.Score ?? 0;
         OnPropertyChanged(nameof(ScoreText));
         
-        SelectedStatus = details?.MyListStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
+        SelectedStatus = details?.UserStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
         
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
@@ -139,22 +140,22 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await _malService.RemoveFromUserList(Details.Id);
+        await _animeService.RemoveFromUserListAsync(Details.Id);
     }
 
     [RelayCommand]
     private async Task AddToList()
     {
         if (Details == null) return;
-        if (Details.MyListStatus == null || Details.MyListStatus.Status == AnimeStatusApi.none)
+        if (Details.UserStatus == null || Details.UserStatus.Status == AnimeStatus.None)
         {
-            await _malService.SetAnimeStatus(Details.Id, AnimeStatusApi.plan_to_watch);
+            await _animeService.SetAnimeStatusAsync(Details.Id, AnimeStatus.PlanToWatch);
         }
     }
 
     private async Task UpdateEpisodeCount(int change)
     {
-        if (Details?.MyListStatus == null) return;
+        if (Details?.UserStatus == null) return;
 
         int newCount = WatchedEpisodes + change;
 
@@ -165,7 +166,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             newCount = Details.NumEpisodes ?? 0;
         }
 
-        await _malService.SetEpisodesWatched(Details.Id, newCount);
+        await _animeService.SetEpisodesWatchedAsync(Details.Id, newCount);
         WatchedEpisodes = newCount;
     }
 
@@ -189,18 +190,18 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     }
     private async Task UpdateAnimeScore(int score)
     {
-        if (Details?.MyListStatus == null) return;
+        if (Details?.UserStatus == null) return;
 
-        await _malService.SetAnimeScore(Details.Id, score);
-        Details.MyListStatus.Score = score;
+        await _animeService.SetAnimeScoreAsync(Details.Id, score);
+        Details.UserStatus.Score = score;
     }
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
-        if(Details?.MyListStatus == null) return;
+        if(Details?.UserStatus == null) return;
         
-        await _malService.SetAnimeStatus(Details.Id, status.TranslatedToApi());
-        if (Details.MyListStatus != null) Details.MyListStatus.Status = status.TranslatedToApi();
+        await _animeService.SetAnimeStatusAsync(Details.Id, status.TranslatedToAnimeStatus());
+        if (Details.UserStatus != null) Details.UserStatus.Status = status.TranslatedToAnimeStatus();
     }
     
     [RelayCommand]

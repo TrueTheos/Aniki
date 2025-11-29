@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -13,11 +14,8 @@ public class AllMangaScraperService : IAllMangaScraperService
     private const string ALLANIME_API = "https://api.allanime.day";
     private const string ALLANIME_REFR = "https://allmanga.to";
 
-    private IMalService _malService;
-    
-    public AllMangaScraperService(IMalService malService)
+    public AllMangaScraperService()
     {
-        _malService = malService;
         var handler = new HttpClientHandler
         {
             AllowAutoRedirect = true,

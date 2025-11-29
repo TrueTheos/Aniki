@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Aniki.Models;
 using Aniki.Models.Anilist;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Auth.Providers;
@@ -15,12 +16,14 @@ public class AnilistLoginProvider : ILoginProvider
     public string LoginUrl => $"https://anilist.co/api/v2/oauth/authorize?client_id={ClientId}&response_type=token";
 
     private readonly ITokenService _tokenService;
-    private readonly IAnilistService _anilistService;
+    private readonly IAnimeService _animeService;
     
-    public AnilistLoginProvider(ITokenService tokenService, IAnilistService anilistService)
+    public AnilistLoginProvider(ITokenService tokenService, IAnimeService animeService, AnilistService anilistService)
     {
         _tokenService = tokenService;
-        _anilistService = anilistService;
+        _animeService = animeService;
+        
+        _animeService.RegisterProvider(anilistService.ProviderName, anilistService);
     }
 
     public Task<string?> LoginAsync(IProgress<string> progressReporter)
@@ -49,9 +52,9 @@ public class AnilistLoginProvider : ILoginProvider
 
         try
         {
-            _anilistService.SetToken(tokenData.AccessToken);
-            Anilist_ViewerData? viewerData = await _anilistService.GetViewerAsync();
-            return viewerData?.Name;
+            _animeService.SetActiveProvider(Name, tokenData.AccessToken);
+            UserData? userData = await _animeService.GetUserDataAsync();
+            return userData?.Name;
         }
         catch (Exception)
         {
@@ -62,8 +65,8 @@ public class AnilistLoginProvider : ILoginProvider
 
     public void Logout()
     {
-        _tokenService.ClearTokens(Id);
-        _anilistService.SetToken(string.Empty);
+        _tokenService.ClearTokens(Id); 
+        //todo _animeService.SetToken(string.Empty);
     }
     
     private void OpenBrowser(string url)

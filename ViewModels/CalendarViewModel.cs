@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,7 +30,7 @@ public partial class CalendarViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentWeekRange = "";
 
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
     private readonly ICalendarService _calendarService;
 
     public double CurrentTimeOffset
@@ -43,9 +44,9 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    public CalendarViewModel(IMalService malService, ICalendarService calendarService)
+    public CalendarViewModel(IAnimeService animeService, ICalendarService calendarService)
     {
-        _malService = malService;
+        _animeService = animeService;
         _calendarService = calendarService;
         Days = new();
         UpdateCurrentWeekRange();
@@ -64,16 +65,16 @@ public partial class CalendarViewModel : ViewModelBase
         
         if(!MalService.IS_LOGGED_IN) return;
         
-        List<MalAnimeData> watching = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
-        List<MalAnimeData> planToWatch = await _malService.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
+        List<AnimeData> watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
+        List<AnimeData> planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
 
-        foreach (MalAnimeData anime in watching)
+        foreach (AnimeData anime in watching)
         {
-            if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
+            if(anime.Details.Title != null) _watchingList.Add(anime.Details.Title);
         }
-        foreach (MalAnimeData anime in planToWatch)
+        foreach (AnimeData anime in planToWatch)
         {
-            if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
+            if(anime.Details.Title != null) _watchingList.Add(anime.Details.Title);
         }
     }
 

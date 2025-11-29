@@ -230,7 +230,7 @@
                             <UniformGridLayout MinColumnSpacing="20" MinRowSpacing="20" Orientation="Horizontal" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
-                            <DataTemplate DataType="mal:MalAnimeDetails">
+                            <DataTemplate DataType="models:AnimeDetails">
                             <Border Width="220"
                                     Cursor="Hand"
                                     Background="Transparent">
@@ -270,14 +270,14 @@
                                                 </Border>
                                                 
                                                 <!-- Status Badge -->
-                                                <Border Background="{Binding MyListStatus.Status, Converter={StaticResource StatusToColorConverter}}"
+                                                <Border Background="{Binding UserStatus.Status, Converter={StaticResource StatusToColorConverter}}"
                                                         CornerRadius="6"
                                                         Padding="10,5"
                                                         HorizontalAlignment="Left"
                                                         VerticalAlignment="Bottom"
                                                         Margin="10"
-                                                        IsVisible="{Binding MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                    <TextBlock Text="{Binding MyListStatus.Status}"
+                                                        IsVisible="{Binding UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                    <TextBlock Text="{Binding UserStatus.Status}"
                                                                FontSize="11"
                                                                FontWeight="Bold"
                                                                Foreground="White"/>
@@ -322,7 +322,7 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="mal:MalAnimeDetails">
+                        <DataTemplate DataType="models:AnimeDetails">
                             <Border Background="Transparent"
                                     CornerRadius="12"
                                     Margin="0,0,0,15"
@@ -402,13 +402,13 @@
                                         
                                         <!-- Status Badge -->
                                         <Border Grid.Column="2"
-                                                Background="{Binding MyListStatus.Status, Converter={StaticResource StatusToColorConverter}}"
+                                                Background="{Binding UserStatus.Status, Converter={StaticResource StatusToColorConverter}}"
                                                 CornerRadius="8"
                                                 Padding="20,12"
                                                 Margin="20,0"
                                                 VerticalAlignment="Center"
-                                                IsVisible="{Binding MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                            <TextBlock Text="{Binding MyListStatus.Status}"
+                                                IsVisible="{Binding UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                            <TextBlock Text="{Binding UserStatus.Status}"
                                                        FontSize="13"
                                                        FontWeight="Bold"
                                                        Foreground="White"/>

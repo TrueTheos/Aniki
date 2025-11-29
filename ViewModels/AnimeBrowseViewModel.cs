@@ -1,12 +1,13 @@
 using Aniki.Services.Interfaces;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Services.Anime;
 
 namespace Aniki.ViewModels;
 
 public partial class AnimeBrowseViewModel : ViewModelBase
 {
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
     private readonly ICalendarService _calendarService;
     
     [ObservableProperty]
@@ -56,12 +57,12 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canGoPrevious;
 
-    private List<MalSearchEntry> _allSearchResults = new();
+    private List<AnimeSearchResult> _allSearchResults = new();
     private const int PageSize = 20;
 
-    public AnimeBrowseViewModel(IMalService malService, ICalendarService calendarService)
+    public AnimeBrowseViewModel(IAnimeService animeService, ICalendarService calendarService)
     {
-        _malService = malService;
+        _animeService = animeService;
         _calendarService = calendarService;
     }
 
@@ -75,15 +76,15 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var airing = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.AIRING);
+            var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing);
             LoadAnimeCards(airing, PopularThisSeason);
             
             await LoadHeroAnimeAsync(airing);
 
-            var upcoming = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.UPCOMING);
+            var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming);
             LoadAnimeCards(upcoming, PopularUpcoming);
             
-            var allTime = await _malService.GetTopAnimeInCategory(MalService.AnimeRankingCategory.BYPOPULARITY);
+            var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity);
             LoadAnimeCards(allTime, TrendingAllTime);
 
             var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
@@ -112,13 +113,13 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 
-    private async Task LoadHeroAnimeAsync(List<MAL_RankingEntry> animeList)
+    private async Task LoadHeroAnimeAsync(List<RankingEntry> animeList)
     {
         HeroAnimeList.Clear();
         
         foreach (var anime in animeList.Take(10))
         {
-            var details = await _malService.GetFieldsAsync(anime.Node.Id, AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS);
+            var details = await _animeService.GetFieldsAsync(anime.Details.Id, AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS);
             if (details?.Videos != null && details.Videos.Length > 0)
             {
                 var heroData = new HeroAnimeData
@@ -127,7 +128,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                     Title = details.Title!,
                     Synopsis = details.Synopsis!,
                     Score = details.Mean,
-                    Status = details.MyListStatus?.Status ?? AnimeStatusApi.none,
+                    Status = details.UserStatus?.Status ?? AnimeStatus.None,
                     VideoUrl = details.Videos[0].Url,
                     VideoThumbnail = details.Videos[0].Thumbnail,
                     IsCurrentHero = HeroAnimeList.Count == 0
@@ -145,14 +146,14 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 
-    private void LoadAnimeCards(List<MAL_RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
+    private void LoadAnimeCards(List<RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
     {
         collection.Clear();
         foreach (var anime in animeList)
         {
-            if (anime != null && anime.Node != null)
+            if (anime != null && anime.Details != null)
             {
-                collection.Add(anime.Node.ToCardData());
+                collection.Add(anime.Details.ToCardData());
             }
         }
     }
@@ -212,7 +213,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             IsLoading = true;
             ViewMode = AnimeBrowseViewMode.Search;
 
-            _allSearchResults = await _malService.SearchAnimeOrdered(query);
+            _allSearchResults = await _animeService.SearchAnimeAsync(query);
             CurrentPage = 1;
             TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PageSize);
             
@@ -239,11 +240,11 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
         foreach (var result in pageResults)
         {
-            MalMainPicture? picture = result.Node.MainPicture;
+            AnimePicture? picture = result.Details.MainPicture;
             var card = new AnimeCardData
             {
-                AnimeId = result.Node.Id,
-                Title = result.Node.Title,
+                AnimeId = result.Details.Id,
+                Title = result.Details.Title,
                 MyListStatus  = null,
                 ImageUrl = picture!.Large != null ? picture.Large : picture.Medium
             };

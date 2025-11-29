@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Aniki.Models;
 using Aniki.Models.MAL;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Auth.Providers;
@@ -19,7 +20,7 @@ public class MalLoginProvider : ILoginProvider
     private readonly HttpListener _httpListener = new();
 
     private readonly ITokenService _tokenService;
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
 
     public string LoginUrl => $"https://myanimelist.net/v1/oauth2/authorize" +
                               $"?response_type=code" +
@@ -29,10 +30,12 @@ public class MalLoginProvider : ILoginProvider
                               $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
                               $"&state={Guid.NewGuid()}";
     
-    public MalLoginProvider(ITokenService tokenService, IMalService malService)
+    public MalLoginProvider(ITokenService tokenService, IAnimeService animeService, MalService malService)
     {
         _tokenService = tokenService;
-        _malService = malService;
+        _animeService = animeService;
+        
+        _animeService.RegisterProvider(malService.ProviderName, malService);
     }
     
     public async Task<string?> LoginAsync(IProgress<string> progressReporter)
@@ -108,8 +111,8 @@ public class MalLoginProvider : ILoginProvider
         
         try
         {
-            _malService.Init(tokenData.AccessToken);
-            MAL_UserData? userData = await _malService.GetUserDataAsync();
+            _animeService.SetActiveProvider(Name, tokenData.AccessToken);
+            UserData? userData = await _animeService.GetUserDataAsync();
             return userData?.Name;
         }
         catch (Exception)
@@ -122,7 +125,7 @@ public class MalLoginProvider : ILoginProvider
     public void Logout()
     {
         _tokenService.ClearTokens(Id);
-        _malService.Init(null);
+        //todo _malService.Init(null);
     }
     
     private async Task<bool> ExchangeCodeForTokenAsync(string code)
