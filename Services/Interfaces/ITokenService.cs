@@ -2,11 +2,10 @@
 
 public interface ITokenService
 {
-    public string ClientId { get; }
-    public void Init();
-    public Task<StoredTokenData?> LoadTokensAsync();
-    public Task SaveTokensAsync(TokenResponse tokenResponse);
-    public void ClearTokens();
-    public string GetAccessToken();
-    public bool HasValidToken();
+    void Init();
+    Task<StoredTokenData?> LoadTokensAsync(string providerId);
+    Task SaveTokensAsync(string providerId, TokenResponse tokenResponse);
+    void ClearTokens(string providerId);
+    string GetAccessToken(string providerId);
+    bool HasValidToken(string providerId);
 }

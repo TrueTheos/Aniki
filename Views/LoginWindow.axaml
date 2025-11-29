@@ -3,79 +3,99 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
-		x:DataType="vm:LoginViewModel"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+        x:DataType="vm:LoginViewModel"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
         x:Class="Aniki.Views.LoginWindow"
         Title="Aniki - Login"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
-        Width="400" Height="300">
+        Width="400" Height="450">
 
-	<Design.DataContext>
-		<vm:LoginViewModel/>
-	</Design.DataContext>
+    <Design.DataContext>
+        <vm:LoginViewModel/>
+    </Design.DataContext>
 
-	<Panel>
-		<ExperimentalAcrylicBorder IsHitTestVisible="False">
-			<ExperimentalAcrylicBorder.Material>
-				<ExperimentalAcrylicMaterial
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
                     BackgroundSource="Digger"
                     TintColor="Black"
                     TintOpacity="1"
                     MaterialOpacity="0.9" />
-			</ExperimentalAcrylicBorder.Material>
-		</ExperimentalAcrylicBorder>
-		<Panel Margin="15">
-			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15">
-				<Image Source="avares://Aniki/Resources/icon.ico" 
-				       Width="64" Height="64"
-				       HorizontalAlignment="Center"/>
-				<TextBlock Text="Welcome to Aniki!"
-				           FontSize="20" FontWeight="Bold"
-				           HorizontalAlignment="Center"/>
-				<TextBlock Text="{Binding StatusMessage}"
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        <Panel Margin="15">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15">
+                <Image Source="avares://Aniki/Resources/icon.ico" 
+                       Width="64" Height="64"
+                       HorizontalAlignment="Center"/>
+                <TextBlock Text="Welcome to Aniki!"
+                           FontSize="20" FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding StatusMessage}"
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap" />
-				<Button
-                        Command="{Binding LoginCommand}"
-                        HorizontalAlignment="Stretch"
-                        Padding="10,8"
-                        Background="{StaticResource DarkerRedColor}"
-                        IsVisible="{Binding !IsLoggedIn}">
-					<TextBlock Text="Login with MyAnimeList" HorizontalAlignment="Center"/>
-				</Button>
-				<Button
+
+                <ItemsRepeater ItemsSource="{Binding LoginProviders}" IsVisible="{Binding !IsLoggedIn}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Button
+                                Command="{Binding $parent[Window].DataContext.LoginCommand}"
+                                CommandParameter="{Binding Id}"
+                                HorizontalAlignment="Stretch"
+                                Padding="10,8"
+                                Margin="0,2"
+                                Background="{StaticResource RedColor}">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                        <Setter Property="Background" Value="{StaticResource DarkerRedColor}"/>
+                                    </Style>
+                                </Button.Styles>
+                                <TextBlock Text="{Binding Name, StringFormat='Login with {0}'}" HorizontalAlignment="Center"/>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+                
+                <StackPanel Spacing="10" IsVisible="{Binding IsTokenInputVisible}">
+                    <TextBox Text="{Binding Token, Mode=TwoWay}" Watermark="Paste your token here" HorizontalAlignment="Stretch"/>
+                    <Button Command="{Binding SubmitTokenCommand}" Content="Submit Token" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <Button
                         Command="{Binding ContinueCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
                         IsVisible="{Binding IsLoggedIn}"
                         Background="{StaticResource RedColor}">
-					<TextBlock Text="{Binding Username, StringFormat=Continue as {0}}"
-					           HorizontalAlignment="Center"/>
-				</Button>
-				<Button
-					Command="{Binding ContinueWithoutLogginInCommand}"
-					HorizontalAlignment="Stretch"
-					Padding="10,8">
-					<TextBlock Text="Skip login"
-					           HorizontalAlignment="Center"/>
-				</Button>
-				<Button 
+                    <TextBlock Text="{Binding Username, StringFormat='Continue as {0}'}"
+                               HorizontalAlignment="Center"/>
+                </Button>
+                <Button
+                    Command="{Binding ContinueWithoutLoggingInCommand}"
+                    HorizontalAlignment="Stretch"
+                    IsVisible="{Binding !IsLoggedIn}"
+                    Padding="10,8">
+                    <TextBlock Text="Skip login"
+                               HorizontalAlignment="Center"/>
+                </Button>
+                <Button 
                         Command="{Binding LogoutCommand}"
                         HorizontalAlignment="Stretch"
                         Padding="10,8"
                         IsVisible="{Binding IsLoggedIn}">
-					<TextBlock Text="Log into different account"
-					           HorizontalAlignment="Center"/>
-				</Button>
-				<ProgressBar IsIndeterminate="True"
+                    <TextBlock Text="Log into different account"
+                               HorizontalAlignment="Center"/>
+                </Button>
+                <ProgressBar IsIndeterminate="True"
                              HorizontalAlignment="Stretch"
                              Background="{StaticResource Background0}"
                              Foreground="{StaticResource RedColor}"
                              IsVisible="{Binding IsLoading}"/>
-			</StackPanel>
-		</Panel>
-	</Panel>
+            </StackPanel>
+        </Panel>
+    </Panel>
 </Window>

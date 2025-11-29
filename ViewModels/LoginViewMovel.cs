@@ -1,17 +1,21 @@
-﻿using Aniki.Services.Interfaces;
+using Aniki.Services.Auth;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
 public partial class LoginViewModel : ViewModelBase
 {
-    private readonly IOAuthService _oauthService;
-    private readonly ITokenService _tokenService;
-    private readonly IMalService _malService;
+    private readonly ILoginService _loginService;
+    
+    public IReadOnlyList<ILoginProvider> LoginProviders => _loginService.Providers;
 
+    private ILoginProvider? _currentProvider;
     private bool _isLoading;
     private string _statusMessage = "";
     private bool _isLoggedIn;
     private string _username = "";
+    private bool _isTokenInputVisible;
+    private string _token = "";
 
     public bool IsLoading
     {
@@ -36,14 +40,24 @@ public partial class LoginViewModel : ViewModelBase
         get => _username;
         set => SetProperty(ref _username, value);
     }
+    
+    public bool IsTokenInputVisible
+    {
+        get => _isTokenInputVisible;
+        set => SetProperty(ref _isTokenInputVisible, value);
+    }
+
+    public string Token
+    {
+        get => _token;
+        set => SetProperty(ref _token, value);
+    }
 
     public event EventHandler? NavigateToMainRequested;
     
-    public LoginViewModel(IOAuthService oauthService, ITokenService tokenService, IMalService malService)
+    public LoginViewModel(ILoginService loginService)
     {
-        _oauthService = oauthService;
-        _tokenService = tokenService;
-        _malService = malService;
+        _loginService = loginService;
     }
 
     public async Task CheckExistingLoginAsync()
@@ -53,30 +67,23 @@ public partial class LoginViewModel : ViewModelBase
 
         try
         {
-            StoredTokenData? tokenData = await _tokenService.LoadTokensAsync();
-
-            if (tokenData != null && !string.IsNullOrEmpty(tokenData.AccessToken))
+            foreach (var provider in _loginService.Providers)
             {
-                try
-                {
-                    MAL_UserData? userData = await _malService.GetUserDataAsync();
-                    if (userData != null && !string.IsNullOrEmpty(userData.Name))
-                    {
-                        Username = userData.Name;
-                        IsLoggedIn = true;
-                        StatusMessage = $"Welcome back, {userData.Name}!";
-                        await ContinueAsync();
-                        return;
-                    }
-                }
-                catch (Exception)
-                {
-                    _tokenService.ClearTokens();
-                }
+                StatusMessage = $"Checking login status for {provider.Name}...";
+                string? username = await provider.CheckExistingLoginAsync();
+                
+                if (username == null) continue;
+                
+                _currentProvider = provider;
+                Username = username;
+                IsLoggedIn = true;
+                StatusMessage = $"Welcome back, {username} (via {provider.Name})!";
+                await ContinueAsync();
+                return;
             }
 
             IsLoggedIn = false;
-            StatusMessage = "Please log in using MyAnimeList.";
+            StatusMessage = "Please log in using one of the available services.";
         }
         finally
         {
@@ -85,32 +92,79 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task LoginAsync()
+    private async Task LoginAsync(string providerId)
     {
-        IsLoading = true;
-
-        Progress<string> progress = new(message => StatusMessage = message);
-        bool success = _oauthService != null && await _oauthService.StartOAuthFlowAsync(progress);
-
-        if (success)
+        ILoginProvider? provider = _loginService.GetProvider(providerId);
+        if (provider == null)
         {
-            await CheckExistingLoginAsync();
-            if (IsLoggedIn)
+            StatusMessage = $"Error: Unknown login provider '{providerId}'.";
+            return;
+        }
+
+        IsLoading = true;
+        _currentProvider = provider;
+        Progress<string> progress = new(message => StatusMessage = message);
+        
+        if (provider.Id == "anilist")
+        {
+            IsTokenInputVisible = true;
+            StatusMessage = "Please paste your AniList token below.";
+            // The LoginAsync for anilist just gives instructions, no username is returned
+            await provider.LoginAsync(progress);
+            IsLoading = false;
+        }
+        else
+        {
+            string? username = await provider.LoginAsync(progress);
+
+            if (username != null)
             {
+                Username = username;
+                IsLoggedIn = true;
+                StatusMessage = $"Successfully logged in as {username} (via {provider.Name})!";
                 await ContinueAsync();
             }
+            else
+            {
+                IsLoading = false;
+                StatusMessage = $"Login failed for {provider.Name}. Please try again.";
+                _currentProvider = null;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task SubmitToken()
+    {
+        if (_currentProvider == null || string.IsNullOrWhiteSpace(Token))
+        {
+            StatusMessage = "Please enter a token.";
+            return;
+        }
+
+        IsLoading = true;
+        await _currentProvider.SaveTokenAsync(Token);
+        
+        string? username = await _currentProvider.CheckExistingLoginAsync();
+        if (username != null)
+        {
+            Username = username;
+            IsLoggedIn = true;
+            StatusMessage = $"Successfully logged in as {username} (via {_currentProvider.Name})!";
+            IsTokenInputVisible = false;
+            await ContinueAsync();
         }
         else
         {
             IsLoading = false;
-            StatusMessage = "Login failed. Please try again.";
+            StatusMessage = "Invalid token. Please try again.";
         }
     }
 
     [RelayCommand]
     private Task ContinueAsync()
     {
-        if (_tokenService.HasValidToken())
+        if (_currentProvider != null)
         {
             NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -124,7 +178,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ContinueWithoutLogginIn()
+    private void ContinueWithoutLoggingIn()
     {
         NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
     }
@@ -132,8 +186,12 @@ public partial class LoginViewModel : ViewModelBase
     [RelayCommand]
     public void Logout()
     {
-        _tokenService.ClearTokens();
+        if (_currentProvider == null) return;
+        
+        _currentProvider.Logout();
         IsLoggedIn = false;
+        IsTokenInputVisible = false;
+        _currentProvider = null;
         StatusMessage = "Logged out. Ready to log in.";
     }
 }

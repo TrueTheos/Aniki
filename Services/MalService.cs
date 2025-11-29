@@ -80,7 +80,7 @@ public class MalService : IMalService
         {
             _accessToken = string.Empty;
             IS_LOGGED_IN = false;
-            _client.DefaultRequestHeaders.Add("X-MAL-Client-ID", _tokenService.ClientId);
+            _client.DefaultRequestHeaders.Add("X-MAL-Client-ID", "dc4a7501af14aec92b98f719b666c37c");
         }
     }
 
