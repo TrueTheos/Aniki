@@ -11,7 +11,7 @@ public class MAL_AnimeRankingResponse
 public class MAL_RankingEntry
 {
     [JsonPropertyName("node")]
-    public required MalAnimeNode Node { get; set; }
+    public required MalAnimeDetails Node { get; set; }
     
     [JsonPropertyName("ranking")]
     public MAL_RankingInfo? Ranking { get; set; }

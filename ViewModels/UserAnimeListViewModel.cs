@@ -199,8 +199,8 @@ public partial class UserAnimeListViewModel : ViewModelBase
         {
             "TitleAsc" => filtered.OrderBy(a => a.Title),
             "TitleDesc" => filtered.OrderByDescending(a => a.Title),
-            "RatingDesc" => filtered.OrderByDescending(a => a.Mean ?? 0),
-            "RatingAsc" => filtered.OrderBy(a => a.Mean ?? 0),
+            "RatingDesc" => filtered.OrderByDescending(a => a.Mean),
+            "RatingAsc" => filtered.OrderBy(a => a.Mean),
             "MyScoreDesc" => filtered.OrderByDescending(a => a.MyListStatus?.Score ?? 0),
             "MyScoreAsc" => filtered.OrderBy(a => a.MyListStatus?.Score ?? 0),
             "Popularity" => filtered.OrderBy(a => a.Popularity ?? int.MaxValue),

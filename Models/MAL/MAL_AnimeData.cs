@@ -31,46 +31,10 @@ public enum AnimeField
 
 public class MalAnimeData
 {
-    public required MalAnimeNode Node { get; set; }
+    public required MalAnimeDetails Node { get; set; }
     [JsonPropertyName("list_status")] public MalMyListStatus? ListStatus { get; set; }
     [JsonIgnore]
     public bool IsOnList => ListStatus != null;
-}
-
-public class MalAnimeNode
-{
-    [CacheField(AnimeField.ID)] public int Id { get; init; }
-    [CacheField(AnimeField.TITLE)] public string? Title { get; init; }
-    [CacheField(AnimeField.ALTER_TITLES)][JsonPropertyName("alternative_titles")] public MalAlternativeTitles? AlternativeTitles { get; set; }
-    [CacheField(AnimeField.GENRES)] public MalGenre[]? Genres { get; set; }
-    [CacheField(AnimeField.MY_LIST_STATUS)] [JsonPropertyName("my_list_status")] public MalMyListStatus? MyListStatus { get; set; }
-    [CacheField(AnimeField.SYNOPSIS)] public string? Synopsis { get; set; }
-    [CacheField(AnimeField.STATUS)] public string? Status { get; set; }
-    [CacheField(AnimeField.MAIN_PICTURE)] [JsonPropertyName("main_picture")] public MalMainPicture? MainPicture { get; set; }
-    [CacheField(AnimeField.EPISODES)] [JsonPropertyName("num_episodes")] public int NumEpisodes { get; set; }
-    [CacheField(AnimeField.POPULARITY)] int Popularity { get; set; }
-    [CacheField(AnimeField.VIDEOS)] public MalVideo[]? Videos { get; set; }
-    [CacheField(AnimeField.START_DATE)] [JsonPropertyName("start_date")] public string? StartDate { get; set; }
-    [CacheField(AnimeField.STUDIOS)] public MalStudio[]? Studios { get; set; } 
-    private float _mean;
-    [CacheField(AnimeField.MEAN)] [JsonPropertyName("mean")]
-    public float Mean 
-    { 
-        get => _mean;
-        set => _mean = (float)Math.Round(value, 1);
-    }
-
-    public AnimeCardData ToCardData()
-    {
-        return new AnimeCardData()
-        {
-            AnimeId = Id,
-            Title = Title,
-            ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
-            Score = Mean,
-            MyListStatus = MyListStatus?.Status ?? AnimeStatusApi.none
-        };
-    }
 }
 
 public class MalUserAnimeListResponse
@@ -88,13 +52,16 @@ public class MalAnimeSearchListResponse
 public class MalSearchEntry
 {
     [JsonPropertyName("node")]
-    public required MalAnimeNode Node { get; set; }
+    public required MalAnimeDetails Node { get; set; }
 }
 
 public class MalPaging
 {
     public string? Next { get; set; }
 }
+
+//TODO IMPORTANT, DO I EVEN NEED MAL_NODE? LIKE, I CAN JUST DESERIALIZE INTO MAL ANIME DETAILS WITH SOME FIELDS MISSING?
+//MY_LIST_STATUS should only be cached in memory!
 
 public class MalAnimeDetails : ObservableObject
 {
@@ -125,13 +92,31 @@ public class MalAnimeDetails : ObservableObject
     [CacheField(AnimeField.PICTURE)] public Bitmap? Picture { get; set; }
     [CacheField(AnimeField.STUDIOS)] public MalStudio[]? Studios { get; set; } 
     [CacheField(AnimeField.START_DATE)][JsonPropertyName("start_date")] public string? StartDate { get; set; }
-    [CacheField(AnimeField.MEAN)] public float? Mean { get; set; }
+    private float _mean;
+    [CacheField(AnimeField.MEAN)] [JsonPropertyName("mean")]
+    public float Mean 
+    { 
+        get => _mean;
+        set => _mean = (float)Math.Round(value, 1);
+    }
     [CacheField(AnimeField.GENRES)] public MalGenre[]? Genres { get; set; }
     [CacheField(AnimeField.RELATED_ANIME)][JsonPropertyName("related_anime")] public MalRelatedAnime[]? RelatedAnime { get; set; }
     [CacheField(AnimeField.VIDEOS)] public MalVideo[]? Videos { get; set; }
     [CacheField(AnimeField.NUM_FAV)][JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
     [CacheField(AnimeField.STATS)] public MalStatistics? Statistics { get; set; }
     [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
+    
+    public AnimeCardData ToCardData()
+    {
+        return new AnimeCardData()
+        {
+            AnimeId = Id,
+            Title = Title,
+            ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
+            Score = Mean,
+            MyListStatus = MyListStatus?.Status ?? AnimeStatusApi.none
+        };
+    }
 }
 
 public class MalStudio
@@ -178,7 +163,7 @@ public class MalMyListStatus
 public class MalRelatedAnime
 {
     [JsonPropertyName("node")]
-    public MalAnimeNode? Node { get; set; }
+    public MalAnimeDetails? Node { get; set; }
 
     [JsonPropertyName("relation_type")]
     public required string RelationType { get; set; }
