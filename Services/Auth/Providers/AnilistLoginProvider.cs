@@ -1,4 +1,5 @@
-﻿using Aniki.Models;
+﻿using System.Diagnostics;
+using Aniki.Models;
 using Aniki.Models.Anilist;
 using Aniki.Services.Interfaces;
 
@@ -9,8 +10,7 @@ public class AnilistLoginProvider : ILoginProvider
     public string Name => "AniList";
     public string Id => "anilist";
     
-    // TODO: Replace with a real Client ID from AniList API settings
-    private const string ClientId = "15243";
+    private const string ClientId = "32652";
 
     public string LoginUrl => $"https://anilist.co/api/v2/oauth/authorize?client_id={ClientId}&response_type=token";
 
@@ -25,7 +25,9 @@ public class AnilistLoginProvider : ILoginProvider
 
     public Task<string?> LoginAsync(IProgress<string> progressReporter)
     {
-        progressReporter.Report("Please open the login URL, authorize the app, and paste the token back into the application.");
+        progressReporter.Report("Redirecting to Anilist for authentication...");
+        OpenBrowser(LoginUrl);
+        progressReporter.Report("Please authorize the app and paste the token back into the application.");
         return Task.FromResult<string?>(null);
     }
     
@@ -34,7 +36,7 @@ public class AnilistLoginProvider : ILoginProvider
         var tokenResponse = new TokenResponse
         {
             access_token = token,
-            expires_in = 31536000 // Anilist tokens from this flow are long-lived (1 year)
+            expires_in = 31536000
         };
         await _tokenService.SaveTokensAsync(Id, tokenResponse);
     }
@@ -62,5 +64,10 @@ public class AnilistLoginProvider : ILoginProvider
     {
         _tokenService.ClearTokens(Id);
         _anilistService.SetToken(string.Empty);
+    }
+    
+    private void OpenBrowser(string url)
+    {
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 }

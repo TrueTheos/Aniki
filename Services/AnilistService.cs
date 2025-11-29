@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using Aniki.Models.Anilist;
 using Aniki.Services.Interfaces;
 using GraphQL;
@@ -37,15 +37,15 @@ public class AnilistService : IAnilistService
                 }"
         };
 
-        var response = await _client.SendQueryAsync<dynamic>(request);
+        GraphQLResponse<ViewerResponse> response = await _client.SendQueryAsync<ViewerResponse>(request);
 
-        if (response.Data == null) return null;
+        if (response.Data is null) return null;
         
         return new Anilist_ViewerData
         {
-            Id = response.Data.Viewer.id,
-            Name = response.Data.Viewer.name,
-            Picture = response.Data.Viewer.avatar.large
+            Id = response.Data.Viewer?.id,
+            Name = response.Data.Viewer?.name,
+            Picture = response.Data.Viewer?.avatar?.large
         };
     }
 }
