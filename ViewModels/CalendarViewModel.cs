@@ -63,7 +63,7 @@ public partial class CalendarViewModel : ViewModelBase
     {
         _watchingList.Clear();
         
-        if(!MalService.IS_LOGGED_IN) return;
+        if(!AnimeService.IsLoggedIn) return;
         
         List<AnimeDetails> watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
         List<AnimeDetails> planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);

@@ -7,6 +7,7 @@
              xmlns:vm="clr-namespace:Aniki.ViewModels"
              xmlns:models="clr-namespace:Aniki.Models"
              xmlns:services="clr-namespace:Aniki.Services"
+             xmlns:anime="clr-namespace:Aniki.Services.Anime"
              mc:Ignorable="d"
              d:DesignWidth="160"
              d:DesignHeight="260"
@@ -64,7 +65,7 @@
                             VerticalAlignment="Bottom"
                             HorizontalAlignment="Center"
                             Margin="0,0,0,5"
-                            IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}}">
+                            IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}">
                         <local:AnimeListStatusButton x:Name="StatusButton"
                                                      HorizontalAlignment="Center"
                                                      VerticalAlignment="Center"/>

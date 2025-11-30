@@ -14,7 +14,7 @@ public class AnimeService : IAnimeService
     private IAnimeProvider? _currentProvider;
     private ILoginProvider.ProviderType? _currentProviderName;
 
-    public bool IsLoggedIn => _currentProvider?.IsLoggedIn ?? false;
+    public static bool IsLoggedIn = false;
     public ILoginProvider.ProviderType? CurrentProviderName => _currentProviderName;
 
     public AnimeService(ISaveService saveService, ITokenService tokenService)
@@ -52,7 +52,9 @@ public class AnimeService : IAnimeService
         _currentProvider = provider;
         _currentProviderName = providerName;
         _currentProvider.Init(accessToken);
-        
+
+        IsLoggedIn = _currentProvider.IsLoggedIn;
+
         //todo Clear cache when switching providers to avoid conflicts
         //_cache.Clear();
     }
@@ -173,15 +175,10 @@ public class AnimeService : IAnimeService
         await GetFieldsAsync(animeId, true, AnimeField.MY_LIST_STATUS);
     }
 
-    // ========================================================================
-    // Search & Discovery
-    // ========================================================================
-
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
         List<AnimeDetails> results = await GetCurrentProvider().SearchAnimeAsync(query);
         
-        // Update cache with search results
         if (_currentProvider != null)
         {
             foreach (AnimeDetails result in results)

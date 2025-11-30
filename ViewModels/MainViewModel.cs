@@ -112,7 +112,7 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task LoadUserDataAsync()
     {
-        if (MalService.IS_LOGGED_IN)
+        if (AnimeService.IsLoggedIn)
         {
             IsLoading = true;
             UserData malUserData = await _animeService.GetUserDataAsync();

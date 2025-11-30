@@ -12,9 +12,8 @@ namespace Aniki.Services;
 public class MalService : IAnimeProvider
 {
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.MAL;
-    public bool IsLoggedIn => MalService.IS_LOGGED_IN;
-    
-    public static bool IS_LOGGED_IN { get; private set; }
+    private bool _isLoggedIn;
+    public bool IsLoggedIn => _isLoggedIn;
 
     public enum AnimeRankingCategory { AIRING, UPCOMING, ALLTIME, BYPOPULARITY }
     
@@ -37,7 +36,7 @@ public class MalService : IAnimeProvider
     private string _accessToken = "";
 
     private string _allFields = "";
-    
+
     public MalService(ISaveService saveService, ITokenService tokenService)
     {
         StringBuilder urlFields = new();
@@ -68,13 +67,13 @@ public class MalService : IAnimeProvider
         if (accessToken != null)
         {
             _accessToken = accessToken;
-            IS_LOGGED_IN = true;
+            _isLoggedIn = true;
             _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
         }
         else
         {
             _accessToken = string.Empty;
-            IS_LOGGED_IN = false;
+            _isLoggedIn = false;
             _client.DefaultRequestHeaders.Add("X-MAL-Client-ID", "dc4a7501af14aec92b98f719b666c37c");
         }
     }
@@ -153,7 +152,7 @@ public class MalService : IAnimeProvider
 
     public async Task<UserData> GetUserDataAsync()
     {
-        if (!IS_LOGGED_IN) return new();
+        if (!IsLoggedIn) return new();
         
         MAL_UserData? userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
         
@@ -193,7 +192,7 @@ public class MalService : IAnimeProvider
 
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
-        if (!IS_LOGGED_IN) return new();
+        if (!IsLoggedIn) return new();
         
         if (_userAnimeList != null)
         {
@@ -249,7 +248,7 @@ public class MalService : IAnimeProvider
     
     private async Task SetMyListStatusField(int  animeId, UserAnimeStatus.UserAnimeStatusField field, string value)
     {
-        if (!IS_LOGGED_IN)
+        if (!IsLoggedIn)
         {
             return;
         }
@@ -275,7 +274,7 @@ public class MalService : IAnimeProvider
     
     public async Task RemoveFromUserListAsync(int animeId)
     {
-        if(!IS_LOGGED_IN) return;
+        if(!IsLoggedIn) return;
         
         HttpResponseMessage response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status");
 

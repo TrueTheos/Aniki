@@ -91,7 +91,13 @@ public class AnilistService : IAnimeProvider
     {
         if (!_isLoggedIn) return new List<AnimeDetails>();
 
-        string statusText = statusFilter != AnimeStatus.None ? $",status: {ConvertToAnilistStatus(statusFilter)}" : "";
+        var allFields = new HashSet<AnimeField>((AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        allFields.Remove(AnimeField.MY_LIST_STATUS); // MY_LIST_STATUS is handled by the root query, not on the media object
+        
+        var fragments = GetGraphQLFragments(allFields);
+        var innerQuery = string.Join("\n", fragments);
+
+        string statusText = statusFilter != AnimeStatus.None ? $", status: {ConvertToAnilistStatus(statusFilter)}" : "";
         
         var request = new GraphQLRequest
         {
@@ -105,52 +111,7 @@ public class AnilistService : IAnimeProvider
                                 score(format: POINT_10)
                                 progress
                                 media {
-                                    id
-                                    title {
-                                        romaji
-                                        english
-                                        native
-                                    }
-                                    coverImage {
-                                        large
-                                        medium
-                                    }
-                                    status
-                                    description
-                                    episodes
-                                    meanScore
-                                    popularity
-                                    studios {
-                                        nodes {
-                                            id
-                                            name
-                                        }
-                                    }
-                                    startDate {
-                                        year
-                                        month
-                                        day
-                                    }
-                                    genres
-                                    favourites
-                                    trailer {
-                                        id
-                                        site
-                                    }
-                                    relations {
-                                        edges {
-                                            relationType
-                                            node {
-                                                id
-                                                title {
-                                                    romaji
-                                                    english
-                                                }
-                                                episodes
-                                                status
-                                            }
-                                        }
-                                    }
+                                    " + innerQuery + @"
                                 }
                             }
                         }
@@ -177,7 +138,13 @@ public class AnilistService : IAnimeProvider
                 {
                     foreach (var entry in list.entries)
                     {
-                        animeList.Add(await ConvertAnilistToUnified(entry.media));
+                        var userStatus = new UserAnimeStatus
+                        {
+                            Status = ConvertFromAnilistStatus(entry.status),
+                            Score = (int)(entry.score ?? 0),
+                            EpisodesWatched = entry.progress ?? 0
+                        };
+                        animeList.Add(await ConvertAnilistToUnified(entry.media, userStatus));
                     }
                 }
             }
@@ -310,6 +277,9 @@ public class AnilistService : IAnimeProvider
         {
             switch (field)
             {
+                case AnimeField.ID:
+                    yield return "id";
+                    break;
                 case AnimeField.TITLE:
                 case AnimeField.ALTER_TITLES:
                     if (fields.Contains(AnimeField.TITLE) || fields.Contains(AnimeField.ALTER_TITLES))
@@ -420,43 +390,32 @@ public class AnilistService : IAnimeProvider
       
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
+        var allFields = new HashSet<AnimeField>((AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        var fragments = GetGraphQLFragments(allFields);
+        var innerQuery = string.Join("\n", fragments);
+
+        var variables = new Dictionary<string, object> { ["search"] = query };
+        
+        var queryVariables = "($search: String";
+        if (_isLoggedIn)
+        {
+            if (_currentUserId == null) _currentUserId = (await GetUserDataAsync()).Id;
+            variables["userId"] = _currentUserId;
+            queryVariables += ", $userId: Int";
+        }
+        queryVariables += ")";
+
         var request = new GraphQLRequest
         {
-            Query = @"
-                query ($search: String) {
-                    Page(page: 1, perPage: 20) {
-                        media(search: $search, type: ANIME) {
-                            id
-                            title {
-                                romaji
-                                english
-                                native
-                            }
-                            coverImage {
-                                large
-                                medium
-                            }
-                            status
-                            description
-                            episodes
-                            meanScore
-                            popularity
-                            studios {
-                                nodes {
-                                    id
-                                    name
-                                }
-                            }
-                            startDate {
-                                year
-                                month
-                                day
-                            }
-                            genres
-                        }
-                    }
-                }",
-            Variables = new { search = query }
+            Query = $@"
+                query {queryVariables} {{
+                    Page(page: 1, perPage: 20) {{
+                        media(search: $search, type: ANIME) {{
+                            {innerQuery}
+                        }}
+                    }}
+                }}",
+            Variables = variables
         };
 
         var response = await _client.SendQueryAsync<PageResponse>(request);
@@ -483,48 +442,50 @@ public class AnilistService : IAnimeProvider
             _ => ("SCORE_DESC", null)
         };
 
+        var allFields = new HashSet<AnimeField>((AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        var fragments = GetGraphQLFragments(allFields);
+        var innerQuery = string.Join("\n", fragments);
+
+        var variables = new Dictionary<string, object>
+        {
+            ["sort"] = sort,
+            ["perPage"] = limit
+        };
+        if (status != null)
+        {
+            variables["status"] = status;
+        }
+        
+        var queryVariables = "($sort: [MediaSort], $perPage: Int";
+        if (status != null)
+        {
+            queryVariables += ", $status: MediaStatus";
+        }
+        if (_isLoggedIn)
+        {
+            if (_currentUserId == null) _currentUserId = (await GetUserDataAsync()).Id;
+            variables["userId"] = _currentUserId;
+            queryVariables += ", $userId: Int";
+        }
+        queryVariables += ")";
+        
+        var mediaArgs = "type: ANIME, sort: $sort";
+        if (status != null)
+        {
+            mediaArgs += ", status: $status";
+        }
+
         var request = new GraphQLRequest
         {
-            Query = @"
-                query ($sort: [MediaSort], $status: MediaStatus, $perPage: Int) {
-                    Page(page: 1, perPage: $perPage) {
-                        media(type: ANIME, sort: $sort, status: $status) {
-                            id
-                            title {
-                                romaji
-                                english
-                                native
-                            }
-                            coverImage {
-                                large
-                                medium
-                            }
-                            status
-                            description
-                            episodes
-                            meanScore
-                            popularity
-                            studios {
-                                nodes {
-                                    id
-                                    name
-                                }
-                            }
-                            startDate {
-                                year
-                                month
-                                day
-                            }
-                            genres
-                        }
-                    }
-                }",
-            Variables = new
-            {
-                sort = sort,
-                status = status,
-                perPage = limit
-            }
+            Query = $@"
+                query {queryVariables} {{
+                    Page(page: 1, perPage: $perPage) {{
+                        media({mediaArgs}) {{
+                            {innerQuery}
+                        }}
+                    }}
+                }}",
+            Variables = variables
         };
 
         var response = await _client.SendQueryAsync<PageResponse>(request);
@@ -572,20 +533,9 @@ public class AnilistService : IAnimeProvider
         return null;
     }
 
-    private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media)
+    private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media, UserAnimeStatus? userStatus = null)
     {
         var picture = await LoadAnimeImageAsync(media.id, media.coverImage?.large);
-        
-        UserAnimeStatus? userStatus = null;
-        if (media.mediaListEntry != null)
-        {
-            userStatus = new UserAnimeStatus
-            {
-                Status = ConvertFromAnilistStatus(media.mediaListEntry.status),
-                Score = (int)(media.mediaListEntry.score ?? 0),
-                EpisodesWatched = media.mediaListEntry.progress ?? 0
-            };
-        }
         
         var stats = new AnimeStatistics
         {

@@ -7,6 +7,7 @@
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:services="clr-namespace:Aniki.Services"
+    xmlns:anime="clr-namespace:Aniki.Services.Anime"
     Title="Aniki - Anime Client"
     d:DesignHeight="720"
     d:DesignWidth="1080"
@@ -256,8 +257,8 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:UserAnimeListViewModel">
                                     <Panel>
-                                        <views:UserAnimeListView IsVisible="{x:Static services:MalService.IS_LOGGED_IN}"/>
-                                        <Grid IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}, 
+                                        <views:UserAnimeListView IsVisible="{x:Static anime:AnimeService.IsLoggedIn}"/>
+                                        <Grid IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}, 
                                             Converter={x:Static BoolConverters.Not}}" 
                                               ClipToBounds="True">
                                             <StackPanel VerticalAlignment="Center" 
@@ -280,8 +281,8 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:StatsViewModel">
                                     <Panel>
-                                        <views:StatsView IsVisible="{x:Static services:MalService.IS_LOGGED_IN}"/>
-                                        <Grid IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}, 
+                                        <views:StatsView IsVisible="{x:Static anime:AnimeService.IsLoggedIn}"/>
+                                        <Grid IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}, 
                                             Converter={x:Static BoolConverters.Not}}" 
                                               ClipToBounds="True">
                                             <StackPanel VerticalAlignment="Center" 

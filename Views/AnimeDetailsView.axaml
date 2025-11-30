@@ -8,6 +8,7 @@
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:services="clr-namespace:Aniki.Services"
+    xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:AnimeDetailsViewModel">
     <Border
         x:Name="Root"
@@ -257,7 +258,7 @@
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
                                                             <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNotNull}"/>
-                                                            <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                                            <Binding Source="{x:Static anime:AnimeService.IsLoggedIn}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
                                                     
@@ -288,7 +289,7 @@
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
                                                             <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNull}"/>
-                                                            <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                                            <Binding Source="{x:Static anime:AnimeService.IsLoggedIn}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
                                                         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -322,7 +323,7 @@
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
-                                                        IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}}">
+                                                        IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}">
                                                     <Button.Flyout>
                                                         <MenuFlyout Placement="Bottom">
                                                             <MenuItem Header="1" Command="{Binding UpdateScoreCommand}" CommandParameter="1"/>
@@ -389,7 +390,7 @@
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
                                                             <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNotNull}"/>
-                                                            <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                                            <Binding Source="{x:Static anime:AnimeService.IsLoggedIn}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
                                                     <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}"  Width="22" 
