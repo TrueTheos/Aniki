@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using Aniki.Models.Anilist;
 using Aniki.Services.Anime;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Avalonia.Media.Imaging;
 using GraphQL;
@@ -16,7 +17,7 @@ public class AnilistService : IAnimeProvider
     private readonly ISaveService _saveService;
     private bool _isLoggedIn;
 
-    public string ProviderName => "AniList";
+    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
     public bool IsLoggedIn => _isLoggedIn;
 
     public AnilistService(ISaveService saveService)

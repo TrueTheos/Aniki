@@ -2,8 +2,9 @@
 
 public interface ILoginProvider
 {
-    string Name { get; }
-    string Id { get; }
+    public enum ProviderType {MAL, AniList}
+    
+    ProviderType Provider { get; }
     string LoginUrl { get; }
 
     Task SaveTokenAsync(string token);

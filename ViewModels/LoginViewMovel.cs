@@ -69,7 +69,7 @@ public partial class LoginViewModel : ViewModelBase
         {
             foreach (var provider in _loginService.Providers)
             {
-                StatusMessage = $"Checking login status for {provider.Name}...";
+                StatusMessage = $"Checking login status for {provider.Provider}...";
                 string? username = await provider.CheckExistingLoginAsync();
                 
                 if (username == null) continue;
@@ -77,7 +77,7 @@ public partial class LoginViewModel : ViewModelBase
                 _currentProvider = provider;
                 Username = username;
                 IsLoggedIn = true;
-                StatusMessage = $"Welcome back, {username} (via {provider.Name})!";
+                StatusMessage = $"Welcome back, {username} (via {provider.Provider})!";
                 await ContinueAsync();
                 return;
             }
@@ -92,7 +92,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task LoginAsync(string providerId)
+    private async Task LoginAsync(ILoginProvider.ProviderType providerId)
     {
         ILoginProvider? provider = _loginService.GetProvider(providerId);
         if (provider == null)
@@ -105,7 +105,7 @@ public partial class LoginViewModel : ViewModelBase
         _currentProvider = provider;
         Progress<string> progress = new(message => StatusMessage = message);
         
-        if (provider.Id == "AniList")
+        if (provider.Provider == ILoginProvider.ProviderType.AniList)
         {
             IsTokenInputVisible = true;
             StatusMessage = "Please paste your AniList token below.";
@@ -121,13 +121,13 @@ public partial class LoginViewModel : ViewModelBase
             {
                 Username = username;
                 IsLoggedIn = true;
-                StatusMessage = $"Successfully logged in as {username} (via {provider.Name})!";
+                StatusMessage = $"Successfully logged in as {username} (via {provider.Provider})!";
                 await ContinueAsync();
             }
             else
             {
                 IsLoading = false;
-                StatusMessage = $"Login failed for {provider.Name}. Please try again.";
+                StatusMessage = $"Login failed for {provider.Provider}. Please try again.";
                 _currentProvider = null;
             }
         }
@@ -150,7 +150,7 @@ public partial class LoginViewModel : ViewModelBase
         {
             Username = username;
             IsLoggedIn = true;
-            StatusMessage = $"Successfully logged in as {username} (via {_currentProvider.Name})!";
+            StatusMessage = $"Successfully logged in as {username} (via {_currentProvider.Provider})!";
             IsTokenInputVisible = false;
             await ContinueAsync();
         }

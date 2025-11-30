@@ -8,9 +8,7 @@ namespace Aniki.Services.Auth.Providers;
 
 public class AnilistLoginProvider : ILoginProvider
 {
-    public string Name => "AniList";
-    public string Id => "AniList";
-    
+    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
     private const string ClientId = "32652";
 
     public string LoginUrl => $"https://anilist.co/api/v2/oauth/authorize?client_id={ClientId}&response_type=token";
@@ -23,7 +21,7 @@ public class AnilistLoginProvider : ILoginProvider
         _tokenService = tokenService;
         _animeService = animeService;
         
-        _animeService.RegisterProvider(anilistService.ProviderName, anilistService);
+        _animeService.RegisterProvider(anilistService.Provider, anilistService);
     }
 
     public Task<string?> LoginAsync(IProgress<string> progressReporter)
@@ -41,31 +39,31 @@ public class AnilistLoginProvider : ILoginProvider
             access_token = token,
             expires_in = 31536000
         };
-        await _tokenService.SaveTokensAsync(Id, tokenResponse);
+        await _tokenService.SaveTokensAsync(Provider, tokenResponse);
     }
 
     public async Task<string?> CheckExistingLoginAsync()
     {
-        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Id);
+        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider);
         
         if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken)) return null;
 
         try
         {
-            _animeService.SetActiveProvider(Name, tokenData.AccessToken);
+            _animeService.SetActiveProvider(Provider, tokenData.AccessToken);
             UserData? userData = await _animeService.GetUserDataAsync();
             return userData?.Name;
         }
         catch (Exception)
         {
-            _tokenService.ClearTokens(Id);
+            _tokenService.ClearTokens(Provider);
             return null;
         }
     }
 
     public void Logout()
     {
-        _tokenService.ClearTokens(Id); 
+        _tokenService.ClearTokens(Provider); 
         //todo _animeService.SetToken(string.Empty);
     }
     

@@ -9,8 +9,8 @@ public class LoginService : ILoginService
         Providers = new List<ILoginProvider>(providers);
     }
 
-    public ILoginProvider? GetProvider(string id)
+    public ILoginProvider? GetProvider(ILoginProvider.ProviderType id)
     {
-        return Providers.FirstOrDefault(p => p.Id == id);
+        return Providers.FirstOrDefault(p => p.Provider == id);
     }
 }

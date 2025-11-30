@@ -1,19 +1,20 @@
-﻿using Aniki.Services.Auth.Providers;
+﻿using Aniki.Services.Auth;
+using Aniki.Services.Auth.Providers;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Anime;
 
 public class AnimeService : IAnimeService
 {
-    private readonly Dictionary<string, IAnimeProvider> _providers = new();
+    private readonly Dictionary<ILoginProvider.ProviderType, IAnimeProvider> _providers = new();
     private readonly GenericCacheService<int, AnimeDetails, AnimeField> _cache;
     private readonly ISaveService _saveService;
     
     private IAnimeProvider? _currentProvider;
-    private string? _currentProviderName;
+    private ILoginProvider.ProviderType? _currentProviderName;
 
     public bool IsLoggedIn => _currentProvider?.IsLoggedIn ?? false;
-    public string? CurrentProviderName => _currentProviderName;
+    public ILoginProvider.ProviderType? CurrentProviderName => _currentProviderName;
 
     public AnimeService(ISaveService saveService, ITokenService tokenService)
     {
@@ -33,12 +34,12 @@ public class AnimeService : IAnimeService
         );
     }
 
-    public void RegisterProvider(string name, IAnimeProvider provider)
+    public void RegisterProvider(ILoginProvider.ProviderType name, IAnimeProvider provider)
     {
         _providers[name] = provider;
     }
 
-    public void SetActiveProvider(string providerName, string accessToken)
+    public void SetActiveProvider(ILoginProvider.ProviderType providerName, string accessToken)
     {
         if (!_providers.TryGetValue(providerName, out IAnimeProvider? provider))
         {

@@ -1,11 +1,13 @@
-﻿namespace Aniki.Services.Interfaces;
+﻿using Aniki.Services.Auth;
+
+namespace Aniki.Services.Interfaces;
 
 public interface ITokenService
 {
     void Init();
-    Task<StoredTokenData?> LoadTokensAsync(string providerId);
-    Task SaveTokensAsync(string providerId, TokenResponse tokenResponse);
-    void ClearTokens(string providerId);
-    string GetAccessToken(string providerId);
-    bool HasValidToken(string providerId);
+    Task<StoredTokenData?> LoadTokensAsync(ILoginProvider.ProviderType providerId);
+    Task SaveTokensAsync(ILoginProvider.ProviderType providerId, TokenResponse tokenResponse);
+    void ClearTokens(ILoginProvider.ProviderType providerId);
+    string GetAccessToken(ILoginProvider.ProviderType providerId);
+    bool HasValidToken(ILoginProvider.ProviderType providerId);
 }

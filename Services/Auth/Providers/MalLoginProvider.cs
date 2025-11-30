@@ -11,9 +11,6 @@ namespace Aniki.Services.Auth.Providers;
 
 public class MalLoginProvider : ILoginProvider
 {
-    public string Name => "MyAnimeList";
-    public string Id => "mal";
-    
     private const string ClientId = "dc4a7501af14aec92b98f719b666c37c";
     private const string RedirectUri = "http://localhost:8000/callback";
     private string _codeVerifier = "";
@@ -21,6 +18,8 @@ public class MalLoginProvider : ILoginProvider
 
     private readonly ITokenService _tokenService;
     private readonly IAnimeService _animeService;
+
+    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.MAL;
 
     public string LoginUrl => $"https://myanimelist.net/v1/oauth2/authorize" +
                               $"?response_type=code" +
@@ -35,7 +34,7 @@ public class MalLoginProvider : ILoginProvider
         _tokenService = tokenService;
         _animeService = animeService;
         
-        _animeService.RegisterProvider(malService.ProviderName, malService);
+        _animeService.RegisterProvider(malService.Provider, malService);
     }
     
     public async Task<string?> LoginAsync(IProgress<string> progressReporter)
@@ -104,26 +103,26 @@ public class MalLoginProvider : ILoginProvider
 
     public async Task<string?> CheckExistingLoginAsync()
     {
-        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Id);
+        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider);
 
         if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken)) return null;
         
         try
         {
-            _animeService.SetActiveProvider(Name, tokenData.AccessToken);
+            _animeService.SetActiveProvider(Provider, tokenData.AccessToken);
             UserData? userData = await _animeService.GetUserDataAsync();
             return userData?.Name;
         }
         catch (Exception)
         {
-            _tokenService.ClearTokens(Id);
+            _tokenService.ClearTokens(Provider);
             return null;
         }
     }
 
     public void Logout()
     {
-        _tokenService.ClearTokens(Id);
+        _tokenService.ClearTokens(Provider);
         //todo _malService.Init(null);
     }
     
@@ -151,7 +150,7 @@ public class MalLoginProvider : ILoginProvider
 
             if (tokenResponse == null) return false;
             
-            await _tokenService.SaveTokensAsync(Id, tokenResponse);
+            await _tokenService.SaveTokensAsync(Provider, tokenResponse);
             return true;
         }
         catch (Exception)

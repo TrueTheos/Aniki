@@ -4,13 +4,14 @@ using Avalonia.Media.Imaging;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Aniki.Services.Anime;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
 public class MalService : IAnimeProvider
 {
-    public string ProviderName => "MyAnimeList";
+    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.MAL;
     public bool IsLoggedIn => MalService.IS_LOGGED_IN;
     
     public static bool IS_LOGGED_IN { get; private set; }

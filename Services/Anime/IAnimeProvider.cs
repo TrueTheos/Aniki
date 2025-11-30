@@ -1,10 +1,11 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Aniki.Services.Auth;
+using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Anime;
 
 public interface IAnimeProvider
 {
-    string ProviderName { get; }
+    ILoginProvider.ProviderType Provider { get; }
     bool IsLoggedIn { get; }
     
     void Init(string accessToken);

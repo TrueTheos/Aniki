@@ -3,5 +3,5 @@
 public interface ILoginService
 {
     IReadOnlyList<ILoginProvider> Providers { get; }
-    ILoginProvider? GetProvider(string id);
+    ILoginProvider? GetProvider(ILoginProvider.ProviderType id);
 }

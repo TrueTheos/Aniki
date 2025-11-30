@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -8,7 +9,7 @@ namespace Aniki.Services;
 public class TokenService : ITokenService
 {
     private string _tokenDirectoryPath = "";
-    private readonly Dictionary<string, StoredTokenData> _cachedTokens = new();
+    private readonly Dictionary<ILoginProvider.ProviderType, StoredTokenData> _cachedTokens = new();
     private readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
 
     public void Init()
@@ -20,7 +21,7 @@ public class TokenService : ITokenService
         }
     }
 
-    public async Task<StoredTokenData?> LoadTokensAsync(string providerId)
+    public async Task<StoredTokenData?> LoadTokensAsync(ILoginProvider.ProviderType providerId)
     {
         if (_cachedTokens.TryGetValue(providerId, out var cachedToken))
         {
@@ -58,7 +59,7 @@ public class TokenService : ITokenService
         }
     }
 
-    public async Task SaveTokensAsync(string providerId, TokenResponse tokenResponse)
+    public async Task SaveTokensAsync(ILoginProvider.ProviderType providerId, TokenResponse tokenResponse)
     {
         StoredTokenData tokens = new()
         {
@@ -75,7 +76,7 @@ public class TokenService : ITokenService
         _cachedTokens[providerId] = tokens;
     }
 
-    public void ClearTokens(string providerId)
+    public void ClearTokens(ILoginProvider.ProviderType providerId)
     {
         string tokenFilePath = Path.Combine(_tokenDirectoryPath, $"{providerId}.dat");
         if (File.Exists(tokenFilePath))
@@ -85,7 +86,7 @@ public class TokenService : ITokenService
         _cachedTokens.Remove(providerId);
     }
 
-    public bool HasValidToken(string providerId)
+    public bool HasValidToken(ILoginProvider.ProviderType providerId)
     {
         if (_cachedTokens.TryGetValue(providerId, out var token))
         {
@@ -95,7 +96,7 @@ public class TokenService : ITokenService
         return false;
     }
 
-    public string GetAccessToken(string providerId)
+    public string GetAccessToken(ILoginProvider.ProviderType providerId)
     {
         if (_cachedTokens.TryGetValue(providerId, out var token))
         {
