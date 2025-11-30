@@ -10,16 +10,13 @@ using GraphQL.Client.Serializer.SystemTextJson;
 
 namespace Aniki.Services;
 
-//TODO IMPORTANT, SO THE ISSUE IS THAT WE OVERRIDE ID WITH ANILIST ID. WE NEED BOTH ANILIST ID AND MALID CACHED!
-//AND IN ANIMEPROVIDER WE CAN JUST HAVE CACHE FOR EACH PROVIDER
-//SIMPLYFY ANIMEDETAILS
-
 public class AnilistService : IAnimeProvider
 {
     private readonly GraphQLHttpClient _client;
     private readonly HttpClient _httpClient;
     private readonly ISaveService _saveService;
     private bool _isLoggedIn;
+    private int? _currentUserId;
 
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
     public bool IsLoggedIn => _isLoggedIn;
@@ -37,10 +34,12 @@ public class AnilistService : IAnimeProvider
         {
             _client.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             _isLoggedIn = true;
+            Task.Run(async () => { _currentUserId = (await GetUserDataAsync()).Id; });
         }
         else
         {
             _isLoggedIn = false;
+            _currentUserId = null;
         }
     }
 
@@ -75,9 +74,9 @@ public class AnilistService : IAnimeProvider
         };
     }
 
-    public async Task<List<AnimeData>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
+    public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
-        if (!_isLoggedIn) return new List<AnimeData>();
+        if (!_isLoggedIn) return new List<AnimeDetails>();
 
         var statusFilter = status != AnimeStatus.None ? ConvertToAnilistStatus(status) : null;
         
@@ -152,7 +151,7 @@ public class AnilistService : IAnimeProvider
         };
 
         var response = await _client.SendQueryAsync<MediaListCollectionResponse>(request);
-        var animeList = new List<AnimeData>();
+        var animeList = new List<AnimeDetails>();
 
         if (response.Data?.MediaListCollection?.lists != null)
         {
@@ -162,16 +161,7 @@ public class AnilistService : IAnimeProvider
                 {
                     foreach (var entry in list.entries)
                     {
-                        animeList.Add(new AnimeData
-                        {
-                            Details = await ConvertAnilistToUnified(entry.media),
-                            UserStatus = new UserAnimeStatus
-                            {
-                                Status = ConvertFromAnilistStatus(entry.status),
-                                Score = entry.score ?? 0,
-                                EpisodesWatched = entry.progress ?? 0
-                            }
-                        });
+                        animeList.Add(await ConvertAnilistToUnified(entry.media));
                     }
                 }
             }
@@ -248,70 +238,80 @@ public class AnilistService : IAnimeProvider
 
     public async Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields)
     {
+        Dictionary<string, object> variables = new() { { "id", animeId } };
+
+        if (_isLoggedIn)
+        {
+            if (_currentUserId == null) _currentUserId = (await GetUserDataAsync()).Id;
+            variables.Add("userId", _currentUserId);
+        }
+        
         var request = new GraphQLRequest
         {
             Query = @"
-                query ($id: Int) {
+                query ($id: Int, $userId: Int) {
                     Media(id: $id, type: ANIME) {
                         id
-                        title {
-                            romaji
-                            english
-                            native
-                        }
-                        coverImage {
-                            large
-                            medium
-                        }
+                        title { romaji english native }
+                        coverImage { large medium }
+                        bannerImage
                         status
                         description
                         episodes
                         meanScore
                         popularity
-                        studios {
-                            nodes {
-                                id
-                                name
-                            }
-                        }
-                        startDate {
-                            year
-                            month
-                            day
-                        }
-                        genres
                         favourites
-                        trailer {
-                            id
-                            site
+                        startDate { year month day }
+                        genres
+                        
+                        # Get specific user status if logged in
+                        mediaListEntry(userId: $userId) {
+                            status
+                            score(format: POINT_10)
+                            progress
                         }
+
+                        studios(isMain: true) {
+                            nodes { id name }
+                        }
+
+                        trailer { id site }
+
+                        stats {
+                            statusDistribution { status amount }
+                        }
+
                         relations {
                             edges {
                                 relationType
                                 node {
                                     id
-                                    title {
-                                        romaji
-                                        english
-                                    }
+                                    title { romaji english }
+                                    coverImage { medium }
                                     episodes
                                     status
+                                    meanScore
                                 }
                             }
                         }
                     }
                 }",
-            Variables = new { id = animeId }
+            Variables = variables
         };
 
-        var response = await _client.SendQueryAsync<MediaResponse>(request);
-        
-        if (response.Data?.Media == null) return null;
-
-        return await ConvertAnilistToUnified(response.Data.Media);
+        try 
+        {
+            var response = await _client.SendQueryAsync<MediaResponse>(request);
+            if (response.Data?.Media == null) return null;
+            return await ConvertAnilistToUnified(response.Data.Media);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
-    public async Task<List<AnimeSearchResult>> SearchAnimeAsync(string query)
+    public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
         var request = new GraphQLRequest
         {
@@ -353,16 +353,13 @@ public class AnilistService : IAnimeProvider
         };
 
         var response = await _client.SendQueryAsync<PageResponse>(request);
-        var results = new List<AnimeSearchResult>();
+        var results = new List<AnimeDetails>();
 
         if (response.Data?.Page?.media != null)
         {
             foreach (var media in response.Data.Page.media)
             {
-                results.Add(new AnimeSearchResult
-                {
-                    Details = await ConvertAnilistToUnified(media)
-                });
+                results.Add(await ConvertAnilistToUnified(media));
             }
         }
 
@@ -471,37 +468,102 @@ public class AnilistService : IAnimeProvider
     private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media)
     {
         var picture = await LoadAnimeImageAsync(media.id, media.coverImage?.large);
+        
+        UserAnimeStatus? userStatus = null;
+        if (media.mediaListEntry != null)
+        {
+            userStatus = new UserAnimeStatus
+            {
+                Status = ConvertFromAnilistStatus(media.mediaListEntry.status),
+                Score = (int)(media.mediaListEntry.score ?? 0),
+                EpisodesWatched = media.mediaListEntry.progress ?? 0
+            };
+        }
+        
+        var stats = new AnimeStatistics
+        {
+            NumListUsers = media.popularity ?? 0, 
+            StatusStats = new StatusStatistics()
+        };
+        
+        if (media.stats?.statusDistribution != null)
+        {
+            foreach (var dist in media.stats.statusDistribution)
+            {
+                switch (dist.status)
+                {
+                    case "CURRENT": stats.StatusStats.Watching = dist.amount; break;
+                    case "COMPLETED": stats.StatusStats.Completed = dist.amount; break;
+                    case "PAUSED": stats.StatusStats.OnHold = dist.amount; break;
+                    case "DROPPED": stats.StatusStats.Dropped = dist.amount; break;
+                    case "PLANNING": stats.StatusStats.PlanToWatch = dist.amount; break;
+                }
+            }
+        }
+        
+        var relatedList = new List<RelatedAnime>();
+        if (media.relations?.edges != null)
+        {
+            foreach (var edge in media.relations.edges)
+            {
+                if (edge.node == null) continue;
+                
+                relatedList.Add(new RelatedAnime
+                {
+                    RelationType = ConvertRelationType(edge.relationType),
+                    Details = new AnimeDetails
+                    {
+                        Id = edge.node.id,
+                        Title = edge.node.title?.romaji ?? edge.node.title?.english,
+                        MainPicture = new AnimePicture 
+                        { 
+                            Medium = edge.node.coverImage?.medium ?? "",
+                            Large = edge.node.coverImage?.large ?? "" // Fallback if needed
+                        },
+                        NumEpisodes = edge.node.episodes,
+                        Status = edge.node.status, // Keep raw string or convert
+                        Mean = (edge.node.meanScore ?? 0) / 10f
+                    }
+                });
+            }
+        }
 
         return new AnimeDetails(
             id: media.id,
-            title: media.title?.romaji ?? media.title?.english ?? "",
+            title: media.title?.romaji ?? media.title?.english ?? "Unknown Title",
             mainPicture: media.coverImage != null ? new AnimePicture
             {
                 Medium = media.coverImage.medium ?? "",
                 Large = media.coverImage.large ?? ""
             } : null,
-            status: media.status,
+            status: media.status, // You might want to normalize this string to "Finished Airing" etc.
             synopsis: media.description,
             alternativeTitles: new AlternativeTitles
             {
                 English = media.title?.english,
                 Japanese = media.title?.native,
-                Synonyms = null
+                Synonyms = null 
             },
-            userStatus: null,
+            userStatus: userStatus, // NOW POPULATED
             numEpisodes: media.episodes,
             popularity: media.popularity,
             picture: picture,
-            studios: media.studios?.nodes?.Select(s => new Studio { Id = s.id, Name = s.name }).ToArray(),
+            studios: media.studios?.nodes?.Select(s => s.name).ToArray() ?? Array.Empty<string>(),
             startDate: FormatDate(media.startDate),
             mean: (media.meanScore ?? 0) / 10f,
-            genres: media.genres?.Select((g, i) => new Genre { Id = i, Name = g }).ToArray(),
+            genres: media.genres?.ToArray(),
             trailerUrl: GetTrailerUrl(media.trailer),
             numFavorites: media.favourites,
-            videos: null,
-            relatedAnime: Array.Empty<RelatedAnime>(),
-            statistics: new AnimeStatistics()
+            videos: null, // Anilist doesn't have a direct equivalent to MAL's PV list in the main object
+            relatedAnime: relatedList.ToArray(), // NOW POPULATED
+            statistics: stats // NOW POPULATED
         );
+    }
+    
+    private string ConvertRelationType(string? type)
+    {
+        if (string.IsNullOrEmpty(type)) return "Related";
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(type.Replace("_", " ").ToLower());
     }
 
     private string? FormatDate(AnilistDate? date)
@@ -543,6 +605,7 @@ public class AnilistService : IAnimeProvider
             "PAUSED" => AnimeStatus.OnHold,
             "DROPPED" => AnimeStatus.Dropped,
             "PLANNING" => AnimeStatus.PlanToWatch,
+            "REPEATING" => AnimeStatus.Watching,
             _ => AnimeStatus.None
         };
     }

@@ -31,14 +31,15 @@ public enum AnimeField
 
 public class MalUserAnimeListResponse
 {
-    public required MalAnimeListItem[] Data { get; set; }
+    public required MalAnimeNode[] Data { get; set; }
     public MalPaging? Paging { get; set; }
 }
 
-public class MalAnimeListItem
+public class MalAnimeNode
 {
     public required MalAnimeDetails Node { get; set; }
 }
+
 
 public class MalAnimeSearchListResponse
 {
@@ -164,11 +165,11 @@ public class MalStatistics
             NumListUsers = NumListUsers,
             StatusStats = new()
             {
-                Watching = Status?.Watching ?? "0",
-                Completed = Status?.Completed ?? "0",
-                OnHold = Status?.OnHold ?? "0",
-                Dropped = Status?.Dropped ?? "0",
-                PlanToWatch = Status?.PlanToWatch ?? "0"
+                Watching = Status?.Watching ?? 0,
+                Completed = Status?.Completed ?? 0,
+                OnHold = Status?.OnHold ?? 0,
+                Dropped = Status?.Dropped ?? 0,
+                PlanToWatch = Status?.PlanToWatch ?? 0
             }
         };
     }
@@ -176,16 +177,16 @@ public class MalStatistics
 
 public class MalStatusStatistics
 {
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? Watching { get; set; }
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? Completed { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? Watching { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? Completed { get; set; }
     [JsonPropertyName("on_hold")]
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? OnHold { get; set; }
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? Dropped { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? OnHold { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? Dropped { get; set; }
     [JsonPropertyName("plan_to_watch")]
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? PlanToWatch { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? PlanToWatch { get; set; }
 }

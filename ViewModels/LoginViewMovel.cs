@@ -109,7 +109,6 @@ public partial class LoginViewModel : ViewModelBase
         {
             IsTokenInputVisible = true;
             StatusMessage = "Please paste your AniList token below.";
-            // The LoginAsync for anilist just gives instructions, no username is returned
             await provider.LoginAsync(progress);
             IsLoading = false;
         }

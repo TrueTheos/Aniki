@@ -9,12 +9,6 @@ public class UserData
     public string? Picture { get; set; }
 }
 
-public class AnimeData
-{
-    public required AnimeDetails Details { get; set; }
-    public UserAnimeStatus? UserStatus { get; set; }
-}
-
 public class AnimeDetails : ObservableObject
 {
     [CacheField(AnimeField.ID)] public int Id { get; set; }
@@ -43,10 +37,10 @@ public class AnimeDetails : ObservableObject
     [CacheField(AnimeField.EPISODES)] public int? NumEpisodes { get; set; }
     [CacheField(AnimeField.POPULARITY)] public int? Popularity { get; set; }
     [CacheField(AnimeField.PICTURE)] public Bitmap? Picture { get; set; }
-    [CacheField(AnimeField.STUDIOS)] public Studio[]? Studios { get; set; }
+    [CacheField(AnimeField.STUDIOS)] public string[]? Studios { get; set; }
     [CacheField(AnimeField.START_DATE)] public string? StartDate { get; set; }
     [CacheField(AnimeField.MEAN)] public float Mean { get; set; }
-    [CacheField(AnimeField.GENRES)] public Genre[]? Genres { get; set; }
+    [CacheField(AnimeField.GENRES)] public string[]? Genres { get; set; }
     [CacheField(AnimeField.RELATED_ANIME)] public RelatedAnime[]? RelatedAnime { get; set; }
     [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
     [CacheField(AnimeField.NUM_FAV)] public int? NumFavorites { get; set; }
@@ -56,13 +50,13 @@ public class AnimeDetails : ObservableObject
     public AnimeDetails(){}
     
     public AnimeDetails(int id, string? title, AnimePicture? mainPicture, string? status, string? synopsis, AlternativeTitles? alternativeTitles,
-        UserAnimeStatus? userStatus, int? numEpisodes, int? popularity, Bitmap? picture, Studio[]? studios, string? startDate,
-        float mean, Genre[]? genres, string? trailerUrl, int? numFavorites, AnimeVideo[]? videos, RelatedAnime[] relatedAnime, AnimeStatistics statistics)
+        UserAnimeStatus? userStatus, int? numEpisodes, int? popularity, Bitmap? picture, string[]? studios, string? startDate,
+        float mean, string[]? genres, string? trailerUrl, int? numFavorites, AnimeVideo[]? videos, RelatedAnime[] relatedAnime, AnimeStatistics statistics)
     {
         Id = id;
         Title = title;
         MainPicture = mainPicture;
-        Status = status;
+        //Status = status;
         Synopsis = synopsis;
         AlternativeTitles = alternativeTitles;
         UserStatus = userStatus;
@@ -99,18 +93,6 @@ public class AnimePicture
     public required string Large { get; set; }
 }
 
-public class Studio
-{
-    public int Id { get; set; }
-    public required string Name { get; set; }
-}
-
-public class Genre
-{
-    public int Id { get; set; }
-    public required string Name { get; set; }
-}
-
 public class AlternativeTitles
 {
     public string[]? Synonyms { get; set; }
@@ -145,16 +127,11 @@ public class AnimeStatistics
 
 public class StatusStatistics
 {
-    public string? Watching { get; set; }
-    public string? Completed { get; set; }
-    public string? OnHold { get; set; }
-    public string? Dropped { get; set; }
-    public string? PlanToWatch { get; set; }
-}
-
-public class AnimeSearchResult
-{
-    public required AnimeDetails Details { get; set; }
+    public int Watching { get; set; }
+    public int Completed { get; set; }
+    public int OnHold { get; set; }
+    public int Dropped { get; set; }
+    public int PlanToWatch { get; set; }
 }
 
 public class RankingEntry
@@ -181,10 +158,8 @@ public enum RankingCategory
     ByPopularity
 }
 
-
 public class AnimeVideo
 {
-    public int Id { get; set; }
     public required string Title { get; set; }
     public required string Url { get; set; }
     public required string Thumbnail { get; set; }

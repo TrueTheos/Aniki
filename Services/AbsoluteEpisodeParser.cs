@@ -86,7 +86,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 var searchResult = await _animeService.SearchAnimeAsync(animeTitle);
                 if (searchResult.Count == 0) return null;
 
-                int foundAnimeId = searchResult.First().Details.Id;
+                int foundAnimeId = searchResult.First().Id;
 
                 if (_malIdToMapIndex.TryGetValue(foundAnimeId, out var existingMap))
                 {

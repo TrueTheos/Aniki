@@ -42,7 +42,7 @@ public partial class StatsViewModel : ViewModelBase
         CalculateGenreStats(animeList);
     }
 
-    private void CalculateAnimeStats(List<AnimeData> animeList)
+    private void CalculateAnimeStats(List<AnimeDetails> animeList)
     {
         AnimeStats stats = new AnimeStats();
     
@@ -68,16 +68,16 @@ public partial class StatsViewModel : ViewModelBase
         AnimeStats = stats;
     }
 
-    private void CalculateGenreStats(List<AnimeData> animeList)
+    private void CalculateGenreStats(List<AnimeDetails> animeList)
     {
-        var allGenres = animeList.SelectMany(a => a.Details.Genres ?? new Genre[0]).ToList();
+        var allGenres = animeList.SelectMany(a => a.Genres ?? []).ToList();
         var totalGenres = allGenres.Count;
 
         GenreStats = allGenres
-            .GroupBy(g => g.Name)
+            .GroupBy(g => g)
             .Select(g =>
             {
-                var animeInGenre = animeList.Where(a => a.Details.Genres?.Any(ag => ag.Name == g.Key) == true && a.UserStatus?.Score > 0).ToList();
+                var animeInGenre = animeList.Where(a => a.Genres?.Any(ag => ag == g.Key) == true && a.UserStatus?.Score > 0).ToList();
                 return new GenreStats
                 {
                     Name = g.Key,

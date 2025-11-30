@@ -1,4 +1,5 @@
-﻿using Aniki.Services.Auth;
+﻿using System.Collections.Concurrent;
+using Aniki.Services.Auth;
 using Aniki.Services.Auth.Providers;
 using Aniki.Services.Interfaces;
 
@@ -7,7 +8,7 @@ namespace Aniki.Services.Anime;
 public class AnimeService : IAnimeService
 {
     private readonly Dictionary<ILoginProvider.ProviderType, IAnimeProvider> _providers = new();
-    private readonly GenericCacheService<int, AnimeDetails, AnimeField> _cache;
+    private readonly ConcurrentDictionary<ILoginProvider.ProviderType, GenericCacheService<int, AnimeDetails, AnimeField>> _caches;
     private readonly ISaveService _saveService;
     
     private IAnimeProvider? _currentProvider;
@@ -19,24 +20,26 @@ public class AnimeService : IAnimeService
     public AnimeService(ISaveService saveService, ITokenService tokenService)
     {
         _saveService = saveService;
-        
-        CacheOptions options = new()
-        {
-            DefaultTimeToLive = TimeSpan.FromHours(8),
-            DiskCachePath = $"{SaveService.MAIN_DIRECTORY}/cache",
-            DiskSyncInterval = TimeSpan.FromMinutes(2),
-            EnableDiskCache = true
-        };
 
-        _cache = new GenericCacheService<int, AnimeDetails, AnimeField>(
-            FetchFieldsFromProvider, 
-            options
-        );
+        _caches = new();
     }
 
     public void RegisterProvider(ILoginProvider.ProviderType name, IAnimeProvider provider)
     {
         _providers[name] = provider;
+        
+        CacheOptions options = new()
+        {
+            DefaultTimeToLive = TimeSpan.FromHours(8),
+            DiskCachePath = $"{SaveService.MAIN_DIRECTORY}/cache/{name}",
+            DiskSyncInterval = TimeSpan.FromMinutes(2),
+            EnableDiskCache = true
+        };
+        
+        _caches[name] = new GenericCacheService<int, AnimeDetails, AnimeField>(
+            FetchFieldsFromProvider, 
+            options
+        );
     }
 
     public void SetActiveProvider(ILoginProvider.ProviderType providerName, string accessToken)
@@ -65,25 +68,31 @@ public class AnimeService : IAnimeService
     
     public void SubscribeToFieldChange(int animeId, FieldChangeHandler<AnimeDetails> handler, params AnimeField[] fields)
     {
-        _cache.SubscribeToFieldChange(animeId, handler, fields);
+        if (_currentProvider != null)
+            _caches[_currentProvider.Provider].SubscribeToFieldChange(animeId, handler, fields);
     }
 
     public void UnsubscribeFromFieldChange(int animeId, FieldChangeHandler<AnimeDetails> handler, params AnimeField[] fields)
     {
-        _cache.UnsubscribeFromFieldChange(animeId, handler, fields);
+        if (_currentProvider != null)
+            _caches[_currentProvider.Provider].UnsubscribeFromFieldChange(animeId, handler, fields);
     }
 
     public async Task<AnimeDetails> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields)
     {
-        return await _cache.GetOrFetchFieldsAsync(animeId, forceFetch, fields: fields);
+        if (_currentProvider != null)
+            return await _caches[_currentProvider.Provider].GetOrFetchFieldsAsync(animeId, forceFetch, fields: fields);
+        throw new Exception("This shouldn't happen");
     }
 
     public async Task<AnimeDetails> GetAllFieldsAsync(int animeId)
     {
-        return await _cache.GetOrFetchFieldsAsync(
-            animeId, 
-            fields: (AnimeField[])Enum.GetValues(typeof(AnimeField))
-        );
+        if (_currentProvider != null)
+            return await _caches[_currentProvider.Provider].GetOrFetchFieldsAsync(
+                animeId,
+                fields: (AnimeField[])Enum.GetValues(typeof(AnimeField))
+            );
+        throw new Exception("This shouldn't happen"); 
     }
 
     private async Task<AnimeDetails?> FetchFieldsFromProvider(int animeId, params AnimeField[] fields)
@@ -91,9 +100,9 @@ public class AnimeService : IAnimeService
         IAnimeProvider provider = GetCurrentProvider();
         AnimeDetails? details = await provider.FetchAnimeDetailsAsync(animeId, fields);
         
-        if (details != null)
+        if (details != null && _currentProvider != null)
         {
-            _cache.Update(animeId, details, fields);
+            _caches[_currentProvider.Provider].Update(animeId, details, fields);
         }
         
         return details;
@@ -110,17 +119,20 @@ public class AnimeService : IAnimeService
         AnimeField.MEAN, AnimeField.POPULARITY, AnimeField.START_DATE, AnimeField.STUDIOS, AnimeField.TITLE, AnimeField.EPISODES
     };
 
-    public async Task<List<AnimeData>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
+    public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
-        List<AnimeData> animeList = await GetCurrentProvider().GetUserAnimeListAsync(status);
-        
-        foreach (AnimeData anime in animeList)
+        List<AnimeDetails> animeList = await GetCurrentProvider().GetUserAnimeListAsync(status);
+
+        if (_currentProvider != null)
         {
-            _cache.UpdatePartial(
-                anime.Details.Id, 
-                anime.Details, 
-                MAL_NODE_FIELD_TYPES
-            );
+            foreach (AnimeDetails anime in animeList)
+            {
+                _caches[_currentProvider.Provider].UpdatePartial(
+                    anime.Id,
+                    anime,
+                    MAL_NODE_FIELD_TYPES
+                );
+            }
         }
         
         return animeList;
@@ -133,7 +145,9 @@ public class AnimeService : IAnimeService
         // Update cache to reflect removal
         AnimeDetails anime = await GetAllFieldsAsync(animeId);
         anime.UserStatus = null;
-        _cache.Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        if (_currentProvider != null)
+            _caches[_currentProvider.Provider]
+                .Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
     }
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
@@ -163,18 +177,21 @@ public class AnimeService : IAnimeService
     // Search & Discovery
     // ========================================================================
 
-    public async Task<List<AnimeSearchResult>> SearchAnimeAsync(string query)
+    public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
-        List<AnimeSearchResult> results = await GetCurrentProvider().SearchAnimeAsync(query);
+        List<AnimeDetails> results = await GetCurrentProvider().SearchAnimeAsync(query);
         
         // Update cache with search results
-        foreach (AnimeSearchResult result in results)
+        if (_currentProvider != null)
         {
-            _cache.UpdatePartial(
-                result.Details.Id,
-                result.Details,
-                MAL_NODE_FIELD_TYPES
-            );
+            foreach (AnimeDetails result in results)
+            {
+                _caches[_currentProvider.Provider].UpdatePartial(
+                    result.Id,
+                    result,
+                    MAL_NODE_FIELD_TYPES
+                );
+            }
         }
         
         return results;
@@ -185,15 +202,18 @@ public class AnimeService : IAnimeService
         List<RankingEntry> rankings = await GetCurrentProvider().GetTopAnimeAsync(category, limit);
         
         // Update cache with ranking data
-        foreach (RankingEntry entry in rankings)
+        if (_currentProvider != null)
         {
-            _cache.UpdatePartial(
-                entry.Details.Id,
-                entry.Details,
-                MAL_NODE_FIELD_TYPES
-            );
+            foreach (RankingEntry entry in rankings)
+            {
+                _caches[_currentProvider.Provider].UpdatePartial(
+                    entry.Details.Id,
+                    entry.Details,
+                    MAL_NODE_FIELD_TYPES
+                );
+            }
         }
-        
+
         return rankings;
     }
 }

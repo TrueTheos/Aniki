@@ -137,7 +137,7 @@
                                             <UniformGrid Columns="3" Rows="2" HorizontalAlignment="Center" RowSpacing="20">
                                                 <!-- Watching -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Watching, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Watching}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -150,7 +150,7 @@
                                                 
                                                 <!-- Completed -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Completed, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Completed}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -163,7 +163,7 @@
 
                                                 <!-- Plan to Watch -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.PlanToWatch, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.PlanToWatch}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -176,7 +176,7 @@
 
                                                 <!-- On Hold -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.OnHold, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.OnHold}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -189,7 +189,7 @@
 
                                                 <!-- Dropped -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Dropped, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Dropped}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -202,7 +202,7 @@
 
                                                 <!-- Favorites -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.NumFavorites, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.NumFavorites}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -451,7 +451,7 @@
                                                            Foreground="#888888"
                                                            FontWeight="SemiBold"
                                                            LetterSpacing="1"/>
-                                                <TextBlock Text="{Binding Details.Studios[0].Name}"
+                                                <TextBlock Text="{Binding Details.Studios[0]}"
                                                            FontSize="15"
                                                            Foreground="White"
                                                            FontWeight="Medium"/>
@@ -504,12 +504,12 @@
                                                 </ItemsPanelTemplate>
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="models:Genre">
+                                                <DataTemplate>
                                                     <Border Background="#44E50914"
                                                             CornerRadius="16"
                                                             Padding="16,8"
                                                             Margin="0,0,10,10">
-                                                        <TextBlock Text="{Binding Name}"
+                                                        <TextBlock Text="{Binding}"
                                                                    FontSize="13"
                                                                    Foreground="#FF6B8E"
                                                                    FontWeight="Medium"/>

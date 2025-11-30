@@ -55,6 +55,26 @@ public class AnilistMedia
     public int? favourites { get; set; }
     public AnilistTrailer? trailer { get; set; }
     public AnilistRelations? relations { get; set; }
+    public AnilistMediaListStatus? mediaListEntry { get; set; }
+    public AnilistStats? stats { get; set; }
+}
+
+public class AnilistMediaListStatus
+{
+    public string? status { get; set; }
+    public float? score { get; set; }
+    public int? progress { get; set; }
+}
+
+public class AnilistStats
+{
+    public List<AnilistStatusDistribution>? statusDistribution { get; set; }
+}
+
+public class AnilistStatusDistribution
+{
+    public string status { get; set; } = "";
+    public int amount { get; set; }
 }
 
 public class AnilistTitle

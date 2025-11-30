@@ -21,7 +21,7 @@ public class MalService : IAnimeProvider
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private HttpClient _client = new();
     
-    private List<AnimeData>? _userAnimeList;
+    private List<AnimeDetails>? _userAnimeList;
 
     private readonly Stopwatch _sw = new();
     private int _requestCounter;
@@ -142,7 +142,7 @@ public class MalService : IAnimeProvider
         
         if (!response.IsSuccessStatusCode)
         {
-            throw new HttpRequestException($"API returned status code: {response.StatusCode}");
+            throw new HttpRequestException($"API returned status code: {response.StatusCode} {url} {message}");
         }
 
         string responseBody = await response.Content.ReadAsStringAsync();
@@ -191,21 +191,20 @@ public class MalService : IAnimeProvider
         };
     }
 
-    public async Task<List<AnimeData>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
+    public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
         if (!IS_LOGGED_IN) return new();
         
-        Console.WriteLine("Started GetUserAnimeListAsync");
         if (_userAnimeList != null)
         {
             return status == AnimeStatus.None 
                 ? _userAnimeList 
-                : _userAnimeList.Where(a => a.Details.UserStatus?.Status == status).ToList();
+                : _userAnimeList.Where(a => a.UserStatus?.Status == status).ToList();
         }
 
         try
         {
-            List<AnimeData> animeList = new();
+            List<AnimeDetails> animeList = new();
             Console.WriteLine("2 GetUserAnimeListAsync");
             string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={_allFields}&limit=1000&nsfw=true";
             
@@ -221,11 +220,7 @@ public class MalService : IAnimeProvider
                 MalUserAnimeListResponse? response = await GetAndDeserializeAsync<MalUserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
                 if (response?.Data != null)
                 {
-                    animeList.AddRange(response.Data.Select(mal => new AnimeData
-                    {
-                        Details = ConvertMalToUnified(mal.Node),
-                        UserStatus = ConvertMalListStatus(mal.Node.MyListStatus)
-                    }).ToList());
+                    animeList.AddRange( response.Data.Select(x => ConvertMalToUnified(x.Node)).ToList());
                 }
                 nextPageUrl = response?.Paging?.Next;
             }
@@ -411,7 +406,7 @@ public class MalService : IAnimeProvider
         }
     }
 
-    public async Task<List<AnimeSearchResult>> SearchAnimeAsync(string query)
+    public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
         string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={_allFields}&nsfw=true";
 
@@ -423,10 +418,7 @@ public class MalService : IAnimeProvider
             .Select(x => x.Entry)
             .ToList() ?? new List<MalSearchEntry>();
 
-        return results.Select(mal => new AnimeSearchResult
-        {
-            Details = ConvertMalToUnified(mal.Node),
-        }).ToList();
+        return results.Select(mal => ConvertMalToUnified(mal.Node)).ToList();
     }
 
     private int CalculateSearchScore(MalAnimeDetails anime, string query)
@@ -593,10 +585,10 @@ public class MalService : IAnimeProvider
             numEpisodes: mal.NumEpisodes,
             popularity: mal.Popularity,
             picture: mal.Picture,
-            studios: mal.Studios?.Select(s => new Studio { Id = s.Id, Name = s.Name }).ToArray(),
+            studios: mal.Studios?.Select(s => s.Name).ToArray(),
             startDate: mal.StartDate,
             mean: mal.Mean,
-            genres: mal.Genres?.Select(g => new Genre { Id = g.Id, Name = g.Name }).ToArray(),
+            genres: mal.Genres?.Select(g => g.Name).ToArray(),
             trailerUrl: mal.TrailerUrl,
             numFavorites: mal.NumFavorites,
             videos: mal.Videos,

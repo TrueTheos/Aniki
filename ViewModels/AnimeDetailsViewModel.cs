@@ -169,7 +169,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         await _animeService.SetEpisodesWatchedAsync(Details.Id, newCount);
         WatchedEpisodes = newCount;
     }
-
     
     [RelayCommand]
     private void UpdateStatus(string status)

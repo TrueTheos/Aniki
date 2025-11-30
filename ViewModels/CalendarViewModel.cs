@@ -65,16 +65,16 @@ public partial class CalendarViewModel : ViewModelBase
         
         if(!MalService.IS_LOGGED_IN) return;
         
-        List<AnimeData> watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
-        List<AnimeData> planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
+        List<AnimeDetails> watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
+        List<AnimeDetails> planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
 
-        foreach (AnimeData anime in watching)
+        foreach (AnimeDetails anime in watching)
         {
-            if(anime.Details.Title != null) _watchingList.Add(anime.Details.Title);
+            if(anime.Title != null) _watchingList.Add(anime.Title);
         }
-        foreach (AnimeData anime in planToWatch)
+        foreach (AnimeDetails anime in planToWatch)
         {
-            if(anime.Details.Title != null) _watchingList.Add(anime.Details.Title);
+            if(anime.Title != null) _watchingList.Add(anime.Title);
         }
     }
 

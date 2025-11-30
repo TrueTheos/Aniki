@@ -393,7 +393,7 @@
                                                            Foreground="#555555"
                                                            IsVisible="{Binding Studios[0], Converter={x:Static ObjectConverters.IsNotNull}}"/>
                                                 
-                                                <TextBlock Text="{Binding Studios[0].Name}"
+                                                <TextBlock Text="{Binding Studios[0]}"
                                                            FontSize="14"
                                                            Foreground="#AAAAAA"
                                                            IsVisible="{Binding Studios[0], Converter={x:Static ObjectConverters.IsNotNull}}"/>

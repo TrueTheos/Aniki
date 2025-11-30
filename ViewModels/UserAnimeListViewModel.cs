@@ -156,11 +156,11 @@ public partial class UserAnimeListViewModel : ViewModelBase
         var list = await _animeService.GetUserAnimeListAsync();
         foreach (var element in list)
         {
-            if(_loadedIds.Contains(element.Details.Id)) continue;
+            if(_loadedIds.Contains(element.Id)) continue;
             
-            if(AnimeList.Any(x => x.Id == element.Details.Id)) continue;
-            AnimeList.Add(await _animeService.GetFieldsAsync(element.Details.Id, fields: AnimeService.MAL_NODE_FIELD_TYPES));
-            _loadedIds.Add(element.Details.Id);
+            if(AnimeList.Any(x => x.Id == element.Id)) continue;
+            AnimeList.Add(await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MAL_NODE_FIELD_TYPES));
+            _loadedIds.Add(element.Id);
         }
         
         TotalCount = AnimeList.Count;
@@ -191,7 +191,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         {
             filtered = filtered.Where(a => 
                 a.Genres != null && selectedGenres.All(sg => 
-                    a.Genres.Any(ag => ag.Name.Equals(sg, StringComparison.OrdinalIgnoreCase))
+                    a.Genres.Any(ag => ag.Equals(sg, StringComparison.OrdinalIgnoreCase))
                 )
             );
         }

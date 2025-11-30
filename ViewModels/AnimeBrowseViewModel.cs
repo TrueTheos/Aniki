@@ -56,7 +56,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canGoPrevious;
 
-    private List<AnimeSearchResult> _allSearchResults = new();
+    private List<AnimeDetails> _allSearchResults = new();
     private const int PageSize = 20;
 
     public AnimeBrowseViewModel(IAnimeService animeService, ICalendarService calendarService)
@@ -238,11 +238,11 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
         foreach (var result in pageResults)
         {
-            AnimePicture? picture = result.Details.MainPicture;
+            AnimePicture? picture = result.MainPicture;
             var card = new AnimeCardData
             {
-                AnimeId = result.Details.Id,
-                Title = result.Details.Title,
+                AnimeId = result.Id,
+                Title = result.Title,
                 MyListStatus  = null,
                 ImageUrl = picture!.Large != null ? picture.Large : picture.Medium
             };
