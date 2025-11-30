@@ -7,6 +7,7 @@ using Avalonia.Media.Imaging;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
+using Newtonsoft.Json.Linq;
 
 namespace Aniki.Services;
 
@@ -92,8 +93,17 @@ public class AnilistService : IAnimeProvider
         if (!_isLoggedIn) return new List<AnimeDetails>();
 
         var allFields = new HashSet<AnimeField>((AnimeField[])Enum.GetValues(typeof(AnimeField)));
-        allFields.Remove(AnimeField.MY_LIST_STATUS); // MY_LIST_STATUS is handled by the root query, not on the media object
-        
+
+        string myListStatusFormated = "";
+        if (allFields.Contains(AnimeField.MY_LIST_STATUS))
+        {
+            allFields.Remove(AnimeField.MY_LIST_STATUS);
+            myListStatusFormated = "\nstatus\nprogress\nscore(format: POINT_10)\n";
+        }
+        else
+        {
+            myListStatusFormated = "\n";
+        }
         var fragments = GetGraphQLFragments(allFields);
         var innerQuery = string.Join("\n", fragments);
 
@@ -106,11 +116,8 @@ public class AnilistService : IAnimeProvider
                     MediaListCollection(userId: $userId, type: ANIME" + statusText + @") {
                         lists {
                             entries {
-                                id
-                                status
-                                score(format: POINT_10)
-                                progress
-                                media {
+                                id" + myListStatusFormated +
+                                @"media {
                                     " + innerQuery + @"
                                 }
                             }
@@ -119,10 +126,10 @@ public class AnilistService : IAnimeProvider
                 }",
             Variables = statusFilter != AnimeStatus.None ? new
             {
-                userId = (await GetUserDataAsync()).Id,
+                userId = _currentUserId,
             } : new
             {
-                userId = (await GetUserDataAsync()).Id,
+                userId = _currentUserId,
                 status = statusFilter
             }
         };
@@ -138,13 +145,7 @@ public class AnilistService : IAnimeProvider
                 {
                     foreach (var entry in list.entries)
                     {
-                        var userStatus = new UserAnimeStatus
-                        {
-                            Status = ConvertFromAnilistStatus(entry.status),
-                            Score = (int)(entry.score ?? 0),
-                            EpisodesWatched = entry.progress ?? 0
-                        };
-                        animeList.Add(await ConvertAnilistToUnified(entry.media, userStatus));
+                        animeList.Add(await ConvertAnilistToUnified(entry.media, entry.media.mediaListEntry));
                     }
                 }
             }
@@ -153,22 +154,45 @@ public class AnilistService : IAnimeProvider
         return animeList;
     }
 
+    private class MediaListResponse
+    {
+        public MediaListEntry MediaList { get; set; } = null!;
+    }
+    
     public async Task RemoveFromUserListAsync(int animeId)
     {
         if (!_isLoggedIn) return;
 
-        var request = new GraphQLRequest
+        var queryRequest = new GraphQLRequest
         {
             Query = @"
-                mutation ($mediaId: Int) {
-                    DeleteMediaListEntry(id: $mediaId) {
-                        deleted
-                    }
-                }",
-            Variables = new { mediaId = animeId }
+            query ($mediaId: Int, $userId: Int) {
+                MediaList(mediaId: $mediaId, userId: $userId) {
+                    id
+                    status
+                }
+            }",
+            Variables = new { mediaId = animeId, userId = _currentUserId }
         };
 
-        await _client.SendMutationAsync<object>(request);
+        var queryResponse = await _client.SendQueryAsync<MediaListResponse>(queryRequest);
+
+        if (queryResponse.Data?.MediaList == null) return;
+
+        int entryId = queryResponse.Data.MediaList.id;
+
+        var deleteRequest = new GraphQLRequest
+        {
+            Query = @"
+            mutation ($id: Int) {
+                DeleteMediaListEntry(id: $id) {
+                    deleted
+                }
+            }",
+            Variables = new { id = entryId }
+        };
+
+        await _client.SendMutationAsync<object>(deleteRequest);
     }
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
@@ -207,11 +231,11 @@ public class AnilistService : IAnimeProvider
             Query = @"
                 mutation ($mediaId: Int, $status: MediaListStatus, $score: Float, $progress: Int) {
                     SaveMediaListEntry(mediaId: $mediaId, status: $status, score: $score, progress: $progress) {
-                        id
-                        status
-                        score
-                        progress
-                    }
+                        id" + 
+                        (status.HasValue ? "\nstatus\n" : "") +
+                        (score.HasValue ? "\nscore\n" : "") +
+                        (progress.HasValue ? "\nprogress\n" : "") +
+                    @"}
                 }",
             Variables = variables
         };
@@ -230,19 +254,11 @@ public class AnilistService : IAnimeProvider
         var fieldSet = new HashSet<AnimeField>(fields);
 
         fragments.AddRange(GetGraphQLFragments(fieldSet));
-
-        bool needsUserId = fieldSet.Contains(AnimeField.MY_LIST_STATUS);
-
-        if (needsUserId || _isLoggedIn)
-        {
-            if (_currentUserId == null) _currentUserId = (await GetUserDataAsync()).Id;
-            variables.Add("userId", _currentUserId);
-        }
-
+        
         string innerQuery = string.Join("\n", fragments);
     
         string query = $@"
-        query ($id: Int, $userId: Int) {{
+        query ($id: Int) {{
             Media(id: $id, type: ANIME) {{
                 {innerQuery}
             }}
@@ -258,7 +274,7 @@ public class AnilistService : IAnimeProvider
         {
             var response = await _client.SendQueryAsync<MediaResponse>(request);
             if (response.Data?.Media == null) return null;
-            return await ConvertAnilistToUnified(response.Data.Media);
+            return await ConvertAnilistToUnified(response.Data.Media, response.Data.Media.mediaListEntry);
         }
         catch
         {
@@ -335,11 +351,11 @@ public class AnilistService : IAnimeProvider
                     break;
 
                 case AnimeField.MY_LIST_STATUS:
-                    yield return @"mediaListEntry(userId: $userId) {
-                                status
-                                score(format: POINT_10)
-                                progress
-                            }";
+                    yield return @" mediaListEntry {
+                                        status
+                                        progress
+                                        score(format: POINT_10)
+                                    }";
                     break;
 
                 case AnimeField.STUDIOS:
@@ -425,7 +441,7 @@ public class AnilistService : IAnimeProvider
         {
             foreach (var media in response.Data.Page.media)
             {
-                results.Add(await ConvertAnilistToUnified(media));
+                results.Add(await ConvertAnilistToUnified(media, media.mediaListEntry));
             }
         }
 
@@ -442,7 +458,7 @@ public class AnilistService : IAnimeProvider
             _ => ("SCORE_DESC", null)
         };
 
-        var allFields = new HashSet<AnimeField>((AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        var allFields = new HashSet<AnimeField>(AnimeService.MAL_NODE_FIELD_TYPES);
         var fragments = GetGraphQLFragments(allFields);
         var innerQuery = string.Join("\n", fragments);
 
@@ -460,12 +476,6 @@ public class AnilistService : IAnimeProvider
         if (status != null)
         {
             queryVariables += ", $status: MediaStatus";
-        }
-        if (_isLoggedIn)
-        {
-            if (_currentUserId == null) _currentUserId = (await GetUserDataAsync()).Id;
-            variables["userId"] = _currentUserId;
-            queryVariables += ", $userId: Int";
         }
         queryVariables += ")";
         
@@ -498,7 +508,8 @@ public class AnilistService : IAnimeProvider
             {
                 results.Add(new RankingEntry
                 {
-                    Details = await ConvertAnilistToUnified(media),
+                    
+                    Details = await ConvertAnilistToUnified(media, media.mediaListEntry),
                     Rank = rank++
                 });
             }
@@ -533,7 +544,7 @@ public class AnilistService : IAnimeProvider
         return null;
     }
 
-    private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media, UserAnimeStatus? userStatus = null)
+    private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media, AnilistMediaListStatus? userStatus)
     {
         var picture = await LoadAnimeImageAsync(media.id, media.coverImage?.large);
         
@@ -585,6 +596,18 @@ public class AnilistService : IAnimeProvider
             }
         }
 
+        UserAnimeStatus? userAnimeStatus = null;
+        
+        if (userStatus != null)
+        {
+            userAnimeStatus = new UserAnimeStatus
+            {
+                Status = ConvertFromAnilistStatus(userStatus.status),
+                Score = (int)(userStatus.score ?? 0),
+                EpisodesWatched = userStatus.progress ?? 0
+            };
+        }
+
         return new AnimeDetails(
             id: media.id,
             title: media.title?.romaji ?? media.title?.english ?? "Unknown Title",
@@ -601,7 +624,7 @@ public class AnilistService : IAnimeProvider
                 Japanese = media.title?.native,
                 Synonyms = null 
             },
-            userStatus: userStatus, // NOW POPULATED
+            userStatus: userAnimeStatus, // NOW POPULATED
             numEpisodes: media.episodes,
             popularity: media.popularity,
             picture: picture,
@@ -674,12 +697,16 @@ public class AnilistService : IAnimeProvider
         private int _remainingRequests = 10;
         private DateTimeOffset _resetTime = DateTimeOffset.MinValue;
 
+        private int _requestCount = 0;
+
         public AnilistRateLimitHandler(HttpMessageHandler innerHandler) : base(innerHandler)
         {
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            Console.WriteLine($"Request {_requestCount}");
+            _requestCount++;
             await _semaphore.WaitAsync(cancellationToken);
             try
             {
@@ -692,7 +719,7 @@ public class AnilistService : IAnimeProvider
 
                     if (finalDelay.TotalMilliseconds > 0)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[AnilistService] Rate limit reached. Waiting {finalDelay.TotalSeconds} seconds.");
+                        Console.WriteLine($"[AnilistService] Rate limit reached. Waiting {finalDelay.TotalSeconds} seconds.");
                         await Task.Delay(finalDelay, cancellationToken);
                     }
                 }
@@ -726,6 +753,7 @@ public class AnilistService : IAnimeProvider
                 if (int.TryParse(remainingValues.FirstOrDefault(), out int remaining))
                 {
                     _remainingRequests = remaining;
+                    Console.WriteLine($"Rate limit remaining {_remainingRequests}");
                 }
             }
 
@@ -734,6 +762,7 @@ public class AnilistService : IAnimeProvider
                 if (long.TryParse(resetValues.FirstOrDefault(), out long resetUnix))
                 {
                     _resetTime = DateTimeOffset.FromUnixTimeSeconds(resetUnix);
+                    Console.WriteLine($"Rate limit reset time {_resetTime}");
                 }
             }
         }

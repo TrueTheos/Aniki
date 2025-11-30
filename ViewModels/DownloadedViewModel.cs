@@ -211,6 +211,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (malId == null)
                 return;
 
+            //TODO IMPORTANT CO JEZELI NIE MAMY MALID TUTAJ...
             var animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, fields:[AnimeField.TITLE, AnimeField.EPISODES]);
 
             var episode = new DownloadedEpisode(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
