@@ -10,6 +10,10 @@ using GraphQL.Client.Serializer.SystemTextJson;
 
 namespace Aniki.Services;
 
+//TODO IMPORTANT, SO THE ISSUE IS THAT WE OVERRIDE ID WITH ANILIST ID. WE NEED BOTH ANILIST ID AND MALID CACHED!
+//AND IN ANIMEPROVIDER WE CAN JUST HAVE CACHE FOR EACH PROVIDER
+//SIMPLYFY ANIMEDETAILS
+
 public class AnilistService : IAnimeProvider
 {
     private readonly GraphQLHttpClient _client;

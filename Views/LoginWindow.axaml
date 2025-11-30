@@ -44,7 +44,7 @@
                         <DataTemplate>
                             <Button
                                 Command="{Binding $parent[Window].DataContext.LoginCommand}"
-                                CommandParameter="{Binding Id}"
+                                CommandParameter="{Binding Provider}"
                                 HorizontalAlignment="Stretch"
                                 Padding="10,8"
                                 Margin="0,2"
@@ -54,7 +54,7 @@
                                         <Setter Property="Background" Value="{StaticResource DarkerRedColor}"/>
                                     </Style>
                                 </Button.Styles>
-                                <TextBlock Text="{Binding Name, StringFormat='Login with {0}'}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding Provider, StringFormat='Login with {0}'}" HorizontalAlignment="Center"/>
                             </Button>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
