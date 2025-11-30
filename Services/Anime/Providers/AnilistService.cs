@@ -12,19 +12,37 @@ namespace Aniki.Services;
 public class AnilistService : IAnimeProvider
 {
     private readonly GraphQLHttpClient _client;
+    private readonly HttpClient _httpClient;
+    private readonly ISaveService _saveService;
+    private bool _isLoggedIn;
 
-    public AnilistService()
+    public string ProviderName => "AniList";
+    public bool IsLoggedIn => _isLoggedIn;
+
+    public AnilistService(ISaveService saveService)
     {
         _client = new GraphQLHttpClient("https://graphql.anilist.co", new SystemTextJsonSerializer());
+        _httpClient = new HttpClient();
+        _saveService = saveService;
     }
 
-    public void SetToken(string token)
+    public void Init(string? accessToken)
     {
-        _client.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            _client.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            _isLoggedIn = true;
+        }
+        else
+        {
+            _isLoggedIn = false;
+        }
     }
 
-    public async Task<Anilist_ViewerData?> GetViewerAsync()
+    public async Task<UserData> GetUserDataAsync()
     {
+        if (!_isLoggedIn) return new UserData();
+
         var request = new GraphQLRequest
         {
             Query = @"
@@ -39,72 +57,488 @@ public class AnilistService : IAnimeProvider
                 }"
         };
 
-        GraphQLResponse<ViewerResponse> response = await _client.SendQueryAsync<ViewerResponse>(request);
+        var response = await _client.SendQueryAsync<ViewerResponse>(request);
 
-        if (response.Data is null) return null;
-        
-        return new Anilist_ViewerData
+        if (response.Data?.Viewer == null)
+            throw new InvalidOperationException("Failed to get user data");
+
+        return new UserData
         {
-            Id = response.Data.Viewer?.id,
-            Name = response.Data.Viewer?.name,
-            Picture = response.Data.Viewer?.avatar?.large
+            Id = response.Data.Viewer.id,
+            Name = response.Data.Viewer.name,
+            Picture = response.Data.Viewer.avatar?.large
         };
     }
 
-    public string ProviderName => "Anilist";
-    public bool IsLoggedIn { get; }
-    public void Init(string accessToken)
+    public async Task<List<AnimeData>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
-        throw new NotImplementedException();
+        if (!_isLoggedIn) return new List<AnimeData>();
+
+        var statusFilter = status != AnimeStatus.None ? ConvertToAnilistStatus(status) : null;
+        
+        var request = new GraphQLRequest
+        {
+            Query = @"
+                query ($userId: Int, $status: MediaListStatus) {
+                    MediaListCollection(userId: $userId, type: ANIME, status: $status) {
+                        lists {
+                            entries {
+                                id
+                                status
+                                score(format: POINT_10)
+                                progress
+                                media {
+                                    id
+                                    title {
+                                        romaji
+                                        english
+                                        native
+                                    }
+                                    coverImage {
+                                        large
+                                        medium
+                                    }
+                                    status
+                                    description
+                                    episodes
+                                    meanScore
+                                    popularity
+                                    studios {
+                                        nodes {
+                                            id
+                                            name
+                                        }
+                                    }
+                                    startDate {
+                                        year
+                                        month
+                                        day
+                                    }
+                                    genres
+                                    favourites
+                                    trailer {
+                                        id
+                                        site
+                                    }
+                                    relations {
+                                        edges {
+                                            relationType
+                                            node {
+                                                id
+                                                title {
+                                                    romaji
+                                                    english
+                                                }
+                                                episodes
+                                                status
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }",
+            Variables = new
+            {
+                userId = (await GetUserDataAsync()).Id,
+                status = statusFilter
+            }
+        };
+
+        var response = await _client.SendQueryAsync<MediaListCollectionResponse>(request);
+        var animeList = new List<AnimeData>();
+
+        if (response.Data?.MediaListCollection?.lists != null)
+        {
+            foreach (var list in response.Data.MediaListCollection.lists)
+            {
+                if (list.entries != null)
+                {
+                    foreach (var entry in list.entries)
+                    {
+                        animeList.Add(new AnimeData
+                        {
+                            Details = await ConvertAnilistToUnified(entry.media),
+                            UserStatus = new UserAnimeStatus
+                            {
+                                Status = ConvertFromAnilistStatus(entry.status),
+                                Score = entry.score ?? 0,
+                                EpisodesWatched = entry.progress ?? 0
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        return animeList;
     }
 
-    public Task<UserData> GetUserDataAsync()
+    public async Task RemoveFromUserListAsync(int animeId)
     {
-        throw new NotImplementedException();
+        if (!_isLoggedIn) return;
+
+        var request = new GraphQLRequest
+        {
+            Query = @"
+                mutation ($mediaId: Int) {
+                    DeleteMediaListEntry(id: $mediaId) {
+                        deleted
+                    }
+                }",
+            Variables = new { mediaId = animeId }
+        };
+
+        await _client.SendMutationAsync<object>(request);
     }
 
-    public Task<List<AnimeData>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
+    public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
-        throw new NotImplementedException();
+        await UpdateMediaListEntry(animeId, status: status);
     }
 
-    public Task RemoveFromUserListAsync(int animeId)
+    public async Task SetAnimeScoreAsync(int animeId, int score)
     {
-        throw new NotImplementedException();
+        await UpdateMediaListEntry(animeId, score: score);
     }
 
-    public Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
+    public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
     {
-        throw new NotImplementedException();
+        await UpdateMediaListEntry(animeId, progress: episodes);
     }
 
-    public Task SetAnimeScoreAsync(int animeId, int score)
+    private async Task UpdateMediaListEntry(int mediaId, AnimeStatus? status = null, int? score = null, int? progress = null)
     {
-        throw new NotImplementedException();
+        if (!_isLoggedIn) return;
+
+        var variables = new Dictionary<string, object>
+        {
+            ["mediaId"] = mediaId
+        };
+
+        if (status.HasValue)
+            variables["status"] = ConvertToAnilistStatus(status.Value);
+        if (score.HasValue)
+            variables["score"] = score.Value;
+        if (progress.HasValue)
+            variables["progress"] = progress.Value;
+
+        var request = new GraphQLRequest
+        {
+            Query = @"
+                mutation ($mediaId: Int, $status: MediaListStatus, $score: Float, $progress: Int) {
+                    SaveMediaListEntry(mediaId: $mediaId, status: $status, score: $score, progress: $progress) {
+                        id
+                        status
+                        score
+                        progress
+                    }
+                }",
+            Variables = variables
+        };
+
+        await _client.SendMutationAsync<object>(request);
     }
 
-    public Task SetEpisodesWatchedAsync(int animeId, int episodes)
+    public async Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields)
     {
-        throw new NotImplementedException();
+        var request = new GraphQLRequest
+        {
+            Query = @"
+                query ($id: Int) {
+                    Media(id: $id, type: ANIME) {
+                        id
+                        title {
+                            romaji
+                            english
+                            native
+                        }
+                        coverImage {
+                            large
+                            medium
+                        }
+                        status
+                        description
+                        episodes
+                        meanScore
+                        popularity
+                        studios {
+                            nodes {
+                                id
+                                name
+                            }
+                        }
+                        startDate {
+                            year
+                            month
+                            day
+                        }
+                        genres
+                        favourites
+                        trailer {
+                            id
+                            site
+                        }
+                        relations {
+                            edges {
+                                relationType
+                                node {
+                                    id
+                                    title {
+                                        romaji
+                                        english
+                                    }
+                                    episodes
+                                    status
+                                }
+                            }
+                        }
+                    }
+                }",
+            Variables = new { id = animeId }
+        };
+
+        var response = await _client.SendQueryAsync<MediaResponse>(request);
+        
+        if (response.Data?.Media == null) return null;
+
+        return await ConvertAnilistToUnified(response.Data.Media);
     }
 
-    public Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields)
+    public async Task<List<AnimeSearchResult>> SearchAnimeAsync(string query)
     {
-        throw new NotImplementedException();
+        var request = new GraphQLRequest
+        {
+            Query = @"
+                query ($search: String) {
+                    Page(page: 1, perPage: 20) {
+                        media(search: $search, type: ANIME) {
+                            id
+                            title {
+                                romaji
+                                english
+                                native
+                            }
+                            coverImage {
+                                large
+                                medium
+                            }
+                            status
+                            description
+                            episodes
+                            meanScore
+                            popularity
+                            studios {
+                                nodes {
+                                    id
+                                    name
+                                }
+                            }
+                            startDate {
+                                year
+                                month
+                                day
+                            }
+                            genres
+                        }
+                    }
+                }",
+            Variables = new { search = query }
+        };
+
+        var response = await _client.SendQueryAsync<PageResponse>(request);
+        var results = new List<AnimeSearchResult>();
+
+        if (response.Data?.Page?.media != null)
+        {
+            foreach (var media in response.Data.Page.media)
+            {
+                results.Add(new AnimeSearchResult
+                {
+                    Details = await ConvertAnilistToUnified(media)
+                });
+            }
+        }
+
+        return results;
     }
 
-    public Task<List<AnimeSearchResult>> SearchAnimeAsync(string query)
+    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10)
     {
-        throw new NotImplementedException();
+        var (sort, status) = category switch
+        {
+            RankingCategory.Airing => ("TRENDING_DESC", "RELEASING"),
+            RankingCategory.Upcoming => ("POPULARITY_DESC", "NOT_YET_RELEASED"),
+            RankingCategory.ByPopularity => ("POPULARITY_DESC", null),
+            _ => ("SCORE_DESC", null)
+        };
+
+        var request = new GraphQLRequest
+        {
+            Query = @"
+                query ($sort: [MediaSort], $status: MediaStatus, $perPage: Int) {
+                    Page(page: 1, perPage: $perPage) {
+                        media(type: ANIME, sort: $sort, status: $status) {
+                            id
+                            title {
+                                romaji
+                                english
+                                native
+                            }
+                            coverImage {
+                                large
+                                medium
+                            }
+                            status
+                            description
+                            episodes
+                            meanScore
+                            popularity
+                            studios {
+                                nodes {
+                                    id
+                                    name
+                                }
+                            }
+                            startDate {
+                                year
+                                month
+                                day
+                            }
+                            genres
+                        }
+                    }
+                }",
+            Variables = new
+            {
+                sort = sort,
+                status = status,
+                perPage = limit
+            }
+        };
+
+        var response = await _client.SendQueryAsync<PageResponse>(request);
+        var results = new List<RankingEntry>();
+
+        if (response.Data?.Page?.media != null)
+        {
+            int rank = 1;
+            foreach (var media in response.Data.Page.media)
+            {
+                results.Add(new RankingEntry
+                {
+                    Details = await ConvertAnilistToUnified(media),
+                    Rank = rank++
+                });
+            }
+        }
+
+        return results;
     }
 
-    public Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10)
+    public async Task<Bitmap?> LoadAnimeImageAsync(int animeId, string? imageUrl)
     {
-        throw new NotImplementedException();
+        if (_saveService.TryGetAnimeImage(animeId, out Bitmap? bitmap))
+        {
+            return bitmap;
+        }
+
+        if (!string.IsNullOrEmpty(imageUrl))
+        {
+            try
+            {
+                var imageData = await _httpClient.GetByteArrayAsync(imageUrl);
+                using var ms = new MemoryStream(imageData);
+                var downloadedImage = new Bitmap(ms);
+                _saveService.SaveImage(animeId, downloadedImage);
+                return downloadedImage;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        return null;
     }
 
-    public Task<Bitmap?> LoadAnimeImageAsync(int animeId, string? imageUrl)
+    private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media)
     {
-        throw new NotImplementedException();
+        var picture = await LoadAnimeImageAsync(media.id, media.coverImage?.large);
+
+        return new AnimeDetails(
+            id: media.id,
+            title: media.title?.romaji ?? media.title?.english ?? "",
+            mainPicture: media.coverImage != null ? new AnimePicture
+            {
+                Medium = media.coverImage.medium ?? "",
+                Large = media.coverImage.large ?? ""
+            } : null,
+            status: media.status,
+            synopsis: media.description,
+            alternativeTitles: new AlternativeTitles
+            {
+                English = media.title?.english,
+                Japanese = media.title?.native,
+                Synonyms = null
+            },
+            userStatus: null,
+            numEpisodes: media.episodes,
+            popularity: media.popularity,
+            picture: picture,
+            studios: media.studios?.nodes?.Select(s => new Studio { Id = s.id, Name = s.name }).ToArray(),
+            startDate: FormatDate(media.startDate),
+            mean: (media.meanScore ?? 0) / 10f,
+            genres: media.genres?.Select((g, i) => new Genre { Id = i, Name = g }).ToArray(),
+            trailerUrl: GetTrailerUrl(media.trailer),
+            numFavorites: media.favourites,
+            videos: null,
+            relatedAnime: Array.Empty<RelatedAnime>(),
+            statistics: new AnimeStatistics()
+        );
+    }
+
+    private string? FormatDate(AnilistDate? date)
+    {
+        if (date?.year == null) return null;
+        return $"{date.year:D4}-{date.month:D2}-{date.day:D2}";
+    }
+
+    private string? GetTrailerUrl(AnilistTrailer? trailer)
+    {
+        if (trailer == null) return null;
+        
+        return trailer.site?.ToLower() switch
+        {
+            "youtube" => $"https://www.youtube.com/watch?v={trailer.id}",
+            _ => null
+        };
+    }
+
+    private string ConvertToAnilistStatus(AnimeStatus status)
+    {
+        return status switch
+        {
+            AnimeStatus.Watching => "CURRENT",
+            AnimeStatus.Completed => "COMPLETED",
+            AnimeStatus.OnHold => "PAUSED",
+            AnimeStatus.Dropped => "DROPPED",
+            AnimeStatus.PlanToWatch => "PLANNING",
+            _ => "PLANNING"
+        };
+    }
+
+    private AnimeStatus ConvertFromAnilistStatus(string? status)
+    {
+        return status switch
+        {
+            "CURRENT" => AnimeStatus.Watching,
+            "COMPLETED" => AnimeStatus.Completed,
+            "PAUSED" => AnimeStatus.OnHold,
+            "DROPPED" => AnimeStatus.Dropped,
+            "PLANNING" => AnimeStatus.PlanToWatch,
+            _ => AnimeStatus.None
+        };
     }
 }

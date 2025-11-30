@@ -9,7 +9,7 @@ namespace Aniki.Services.Auth.Providers;
 public class AnilistLoginProvider : ILoginProvider
 {
     public string Name => "AniList";
-    public string Id => "anilist";
+    public string Id => "AniList";
     
     private const string ClientId = "32652";
 

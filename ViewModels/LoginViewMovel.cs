@@ -105,7 +105,7 @@ public partial class LoginViewModel : ViewModelBase
         _currentProvider = provider;
         Progress<string> progress = new(message => StatusMessage = message);
         
-        if (provider.Id == "anilist")
+        if (provider.Id == "AniList")
         {
             IsTokenInputVisible = true;
             StatusMessage = "Please paste your AniList token below.";
