@@ -23,7 +23,20 @@ public class AnilistService : IAnimeProvider
 
     public AnilistService(ISaveService saveService)
     {
-        _client = new GraphQLHttpClient("https://graphql.anilist.co", new SystemTextJsonSerializer());
+        var rateLimitHandler = new AnilistRateLimitHandler(new HttpClientHandler());
+        
+        var graphQlHttpClient = new HttpClient(rateLimitHandler)
+        {
+            BaseAddress = new Uri("https://graphql.anilist.co")
+        };
+
+        var options = new GraphQLHttpClientOptions
+        {
+            EndPoint = new Uri("https://graphql.anilist.co")
+        };
+        
+        _client = new GraphQLHttpClient(options, new SystemTextJsonSerializer(), graphQlHttpClient);
+        
         _httpClient = new HttpClient();
         _saveService = saveService;
     }
@@ -74,17 +87,17 @@ public class AnilistService : IAnimeProvider
         };
     }
 
-    public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
+    public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus statusFilter = AnimeStatus.None)
     {
         if (!_isLoggedIn) return new List<AnimeDetails>();
 
-        var statusFilter = status != AnimeStatus.None ? ConvertToAnilistStatus(status) : null;
+        string statusText = statusFilter != AnimeStatus.None ? $",status: {ConvertToAnilistStatus(statusFilter)}" : "";
         
         var request = new GraphQLRequest
         {
             Query = @"
-                query ($userId: Int, $status: MediaListStatus) {
-                    MediaListCollection(userId: $userId, type: ANIME, status: $status) {
+                query ($userId: Int" + (statusFilter != AnimeStatus.None ? ", $status: MediaListStatus" : "") + @") {
+                    MediaListCollection(userId: $userId, type: ANIME" + statusText + @") {
                         lists {
                             entries {
                                 id
@@ -143,7 +156,10 @@ public class AnilistService : IAnimeProvider
                         }
                     }
                 }",
-            Variables = new
+            Variables = statusFilter != AnimeStatus.None ? new
+            {
+                userId = (await GetUserDataAsync()).Id,
+            } : new
             {
                 userId = (await GetUserDataAsync()).Id,
                 status = statusFilter
@@ -240,62 +256,34 @@ public class AnilistService : IAnimeProvider
     {
         Dictionary<string, object> variables = new() { { "id", animeId } };
 
-        if (_isLoggedIn)
+        var fragments = new List<string> {
+            "id"
+        };
+    
+        var fieldSet = new HashSet<AnimeField>(fields);
+
+        fragments.AddRange(GetGraphQLFragments(fieldSet));
+
+        bool needsUserId = fieldSet.Contains(AnimeField.MY_LIST_STATUS);
+
+        if (needsUserId || _isLoggedIn)
         {
             if (_currentUserId == null) _currentUserId = (await GetUserDataAsync()).Id;
             variables.Add("userId", _currentUserId);
         }
-        
+
+        string innerQuery = string.Join("\n", fragments);
+    
+        string query = $@"
+        query ($id: Int, $userId: Int) {{
+            Media(id: $id, type: ANIME) {{
+                {innerQuery}
+            }}
+        }}";
+
         var request = new GraphQLRequest
         {
-            Query = @"
-                query ($id: Int, $userId: Int) {
-                    Media(id: $id, type: ANIME) {
-                        id
-                        title { romaji english native }
-                        coverImage { large medium }
-                        bannerImage
-                        status
-                        description
-                        episodes
-                        meanScore
-                        popularity
-                        favourites
-                        startDate { year month day }
-                        genres
-                        
-                        # Get specific user status if logged in
-                        mediaListEntry(userId: $userId) {
-                            status
-                            score(format: POINT_10)
-                            progress
-                        }
-
-                        studios(isMain: true) {
-                            nodes { id name }
-                        }
-
-                        trailer { id site }
-
-                        stats {
-                            statusDistribution { status amount }
-                        }
-
-                        relations {
-                            edges {
-                                relationType
-                                node {
-                                    id
-                                    title { romaji english }
-                                    coverImage { medium }
-                                    episodes
-                                    status
-                                    meanScore
-                                }
-                            }
-                        }
-                    }
-                }",
+            Query = query,
             Variables = variables
         };
 
@@ -311,6 +299,125 @@ public class AnilistService : IAnimeProvider
         }
     }
 
+    private IEnumerable<string> GetGraphQLFragments(HashSet<AnimeField> fields)
+    {
+        if (fields.Count > 0)
+        {
+            yield return "id";
+        }
+
+        foreach (var field in fields)
+        {
+            switch (field)
+            {
+                case AnimeField.TITLE:
+                case AnimeField.ALTER_TITLES:
+                    if (fields.Contains(AnimeField.TITLE) || fields.Contains(AnimeField.ALTER_TITLES))
+                    {
+                        yield return "title { romaji english native }";
+                        fields.Remove(AnimeField.TITLE); 
+                        fields.Remove(AnimeField.ALTER_TITLES);
+                    }
+                    break;
+
+                case AnimeField.MAIN_PICTURE:
+                case AnimeField.PICTURE:
+                    if (fields.Contains(AnimeField.MAIN_PICTURE) || fields.Contains(AnimeField.PICTURE))
+                    {
+                        yield return "coverImage { large medium }";
+                        yield return "bannerImage";
+                        
+                        fields.Remove(AnimeField.MAIN_PICTURE);
+                        fields.Remove(AnimeField.PICTURE);
+                    }
+                    break;
+                
+                case AnimeField.STATUS:
+                    yield return "status";
+                    break;
+
+                case AnimeField.SYNOPSIS:
+                    yield return "description";
+                    break;
+
+                case AnimeField.EPISODES:
+                    yield return "episodes";
+                    break;
+
+                case AnimeField.POPULARITY:
+                    yield return "popularity";
+                    break;
+
+                case AnimeField.NUM_FAV:
+                    yield return "favourites";
+                    break;
+
+                case AnimeField.START_DATE:
+                    yield return "startDate { year month day }";
+                    break;
+
+                case AnimeField.GENRES:
+                    yield return "genres";
+                    break;
+
+                case AnimeField.MEAN:
+                    yield return "meanScore";
+                    break;
+
+                case AnimeField.MY_LIST_STATUS:
+                    yield return @"mediaListEntry(userId: $userId) {
+                                status
+                                score(format: POINT_10)
+                                progress
+                            }";
+                    break;
+
+                case AnimeField.STUDIOS:
+                    yield return @"studios(isMain: true) {
+                                nodes { id name }
+                            }";
+                    break;
+
+                case AnimeField.VIDEOS:
+                case AnimeField.TRAILER_URL:
+                    if (fields.Contains(AnimeField.VIDEOS) || fields.Contains(AnimeField.TRAILER_URL))
+                    {
+                        yield return "trailer { id site }";
+                        
+                        fields.Remove(AnimeField.VIDEOS);
+                        fields.Remove(AnimeField.TRAILER_URL);
+                    }
+                    break;
+
+                case AnimeField.STATS:
+                    yield return @"stats {
+                                statusDistribution { status amount }
+                            }";
+                    break;
+
+                case AnimeField.RELATED_ANIME:
+                    yield return @"relations {
+                                edges {
+                                    relationType
+                                    node {
+                                        id
+                                        title { romaji english }
+                                        coverImage { medium }
+                                        episodes
+                                        status
+                                        meanScore
+                                    }
+                                }
+                            }";
+                    break;
+                
+                default:
+                    Console.WriteLine($"{field} is not supported");
+                    break;
+            }
+        }
+    }
+      
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
         var request = new GraphQLRequest
@@ -608,5 +715,77 @@ public class AnilistService : IAnimeProvider
             "REPEATING" => AnimeStatus.Watching,
             _ => AnimeStatus.None
         };
+    }
+    
+    private class AnilistRateLimitHandler : DelegatingHandler
+    {
+        private static readonly SemaphoreSlim _semaphore = new(1, 1);
+        
+        private int _remainingRequests = 10;
+        private DateTimeOffset _resetTime = DateTimeOffset.MinValue;
+
+        public AnilistRateLimitHandler(HttpMessageHandler innerHandler) : base(innerHandler)
+        {
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await _semaphore.WaitAsync(cancellationToken);
+            try
+            {
+                var now = DateTimeOffset.UtcNow;
+                
+                if (_remainingRequests <= 0 && _resetTime > now)
+                {
+                    var delay = _resetTime - now;
+                    var finalDelay = delay.Add(TimeSpan.FromSeconds(1));
+
+                    if (finalDelay.TotalMilliseconds > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[AnilistService] Rate limit reached. Waiting {finalDelay.TotalSeconds} seconds.");
+                        await Task.Delay(finalDelay, cancellationToken);
+                    }
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+
+            var response = await base.SendAsync(request, cancellationToken);
+
+            if (response.StatusCode == (System.Net.HttpStatusCode)429)
+            {
+                var retryAfter = response.Headers.RetryAfter?.Delta;
+                if (retryAfter.HasValue)
+                {
+                    await Task.Delay(retryAfter.Value, cancellationToken);
+                    return await base.SendAsync(request, cancellationToken);
+                }
+            }
+
+            UpdateRateLimits(response.Headers);
+
+            return response;
+        }
+
+        private void UpdateRateLimits(HttpResponseHeaders headers)
+        {
+            if (headers.TryGetValues("X-RateLimit-Remaining", out var remainingValues))
+            {
+                if (int.TryParse(remainingValues.FirstOrDefault(), out int remaining))
+                {
+                    _remainingRequests = remaining;
+                }
+            }
+
+            if (headers.TryGetValues("X-RateLimit-Reset", out var resetValues))
+            {
+                if (long.TryParse(resetValues.FirstOrDefault(), out long resetUnix))
+                {
+                    _resetTime = DateTimeOffset.FromUnixTimeSeconds(resetUnix);
+                }
+            }
+        }
     }
 }
