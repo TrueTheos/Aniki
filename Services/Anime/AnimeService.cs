@@ -194,7 +194,7 @@ public class AnimeService : IAnimeService
         return results;
     }
 
-    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10)
+    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit)
     {
         List<RankingEntry> rankings = await GetCurrentProvider().GetTopAnimeAsync(category, limit);
         

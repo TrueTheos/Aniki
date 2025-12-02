@@ -17,7 +17,7 @@ public interface IAnimeService
 
     public void SetActiveProvider(ILoginProvider.ProviderType providerName, string accessToken);
     public Task<UserData> GetUserDataAsync();
-    public Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10);
+    public Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit);
     public Task<AnimeDetails> GetAllFieldsAsync(int animeId);
     public Task RemoveFromUserListAsync(int animeId);
     public Task SetAnimeStatusAsync(int animeId, AnimeStatus status);

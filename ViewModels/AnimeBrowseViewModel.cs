@@ -75,15 +75,15 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing);
+            var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing, 20);
             LoadAnimeCards(airing, PopularThisSeason);
             
             await LoadHeroAnimeAsync(airing);
 
-            var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming);
+            var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming, 20);
             LoadAnimeCards(upcoming, PopularUpcoming);
             
-            var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity);
+            var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity, 20);
             LoadAnimeCards(allTime, TrendingAllTime);
 
             var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
@@ -116,7 +116,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     {
         HeroAnimeList.Clear();
         
-        foreach (var anime in animeList.Take(10))
+        foreach (var anime in animeList)
         {
             var details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS]);
             if (details?.Videos != null && details.Videos.Length > 0)
