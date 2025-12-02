@@ -5,12 +5,12 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
+//todo removing from AnimeDetailsView doesnt remove from AnimeList
+
 public partial class UserAnimeListViewModel : ViewModelBase
 {
     [ObservableProperty]
     private ObservableCollection<AnimeDetails> _animeList = new();
-    
-    private HashSet<int> _loadedIds = new();
     
     [ObservableProperty]
     private ObservableCollection<AnimeDetails> _filteredAnimeList = new();
@@ -154,13 +154,10 @@ public partial class UserAnimeListViewModel : ViewModelBase
     private async Task LoadAnimeListAsync()
     {
         var list = await _animeService.GetUserAnimeListAsync();
+        AnimeList.Clear();
         foreach (var element in list)
         {
-            if(_loadedIds.Contains(element.Id)) continue;
-            
-            if(AnimeList.Any(x => x.Id == element.Id)) continue;
             AnimeList.Add(await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MAL_NODE_FIELD_TYPES));
-            _loadedIds.Add(element.Id);
         }
         
         TotalCount = AnimeList.Count;

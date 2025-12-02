@@ -1,4 +1,5 @@
 using System.Reflection;
+using Aniki.Misc;
 using Aniki.Services.Interfaces;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -67,7 +68,7 @@ public partial class MainWindow : Window
 
     private async void OnSettingsRequested(object? sender, EventArgs e)
     {
-        var settingsViewModel = App.ServiceProvider.GetRequiredService<SettingsViewModel>();
+        var settingsViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<SettingsViewModel>();
         settingsViewModel.LoadSettings();
         SettingsWindow settingsWindow = new()
         {
@@ -78,15 +79,9 @@ public partial class MainWindow : Window
     
     public void LogOut(object? sender, RoutedEventArgs routedEventArgs)
     {
-        if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (Application.Current is App app)
         {
-            var loginViewModel = App.ServiceProvider.GetRequiredService<LoginViewModel>();
-            loginViewModel.Logout();
-            
-            desktop.MainWindow = new LoginWindow();
-            desktop.MainWindow.Show();
-            
-            Close();
+            app.Reset();
         }
     }
 }

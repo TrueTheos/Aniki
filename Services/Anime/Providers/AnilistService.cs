@@ -137,10 +137,10 @@ public class AnilistService : IAnimeProvider
             Variables = statusFilter != AnimeStatus.None ? new
             {
                 userId = _currentUserId,
+                status = statusFilter
             } : new
             {
-                userId = _currentUserId,
-                status = statusFilter
+                userId = _currentUserId
             }
         };
 

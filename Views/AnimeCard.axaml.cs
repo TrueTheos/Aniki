@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using Aniki.Misc;
+using Aniki.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -37,6 +39,7 @@ public partial class AnimeCard : UserControl
     
     private void OnTapped(object? sender, TappedEventArgs e)
     {
-        App.ServiceProvider.GetRequiredService<MainViewModel>().GoToAnime(_data!.AnimeId);
+        if (_data is null) return;
+        DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(_data.AnimeId);
     }
 }

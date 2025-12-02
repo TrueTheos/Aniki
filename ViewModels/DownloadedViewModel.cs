@@ -1,6 +1,7 @@
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Aniki.Misc;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
 using Aniki.Services.Anime;
@@ -133,7 +134,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     public void OpenAnimeDetails(int malId)
     {
-        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         vm.GoToAnime(malId);
     }
 

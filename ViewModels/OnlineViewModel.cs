@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
@@ -356,7 +357,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void GoToAnimeDetails()
     {
-        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         if (_selectedAnime != null && _selectedAnime.MalId != null)
         {
             vm.GoToAnime(_selectedAnime.MalId.Value);

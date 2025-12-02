@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -110,7 +111,7 @@ public partial class CalendarViewModel : ViewModelBase
 
     public void GoToClickedAnime(AnimeScheduleItem anime)
     {
-        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         if (anime.GetId() != null && anime.GetId()!.Value > 0)
         {
             vm.GoToAnime(anime.GetId()!.Value);

@@ -1,4 +1,6 @@
-﻿using Avalonia.Controls;
+﻿using Aniki.Misc;
+using Aniki.ViewModels;
+using Avalonia.Controls;
 using Avalonia;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,9 +26,9 @@ public partial class AnimeBrowseView : UserControl
     
     private void OnDoubleTapped(object? sender, RoutedEventArgs e)
     {
-        if (sender is Border border && border.DataContext is AnimeCardData anime)
+        if (sender is Border { DataContext: AnimeCardData anime })
         {
-            App.ServiceProvider.GetRequiredService<MainViewModel>().GoToAnime(anime!.AnimeId);
+            DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.AnimeId);
         }
     }
     

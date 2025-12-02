@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
@@ -263,7 +264,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if(Details == null) return;
         if(Details.Title == null) return;
         
-        var mainViewModel = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        var mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         WatchAnimeViewModel.GoToAnimeInOnlineView(Details.Id, Details.Title);
         _ = mainViewModel.ShowWatchPage();
     }

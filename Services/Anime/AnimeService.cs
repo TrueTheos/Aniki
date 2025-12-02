@@ -123,10 +123,10 @@ public class AnimeService : IAnimeService
 
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
-        List<AnimeDetails> animeList = await GetCurrentProvider().GetUserAnimeListAsync(status);
-
         if (_currentProvider != null)
         {
+            List<AnimeDetails> animeList = await GetCurrentProvider().GetUserAnimeListAsync(status);
+            
             foreach (AnimeDetails anime in animeList)
             {
                 _caches[_currentProvider.Provider].UpdatePartial(
@@ -137,7 +137,7 @@ public class AnimeService : IAnimeService
             }
         }
         
-        return animeList;
+        return new();
     }
 
     public async Task RemoveFromUserListAsync(int animeId)
@@ -169,7 +169,7 @@ public class AnimeService : IAnimeService
         await GetCurrentProvider().SetEpisodesWatchedAsync(animeId, episodes);
         await AfterUserStatusChange(animeId);
     }
-    
+
     private async Task AfterUserStatusChange(int animeId)
     {
         await GetFieldsAsync(animeId, true, AnimeField.MY_LIST_STATUS);

@@ -1,3 +1,5 @@
+using Aniki.Misc;
+using Aniki.Models;
 using Aniki.Services.Anime;
 using Avalonia.Controls;
 using Aniki.Services.Interfaces;
@@ -11,13 +13,13 @@ public partial class AnimeListStatusButton : UserControl
     private bool _mouseOverRoot;
     private AnimeCardData? _data = null;
 
-    private IAnimeService _animeService;
+    private readonly IAnimeService _animeService;
 
     public AnimeListStatusButton()
     {
         InitializeComponent();
         
-        _animeService = App.ServiceProvider.GetRequiredService<IAnimeService>();
+        _animeService = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<IAnimeService>();
         
         MainButton.PointerEntered += (_, __) => ShowStatusButtons();
         MainButton.PointerExited += (_, __) => HideStatusButtons();
@@ -33,8 +35,6 @@ public partial class AnimeListStatusButton : UserControl
         {
             _data = data;
         }
-        
-        
     }
     private void ShowStatusButtons()
     {
