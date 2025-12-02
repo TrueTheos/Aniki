@@ -98,6 +98,11 @@ Contributions are welcome! Please fork the repository and create a pull request 
    ```
 6. Open a Pull Request.
 
+## Troubleshooting
+
+If something doesn't work after updating to newer version, it's most likely cache issue. You can wipe cache manually by going into app installation directory. Most likely `C:\Users\[user]\AppData\Local\Aniki`.
+Delete folders `tokens` `cache` and `ImageCache`.
+
 ## Acknowledgments
 
 - Built with [Avalonia UI](https://avaloniaui.net/).
