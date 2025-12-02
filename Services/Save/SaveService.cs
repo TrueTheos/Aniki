@@ -42,11 +42,11 @@ public class SaveService : ISaveService
     private Dictionary<ILoginProvider.ProviderType,
         GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>> _seasonsCache;
 
-    private readonly ConcurrentDictionary<Type, ICacheService> _caches;
+    private readonly ConcurrentDictionary<Guid, ICacheService> _caches;
 
     public SaveService()
     {
-        _caches = new ConcurrentDictionary<Type, ICacheService>();
+        _caches = new ConcurrentDictionary<Guid, ICacheService>();
         _seasonsCache = new();
         
         foreach (ILoginProvider.ProviderType providerType in (ILoginProvider.ProviderType[])Enum.GetValues(typeof(ILoginProvider.ProviderType)))
@@ -86,7 +86,7 @@ public class SaveService : ISaveService
     {
         Type cacheType = typeof(GenericCacheService<TKey, TEntity, TFieldEnum>);
 
-        ICacheService cache = _caches.GetOrAdd(cacheType, _ =>
+        ICacheService cache = _caches.GetOrAdd(Guid.NewGuid(), _ =>
             new GenericCacheService<TKey, TEntity, TFieldEnum>(fetchHandler, options));
 
         return (GenericCacheService<TKey, TEntity, TFieldEnum>)cache;

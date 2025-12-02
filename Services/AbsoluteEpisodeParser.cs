@@ -8,9 +8,20 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 {
     private readonly ISaveService _saveService;
     private readonly IAnimeService _animeService;
-    
-    private GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> _animeSeasonCache;
-    private static readonly ConcurrentDictionary<int, AnimeSeasonsMap> _animeIdToMapIndex = new();
+
+    private GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>? _seasonCache;
+    public GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> AnimeSeasonCache
+    {
+        get
+        {
+            if (_seasonCache == null)
+            {
+                _seasonCache = _saveService.GetSeasonCache();
+            }
+            return _seasonCache;
+        }
+    }
+    private readonly ConcurrentDictionary<int, AnimeSeasonsMap> _animeIdToMapIndex = new();
 
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> _buildLocks = new();
     
@@ -18,7 +29,6 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         _saveService = saveService;
         _animeService = animeService;
-        _animeSeasonCache = _saveService.GetSeasonCache();
         
         // todo we might want to populate _idToMapIndex with _animeSeasonCache across restarts, 
         // make the map invalid after like 1 day or something
@@ -64,7 +74,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         try
         {
-            var cachedMap = _animeSeasonCache.GetWithoutFetching(animeTitle);
+            var cachedMap = AnimeSeasonCache.GetWithoutFetching(animeTitle);
             if (cachedMap != null)
             {
                 IndexMap(cachedMap);
@@ -76,7 +86,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
             try
             {
-                cachedMap = _animeSeasonCache.GetWithoutFetching(animeTitle);
+                cachedMap = AnimeSeasonCache.GetWithoutFetching(animeTitle);
                 if (cachedMap != null)
                 {
                     IndexMap(cachedMap);
@@ -90,7 +100,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
                 if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out var existingMap))
                 {
-                    _animeSeasonCache.Update(animeTitle, existingMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+                    AnimeSeasonCache.Update(animeTitle, existingMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
                     return existingMap;
                 }
 
@@ -98,7 +108,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
                 if (newMap?.Seasons != null && newMap.Seasons.Count > 0)
                 {
-                    _animeSeasonCache.Update(animeTitle, newMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+                    AnimeSeasonCache.Update(animeTitle, newMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
                     IndexMap(newMap);
                 }
 

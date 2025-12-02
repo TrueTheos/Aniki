@@ -128,7 +128,7 @@
                                                                     Padding="8,4"
                                                                     Margin="8,0,0,0"
                                                                     VerticalAlignment="Center"
-                                                                    IsEnabled="{Binding Watched}">
+                                                                    IsVisible="{Binding Watched}">
                                                                 <TextBlock Text="Watched"
                                                                            FontSize="11"
                                                                            VerticalAlignment="Center"

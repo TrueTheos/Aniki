@@ -122,7 +122,7 @@ public class AnilistService : IAnimeProvider
         var request = new GraphQLRequest
         {
             Query = @"
-                query ($userId: Int" + (statusFilter != AnimeStatus.None ? ", $status: MediaListStatus" : "") + @") {
+                query ($userId: Int) {
                     MediaListCollection(userId: $userId, type: ANIME" + statusText + @") {
                         lists {
                             entries {
@@ -134,13 +134,9 @@ public class AnilistService : IAnimeProvider
                         }
                     }
                 }",
-            Variables = statusFilter != AnimeStatus.None ? new
+            Variables = new
             {
                 userId = _currentUserId,
-                status = statusFilter
-            } : new
-            {
-                userId = _currentUserId
             }
         };
 

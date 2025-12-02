@@ -9,6 +9,10 @@ class AnilistRateLimitHandler : DelegatingHandler
     private int _remainingRequests = 10;
     private DateTimeOffset _resetTime = DateTimeOffset.MinValue;
     
+    private readonly Queue<DateTimeOffset> _requestTimestamps = new();
+    private const int MaxBurstRequests = 4;
+    private static readonly TimeSpan BurstWindow = TimeSpan.FromSeconds(1);
+    
     public AnilistRateLimitHandler(HttpMessageHandler innerHandler) : base(innerHandler)
     {
     }
@@ -27,10 +31,31 @@ class AnilistRateLimitHandler : DelegatingHandler
 
                 if (finalDelay.TotalMilliseconds > 0)
                 {
-                    Console.WriteLine($"[AnilistService] Rate limit reached. Waiting {finalDelay.TotalSeconds} seconds.");
+                    Console.WriteLine($"Rate limit reached. Waiting {finalDelay.TotalSeconds} seconds.");
                     await Task.Delay(finalDelay, cancellationToken);
                 }
             }
+            
+            while (_requestTimestamps.Count > 0 && _requestTimestamps.Peek() < now - BurstWindow)
+            {
+                _requestTimestamps.Dequeue();
+            }
+            
+            if (_requestTimestamps.Count >= MaxBurstRequests)
+            {
+                var oldestRequest = _requestTimestamps.Peek();
+                var burstDelay = (oldestRequest + BurstWindow) - now;
+                
+                if (burstDelay.TotalMilliseconds > 0)
+                {
+                    Console.WriteLine($"Burst limit reached. Waiting {burstDelay.TotalMilliseconds:F0}ms.");
+                    await Task.Delay(burstDelay, cancellationToken);
+                    
+                    _requestTimestamps.Dequeue();
+                }
+            }
+            
+            _requestTimestamps.Enqueue(DateTimeOffset.UtcNow);
         }
         finally
         {
@@ -44,6 +69,7 @@ class AnilistRateLimitHandler : DelegatingHandler
             var retryAfter = response.Headers.RetryAfter?.Delta;
             if (retryAfter.HasValue)
             {
+                Console.WriteLine($"429 received. Retrying after {retryAfter.Value.TotalSeconds:F1} seconds.");
                 await Task.Delay(retryAfter.Value, cancellationToken);
                 return await base.SendAsync(request, cancellationToken);
             }
