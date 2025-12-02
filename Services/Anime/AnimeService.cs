@@ -41,7 +41,7 @@ public class AnimeService : IAnimeService
         );
     }
 
-    public void SetActiveProvider(ILoginProvider.ProviderType providerName, string accessToken)
+    public void SetActiveProvider(ILoginProvider.ProviderType providerName, string? accessToken)
     {
         if (!_providers.TryGetValue(providerName, out IAnimeProvider? provider))
         {

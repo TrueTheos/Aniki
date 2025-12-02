@@ -5,6 +5,7 @@
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:views="clr-namespace:Aniki.Views"
     xmlns:models="clr-namespace:Aniki.Models"
+    xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:DownloadedViewModel">
     <Grid RowDefinitions="38,*">
         <StackPanel Orientation="Horizontal" 
@@ -93,7 +94,8 @@
                                                          ShowProgressText="True"
                                                          ProgressTextFormat="{}{0}/{3}"
                                                          Background="{StaticResource Background1}"
-                                                         Foreground="{StaticResource RedColor}"/>
+                                                         Foreground="{StaticResource RedColor}"
+                                                         IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}"/>
                                         </StackPanel>
                                        
                                     </Border>

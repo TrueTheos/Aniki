@@ -369,25 +369,28 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     {
         Log.Information("Video player closed!");
 
-        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+        if (AnimeService.IsLoggedIn)
         {
-            if (_lastPlayedEpisode == null) return;
-            if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                var animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.EPISODES);
-                ConfirmEpisodeWindow dialog = new() 
+                if (_lastPlayedEpisode == null) return;
+                if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
-                };
+                    var animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.EPISODES);
+                    ConfirmEpisodeWindow dialog = new() 
+                    {
+                        DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
+                    };
 
-                bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
 
-                if (result)
-                {
-                    MarkEpisodeCompleted(_lastPlayedEpisode);
+                    if (result)
+                    {
+                        MarkEpisodeCompleted(_lastPlayedEpisode);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         _discordService.Reset();
     }

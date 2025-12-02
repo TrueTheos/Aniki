@@ -310,28 +310,31 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     {
         if (SelectedEpisode != null)
         {
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            if (AnimeService.IsLoggedIn)
             {
-                if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    ConfirmEpisodeWindow dialog = new() 
+                    if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                     {
-                        DataContext = new ConfirmEpisodeViewModel(SelectedEpisode.Number, SelectedEpisode.TotalEpisodes)
-                    };
-
-
-                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
-
-                    if (result)
-                    {
-                        if (SelectedEpisode != null)
+                        ConfirmEpisodeWindow dialog = new() 
                         {
-                            _ = _animeService.SetEpisodesWatchedAsync(_watchingMalId!.Value, SelectedEpisode.Number);
-                            UpdateWatchedEpisodesText(SelectedEpisode.Number);
+                            DataContext = new ConfirmEpisodeViewModel(SelectedEpisode.Number, SelectedEpisode.TotalEpisodes)
+                        };
+
+
+                        bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+
+                        if (result)
+                        {
+                            if (SelectedEpisode != null)
+                            {
+                                _ = _animeService.SetEpisodesWatchedAsync(_watchingMalId!.Value, SelectedEpisode.Number);
+                                UpdateWatchedEpisodesText(SelectedEpisode.Number);
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
             
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {

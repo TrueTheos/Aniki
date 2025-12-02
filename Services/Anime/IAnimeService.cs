@@ -15,7 +15,7 @@ public interface IAnimeService
     public void UnsubscribeFromFieldChange(int animeId, FieldChangeHandler<AnimeDetails> handler,
         params AnimeField[] fields);
 
-    public void SetActiveProvider(ILoginProvider.ProviderType providerName, string accessToken);
+    public void SetActiveProvider(ILoginProvider.ProviderType providerName, string? accessToken);
     public Task<UserData> GetUserDataAsync();
     public Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit);
     public Task<AnimeDetails> GetAllFieldsAsync(int animeId);

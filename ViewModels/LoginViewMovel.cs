@@ -1,3 +1,4 @@
+using Aniki.Services.Anime;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 
@@ -54,10 +55,13 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     public event EventHandler? NavigateToMainRequested;
+
+    private IAnimeService _animeService;
     
-    public LoginViewModel(ILoginService loginService)
+    public LoginViewModel(ILoginService loginService, IAnimeService animeService)
     {
         _loginService = loginService;
+        _animeService = animeService;
     }
 
     public async Task CheckExistingLoginAsync()
@@ -179,6 +183,7 @@ public partial class LoginViewModel : ViewModelBase
     [RelayCommand]
     private void ContinueWithoutLoggingIn()
     {
+        _animeService.SetActiveProvider(ILoginProvider.ProviderType.MAL, null);
         NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
     }
 

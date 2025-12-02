@@ -8,7 +8,7 @@ public interface IAnimeProvider
     ILoginProvider.ProviderType Provider { get; }
     bool IsLoggedIn { get; }
     
-    void Init(string accessToken);
+    void Init(string? accessToken);
     
     Task<UserData> GetUserDataAsync();
     Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None);
