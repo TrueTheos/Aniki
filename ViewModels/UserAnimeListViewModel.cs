@@ -5,8 +5,6 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
-//todo removing from AnimeDetailsView doesnt remove from AnimeList
-
 public partial class UserAnimeListViewModel : ViewModelBase
 {
     [ObservableProperty]

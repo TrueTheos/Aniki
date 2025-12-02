@@ -123,7 +123,6 @@ public class MalLoginProvider : ILoginProvider
     public void Logout()
     {
         _tokenService.ClearTokens(Provider);
-        //todo _malService.Init(null);
     }
     
     private async Task<bool> ExchangeCodeForTokenAsync(string code)

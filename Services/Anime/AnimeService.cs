@@ -54,9 +54,6 @@ public class AnimeService : IAnimeService
 
         IsLoggedIn = _currentProvider.IsLoggedIn;
         if (!IsLoggedIn) CurrentProviderType = ILoginProvider.ProviderType.MAL; //we just use MAL as default
-
-        //todo Clear cache when switching providers to avoid conflicts
-        //_cache.Clear();
     }
 
     private IAnimeProvider GetCurrentProvider()
