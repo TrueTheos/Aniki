@@ -45,12 +45,19 @@ cd Aniki
 
 ### Setup Client ID
 
-1. Go https://myanimelist.net/apiconfig
+#### MyAnimeList:
+1. Go to https://myanimelist.net/apiconfig
 2. Create ID
 3. Select `App Type` `other`
 4. Inside `App Redirect URL` type `http://localhost:8000/callback` (you can later change it)
 5. Copy the generated ClientID.
-6. Create `CLIENTID.txt` inside `Resources` folder and paste in the ClientID
+6. Replace `ClientId` inside `MalLoginProvider.cs`
+
+#### Anilist:
+1. Go to https://anilist.co/settings/developer
+2. Create new client
+3. Copy ID
+4.  Replace `ClientId` inside `AnilistLoginProvider.cs`
 
 ### Build and Run
 
