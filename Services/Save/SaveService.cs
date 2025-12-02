@@ -32,9 +32,11 @@ public class SaveService : ISaveService
         "Aniki");
     
     public static readonly string CACHE_PATH = Path.Combine(MAIN_DIRECTORY, "cache");
+    public static readonly string TokenDirectoryPath = Path.Combine(MAIN_DIRECTORY, "tokens");
 
     public string DefaultEpisodesFolder => Path.Combine(MAIN_DIRECTORY, "Episodes");
     private string _imageCacheFolder => Path.Combine(MAIN_DIRECTORY, "ImageCache");
+    
 
     private ImageSaver _imageSaver;
     private SaveEntity<SettingsConfig> _settingsSaver;
@@ -126,6 +128,32 @@ public class SaveService : ISaveService
         foreach (var cache in _caches)
         {
             await cache.Value.FlushAsync();
+        }
+    }
+
+    public void Wipe()
+    {
+        DeleteFolder(CACHE_PATH);
+        DeleteFolder(_imageCacheFolder);
+        DeleteFolder(TokenDirectoryPath);
+    }
+
+    private void DeleteFolder(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
+            }
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.WriteLine($"Access denied: {ex.Message}");
         }
     }
 }

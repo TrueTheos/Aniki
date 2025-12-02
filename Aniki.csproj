@@ -104,5 +104,6 @@
 
   <ItemGroup>
     <Folder Include="publish\" />
+    <Folder Include="Releases\" />
   </ItemGroup>
 </Project>

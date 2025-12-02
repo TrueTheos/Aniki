@@ -8,15 +8,14 @@ namespace Aniki.Services;
 
 public class TokenService : ITokenService
 {
-    private string _tokenDirectoryPath = Path.Combine(SaveService.MAIN_DIRECTORY, "tokens");
     private readonly Dictionary<ILoginProvider.ProviderType, StoredTokenData> _cachedTokens = new();
     private readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
 
     public void Init()
     {
-        if (!Directory.Exists(_tokenDirectoryPath))
+        if (!Directory.Exists(SaveService.TokenDirectoryPath))
         {
-            Directory.CreateDirectory(_tokenDirectoryPath);
+            Directory.CreateDirectory(SaveService.TokenDirectoryPath);
         }
     }
 
@@ -27,7 +26,7 @@ public class TokenService : ITokenService
             return cachedToken;
         }
 
-        string tokenFilePath = Path.Combine(_tokenDirectoryPath, $"{providerId}.dat");
+        string tokenFilePath = Path.Combine(SaveService.TokenDirectoryPath, $"{providerId}.dat");
         if (!File.Exists(tokenFilePath))
         {
             return null;
@@ -70,14 +69,14 @@ public class TokenService : ITokenService
         string json = JsonSerializer.Serialize(tokens);
         byte[] encryptedData = EncryptData(json);
         
-        string tokenFilePath = Path.Combine(_tokenDirectoryPath, $"{providerId}.dat");
+        string tokenFilePath = Path.Combine(SaveService.TokenDirectoryPath, $"{providerId}.dat");
         await File.WriteAllBytesAsync(tokenFilePath, encryptedData);
         _cachedTokens[providerId] = tokens;
     }
 
     public void ClearTokens(ILoginProvider.ProviderType providerId)
     {
-        string tokenFilePath = Path.Combine(_tokenDirectoryPath, $"{providerId}.dat");
+        string tokenFilePath = Path.Combine(SaveService.TokenDirectoryPath, $"{providerId}.dat");
         if (File.Exists(tokenFilePath))
         {
             File.Delete(tokenFilePath);

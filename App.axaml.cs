@@ -39,9 +39,12 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        _ = PostInitialization();
+    }
+
+    private async Task PostInitialization()
+    {
         BindingPlugins.DataValidators.RemoveAt(0);
-        
-        DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -49,8 +52,10 @@ public partial class App : Application
             
             desktop.MainWindow = new LoginWindow();
 
-            CheckForUpdates();
+            await CheckForUpdates();
         }
+        
+        DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
 
         AppDomain.CurrentDomain.UnhandledException += (s, e) => 
             Log.Fatal(e.ExceptionObject as Exception, "Unhandled exception");
@@ -58,7 +63,7 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private async void CheckForUpdates()
+    private async Task CheckForUpdates()
     {
         try
         {
@@ -69,6 +74,9 @@ public partial class App : Application
             if (newVersion != null)
             {
                 await mgr.DownloadUpdatesAsync(newVersion);
+                
+                if (DependencyInjection.Instance.ServiceProvider != null)
+                    DependencyInjection.Instance.ServiceProvider?.GetService<ISaveService>()?.Wipe();
 
                 mgr.ApplyUpdatesAndRestart(newVersion);
             }

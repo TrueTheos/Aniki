@@ -11,4 +11,5 @@ public interface ISaveService
     public bool TryGetAnimeImage(int id, out Bitmap? picture);
     public void SaveImage(int id, Bitmap image);
     public Task FlushAllCaches();
+    public void Wipe();
 }
