@@ -6,7 +6,7 @@ public partial class HeroAnimeData : ObservableObject
     public required string Title { get; set; }
     public required string Synopsis { get; set; }
     public float Score { get; set; }
-    public AnimeStatusApi Status { get; set; }
+    public AnimeStatus Status { get; set; }
     public required string VideoUrl { get; set; }
     public required string VideoThumbnail { get; set; }
     

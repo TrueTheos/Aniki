@@ -1,77 +1,64 @@
-﻿using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Services;
 
 public class TokenService : ITokenService
 {
-    public string ClientId { get; private set; } = "";
-    
-    private string _tokenFilePath = "";
-    private StoredTokenData? _cachedTokens;
+    private string _tokenDirectoryPath = Path.Combine(SaveService.MAIN_DIRECTORY, "tokens");
+    private readonly Dictionary<ILoginProvider.ProviderType, StoredTokenData> _cachedTokens = new();
     private readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
 
     public void Init()
     {
-        if (!Directory.Exists(SaveService.MAIN_DIRECTORY))
+        if (!Directory.Exists(_tokenDirectoryPath))
         {
-            Directory.CreateDirectory(SaveService.MAIN_DIRECTORY);
+            Directory.CreateDirectory(_tokenDirectoryPath);
         }
-
-        _tokenFilePath = Path.Combine(SaveService.MAIN_DIRECTORY, "tokens.dat");
-        
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        using Stream? stream = assembly.GetManifestResourceStream("Aniki.Resources.CLIENTID.txt");
-        if (stream == null)
-            throw new FileNotFoundException("CLIENTID not found.");
-
-        using StreamReader reader = new(stream);
-        ClientId = reader.ReadToEnd();
     }
 
-    public async Task<StoredTokenData?> LoadTokensAsync()
+    public async Task<StoredTokenData?> LoadTokensAsync(ILoginProvider.ProviderType providerId)
     {
-        IMalService malService = App.ServiceProvider.GetRequiredService<IMalService>();
-        if (_cachedTokens != null)
+        if (_cachedTokens.TryGetValue(providerId, out var cachedToken))
         {
-            
-            malService.Init(_cachedTokens.AccessToken);
-            return _cachedTokens;
+            return cachedToken;
         }
 
-        if (!File.Exists(_tokenFilePath))
+        string tokenFilePath = Path.Combine(_tokenDirectoryPath, $"{providerId}.dat");
+        if (!File.Exists(tokenFilePath))
         {
-            malService.Init(null);
             return null;
         }
 
         try
         {
-            byte[] encryptedData = await File.ReadAllBytesAsync(_tokenFilePath);
+            byte[] encryptedData = await File.ReadAllBytesAsync(tokenFilePath);
             string decryptedJson = DecryptData(encryptedData);
-            _cachedTokens = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
+            var storedTokenData = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
 
-            if (_cachedTokens != null && DateTime.UtcNow > _cachedTokens.ExpiresAtUtc)
+            if (storedTokenData != null && DateTime.UtcNow > storedTokenData.ExpiresAtUtc)
             {
                 return null;
             }
 
-            malService.Init(_cachedTokens?.AccessToken ?? null);
-            return _cachedTokens;
+            if (storedTokenData != null)
+            {
+                _cachedTokens[providerId] = storedTokenData;
+            }
+
+            return storedTokenData;
         }
         catch (Exception ex)
         {
-            Log.Information($"Error loading tokens: {ex.Message}");
-            malService.Init(null);
+            Log.Information($"Error loading tokens for {providerId}: {ex.Message}");
             return null;
         }
     }
 
-    public async Task SaveTokensAsync(TokenResponse tokenResponse)
+    public async Task SaveTokensAsync(ILoginProvider.ProviderType providerId, TokenResponse tokenResponse)
     {
         StoredTokenData tokens = new()
         {
@@ -82,29 +69,39 @@ public class TokenService : ITokenService
 
         string json = JsonSerializer.Serialize(tokens);
         byte[] encryptedData = EncryptData(json);
-        await File.WriteAllBytesAsync(_tokenFilePath, encryptedData);
-        _cachedTokens = tokens;
+        
+        string tokenFilePath = Path.Combine(_tokenDirectoryPath, $"{providerId}.dat");
+        await File.WriteAllBytesAsync(tokenFilePath, encryptedData);
+        _cachedTokens[providerId] = tokens;
     }
 
-    public void ClearTokens()
+    public void ClearTokens(ILoginProvider.ProviderType providerId)
     {
-        if (File.Exists(_tokenFilePath))
+        string tokenFilePath = Path.Combine(_tokenDirectoryPath, $"{providerId}.dat");
+        if (File.Exists(tokenFilePath))
         {
-            File.Delete(_tokenFilePath);
+            File.Delete(tokenFilePath);
         }
-        _cachedTokens = null;
+        _cachedTokens.Remove(providerId);
     }
 
-    public bool HasValidToken()
+    public bool HasValidToken(ILoginProvider.ProviderType providerId)
     {
-        return _cachedTokens != null &&
-               !string.IsNullOrEmpty(_cachedTokens.AccessToken) &&
-               DateTime.UtcNow < _cachedTokens.ExpiresAtUtc;
+        if (_cachedTokens.TryGetValue(providerId, out var token))
+        {
+            return !string.IsNullOrEmpty(token.AccessToken) &&
+                   DateTime.UtcNow < token.ExpiresAtUtc;
+        }
+        return false;
     }
 
-    public string GetAccessToken()
+    public string GetAccessToken(ILoginProvider.ProviderType providerId)
     {
-        return _cachedTokens?.AccessToken ?? string.Empty;
+        if (_cachedTokens.TryGetValue(providerId, out var token))
+        {
+            return token.AccessToken ?? string.Empty;
+        }
+        return string.Empty;
     }
 
     private byte[] EncryptData(string data)
@@ -132,7 +129,7 @@ public class TokenService : ITokenService
             return DecryptDataAes(encryptedData);
         }
     }
-
+    
     private byte[] EncryptDataAes(string data)
     {
         using var aes = Aes.Create();

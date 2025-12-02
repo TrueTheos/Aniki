@@ -1,4 +1,7 @@
-﻿using Avalonia.Controls;
+﻿using Aniki.Misc;
+using Aniki.ViewModels;
+using Aniki.Models.Anilist;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,10 +16,9 @@ public partial class UserAnimeListView : UserControl
     
     private void GoToAnime(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.DataContext is MalAnimeDetails anime)
+        if (sender is Button { DataContext: AnimeDetails anime })
         {
-            App.ServiceProvider.GetRequiredService<MainViewModel>().GoToAnime(anime!.Id);
+            DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime!.Id);
         }
     }
-
 }

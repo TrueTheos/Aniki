@@ -5,6 +5,7 @@
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:services="clr-namespace:Aniki.Services"
+    xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:CalendarViewModel">
     <UserControl.Styles>
         <Style Selector="Button.today-button">
@@ -102,7 +103,7 @@
                     <ToggleButton
                         Content="My Anime"
                         IsChecked="{Binding ShowOnlyMyAnime}" 
-                        IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}}"/>
+                        IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}"/>
                 </StackPanel>
             </Grid>
         </Border>

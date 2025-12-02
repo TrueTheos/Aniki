@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Models;
@@ -13,7 +14,7 @@ public partial class AnimeGroup : ObservableObject
     public string EpisodesProgressText => $"{WatchedEpisodes} / {MaxEpisodes} watched";
 
     public AnimeGroup(string title, ObservableCollection<DownloadedEpisode> episodes, int maxEp, int malId,
-        IMalService malService)
+        IAnimeService animeService)
     {
         Title = title;
         Episodes = episodes;
@@ -22,7 +23,7 @@ public partial class AnimeGroup : ObservableObject
 
         Episodes.CollectionChanged += (_, _) => UpdateEpisodes();
 
-        malService.SubscribeToFieldChange(MalId, OnEpisodesCompletedCollectionChanged, AnimeField.MY_LIST_STATUS);
+        animeService.SubscribeToFieldChange(MalId, OnEpisodesCompletedCollectionChanged, AnimeField.MY_LIST_STATUS);
     }
 
     private void UpdateEpisodes()
@@ -33,9 +34,9 @@ public partial class AnimeGroup : ObservableObject
         }
     }
     
-    private void OnEpisodesCompletedCollectionChanged(MalAnimeDetails e)
+    private void OnEpisodesCompletedCollectionChanged(AnimeDetails e)
     {
-        WatchedEpisodes = e.MyListStatus?.NumEpisodesWatched ?? 0;
+        WatchedEpisodes = e.UserStatus?.EpisodesWatched ?? 0;
         UpdateEpisodes();
 
         OnPropertyChanged(nameof(EpisodesProgressText));

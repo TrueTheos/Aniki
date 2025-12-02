@@ -16,7 +16,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] private string _torrentSearchTerms = string.Empty;
     [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = new();
     
-    private MalAnimeDetails? _details;
+    private AnimeDetails? _details;
 
     [ObservableProperty]
     private SortDirection _seedersSortDirection = SortDirection.Descending;
@@ -31,7 +31,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
         _nyaaService = nyaaService;
     }
 
-    public void Update(MalAnimeDetails? details, int episodesWatched)
+    public void Update(AnimeDetails? details, int episodesWatched)
     {
         _details = details;
         

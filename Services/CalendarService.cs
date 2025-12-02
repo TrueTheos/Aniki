@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Text;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Avalonia.Media.Imaging;
 
@@ -197,6 +198,7 @@ public class CalendarService : ICalendarService
                           "/api/placeholder/300/400";
 
         string format = media["format"]?.ToString() ?? "TV";
+        int? aniListId = media["id"]?.ToObject<int?>();
         int? malId = media["idMal"]?.ToObject<int?>();
         
         int? meanScore = media["meanScore"]?.ToObject<int?>();
@@ -205,18 +207,22 @@ public class CalendarService : ICalendarService
             ? meanScore.Value / 10f
             : null;
         
-        return new()
+        AnimeScheduleItem result = new()
         {
             Title = title,
             AiringAt = airingAt,
             Episode = episode,
             EpisodeInfo = episode > 0 ? $"EP{episode} • {format}" : format,
             Type = format,
-            MalId = malId,
             IsBookmarked = watchSet.Contains(title),
             ImageUrl = imageUrl,
             Mean = meanScoreScaled ?? 0
         };
+
+        if (aniListId.HasValue) result.ProviderId[ILoginProvider.ProviderType.AniList] = aniListId.Value;
+        if (malId.HasValue) result.ProviderId[ILoginProvider.ProviderType.MAL] = malId.Value;
+
+        return result;
     }
 
     private  string GetBestTitle(JToken? titleObject)

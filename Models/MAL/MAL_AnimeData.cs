@@ -29,19 +29,17 @@ public enum AnimeField
     TRAILER_URL
 }
 
-public class MalAnimeData
-{
-    public required MalAnimeDetails Node { get; set; }
-    [JsonPropertyName("list_status")] public MalMyListStatus? ListStatus { get; set; }
-    [JsonIgnore]
-    public bool IsOnList => ListStatus != null;
-}
-
 public class MalUserAnimeListResponse
 {
-    public required MalAnimeData[] Data {get; set;}
+    public required MalAnimeNode[] Data { get; set; }
     public MalPaging? Paging { get; set; }
 }
+
+public class MalAnimeNode
+{
+    public required MalAnimeDetails Node { get; set; }
+}
+
 
 public class MalAnimeSearchListResponse
 {
@@ -98,22 +96,10 @@ public class MalAnimeDetails : ObservableObject
     }
     [CacheField(AnimeField.GENRES)] public MalGenre[]? Genres { get; set; }
     [CacheField(AnimeField.RELATED_ANIME)][JsonPropertyName("related_anime")] public MalRelatedAnime[]? RelatedAnime { get; set; }
-    [CacheField(AnimeField.VIDEOS)] public MalVideo[]? Videos { get; set; }
     [CacheField(AnimeField.NUM_FAV)][JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
     [CacheField(AnimeField.STATS)] public MalStatistics? Statistics { get; set; }
     [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
-    
-    public AnimeCardData ToCardData()
-    {
-        return new AnimeCardData()
-        {
-            AnimeId = Id,
-            Title = Title,
-            ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
-            Score = Mean,
-            MyListStatus = MyListStatus?.Status ?? AnimeStatusApi.none
-        };
-    }
+    [CacheField(AnimeField.VIDEOS)] public AnimeVideo[]? Videos { get; set; }
 }
 
 public class MalStudio
@@ -166,37 +152,41 @@ public class MalRelatedAnime
     public required string RelationType { get; set; }
 }
 
-public class MalVideo
-{
-    public int Id { get; set; }
-    public required string Title { get; set; }
-    public required string Url { get; set; }
-    [JsonPropertyName("created_at")]
-    public long CreatedAt { get; set; }
-    [JsonPropertyName("updated_at")]
-    public long UpdatedAt { get; set; }
-    public required string Thumbnail { get; set; }
-}
-
 public class MalStatistics
 {
     [JsonPropertyName("num_list_users")]
     public int NumListUsers { get; set; }
     public MalStatusStatistics? Status { get; set; }
+
+    public AnimeStatistics ToAnimeStatistics()
+    {
+        return new AnimeStatistics
+        {
+            NumListUsers = NumListUsers,
+            StatusStats = new()
+            {
+                Watching = Status?.Watching ?? 0,
+                Completed = Status?.Completed ?? 0,
+                OnHold = Status?.OnHold ?? 0,
+                Dropped = Status?.Dropped ?? 0,
+                PlanToWatch = Status?.PlanToWatch ?? 0
+            }
+        };
+    }
 }
 
 public class MalStatusStatistics
 {
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? Watching { get; set; }
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? Completed { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? Watching { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? Completed { get; set; }
     [JsonPropertyName("on_hold")]
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? OnHold { get; set; }
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? Dropped { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? OnHold { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? Dropped { get; set; }
     [JsonPropertyName("plan_to_watch")]
-    [JsonConverter(typeof(IntToStringConverter))]
-    public string? PlanToWatch { get; set; }
+    [JsonConverter(typeof(MalIntStringConverter))]
+    public int? PlanToWatch { get; set; }
 }

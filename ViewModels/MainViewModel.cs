@@ -1,4 +1,5 @@
-﻿using Aniki.Services.Interfaces;
+﻿using Aniki.Services.Anime;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
@@ -31,15 +32,15 @@ public partial class MainViewModel : ViewModelBase
     #endregion
 
     private readonly ICalendarService _calendarService;
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
     
-    public MainViewModel(ICalendarService calendarService, IMalService malService, AnimeDetailsViewModel animeDetailsViewModel,
+    public MainViewModel(ICalendarService calendarService, IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
         UserAnimeListViewModel userAnimeListViewModel, IVideoPlayerService videoPlayerService) 
     {
         _calendarService = calendarService;
-        _malService = malService;
+        _animeService = animeService;
         _animeDetailsViewModel = animeDetailsViewModel;
         _watchViewModel = watchViewModel;
         _calendarViewModel = calendarViewModel;
@@ -111,10 +112,10 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task LoadUserDataAsync()
     {
-        if (MalService.IS_LOGGED_IN)
+        if (AnimeService.IsLoggedIn)
         {
             IsLoading = true;
-            MAL_UserData malUserData = await _malService.GetUserDataAsync();
+            UserData malUserData = await _animeService.GetUserDataAsync();
             Username = malUserData.Name;
         }
         

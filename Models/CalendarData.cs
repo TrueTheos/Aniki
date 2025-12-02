@@ -1,4 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using Aniki.Services.Anime;
+using Aniki.Services.Auth;
+using Tmds.DBus.Protocol;
 
 namespace Aniki.Models;
 
@@ -22,7 +25,7 @@ public partial class DaySchedule : ObservableObject
 
 public partial class AnimeScheduleItem : ObservableObject
 {
-    public int? MalId { get; set; }
+    public Dictionary<ILoginProvider.ProviderType, int> ProviderId { get; set; } = new();
 
     [ObservableProperty]
     private string _title = "";
@@ -53,6 +56,12 @@ public partial class AnimeScheduleItem : ObservableObject
 
     public string EpisodeText => Episode > 0 ? $"EP{Episode}" : "";
 
+    public int? GetId()
+    {
+        if (!ProviderId.TryGetValue(AnimeService.CurrentProviderType, out int id)) return null;
+        return id;
+    }
+
     public TimeSpan TimeUntilAiring
     {
         get
@@ -73,5 +82,4 @@ public partial class AnimeScheduleItem : ObservableObject
             return TimeSpan.Zero;
         }
     }
-
 }

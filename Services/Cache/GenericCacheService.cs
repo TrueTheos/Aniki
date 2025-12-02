@@ -442,10 +442,11 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         MarkDirty(id);
     }
 
-    public async Task<TEntity> GetOrFetchFieldsAsync(TKey id, params TFieldEnum[] fields)
+    public async Task<TEntity> GetOrFetchFieldsAsync(TKey id, bool forceFetch = false, params TFieldEnum[] fields)
     {
         CachedEntity<TEntity, TFieldEnum> entry = GetOrCreateEntry(id);
-        TFieldEnum[] missing = entry.GetMissingFields(fields, _options.DefaultTimeToLive);
+
+        TFieldEnum[] missing = forceFetch ? fields : entry.GetMissingFields(fields, _options.DefaultTimeToLive);
 
         if (missing.Length > 0 && _fetchHandler != null)
         {

@@ -374,7 +374,6 @@ public class VideoPlayerService : IVideoPlayerService
             {
                 "mpv" or "mpvnet" => $"\"{url}\" --force-window=yes --title=\"Aniki Player\"",
                 "vlc" => $"\"{url}\" --meta-title=\"Aniki Player\"",
-                // MPC variants usually handle URL simply as argument
                 var n when n.Contains("mpc") => $"\"{url}\"", 
                 _ => $"\"{url}\""
             };

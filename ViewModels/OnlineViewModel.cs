@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Misc;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -10,7 +12,7 @@ namespace Aniki.ViewModels;
 public partial class OnlineViewModel : ViewModelBase, IDisposable
 {
     private readonly IAllMangaScraperService _scraperService;
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly IDiscordService _discordService;
     private string? _currentVideoUrl;
@@ -110,12 +112,12 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
     public bool ShowSelectionStatus => !string.IsNullOrEmpty(SelectionStatusMessage);
 
-    public OnlineViewModel(IAllMangaScraperService scraperService, IMalService malService,
+    public OnlineViewModel(IAllMangaScraperService scraperService, IAnimeService animeService,
         IVideoPlayerService videoPlayerService, IDiscordService discordService)
     {
         _watchingMalId = null;
         _scraperService = scraperService;
-        _malService = malService;
+        _animeService = animeService;
         _videoPlayerService = videoPlayerService;
         _discordService = discordService;
     }
@@ -180,11 +182,11 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             _ = LoadEpisodesAsync(value);
 
-            var animeField = await _malService.GetFieldsAsync(value.MalId!.Value, AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS);
+            var animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields:[AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS]);
 
-            if (animeField.MyListStatus != null)
+            if (animeField.UserStatus != null)
             {
-                UpdateWatchedEpisodesText(animeField.MyListStatus!.NumEpisodesWatched);
+                UpdateWatchedEpisodesText(animeField.UserStatus!.EpisodesWatched);
             }
             else
             {
@@ -308,28 +310,31 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     {
         if (SelectedEpisode != null)
         {
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            if (AnimeService.IsLoggedIn)
             {
-                if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    ConfirmEpisodeWindow dialog = new() 
+                    if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                     {
-                        DataContext = new ConfirmEpisodeViewModel(SelectedEpisode.Number, SelectedEpisode.TotalEpisodes)
-                    };
-
-
-                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
-
-                    if (result)
-                    {
-                        if (SelectedEpisode != null)
+                        ConfirmEpisodeWindow dialog = new() 
                         {
-                            _ = _malService.SetEpisodesWatched(_watchingMalId!.Value, SelectedEpisode.Number);
-                            UpdateWatchedEpisodesText(SelectedEpisode.Number);
+                            DataContext = new ConfirmEpisodeViewModel(SelectedEpisode.Number, SelectedEpisode.TotalEpisodes)
+                        };
+
+
+                        bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+
+                        if (result)
+                        {
+                            if (SelectedEpisode != null)
+                            {
+                                _ = _animeService.SetEpisodesWatchedAsync(_watchingMalId!.Value, SelectedEpisode.Number);
+                                UpdateWatchedEpisodesText(SelectedEpisode.Number);
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
             
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
@@ -355,7 +360,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void GoToAnimeDetails()
     {
-        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         if (_selectedAnime != null && _selectedAnime.MalId != null)
         {
             vm.GoToAnime(_selectedAnime.MalId.Value);

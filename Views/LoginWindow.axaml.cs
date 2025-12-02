@@ -1,3 +1,4 @@
+using Aniki.Misc;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -13,7 +14,7 @@ public partial class LoginWindow : Window
 
     public LoginWindow()
     {
-        _viewModel = App.ServiceProvider.GetRequiredService<LoginViewModel>();
+        _viewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<LoginViewModel>();
         InitializeComponent();
 #if DEBUG
         this.AttachDevTools();
@@ -44,7 +45,7 @@ public partial class LoginWindow : Window
 
     private void OnNavigateToMainRequested(object? sender, EventArgs e)
     {
-        var mainViewModel = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        var mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         MainWindow mainWindow = new(mainViewModel);
         
         if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using Aniki.Misc;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,7 +31,7 @@ public partial class CalendarViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentWeekRange = "";
 
-    private readonly IMalService _malService;
+    private readonly IAnimeService _animeService;
     private readonly ICalendarService _calendarService;
 
     public double CurrentTimeOffset
@@ -43,9 +45,9 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    public CalendarViewModel(IMalService malService, ICalendarService calendarService)
+    public CalendarViewModel(IAnimeService animeService, ICalendarService calendarService)
     {
-        _malService = malService;
+        _animeService = animeService;
         _calendarService = calendarService;
         Days = new();
         UpdateCurrentWeekRange();
@@ -62,18 +64,18 @@ public partial class CalendarViewModel : ViewModelBase
     {
         _watchingList.Clear();
         
-        if(!MalService.IS_LOGGED_IN) return;
+        if(!AnimeService.IsLoggedIn) return;
         
-        List<MalAnimeData> watching = await _malService.GetUserAnimeList(AnimeStatusApi.watching);
-        List<MalAnimeData> planToWatch = await _malService.GetUserAnimeList(AnimeStatusApi.plan_to_watch);
+        List<AnimeDetails> watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
+        List<AnimeDetails> planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
 
-        foreach (MalAnimeData anime in watching)
+        foreach (AnimeDetails anime in watching)
         {
-            if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
+            if(anime.Title != null) _watchingList.Add(anime.Title);
         }
-        foreach (MalAnimeData anime in planToWatch)
+        foreach (AnimeDetails anime in planToWatch)
         {
-            if(anime.Node.Title != null) _watchingList.Add(anime.Node.Title);
+            if(anime.Title != null) _watchingList.Add(anime.Title);
         }
     }
 
@@ -109,10 +111,10 @@ public partial class CalendarViewModel : ViewModelBase
 
     public void GoToClickedAnime(AnimeScheduleItem anime)
     {
-        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
-        if (anime.MalId.HasValue && anime.MalId.Value > 0)
+        MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+        if (anime.GetId() != null && anime.GetId()!.Value > 0)
         {
-            vm.GoToAnime(anime.MalId.Value);
+            vm.GoToAnime(anime.GetId()!.Value);
         }
         else
         {

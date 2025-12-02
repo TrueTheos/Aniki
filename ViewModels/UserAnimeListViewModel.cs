@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -7,12 +8,10 @@ namespace Aniki.ViewModels;
 public partial class UserAnimeListViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private ObservableCollection<MalAnimeDetails> _animeList = new();
-    
-    private HashSet<int> _loadedIds = new();
+    private ObservableCollection<AnimeDetails> _animeList = new();
     
     [ObservableProperty]
-    private ObservableCollection<MalAnimeDetails> _filteredAnimeList = new();
+    private ObservableCollection<AnimeDetails> _filteredAnimeList = new();
     
     [ObservableProperty]
     private string _statusFilter = "All";
@@ -32,11 +31,11 @@ public partial class UserAnimeListViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<GenreViewModel> _availableGenres;
 
-    private IMalService _malService;
-    
-    public UserAnimeListViewModel(IMalService malService)
+    private IAnimeService _animeService;
+
+    public UserAnimeListViewModel(IAnimeService animeService)
     {
-        _malService = malService;
+        _animeService = animeService;
         var genres = new List<string>
         {
             "Action", "Adventure", "Comedy", "Drama", "Fantasy",
@@ -152,21 +151,18 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     private async Task LoadAnimeListAsync()
     {
-        var list = await _malService.GetUserAnimeList();
+        var list = await _animeService.GetUserAnimeListAsync();
+        AnimeList.Clear();
         foreach (var element in list)
         {
-            if(_loadedIds.Contains(element.Node.Id)) continue;
-            
-            if(AnimeList.Any(x => x.Id == element.Node.Id)) continue;
-            AnimeList.Add(await _malService.GetFieldsAsync(element.Node.Id, MalService.MAL_NODE_FIELD_TYPES));
-            _loadedIds.Add(element.Node.Id);
+            AnimeList.Add(await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MAL_NODE_FIELD_TYPES));
         }
         
         TotalCount = AnimeList.Count;
         ApplyFiltersAndSort();
     }
 
-    private bool CompareStatus(AnimeStatusApi? api, string statusFilter)
+    private bool CompareStatus(AnimeStatus? api, string statusFilter)
     {
         if (!api.HasValue) return false;
         
@@ -182,7 +178,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         
         if (StatusFilter != "All")
         {
-            filtered = filtered.Where(a => CompareStatus(a.MyListStatus!.Status, StatusFilter));
+            filtered = filtered.Where(a => CompareStatus(a.UserStatus?.Status, StatusFilter));
         }
 
         var selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
@@ -190,7 +186,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         {
             filtered = filtered.Where(a => 
                 a.Genres != null && selectedGenres.All(sg => 
-                    a.Genres.Any(ag => ag.Name.Equals(sg, StringComparison.OrdinalIgnoreCase))
+                    a.Genres.Any(ag => ag.Equals(sg, StringComparison.OrdinalIgnoreCase))
                 )
             );
         }
@@ -201,8 +197,8 @@ public partial class UserAnimeListViewModel : ViewModelBase
             "TitleDesc" => filtered.OrderByDescending(a => a.Title),
             "RatingDesc" => filtered.OrderByDescending(a => a.Mean),
             "RatingAsc" => filtered.OrderBy(a => a.Mean),
-            "MyScoreDesc" => filtered.OrderByDescending(a => a.MyListStatus?.Score ?? 0),
-            "MyScoreAsc" => filtered.OrderBy(a => a.MyListStatus?.Score ?? 0),
+            "MyScoreDesc" => filtered.OrderByDescending(a => a.UserStatus?.Score ?? 0),
+            "MyScoreAsc" => filtered.OrderBy(a => a.UserStatus?.Score ?? 0),
             "Popularity" => filtered.OrderBy(a => a.Popularity ?? int.MaxValue),
             "DateDesc" => filtered.OrderByDescending(a => a.StartDate),
             "DateAsc" => filtered.OrderBy(a => a.StartDate),
@@ -210,7 +206,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         };
         
         var result = filtered.ToList();
-        FilteredAnimeList = new ObservableCollection<MalAnimeDetails>(result);
+        FilteredAnimeList = new ObservableCollection<AnimeDetails>(result);
         FilteredCount = result.Count;
     }
     

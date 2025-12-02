@@ -1,6 +1,9 @@
+using Aniki.Misc;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
@@ -12,23 +15,33 @@ namespace Aniki;
 
 public partial class App : Application
 {
-    private ServiceProvider _serviceProvider = null!;
-    public static ServiceProvider ServiceProvider => ((App)Current!)._serviceProvider;
-    
     public override void Initialize()
     {
-        var collection = new ServiceCollection();
-        collection.AddCommonServices();
-        _serviceProvider = collection.BuildServiceProvider();
-
+        DependencyInjection.Instance.BuildServiceProvider();
         AvaloniaXamlLoader.Load(this);
+    }
+    
+    public void Reset()
+    {
+        if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
+        
+        var oldWindow = desktop.MainWindow;
+
+        AnimeService.IsLoggedIn = false;
+        DependencyInjection.Instance.Logout();
+        
+        desktop.MainWindow = new LoginWindow();
+        desktop.MainWindow.Show();
+        
+        oldWindow?.Close();
+        
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
         BindingPlugins.DataValidators.RemoveAt(0);
         
-        _serviceProvider.GetService<ITokenService>()?.Init();
+        DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -72,7 +85,7 @@ public partial class App : Application
         
         try
         {
-            await _serviceProvider.GetRequiredService<ISaveService>().FlushAllCaches();
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<ISaveService>().FlushAllCaches();
             
             if (sender is IClassicDesktopStyleApplicationLifetime lifetime)
             {

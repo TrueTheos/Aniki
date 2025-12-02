@@ -1,3 +1,6 @@
+using Aniki.Misc;
+using Aniki.Models;
+using Aniki.Services.Anime;
 using Avalonia.Controls;
 using Aniki.Services.Interfaces;
 using Avalonia.Interactivity;
@@ -10,13 +13,13 @@ public partial class AnimeListStatusButton : UserControl
     private bool _mouseOverRoot;
     private AnimeCardData? _data = null;
 
-    private IMalService _malService;
+    private readonly IAnimeService _animeService;
 
     public AnimeListStatusButton()
     {
         InitializeComponent();
         
-        _malService = App.ServiceProvider.GetRequiredService<IMalService>();
+        _animeService = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<IAnimeService>();
         
         MainButton.PointerEntered += (_, __) => ShowStatusButtons();
         MainButton.PointerExited += (_, __) => HideStatusButtons();
@@ -32,8 +35,6 @@ public partial class AnimeListStatusButton : UserControl
         {
             _data = data;
         }
-        
-        
     }
     private void ShowStatusButtons()
     {
@@ -46,37 +47,37 @@ public partial class AnimeListStatusButton : UserControl
         {
             switch (_data.MyListStatus.Value)
             {
-                case AnimeStatusApi.none:
+                case AnimeStatus.None:
                     RemoveButton.IsVisible = false;
                     PlannedToWatchButton.IsVisible = true;
                     WatchingButton.IsVisible = true;
                     CompletedButton.IsVisible = true;
                     break;
-                case AnimeStatusApi.dropped:   
+                case AnimeStatus.Dropped:   
                     RemoveButton.IsVisible = true;
                     PlannedToWatchButton.IsVisible = true;
                     WatchingButton.IsVisible = true;
                     CompletedButton.IsVisible = true;
                     break;
-                case AnimeStatusApi.on_hold:
+                case AnimeStatus.OnHold:
                     RemoveButton.IsVisible = true;
                     PlannedToWatchButton.IsVisible = true;
                     WatchingButton.IsVisible = true;
                     CompletedButton.IsVisible = true;
                     break;
-                case AnimeStatusApi.completed:
+                case AnimeStatus.Completed:
                     RemoveButton.IsVisible = true;
                     PlannedToWatchButton.IsVisible = true;
                     WatchingButton.IsVisible = true;
                     CompletedButton.IsVisible = false;
                     break;
-                case AnimeStatusApi.plan_to_watch:
+                case AnimeStatus.PlanToWatch:
                     RemoveButton.IsVisible = true;
                     PlannedToWatchButton.IsVisible = false;
                     WatchingButton.IsVisible = true;
                     CompletedButton.IsVisible = true;
                     break;
-                case AnimeStatusApi.watching:
+                case AnimeStatus.Watching:
                     RemoveButton.IsVisible = true;
                     PlannedToWatchButton.IsVisible = true;
                     WatchingButton.IsVisible = false;
@@ -123,14 +124,14 @@ public partial class AnimeListStatusButton : UserControl
             {
                 if (status == AnimeStatusApi.none)
                 {
-                    _malService.RemoveFromUserList(_data!.AnimeId);
+                    _animeService.RemoveFromUserListAsync(_data!.AnimeId);
                 }
                 else
                 {
-                    _malService.SetAnimeStatus(_data!.AnimeId, status);
+                    _animeService.SetAnimeStatusAsync(_data!.AnimeId, StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus());
                 }
 
-                _data!.MyListStatus = status;
+                _data!.MyListStatus = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
                 HideStatusButtons();
                 ShowStatusButtons();
             }

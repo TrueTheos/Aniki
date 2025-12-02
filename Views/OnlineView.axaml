@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:OnlineViewModel">
     
     <UserControl.Styles>
@@ -150,7 +151,7 @@
                                 BorderThickness="0"
                                 CornerRadius="6"
                                 Padding="12,4"
-                                ToolTip.Tip="Go to MAL page"
+                                ToolTip.Tip="Go to website"
                                 Command="{Binding GoToAnimeDetailsCommand}"
                                 IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}">
                             <StackPanel Orientation="Horizontal" Spacing="5">
@@ -164,7 +165,8 @@
                         <Border Background="#2D2D30"
                                 CornerRadius="12"
                                 Padding="12,4"
-                                HorizontalAlignment="Left">
+                                HorizontalAlignment="Left"
+                                IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}">
                             <TextBlock Text="{Binding WatchedEpisodesText}"
                                        FontSize="11"
                                        VerticalAlignment="Center"

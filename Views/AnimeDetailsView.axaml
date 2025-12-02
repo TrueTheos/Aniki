@@ -8,6 +8,7 @@
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:services="clr-namespace:Aniki.Services"
+    xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:AnimeDetailsViewModel">
     <Border
         x:Name="Root"
@@ -88,7 +89,7 @@
                                             </Border>
                                         </Grid>
                                         
-                                        <StackPanel Grid.Row="1" Margin="0,50,0,0" IsVisible="{Binding Details.MyListStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                        <StackPanel Grid.Row="1" Margin="0,50,0,0" IsVisible="{Binding Details.UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
                                             <ProgressBar Height="8"
                                                          Value="{Binding WatchedEpisodes}"
                                                          Maximum="{Binding Details.NumEpisodes}"
@@ -137,7 +138,7 @@
                                             <UniformGrid Columns="3" Rows="2" HorizontalAlignment="Center" RowSpacing="20">
                                                 <!-- Watching -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.Watching, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Watching}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -150,7 +151,7 @@
                                                 
                                                 <!-- Completed -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.Completed, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Completed}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -163,7 +164,7 @@
 
                                                 <!-- Plan to Watch -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.PlanToWatch, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.PlanToWatch}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -176,7 +177,7 @@
 
                                                 <!-- On Hold -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.OnHold, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.OnHold}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -189,7 +190,7 @@
 
                                                 <!-- Dropped -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.Status.Dropped, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Dropped}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -202,7 +203,7 @@
 
                                                 <!-- Favorites -->
                                                 <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.NumFavorites, Converter={StaticResource StringToFormattedIntConverter}}"
+                                                    <TextBlock Text="{Binding Details.NumFavorites}"
                                                                FontSize="16"
                                                                FontWeight="Bold"
                                                                Foreground="White"
@@ -227,7 +228,7 @@
                                         
                                         <!-- Japanese Title + Metadata -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,20" Spacing="10">
-                                            <TextBlock Text="{Binding Details.AlternativeTitles.Ja}"
+                                            <TextBlock Text="{Binding Details.AlternativeTitles.Japanese}"
                                                        FontSize="14"
                                                        Foreground="#AAAAAA"/>
                                             <TextBlock Text="•" 
@@ -255,9 +256,9 @@
                                                         Padding="28,13">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
-                                                            <Binding Path="Details.MyListStatus"
+                                                            <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNotNull}"/>
-                                                            <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                                            <Binding Source="{x:Static anime:AnimeService.IsLoggedIn}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
                                                     
@@ -286,9 +287,9 @@
                                                         Command="{Binding AddToListCommand}">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
-                                                            <Binding Path="Details.MyListStatus"
+                                                            <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNull}"/>
-                                                            <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                                            <Binding Source="{x:Static anime:AnimeService.IsLoggedIn}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
                                                         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -322,7 +323,7 @@
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
-                                                        IsVisible="{Binding Source={x:Static services:MalService.IS_LOGGED_IN}}">
+                                                        IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}">
                                                     <Button.Flyout>
                                                         <MenuFlyout Placement="Bottom">
                                                             <MenuItem Header="1" Command="{Binding UpdateScoreCommand}" CommandParameter="1"/>
@@ -371,7 +372,7 @@
                                                         Width="50"
                                                         Height="50"
                                                         CornerRadius="25"
-                                                        Command="{Binding CopyMalPageUrlCommand}">
+                                                        Command="{Binding CopyPageUrlCommand}">
                                                     <PathIcon Data="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" 
                                                               Width="22" 
                                                               Height="22"
@@ -387,9 +388,9 @@
                                                         Command="{Binding RemoveFromListCommand}">
                                                     <Button.IsVisible>
                                                         <MultiBinding Converter="{StaticResource AllTrueMultiValueConverter}">
-                                                            <Binding Path="Details.MyListStatus"
+                                                            <Binding Path="Details.UserStatus"
                                                                      Converter="{x:Static ObjectConverters.IsNotNull}"/>
-                                                            <Binding Source="{x:Static services:MalService.IS_LOGGED_IN}"/>
+                                                            <Binding Source="{x:Static anime:AnimeService.IsLoggedIn}"/>
                                                         </MultiBinding>
                                                     </Button.IsVisible>
                                                     <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}"  Width="22" 
@@ -451,7 +452,7 @@
                                                            Foreground="#888888"
                                                            FontWeight="SemiBold"
                                                            LetterSpacing="1"/>
-                                                <TextBlock Text="{Binding Details.Studios[0].Name}"
+                                                <TextBlock Text="{Binding Details.Studios[0]}"
                                                            FontSize="15"
                                                            Foreground="White"
                                                            FontWeight="Medium"/>
@@ -504,12 +505,12 @@
                                                 </ItemsPanelTemplate>
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="mal:MalGenre">
+                                                <DataTemplate>
                                                     <Border Background="#44E50914"
                                                             CornerRadius="16"
                                                             Padding="16,8"
                                                             Margin="0,0,10,10">
-                                                        <TextBlock Text="{Binding Name}"
+                                                        <TextBlock Text="{Binding}"
                                                                    FontSize="13"
                                                                    Foreground="#FF6B8E"
                                                                    FontWeight="Medium"/>
@@ -533,7 +534,7 @@
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
-                                                    <DataTemplate DataType="mal:MalVideo">
+                                                    <DataTemplate DataType="models:AnimeVideo">
                                                         <Border x:Name="thumbnailCard"
                                                                 Width="380"
                                                                 Height="214"

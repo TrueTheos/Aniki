@@ -1,8 +1,10 @@
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Aniki.Misc;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
@@ -46,7 +48,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     enum AssocStr { Executable = 2 }
     
     private readonly IDiscordService _discordService;
-    private readonly IMalService  _malService;
+    private readonly IAnimeService  _animeService;
     private readonly ISaveService  _saveService;
     private readonly IAbsoluteEpisodeParser  _absoluteEpisodeParser;
     private readonly IAnimeNameParser  _animeNameParser;
@@ -67,11 +69,11 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<VideoPlayerOption> AvailablePlayers => _videoPlayerService.AvailablePlayers;
 
-    public DownloadedViewModel(IDiscordService discordService, IMalService malService, ISaveService saveService, 
+    public DownloadedViewModel(IDiscordService discordService, IAnimeService animeService, ISaveService saveService, 
         IAbsoluteEpisodeParser absoluteEpisodeParser, IAnimeNameParser animeNameParser, IVideoPlayerService videoPlayerService)
     {
         _discordService = discordService;
-        _malService = malService;
+        _animeService = animeService;
         _saveService = saveService;
         _absoluteEpisodeParser = absoluteEpisodeParser;
         _animeNameParser = animeNameParser;
@@ -132,7 +134,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     public void OpenAnimeDetails(int malId)
     {
-        MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
+        MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         vm.GoToAnime(malId);
     }
 
@@ -206,11 +208,12 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (parsedFile.EpisodeNumber == null)
                 return;
     
-            int? malId = await _absoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
+            int? malId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season);
             if (malId == null)
                 return;
 
-            var animeFieldSet = await _malService.GetFieldsAsync(malId.Value, AnimeField.TITLE, AnimeField.EPISODES);
+            //TODO IMPORTANT CO JEZELI NIE MAMY MALID TUTAJ...
+            var animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, fields:[AnimeField.TITLE, AnimeField.EPISODES]);
 
             var episode = new DownloadedEpisode(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                 parsedFile.AbsoluteEpisodeNumber,
@@ -236,7 +239,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
         else
         {
-            AnimeGroup newGroup = new(downloadedEpisode.AnimeTitle, new ObservableCollection<DownloadedEpisode> { downloadedEpisode }, animeTotalEpisodes, malId, _malService);
+            AnimeGroup newGroup = new(downloadedEpisode.AnimeTitle, new ObservableCollection<DownloadedEpisode> { downloadedEpisode }, animeTotalEpisodes, malId, _animeService);
             InsertGroupInSortedOrder(newGroup);
         }
     }
@@ -366,25 +369,28 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     {
         Log.Information("Video player closed!");
 
-        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+        if (AnimeService.IsLoggedIn)
         {
-            if (_lastPlayedEpisode == null) return;
-            if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                var animeData = await _malService.GetFieldsAsync(_lastPlayedEpisode.Id, AnimeField.EPISODES);
-                ConfirmEpisodeWindow dialog = new() 
+                if (_lastPlayedEpisode == null) return;
+                if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
-                };
+                    var animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.EPISODES);
+                    ConfirmEpisodeWindow dialog = new() 
+                    {
+                        DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
+                    };
 
-                bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+                    bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
 
-                if (result)
-                {
-                    MarkEpisodeCompleted(_lastPlayedEpisode);
+                    if (result)
+                    {
+                        MarkEpisodeCompleted(_lastPlayedEpisode);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         _discordService.Reset();
     }
@@ -392,7 +398,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private void MarkEpisodeCompleted(DownloadedEpisode ep)
     {
         int episodeToMark = ep.EpisodeNumber;
-        _ = _malService.SetEpisodesWatched(ep.Id,  episodeToMark);
+        _ = _animeService.SetEpisodesWatchedAsync(ep.Id,  episodeToMark);
     }
 
     public void Dispose()

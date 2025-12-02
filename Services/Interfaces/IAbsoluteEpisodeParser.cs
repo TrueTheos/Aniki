@@ -5,6 +5,6 @@ public interface IAbsoluteEpisodeParser
     public Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle,
         int absoluteEpisode);
 
-    public Task<int?> GetMalIdForSeason(string animeTitle, int seasonNumber);
+    public Task<int?> GetIdForSeason(string animeTitle, int seasonNumber);
     public Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle);
 }
