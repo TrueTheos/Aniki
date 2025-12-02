@@ -111,9 +111,9 @@ public partial class CalendarViewModel : ViewModelBase
     public void GoToClickedAnime(AnimeScheduleItem anime)
     {
         MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
-        if (anime.MalId.HasValue && anime.MalId.Value > 0)
+        if (anime.GetId() != null && anime.GetId()!.Value > 0)
         {
-            vm.GoToAnime(anime.MalId.Value);
+            vm.GoToAnime(anime.GetId()!.Value);
         }
         else
         {

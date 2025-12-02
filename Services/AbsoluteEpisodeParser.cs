@@ -10,7 +10,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     private readonly IAnimeService _animeService;
     
     private GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> _animeSeasonCache;
-    private static readonly ConcurrentDictionary<int, AnimeSeasonsMap> _malIdToMapIndex = new();
+    private static readonly ConcurrentDictionary<int, AnimeSeasonsMap> _animeIdToMapIndex = new();
 
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> _buildLocks = new();
     
@@ -50,12 +50,12 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         return (lastKnownSeason + 1, absoluteEpisode - accumulatedEpisodes);
     }
 
-    public async Task<int?> GetMalIdForSeason(string animeTitle, int seasonNumber)
+    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber)
     {
         var seasonMap = await GetOrCreateSeasonMap(animeTitle);
         if (seasonMap != null && seasonMap.Seasons.TryGetValue(seasonNumber, out SeasonData seasonData))
         {
-            return seasonData.MalId;
+            return seasonData.Id;
         }
         return null;
     }
@@ -88,7 +88,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
                 int foundAnimeId = searchResult.First().Id;
 
-                if (_malIdToMapIndex.TryGetValue(foundAnimeId, out var existingMap))
+                if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out var existingMap))
                 {
                     _animeSeasonCache.Update(animeTitle, existingMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
                     return existingMap;
@@ -121,7 +121,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
         foreach (var season in map.Seasons.Values)
         {
-            _malIdToMapIndex.TryAdd(season.MalId, map);
+            _animeIdToMapIndex.TryAdd(season.Id, map);
         }
     }
 
@@ -145,7 +145,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 
                 seasonChain.Insert(0, (currentId, details));
                 
-                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.RelationType == "prequel");
+                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.PREQUEL);
                 if (prequel?.Details != null) currentId = prequel.Details.Id;
                 else break;
             }
@@ -157,7 +157,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             
             while (currentDetails != null)
             {
-                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.RelationType == "sequel");
+                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.SEQUEL);
                 if (sequel?.Details != null && !visitedIds.Contains(sequel.Details.Id))
                 {
                     currentId = sequel.Details.Id;
@@ -181,7 +181,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 seasonMap.Seasons[i + 1] = new SeasonData 
                 { 
                     Episodes = details.NumEpisodes ?? 0, 
-                    MalId = id 
+                    Id = id 
                 };
             }
             

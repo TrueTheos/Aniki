@@ -150,7 +150,7 @@
                                 BorderThickness="0"
                                 CornerRadius="6"
                                 Padding="12,4"
-                                ToolTip.Tip="Go to MAL page"
+                                ToolTip.Tip="Go to website"
                                 Command="{Binding GoToAnimeDetailsCommand}"
                                 IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}">
                             <StackPanel Orientation="Horizontal" Spacing="5">

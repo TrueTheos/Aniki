@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using Avalonia.Media.Imaging;
 using System.Text.Json.Serialization;
+using Aniki.Services.Anime;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -8,7 +10,7 @@ namespace Aniki.Services;
     
 public struct SeasonData
 {
-    public int MalId { get; set; }
+    public int Id { get; set; }
     public int Episodes { get; set; }
 }
 
@@ -28,22 +30,35 @@ public class SaveService : ISaveService
     public static readonly string MAIN_DIRECTORY = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Aniki");
+    
+    public static readonly string CACHE_PATH = Path.Combine(MAIN_DIRECTORY, "cache");
 
     public string DefaultEpisodesFolder => Path.Combine(MAIN_DIRECTORY, "Episodes");
     private string _imageCacheFolder => Path.Combine(MAIN_DIRECTORY, "ImageCache");
 
     private ImageSaver _imageSaver;
     private SaveEntity<SettingsConfig> _settingsSaver;
-    public GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> SeasonCache { get; private set; }
+
+    private Dictionary<ILoginProvider.ProviderType,
+        GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>> _seasonsCache;
 
     private readonly ConcurrentDictionary<Type, ICacheService> _caches;
 
     public SaveService()
     {
         _caches = new ConcurrentDictionary<Type, ICacheService>();
-        SeasonCache = CreateCache<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>(null);
+        _seasonsCache = new();
+        
+        foreach (ILoginProvider.ProviderType providerType in (ILoginProvider.ProviderType[])Enum.GetValues(typeof(ILoginProvider.ProviderType)))
+        {
+            CacheOptions options = new()
+            {
+                DiskCachePath = $"{CACHE_PATH}/SeasonMaps/{providerType}",
+            };
+            _seasonsCache[providerType] = CreateCache<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>(fetchHandler:null, options: options);
+        }
 
-        _imageSaver = (ImageSaver)CreateSaveEntity<Avalonia.Media.Imaging.Bitmap>(_imageCacheFolder);
+        _imageSaver = (ImageSaver)CreateSaveEntity<Bitmap>(_imageCacheFolder);
         _settingsSaver = CreateSaveEntity<SettingsConfig>(MAIN_DIRECTORY);
 
         EnsureDirectoriesExist();
@@ -58,7 +73,7 @@ public class SaveService : ISaveService
 
         return typeof(T).Name switch
         {
-            nameof(Avalonia.Media.Imaging.Bitmap) => (SaveEntity<T>)(object)new ImageSaver(path),
+            nameof(Bitmap) => (SaveEntity<T>)(object)new ImageSaver(path),
             _ => new SaveEntity<T>(path)
         };
     }
@@ -86,7 +101,7 @@ public class SaveService : ISaveService
             Directory.CreateDirectory(DefaultEpisodesFolder);
     }
 
-    public GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> GetSeasonCache() => SeasonCache;
+    public GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> GetSeasonCache() => _seasonsCache[AnimeService.CurrentProviderType];
 
     public void SaveSettings(SettingsConfig config) => _settingsSaver.Save("config.json", config);
     public SettingsConfig? GetSettingsConfig() => _settingsSaver.Read("config.json");

@@ -115,8 +115,14 @@ public class UserAnimeStatus
 
 public class RelatedAnime
 {
+    public enum RelationType
+    {
+        PREQUEL,
+        SEQUEL,
+        OTHER
+    };
     public AnimeDetails? Details { get; set; }
-    public required string RelationType { get; set; }
+    public required RelationType Relation { get; set; }
 }
 
 public class AnimeStatistics

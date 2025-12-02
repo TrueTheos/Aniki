@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Aniki.Services.Anime;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -207,20 +208,45 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     private void OpenMalPage()
     {
         if (Details == null) return;
-        string url = $"https://myanimelist.net/anime/{Details.Id}";
+        string url = "";
+        switch (AnimeService.CurrentProviderType)
+        {
+            case ILoginProvider.ProviderType.MAL:
+                url = $"https://myanimelist.net/anime/{Details.Id}";
+                break;
+            case ILoginProvider.ProviderType.AniList:
+                url = $"https://anilist.com/anime/{Details.Id}";
+                break;
+            default:
+                //todo do something
+                break;
+        }
+
+        if (string.IsNullOrEmpty(url)) return;
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
     
     [RelayCommand]
-    private void CopyMalPageUrl()
+    private void CopyPageUrl()
     {
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
             desktop.MainWindow?.Clipboard is not { } provider)
             return;
         
         if (Details == null) return;
-
-        _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.Id}");
+        
+        switch (AnimeService.CurrentProviderType)
+        {
+            case ILoginProvider.ProviderType.MAL:
+                _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.Id}");
+                break;
+            case ILoginProvider.ProviderType.AniList:
+                _ = provider.SetTextAsync($"https://anilist.com/anime/{Details.Id}");
+                break;
+            default:
+                //todo do something
+                break;
+        }
     }
 
     [RelayCommand]

@@ -32,9 +32,7 @@ public partial class StatsViewModel : ViewModelBase
     {
         if(!AnimeService.IsLoggedIn) return;
         
-        Console.WriteLine("awake GetUserAnimeListAsync");
         var animeList = await _malService.GetUserAnimeListAsync();
-        Console.WriteLine("end GetUserAnimeListAsync");
         if (animeList == null || !animeList.Any())
             return;
 

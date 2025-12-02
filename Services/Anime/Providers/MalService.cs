@@ -47,14 +47,6 @@ public class MalService : IAnimeProvider
 
         _allFields = urlFields.ToString();
         
-        CacheOptions options = new()
-        {
-            DefaultTimeToLive = TimeSpan.FromHours(8),
-            DiskCachePath = $"{SaveService.MAIN_DIRECTORY}/cache",
-            DiskSyncInterval = TimeSpan.FromMinutes(2),
-            EnableDiskCache = true
-        };
-        
         _tokenService = tokenService;
         _saveService = saveService;
     }
@@ -560,6 +552,17 @@ public class MalService : IAnimeProvider
         }
     }
     
+    private RelatedAnime.RelationType ConvertRelationType(string? type)
+    {
+        if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.OTHER;
+        return type switch
+        {
+            "prequel" => RelatedAnime.RelationType.PREQUEL,
+            "sequel" => RelatedAnime.RelationType.SEQUEL,
+            _ => RelatedAnime.RelationType.OTHER
+        };
+    }
+    
     private AnimeDetails ConvertMalToUnified(MalAnimeDetails mal)
     {
         return new AnimeDetails(
@@ -596,7 +599,7 @@ public class MalService : IAnimeProvider
                 .Select(r => new Models.RelatedAnime
                 {
                     Details = r.Node != null ? ConvertMalToUnified(r.Node) : null,
-                    RelationType = r.RelationType
+                    Relation = ConvertRelationType(r.RelationType)
                 })
                 .ToArray() ?? []);
     }

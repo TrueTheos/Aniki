@@ -12,10 +12,9 @@ public class AnimeService : IAnimeService
     private readonly ISaveService _saveService;
     
     private IAnimeProvider? _currentProvider;
-    private ILoginProvider.ProviderType? _currentProviderName;
 
     public static bool IsLoggedIn = false;
-    public ILoginProvider.ProviderType? CurrentProviderName => _currentProviderName;
+    public static ILoginProvider.ProviderType CurrentProviderType = ILoginProvider.ProviderType.MAL;
 
     public AnimeService(ISaveService saveService, ITokenService tokenService)
     {
@@ -31,7 +30,7 @@ public class AnimeService : IAnimeService
         CacheOptions options = new()
         {
             DefaultTimeToLive = TimeSpan.FromHours(8),
-            DiskCachePath = $"{SaveService.MAIN_DIRECTORY}/cache/{name}",
+            DiskCachePath = $"{SaveService.CACHE_PATH}/{name}",
             DiskSyncInterval = TimeSpan.FromMinutes(2),
             EnableDiskCache = true
         };
@@ -50,10 +49,11 @@ public class AnimeService : IAnimeService
         }
 
         _currentProvider = provider;
-        _currentProviderName = providerName;
+        CurrentProviderType = providerName;
         _currentProvider.Init(accessToken);
 
         IsLoggedIn = _currentProvider.IsLoggedIn;
+        if (!IsLoggedIn) CurrentProviderType = ILoginProvider.ProviderType.MAL; //we just use MAL as default
 
         //todo Clear cache when switching providers to avoid conflicts
         //_cache.Clear();

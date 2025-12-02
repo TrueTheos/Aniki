@@ -21,6 +21,8 @@ public class AnilistService : IAnimeProvider
 
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
     public bool IsLoggedIn => _isLoggedIn;
+    
+    private int _requestCount = 0;
 
     public AnilistService(ISaveService saveService)
     {
@@ -42,6 +44,14 @@ public class AnilistService : IAnimeProvider
         _saveService = saveService;
     }
 
+    private async Task<GraphQLResponse<TResponse>> SendQueryAsyncWrapper<TResponse>(GraphQLRequest request, string message,
+        CancellationToken cancellationToken = default)
+    {
+        Console.WriteLine($"{_requestCount}: {message}");
+        _requestCount++;
+        return await _client.SendQueryAsync<TResponse>(request, cancellationToken);
+    }
+    
     public void Init(string? accessToken)
     {
         if (!string.IsNullOrEmpty(accessToken))
@@ -75,7 +85,7 @@ public class AnilistService : IAnimeProvider
                 }"
         };
 
-        var response = await _client.SendQueryAsync<ViewerResponse>(request);
+        var response = await SendQueryAsyncWrapper<ViewerResponse>(request, "GetUserDataAsync");
 
         if (response.Data?.Viewer == null)
             throw new InvalidOperationException("Failed to get user data");
@@ -134,7 +144,7 @@ public class AnilistService : IAnimeProvider
             }
         };
 
-        var response = await _client.SendQueryAsync<MediaListCollectionResponse>(request);
+        var response = await SendQueryAsyncWrapper<MediaListCollectionResponse>(request, "GetUserAnimeListAsync");
         var animeList = new List<AnimeDetails>();
 
         if (response.Data?.MediaListCollection?.lists != null)
@@ -145,7 +155,13 @@ public class AnilistService : IAnimeProvider
                 {
                     foreach (var entry in list.entries)
                     {
-                        animeList.Add(await ConvertAnilistToUnified(entry.media, entry.media.mediaListEntry));
+                        AnilistMediaListStatus mediaListStatus = new AnilistMediaListStatus()
+                        {
+                            progress = entry.progress,
+                            score = entry.score,
+                            status = entry.status
+                        };
+                        animeList.Add(await ConvertAnilistToUnified(entry.media, mediaListStatus));
                     }
                 }
             }
@@ -175,7 +191,7 @@ public class AnilistService : IAnimeProvider
             Variables = new { mediaId = animeId, userId = _currentUserId }
         };
 
-        var queryResponse = await _client.SendQueryAsync<MediaListResponse>(queryRequest);
+        var queryResponse = await SendQueryAsyncWrapper<MediaListResponse>(queryRequest, "RemoveFromUserListAsync");
 
         if (queryResponse.Data?.MediaList == null) return;
 
@@ -272,7 +288,7 @@ public class AnilistService : IAnimeProvider
 
         try 
         {
-            var response = await _client.SendQueryAsync<MediaResponse>(request);
+            var response = await SendQueryAsyncWrapper<MediaResponse>(request, $"FetchAnimeDetailsAsync {animeId} {string.Join(", ", fields)}");
             if (response.Data?.Media == null) return null;
             return await ConvertAnilistToUnified(response.Data.Media, response.Data.Media.mediaListEntry);
         }
@@ -368,7 +384,7 @@ public class AnilistService : IAnimeProvider
                 case AnimeField.TRAILER_URL:
                     if (fields.Contains(AnimeField.VIDEOS) || fields.Contains(AnimeField.TRAILER_URL))
                     {
-                        yield return "trailer { id site }";
+                        yield return "trailer { id site thumbnail}";
                         
                         fields.Remove(AnimeField.VIDEOS);
                         fields.Remove(AnimeField.TRAILER_URL);
@@ -412,14 +428,7 @@ public class AnilistService : IAnimeProvider
 
         var variables = new Dictionary<string, object> { ["search"] = query };
         
-        var queryVariables = "($search: String";
-        if (_isLoggedIn)
-        {
-            if (_currentUserId == null) _currentUserId = (await GetUserDataAsync()).Id;
-            variables["userId"] = _currentUserId;
-            queryVariables += ", $userId: Int";
-        }
-        queryVariables += ")";
+        var queryVariables = "($search: String)";
 
         var request = new GraphQLRequest
         {
@@ -434,7 +443,7 @@ public class AnilistService : IAnimeProvider
             Variables = variables
         };
 
-        var response = await _client.SendQueryAsync<PageResponse>(request);
+        var response = await SendQueryAsyncWrapper<PageResponse>(request, "SearchAnimeAsync");
         var results = new List<AnimeDetails>();
 
         if (response.Data?.Page?.media != null)
@@ -578,7 +587,7 @@ public class AnilistService : IAnimeProvider
                 
                 relatedList.Add(new RelatedAnime
                 {
-                    RelationType = ConvertRelationType(edge.relationType),
+                    Relation = ConvertRelationType(edge.relationType),
                     Details = new AnimeDetails
                     {
                         Id = edge.node.id,
@@ -586,10 +595,10 @@ public class AnilistService : IAnimeProvider
                         MainPicture = new AnimePicture 
                         { 
                             Medium = edge.node.coverImage?.medium ?? "",
-                            Large = edge.node.coverImage?.large ?? "" // Fallback if needed
+                            Large = edge.node.coverImage?.large ?? ""
                         },
                         NumEpisodes = edge.node.episodes,
-                        Status = edge.node.status, // Keep raw string or convert
+                        Status = edge.node.status,
                         Mean = (edge.node.meanScore ?? 0) / 10f
                     }
                 });
@@ -608,6 +617,20 @@ public class AnilistService : IAnimeProvider
             };
         }
 
+        AnimeVideo[]? vidoes = null;
+        if (media.trailer != null)
+        {
+            vidoes = new[]
+            {
+                new AnimeVideo
+                {
+                    Title = "Trailer",
+                    Url = GetTrailerUrl(media.trailer!) ?? "",
+                    Thumbnail = media.trailer.thumbnail ?? ""
+                }
+            };
+        }
+
         return new AnimeDetails(
             id: media.id,
             title: media.title?.romaji ?? media.title?.english ?? "Unknown Title",
@@ -616,7 +639,7 @@ public class AnilistService : IAnimeProvider
                 Medium = media.coverImage.medium ?? "",
                 Large = media.coverImage.large ?? ""
             } : null,
-            status: media.status, // You might want to normalize this string to "Finished Airing" etc.
+            status: media.status,
             synopsis: media.description,
             alternativeTitles: new AlternativeTitles
             {
@@ -624,8 +647,8 @@ public class AnilistService : IAnimeProvider
                 Japanese = media.title?.native,
                 Synonyms = null 
             },
-            userStatus: userAnimeStatus, // NOW POPULATED
-            numEpisodes: media.episodes,
+            userStatus: userAnimeStatus,
+            numEpisodes: media.episodes ?? 0,
             popularity: media.popularity,
             picture: picture,
             studios: media.studios?.nodes?.Select(s => s.name).ToArray() ?? Array.Empty<string>(),
@@ -634,16 +657,21 @@ public class AnilistService : IAnimeProvider
             genres: media.genres?.ToArray(),
             trailerUrl: GetTrailerUrl(media.trailer),
             numFavorites: media.favourites,
-            videos: null, // Anilist doesn't have a direct equivalent to MAL's PV list in the main object
-            relatedAnime: relatedList.ToArray(), // NOW POPULATED
-            statistics: stats // NOW POPULATED
+            videos: vidoes,
+            relatedAnime: relatedList.ToArray(),
+            statistics: stats
         );
     }
     
-    private string ConvertRelationType(string? type)
+    private RelatedAnime.RelationType ConvertRelationType(string? type)
     {
-        if (string.IsNullOrEmpty(type)) return "Related";
-        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(type.Replace("_", " ").ToLower());
+        if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.OTHER;
+        return type switch
+        {
+            "PREQUEL" => RelatedAnime.RelationType.PREQUEL,
+            "SEQUEL" => RelatedAnime.RelationType.SEQUEL,
+            _ => RelatedAnime.RelationType.OTHER
+        };
     }
 
     private string? FormatDate(AnilistDate? date)
@@ -688,83 +716,5 @@ public class AnilistService : IAnimeProvider
             "REPEATING" => AnimeStatus.Watching,
             _ => AnimeStatus.None
         };
-    }
-    
-    private class AnilistRateLimitHandler : DelegatingHandler
-    {
-        private static readonly SemaphoreSlim _semaphore = new(1, 1);
-        
-        private int _remainingRequests = 10;
-        private DateTimeOffset _resetTime = DateTimeOffset.MinValue;
-
-        private int _requestCount = 0;
-
-        public AnilistRateLimitHandler(HttpMessageHandler innerHandler) : base(innerHandler)
-        {
-        }
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            Console.WriteLine($"Request {_requestCount}");
-            _requestCount++;
-            await _semaphore.WaitAsync(cancellationToken);
-            try
-            {
-                var now = DateTimeOffset.UtcNow;
-                
-                if (_remainingRequests <= 0 && _resetTime > now)
-                {
-                    var delay = _resetTime - now;
-                    var finalDelay = delay.Add(TimeSpan.FromSeconds(1));
-
-                    if (finalDelay.TotalMilliseconds > 0)
-                    {
-                        Console.WriteLine($"[AnilistService] Rate limit reached. Waiting {finalDelay.TotalSeconds} seconds.");
-                        await Task.Delay(finalDelay, cancellationToken);
-                    }
-                }
-            }
-            finally
-            {
-                _semaphore.Release();
-            }
-
-            var response = await base.SendAsync(request, cancellationToken);
-
-            if (response.StatusCode == (System.Net.HttpStatusCode)429)
-            {
-                var retryAfter = response.Headers.RetryAfter?.Delta;
-                if (retryAfter.HasValue)
-                {
-                    await Task.Delay(retryAfter.Value, cancellationToken);
-                    return await base.SendAsync(request, cancellationToken);
-                }
-            }
-
-            UpdateRateLimits(response.Headers);
-
-            return response;
-        }
-
-        private void UpdateRateLimits(HttpResponseHeaders headers)
-        {
-            if (headers.TryGetValues("X-RateLimit-Remaining", out var remainingValues))
-            {
-                if (int.TryParse(remainingValues.FirstOrDefault(), out int remaining))
-                {
-                    _remainingRequests = remaining;
-                    Console.WriteLine($"Rate limit remaining {_remainingRequests}");
-                }
-            }
-
-            if (headers.TryGetValues("X-RateLimit-Reset", out var resetValues))
-            {
-                if (long.TryParse(resetValues.FirstOrDefault(), out long resetUnix))
-                {
-                    _resetTime = DateTimeOffset.FromUnixTimeSeconds(resetUnix);
-                    Console.WriteLine($"Rate limit reset time {_resetTime}");
-                }
-            }
-        }
     }
 }

@@ -90,10 +90,11 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             AiringToday.Clear();
             foreach (var anime in airingToday)
             {
-                if(anime.MalId == null) continue;
+                if(anime.ProviderId.Keys.Count == 0 || anime.GetId() == null) continue;
+                
                 AiringToday.Add(new AnimeCardData
                 {
-                    AnimeId = anime.MalId.Value,
+                    AnimeId = anime.GetId()!.Value,
                     Title = anime.Title,
                     ImageUrl = anime.ImageUrl,
                     Score = anime.Mean,

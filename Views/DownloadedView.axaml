@@ -74,7 +74,7 @@
                                                     BorderThickness="0"
                                                     CornerRadius="6"
                                                     Padding="12,4"
-                                                    ToolTip.Tip="Go to MAL page"
+                                                    ToolTip.Tip="Go to website"
                                                     Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).OpenAnimeDetailsCommand}"
                                                     CommandParameter="{Binding MalId}">
                                                 <StackPanel Orientation="Horizontal" Spacing="5">

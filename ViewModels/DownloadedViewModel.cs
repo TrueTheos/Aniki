@@ -207,7 +207,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (parsedFile.EpisodeNumber == null)
                 return;
     
-            int? malId = await _absoluteEpisodeParser.GetMalIdForSeason(parsedFile.AnimeName, parsedFile.Season);
+            int? malId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season);
             if (malId == null)
                 return;
 

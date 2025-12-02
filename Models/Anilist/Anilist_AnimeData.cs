@@ -112,6 +112,7 @@ public class AnilistTrailer
 {
     public string? id { get; set; }
     public string? site { get; set; }
+    public string? thumbnail { get; set; }
 }
 
 public class AnilistRelations
