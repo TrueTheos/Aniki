@@ -66,6 +66,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     private int? _currentSubscribedId;
     
+    private CancellationTokenSource? _episodeUpdateCts;
+    
     public AnimeDetailsViewModel(IAnimeService animeService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
         _animeService = animeService;
@@ -162,14 +164,33 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         int newCount = WatchedEpisodes + change;
 
         if (newCount < 0) newCount = 0;
-
         if (Details.NumEpisodes > 0 && newCount > Details.NumEpisodes)
         {
             newCount = Details.NumEpisodes ?? 0;
         }
 
-        await _animeService.SetEpisodesWatchedAsync(Details.Id, newCount);
-        WatchedEpisodes = newCount;
+        WatchedEpisodes = newCount; 
+        
+        OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
+        OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
+        TorrentSearchViewModel.Update(Details, WatchedEpisodes);
+
+        _episodeUpdateCts?.Cancel();
+        _episodeUpdateCts?.Dispose();
+        _episodeUpdateCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(2000, _episodeUpdateCts.Token);
+            await _animeService.SetEpisodesWatchedAsync(Details.Id, newCount);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to update episodes: {ex.Message}");
+        }
     }
     
     [RelayCommand]
