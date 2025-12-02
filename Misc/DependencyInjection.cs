@@ -8,6 +8,8 @@ public class DependencyInjection
     private static DependencyInjection? _instance;
     public static DependencyInjection Instance => _instance ??= new DependencyInjection();
 
+    public event Action? OnLogout;
+
     public IServiceProvider? ServiceProvider { get; private set; }
 
     private DependencyInjection()
@@ -21,12 +23,15 @@ public class DependencyInjection
         ServiceProvider = collection.BuildServiceProvider();
     }
 
-    public void Reset()
+    public void Logout()
     {
+        OnLogout?.Invoke();
+        
         if (ServiceProvider is ServiceProvider sp)
         {
             sp.Dispose();
         }
+        
         BuildServiceProvider();
     }
 }

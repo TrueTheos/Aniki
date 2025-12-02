@@ -135,6 +135,8 @@ public class AnimeService : IAnimeService
                     MAL_NODE_FIELD_TYPES
                 );
             }
+
+            return animeList;
         }
         
         return new();

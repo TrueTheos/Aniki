@@ -28,13 +28,13 @@ public partial class App : Application
         var oldWindow = desktop.MainWindow;
 
         AnimeService.IsLoggedIn = false;
+        DependencyInjection.Instance.Logout();
         
         desktop.MainWindow = new LoginWindow();
         desktop.MainWindow.Show();
         
         oldWindow?.Close();
         
-        DependencyInjection.Instance.Reset();
     }
 
     public override void OnFrameworkInitializationCompleted()

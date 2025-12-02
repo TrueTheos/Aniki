@@ -8,13 +8,12 @@ namespace Aniki.Services;
 
 public class TokenService : ITokenService
 {
-    private string _tokenDirectoryPath = "";
+    private string _tokenDirectoryPath = Path.Combine(SaveService.MAIN_DIRECTORY, "tokens");
     private readonly Dictionary<ILoginProvider.ProviderType, StoredTokenData> _cachedTokens = new();
     private readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
 
     public void Init()
     {
-        _tokenDirectoryPath = Path.Combine(SaveService.MAIN_DIRECTORY, "tokens");
         if (!Directory.Exists(_tokenDirectoryPath))
         {
             Directory.CreateDirectory(_tokenDirectoryPath);

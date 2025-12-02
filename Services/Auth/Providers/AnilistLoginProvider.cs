@@ -64,7 +64,7 @@ public class AnilistLoginProvider : ILoginProvider
     public void Logout()
     {
         _tokenService.ClearTokens(Provider); 
-        //todo _animeService.SetToken(string.Empty);
+        //_animeService.SetToken(string.Empty);
     }
     
     private void OpenBrowser(string url)
