@@ -21,7 +21,7 @@ public class TokenService : ITokenService
 
     public async Task<StoredTokenData?> LoadTokensAsync(ILoginProvider.ProviderType providerId)
     {
-        if (_cachedTokens.TryGetValue(providerId, out var cachedToken))
+        if (_cachedTokens.TryGetValue(providerId, out StoredTokenData? cachedToken))
         {
             return cachedToken;
         }
@@ -36,7 +36,7 @@ public class TokenService : ITokenService
         {
             byte[] encryptedData = await File.ReadAllBytesAsync(tokenFilePath);
             string decryptedJson = DecryptData(encryptedData);
-            var storedTokenData = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
+            StoredTokenData? storedTokenData = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
 
             if (storedTokenData != null && DateTime.UtcNow > storedTokenData.ExpiresAtUtc)
             {
@@ -86,7 +86,7 @@ public class TokenService : ITokenService
 
     public bool HasValidToken(ILoginProvider.ProviderType providerId)
     {
-        if (_cachedTokens.TryGetValue(providerId, out var token))
+        if (_cachedTokens.TryGetValue(providerId, out StoredTokenData? token))
         {
             return !string.IsNullOrEmpty(token.AccessToken) &&
                    DateTime.UtcNow < token.ExpiresAtUtc;
@@ -96,7 +96,7 @@ public class TokenService : ITokenService
 
     public string GetAccessToken(ILoginProvider.ProviderType providerId)
     {
-        if (_cachedTokens.TryGetValue(providerId, out var token))
+        if (_cachedTokens.TryGetValue(providerId, out StoredTokenData? token))
         {
             return token.AccessToken ?? string.Empty;
         }
@@ -131,11 +131,11 @@ public class TokenService : ITokenService
     
     private byte[] EncryptDataAes(string data)
     {
-        using var aes = Aes.Create();
+        using Aes aes = Aes.Create();
         
         string machineKey = Environment.MachineName + Environment.UserName + "Aniki-Secret-Key";
         byte[] key = new byte[32];
-        using (var sha = SHA256.Create())
+        using (SHA256 sha = SHA256.Create())
         {
             byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(machineKey));
             Array.Copy(hash, key, 32);
@@ -144,7 +144,7 @@ public class TokenService : ITokenService
         aes.Key = key;
         aes.GenerateIV();
 
-        using var encryptor = aes.CreateEncryptor();
+        using ICryptoTransform encryptor = aes.CreateEncryptor();
         byte[] dataBytes = Encoding.UTF8.GetBytes(data);
         byte[] encryptedBytes = encryptor.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
         
@@ -157,11 +157,11 @@ public class TokenService : ITokenService
 
     private string DecryptDataAes(byte[] encryptedData)
     {
-        using var aes = Aes.Create();
+        using Aes aes = Aes.Create();
         
         string machineKey = Environment.MachineName + Environment.UserName + "Aniki-Secret-Key";
         byte[] key = new byte[32];
-        using (var sha = SHA256.Create())
+        using (SHA256 sha = SHA256.Create())
         {
             byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(machineKey));
             Array.Copy(hash, key, 32);
@@ -176,7 +176,7 @@ public class TokenService : ITokenService
         
         aes.IV = iv;
         
-        using var decryptor = aes.CreateDecryptor();
+        using ICryptoTransform decryptor = aes.CreateDecryptor();
         byte[] decryptedBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
         
         return Encoding.UTF8.GetString(decryptedBytes);

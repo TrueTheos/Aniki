@@ -25,7 +25,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
         
-        var oldWindow = desktop.MainWindow;
+        Window? oldWindow = desktop.MainWindow;
 
         AnimeService.IsLoggedIn = false;
         DependencyInjection.Instance.Logout();

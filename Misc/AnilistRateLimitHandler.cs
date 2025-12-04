@@ -22,12 +22,12 @@ class AnilistRateLimitHandler : DelegatingHandler
         await _semaphore.WaitAsync(cancellationToken);
         try
         {
-            var now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
             
             if (_remainingRequests <= 0 && _resetTime > now)
             {
-                var delay = _resetTime - now;
-                var finalDelay = delay.Add(TimeSpan.FromSeconds(1));
+                TimeSpan delay = _resetTime - now;
+                TimeSpan finalDelay = delay.Add(TimeSpan.FromSeconds(1));
 
                 if (finalDelay.TotalMilliseconds > 0)
                 {
@@ -43,8 +43,8 @@ class AnilistRateLimitHandler : DelegatingHandler
             
             if (_requestTimestamps.Count >= MaxBurstRequests)
             {
-                var oldestRequest = _requestTimestamps.Peek();
-                var burstDelay = (oldestRequest + BurstWindow) - now;
+                DateTimeOffset oldestRequest = _requestTimestamps.Peek();
+                TimeSpan burstDelay = (oldestRequest + BurstWindow) - now;
                 
                 if (burstDelay.TotalMilliseconds > 0)
                 {
@@ -62,11 +62,11 @@ class AnilistRateLimitHandler : DelegatingHandler
             _semaphore.Release();
         }
 
-        var response = await base.SendAsync(request, cancellationToken);
+        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
         if (response.StatusCode == (System.Net.HttpStatusCode)429)
         {
-            var retryAfter = response.Headers.RetryAfter?.Delta;
+            TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
             if (retryAfter.HasValue)
             {
                 Console.WriteLine($"429 received. Retrying after {retryAfter.Value.TotalSeconds:F1} seconds.");
@@ -82,7 +82,7 @@ class AnilistRateLimitHandler : DelegatingHandler
 
     private void UpdateRateLimits(HttpResponseHeaders headers)
     {
-        if (headers.TryGetValues("X-RateLimit-Remaining", out var remainingValues))
+        if (headers.TryGetValues("X-RateLimit-Remaining", out IEnumerable<string>? remainingValues))
         {
             if (int.TryParse(remainingValues.FirstOrDefault(), out int remaining))
             {
@@ -91,7 +91,7 @@ class AnilistRateLimitHandler : DelegatingHandler
             }
         }
 
-        if (headers.TryGetValues("X-RateLimit-Reset", out var resetValues))
+        if (headers.TryGetValues("X-RateLimit-Reset", out IEnumerable<string>? resetValues))
         {
             if (long.TryParse(resetValues.FirstOrDefault(), out long resetUnix))
             {

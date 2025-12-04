@@ -12,7 +12,7 @@ public class EnumMatchConverter : IValueConverter
 
         if (parameter is string paramString)
         {
-            if (Enum.TryParse(value.GetType(), paramString, true, out var parsedParam))
+            if (Enum.TryParse(value.GetType(), paramString, true, out object? parsedParam))
             {
                 return value.Equals(parsedParam);
             }
@@ -28,7 +28,7 @@ public class EnumMatchConverter : IValueConverter
         {
             if (parameter is string paramString)
             {
-                if (Enum.TryParse(targetType, paramString, true, out var parsedEnum))
+                if (Enum.TryParse(targetType, paramString, true, out object? parsedEnum))
                 {
                     return parsedEnum;
                 }

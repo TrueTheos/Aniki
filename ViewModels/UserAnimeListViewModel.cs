@@ -36,16 +36,16 @@ public partial class UserAnimeListViewModel : ViewModelBase
     public UserAnimeListViewModel(IAnimeService animeService)
     {
         _animeService = animeService;
-        var genres = new List<string>
+        List<string> genres = new()
         {
             "Action", "Adventure", "Comedy", "Drama", "Fantasy",
             "Horror", "Mystery", "Psychological", "Romance", "Sci-Fi",
             "Slice of Life", "Sports", "Supernatural", "Thriller"
         };
         AvailableGenres = new ObservableCollection<GenreViewModel>();
-        foreach (var genreName in genres)
+        foreach (string genreName in genres)
         {
-            var genreVm = new GenreViewModel(genreName);
+            GenreViewModel genreVm = new(genreName);
             genreVm.PropertyChanged += (sender, args) =>
             {
                 if (args.PropertyName == nameof(GenreViewModel.IsSelected))
@@ -71,7 +71,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
     {
         get
         {
-            var selectedGenres = AvailableGenres.Where(g => g.IsSelected).ToList();
+            List<GenreViewModel> selectedGenres = AvailableGenres.Where(g => g.IsSelected).ToList();
             if (!selectedGenres.Any()) return "All Genres";
             if (selectedGenres.Count > 2) return $"{selectedGenres.Count} genres selected";
             return string.Join(", ", selectedGenres.Select(g => g.Name));
@@ -118,7 +118,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
     [RelayCommand]
     private void ClearGenreFilter()
     {
-        foreach (var genre in AvailableGenres)
+        foreach (GenreViewModel genre in AvailableGenres)
         {
             genre.IsSelected = false;
         }
@@ -151,9 +151,9 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     private async Task LoadAnimeListAsync()
     {
-        var list = await _animeService.GetUserAnimeListAsync();
+        List<AnimeDetails> list = await _animeService.GetUserAnimeListAsync();
         AnimeList.Clear();
-        foreach (var element in list)
+        foreach (AnimeDetails element in list)
         {
             AnimeList.Add(await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MAL_NODE_FIELD_TYPES));
         }
@@ -174,14 +174,14 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     private void ApplyFiltersAndSort()
     {
-        var filtered = AnimeList.AsEnumerable();
+        IEnumerable<AnimeDetails> filtered = AnimeList.AsEnumerable();
         
         if (StatusFilter != "All")
         {
             filtered = filtered.Where(a => CompareStatus(a.UserStatus?.Status, StatusFilter));
         }
 
-        var selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
+        List<string> selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
         if (selectedGenres.Any())
         {
             filtered = filtered.Where(a => 
@@ -205,7 +205,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
             _ => filtered.OrderBy(a => a.Title)
         };
         
-        var result = filtered.ToList();
+        List<AnimeDetails> result = filtered.ToList();
         FilteredAnimeList = new ObservableCollection<AnimeDetails>(result);
         FilteredCount = result.Count;
     }

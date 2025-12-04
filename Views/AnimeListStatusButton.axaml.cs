@@ -120,7 +120,7 @@ public partial class AnimeListStatusButton : UserControl
     {
         if (sender is Button button && button.Tag is string statusStr)
         {
-            if (Enum.TryParse<AnimeStatusApi>(statusStr, out var status))
+            if (Enum.TryParse<AnimeStatusApi>(statusStr, out AnimeStatusApi status))
             {
                 if (status == AnimeStatusApi.none)
                 {

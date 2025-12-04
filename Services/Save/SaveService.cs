@@ -51,7 +51,7 @@ public class SaveService : ISaveService
         _caches = new ConcurrentDictionary<Guid, ICacheService>();
         _seasonsCache = new();
         
-        foreach (ILoginProvider.ProviderType providerType in (ILoginProvider.ProviderType[])Enum.GetValues(typeof(ILoginProvider.ProviderType)))
+        foreach (ILoginProvider.ProviderType providerType in Enum.GetValues<ILoginProvider.ProviderType>())
         {
             CacheOptions options = new()
             {
@@ -125,7 +125,7 @@ public class SaveService : ISaveService
 
     public async Task FlushAllCaches()
     {
-        foreach (var cache in _caches)
+        foreach (KeyValuePair<Guid, ICacheService> cache in _caches)
         {
             await cache.Value.FlushAsync();
         }

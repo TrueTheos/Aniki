@@ -71,7 +71,7 @@ public partial class LoginViewModel : ViewModelBase
 
         try
         {
-            foreach (var provider in _loginService.Providers)
+            foreach (ILoginProvider provider in _loginService.Providers)
             {
                 StatusMessage = $"Checking login status for {provider.Provider}...";
                 string? username = await provider.CheckExistingLoginAsync();

@@ -10,13 +10,13 @@ public class BoolToColorConverter : IValueConverter
     {
         if (value is bool boolValue && parameter is string colorString)
         {
-            var colors = colorString.Split(':');
+            string[] colors = colorString.Split(':');
             if (colors.Length != 2) return Brushes.Transparent;
             
-            var trueColor = colors[0];
-            var falseColor = colors[1];
+            string trueColor = colors[0];
+            string falseColor = colors[1];
             
-            var selectedColor = boolValue ? trueColor : falseColor;
+            string selectedColor = boolValue ? trueColor : falseColor;
             
             return Brush.Parse(selectedColor);
         }

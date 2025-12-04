@@ -16,7 +16,7 @@ public class AllMangaScraperService : IAllMangaScraperService
 
     public AllMangaScraperService()
     {
-        var handler = new HttpClientHandler
+        HttpClientHandler handler = new()
         {
             AllowAutoRedirect = true,
             UseCookies = true
@@ -60,24 +60,24 @@ public class AllMangaScraperService : IAllMangaScraperService
                 countryOrigin = "ALL"
             };
 
-            var requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(searchGql)}";
+            string requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(searchGql)}";
             
-            var response = await _httpClient.GetStringAsync(requestUrl);
-            var jsonDoc = JsonDocument.Parse(response);
+            string response = await _httpClient.GetStringAsync(requestUrl);
+            JsonDocument jsonDoc = JsonDocument.Parse(response);
             
-            var results = new List<AllMangaSearchResult>();
+            List<AllMangaSearchResult> results = new();
             
-            if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
-                data.TryGetProperty("shows", out var shows) &&
-                shows.TryGetProperty("edges", out var edges))
+            if (jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) &&
+                data.TryGetProperty("shows", out JsonElement shows) &&
+                shows.TryGetProperty("edges", out JsonElement edges))
             {
-                foreach (var edge in edges.EnumerateArray())
+                foreach (JsonElement edge in edges.EnumerateArray())
                 {
-                    var id = edge.GetProperty("_id").GetString();
-                    var name = edge.GetProperty("name").GetString();
+                    string? id = edge.GetProperty("_id").GetString();
+                    string? name = edge.GetProperty("name").GetString();
                     
                     int? malId = null;
-                    if (edge.TryGetProperty("malId", out var malIdProp) && 
+                    if (edge.TryGetProperty("malId", out JsonElement malIdProp) && 
                         malIdProp.ValueKind == JsonValueKind.String)
                     {
                         if (malIdProp.ValueKind == JsonValueKind.String)
@@ -98,15 +98,15 @@ public class AllMangaScraperService : IAllMangaScraperService
                         }
                     }
                     
-                    var episodeCount = 0;
-                    if (edge.TryGetProperty("availableEpisodes", out var availableEpisodes) &&
-                        availableEpisodes.TryGetProperty("sub", out var subCount))
+                    int episodeCount = 0;
+                    if (edge.TryGetProperty("availableEpisodes", out JsonElement availableEpisodes) &&
+                        availableEpisodes.TryGetProperty("sub", out JsonElement subCount))
                     {
                         episodeCount = subCount.GetInt32();
                     }
 
                     string? banner = null;
-                    if (edge.TryGetProperty("banner", out var bannerString))
+                    if (edge.TryGetProperty("banner", out JsonElement bannerString))
                     {
                         banner = bannerString.GetString();
                     }
@@ -145,7 +145,7 @@ public class AllMangaScraperService : IAllMangaScraperService
     {
         try
         {
-            var showId = animeIdOrUrl.Contains("/") 
+            string showId = animeIdOrUrl.Contains("/") 
                 ? animeIdOrUrl.Split('/').Last() 
                 : animeIdOrUrl;
 
@@ -167,38 +167,38 @@ public class AllMangaScraperService : IAllMangaScraperService
                 showId = showId
             };
 
-            var requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(detailsGql)}";
+            string requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(detailsGql)}";
             
-            var response = await _httpClient.GetStringAsync(requestUrl);
-            var jsonDoc = JsonDocument.Parse(response);
+            string response = await _httpClient.GetStringAsync(requestUrl);
+            JsonDocument jsonDoc = JsonDocument.Parse(response);
             
-            if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
-                data.TryGetProperty("show", out var show))
+            if (jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) &&
+                data.TryGetProperty("show", out JsonElement show))
             {
-                var details = new AllMangaAnimeDetails
+                AllMangaAnimeDetails details = new()
                 {
                     Id = show.GetProperty("_id").GetString() ?? string.Empty,
                     Name = show.GetProperty("name").GetString() ?? string.Empty
                 };
 
-                if (show.TryGetProperty("malId", out var malIdProp) && 
+                if (show.TryGetProperty("malId", out JsonElement malIdProp) && 
                     malIdProp.ValueKind == JsonValueKind.Number)
                 {
                     details.MalId = malIdProp.GetInt32();
                 }
 
-                if (show.TryGetProperty("aniListId", out var aniListIdProp) && 
+                if (show.TryGetProperty("aniListId", out JsonElement aniListIdProp) && 
                     aniListIdProp.ValueKind == JsonValueKind.Number)
                 {
                     details.AniListId = aniListIdProp.GetInt32();
                 }
 
-                if (show.TryGetProperty("description", out var descProp))
+                if (show.TryGetProperty("description", out JsonElement descProp))
                 {
                     details.Description = descProp.GetString();
                 }
                 
-                if (show.TryGetProperty("thumbnail", out var thumbProp))
+                if (show.TryGetProperty("thumbnail", out JsonElement thumbProp))
                 {
                     details.Thumbnail = thumbProp.GetString();
                 }
@@ -218,7 +218,7 @@ public class AllMangaScraperService : IAllMangaScraperService
     {
         try
         {
-            var showId = animeIdOrUrl.Contains("/") 
+            string showId = animeIdOrUrl.Contains("/") 
                 ? animeIdOrUrl.Split('/').Last() 
                 : animeIdOrUrl;
 
@@ -234,22 +234,22 @@ public class AllMangaScraperService : IAllMangaScraperService
                 showId = showId
             };
 
-            var requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(episodesGql)}";
+            string requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(episodesGql)}";
             
-            var response = await _httpClient.GetStringAsync(requestUrl);
-            var jsonDoc = JsonDocument.Parse(response);
+            string response = await _httpClient.GetStringAsync(requestUrl);
+            JsonDocument jsonDoc = JsonDocument.Parse(response);
             
-            var episodes = new List<AllManagaEpisode>();
+            List<AllManagaEpisode> episodes = new();
             
-            if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
-                data.TryGetProperty("show", out var show) &&
-                show.TryGetProperty("availableEpisodesDetail", out var episodesDetail) &&
-                episodesDetail.TryGetProperty("sub", out var subEpisodes))
+            if (jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) &&
+                data.TryGetProperty("show", out JsonElement show) &&
+                show.TryGetProperty("availableEpisodesDetail", out JsonElement episodesDetail) &&
+                episodesDetail.TryGetProperty("sub", out JsonElement subEpisodes))
             {
-                foreach (var ep in subEpisodes.EnumerateArray())
+                foreach (JsonElement ep in subEpisodes.EnumerateArray())
                 {
-                    var epString = ep.GetString();
-                    if (float.TryParse(epString, out var epNum))
+                    string? epString = ep.GetString();
+                    if (float.TryParse(epString, out float epNum))
                     {
                         episodes.Add(new AllManagaEpisode
                         {
@@ -311,9 +311,9 @@ public class AllMangaScraperService : IAllMangaScraperService
         try
         {
             // Expected format: https://allmanga.to/anime/{showId}/episodes/sub/{episodeString}
-            var parts = episodeUrl.Split('/');
-            var showId = parts[^4];
-            var episodeString = parts[^1];
+            string[] parts = episodeUrl.Split('/');
+            string showId = parts[^4];
+            string episodeString = parts[^1];
 
             const string episodeGql = @"query($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) { 
                 episode(showId: $showId translationType: $translationType episodeString: $episodeString) { 
@@ -329,26 +329,26 @@ public class AllMangaScraperService : IAllMangaScraperService
                 episodeString = episodeString
             };
 
-            var requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(episodeGql)}";
+            string requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(episodeGql)}";
             
-            var response = await _httpClient.GetStringAsync(requestUrl);
+            string response = await _httpClient.GetStringAsync(requestUrl);
             
-            var jsonDoc = JsonDocument.Parse(response);
+            JsonDocument jsonDoc = JsonDocument.Parse(response);
             
-            if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
-                data.TryGetProperty("episode", out var episode) &&
-                episode.TryGetProperty("sourceUrls", out var sourceUrls))
+            if (jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) &&
+                data.TryGetProperty("episode", out JsonElement episode) &&
+                episode.TryGetProperty("sourceUrls", out JsonElement sourceUrls))
             {
-                foreach (var source in sourceUrls.EnumerateArray())
+                foreach (JsonElement source in sourceUrls.EnumerateArray())
                 {
-                    if (source.TryGetProperty("sourceUrl", out var sourceUrl))
+                    if (source.TryGetProperty("sourceUrl", out JsonElement sourceUrl))
                     {
-                        var encodedUrl = sourceUrl.GetString();
+                        string? encodedUrl = sourceUrl.GetString();
                         if (!string.IsNullOrEmpty(encodedUrl))
                         {
-                            var decodedUrl = DecodeSourceUrl(encodedUrl);
+                            string decodedUrl = DecodeSourceUrl(encodedUrl);
                             
-                            var videoLink = await GetLinksFromSource(decodedUrl);
+                            string videoLink = await GetLinksFromSource(decodedUrl);
                             if (!string.IsNullOrEmpty(videoLink))
                                 return videoLink;
                         }
@@ -370,14 +370,14 @@ public class AllMangaScraperService : IAllMangaScraperService
             return encoded;
 
         encoded = encoded.Substring(2);
-        var decoded = new StringBuilder();
+        StringBuilder decoded = new();
         
         for (int i = 0; i < encoded.Length; i += 2)
         {
             if (i + 1 < encoded.Length)
             {
-                var hex = encoded.Substring(i, 2);
-                var chr = DecodeHexChar(hex);
+                string hex = encoded.Substring(i, 2);
+                string chr = DecodeHexChar(hex);
                 if (!string.IsNullOrEmpty(chr))
                     decoded.Append(chr);
             }
@@ -411,17 +411,17 @@ public class AllMangaScraperService : IAllMangaScraperService
     {
         try
         {
-            var response = await _httpClient.GetStringAsync($"https://{ALLANIME_BASE}{sourceUrl}");
-            var jsonDoc = JsonDocument.Parse(response);
+            string response = await _httpClient.GetStringAsync($"https://{ALLANIME_BASE}{sourceUrl}");
+            JsonDocument jsonDoc = JsonDocument.Parse(response);
             
-            if (jsonDoc.RootElement.TryGetProperty("links", out var links))
+            if (jsonDoc.RootElement.TryGetProperty("links", out JsonElement links))
             {
-                foreach (var link in links.EnumerateArray())
+                foreach (JsonElement link in links.EnumerateArray())
                 {
-                    if (link.TryGetProperty("link", out var linkProp) &&
-                        link.TryGetProperty("resolutionStr", out var resolution))
+                    if (link.TryGetProperty("link", out JsonElement linkProp) &&
+                        link.TryGetProperty("resolutionStr", out JsonElement resolution))
                     {
-                        var url = linkProp.GetString();
+                        string? url = linkProp.GetString();
                         if (!string.IsNullOrEmpty(url))
                         {
                             return url;

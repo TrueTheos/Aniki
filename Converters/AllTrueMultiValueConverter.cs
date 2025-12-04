@@ -10,7 +10,7 @@ public class AllTrueMultiValueConverter : IMultiValueConverter
         if (values == null || values.Count == 0)
             return false;
 
-        foreach (var value in values)
+        foreach (object? value in values)
         {
             if (value == Avalonia.Data.BindingOperations.DoNothing ||
                 value == Avalonia.AvaloniaProperty.UnsetValue ||

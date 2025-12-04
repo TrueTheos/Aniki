@@ -89,7 +89,7 @@ public class AnimeService : IAnimeService
         if (_currentProvider != null)
             return await _caches[_currentProvider.Provider].GetOrFetchFieldsAsync(
                 animeId,
-                fields: (AnimeField[])Enum.GetValues(typeof(AnimeField))
+                fields: Enum.GetValues<AnimeField>()
             );
         throw new Exception("This shouldn't happen"); 
     }
@@ -148,7 +148,7 @@ public class AnimeService : IAnimeService
         anime.UserStatus = null;
         if (_currentProvider != null)
             _caches[_currentProvider.Provider]
-                .Update(anime.Id, anime, (AnimeField[])Enum.GetValues(typeof(AnimeField)));
+                .Update(anime.Id, anime, Enum.GetValues<AnimeField>());
     }
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)

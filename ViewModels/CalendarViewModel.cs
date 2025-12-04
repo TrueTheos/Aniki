@@ -97,7 +97,7 @@ public partial class CalendarViewModel : ViewModelBase
 
         if (daysToFetch.Any())
         {
-            var schedule = await _calendarService.GetScheduleAsync(_watchingList, daysToFetch.First(), daysToFetch.Last().AddDays(1));
+            List<DaySchedule> schedule = await _calendarService.GetScheduleAsync(_watchingList, daysToFetch.First(), daysToFetch.Last().AddDays(1));
             foreach (DaySchedule day in schedule)
             {
                 _cachedDays[day.Date] = day;
@@ -175,11 +175,11 @@ public partial class CalendarViewModel : ViewModelBase
             DateTime currentDate = _windowStartDate.AddDays(i);
             if (_cachedDays.TryGetValue(currentDate.Date, out DaySchedule? cachedDaySchedule))
             {
-                var filteredItems = cachedDaySchedule.Items
+                IEnumerable<AnimeScheduleItem> filteredItems = cachedDaySchedule.Items
                     .Where(item => !ShowOnlyMyAnime || _watchingList.Contains(item.Title))
                     .Select(item => EnhanceAnimeItem(item, currentDate));
 
-                var displayDaySchedule = new DaySchedule
+                DaySchedule displayDaySchedule = new()
                 {
                     Name = cachedDaySchedule.Name,
                     DayName = cachedDaySchedule.DayName,

@@ -44,7 +44,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         }
 
         int accumulatedEpisodes = 0;
-        foreach (var season in seasonMap.Seasons.OrderBy(kvp => kvp.Key))
+        foreach (KeyValuePair<int, SeasonData> season in seasonMap.Seasons.OrderBy(kvp => kvp.Key))
         {
             int seasonNumber = season.Key;
             int episodesInSeason = season.Value.Episodes;
@@ -62,7 +62,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
     public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber)
     {
-        var seasonMap = await GetOrCreateSeasonMap(animeTitle);
+        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle);
         if (seasonMap != null && seasonMap.Seasons.TryGetValue(seasonNumber, out SeasonData seasonData))
         {
             return seasonData.Id;
@@ -74,14 +74,14 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         try
         {
-            var cachedMap = AnimeSeasonCache.GetWithoutFetching(animeTitle);
+            AnimeSeasonsMap? cachedMap = AnimeSeasonCache.GetWithoutFetching(animeTitle);
             if (cachedMap != null)
             {
                 IndexMap(cachedMap);
                 return cachedMap;
             }
             
-            var lockObj = _buildLocks.GetOrAdd(animeTitle, _ => new SemaphoreSlim(1, 1));
+            SemaphoreSlim lockObj = _buildLocks.GetOrAdd(animeTitle, _ => new SemaphoreSlim(1, 1));
             await lockObj.WaitAsync();
 
             try
@@ -93,12 +93,12 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     return cachedMap;
                 }
 
-                var searchResult = await _animeService.SearchAnimeAsync(animeTitle);
+                List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(animeTitle);
                 if (searchResult.Count == 0) return null;
 
                 int foundAnimeId = searchResult.First().Id;
 
-                if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out var existingMap))
+                if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out AnimeSeasonsMap? existingMap))
                 {
                     AnimeSeasonCache.Update(animeTitle, existingMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
                     return existingMap;
@@ -129,7 +129,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         if (map.Seasons == null) return;
 
-        foreach (var season in map.Seasons.Values)
+        foreach (SeasonData season in map.Seasons.Values)
         {
             _animeIdToMapIndex.TryAdd(season.Id, map);
         }

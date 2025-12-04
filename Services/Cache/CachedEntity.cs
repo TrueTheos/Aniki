@@ -17,7 +17,7 @@ public class CachedEntity<TEntity, TFieldEnum> where TEntity : class, new() wher
     {
         lock (_lock)
         {
-            if (!_fieldExpirations.TryGetValue(field, out var expiry))
+            if (!_fieldExpirations.TryGetValue(field, out DateTime expiry))
                 return true;
             return DateTime.UtcNow > expiry;
         }
@@ -48,7 +48,7 @@ public class CachedEntity<TEntity, TFieldEnum> where TEntity : class, new() wher
     {
         lock (_lock)
         {
-            return _fieldExpirations.TryGetValue(field, out var expiry) ? expiry : null;
+            return _fieldExpirations.TryGetValue(field, out DateTime expiry) ? expiry : null;
         }
     }
 }

@@ -28,7 +28,7 @@ public partial class AnimeGroup : ObservableObject
 
     private void UpdateEpisodes()
     {
-        foreach (var ep in Episodes)
+        foreach (DownloadedEpisode ep in Episodes)
         {
             ep.Watched = ep.EpisodeNumber <= WatchedEpisodes;
         }

@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using Aniki.Models.Anilist;
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
@@ -16,24 +17,23 @@ public class AnilistService : IAnimeProvider
     private readonly GraphQLHttpClient _client;
     private readonly HttpClient _httpClient;
     private readonly ISaveService _saveService;
-    private bool _isLoggedIn;
-    private int? _currentUserId;
-
-    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
-    public bool IsLoggedIn => _isLoggedIn;
     
-    private int _requestCount = 0;
+    private bool _isLoggedIn;
+    public bool IsLoggedIn => _isLoggedIn;
+    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
+    
+    private int? _currentUserId;
 
     public AnilistService(ISaveService saveService)
     {
-        var rateLimitHandler = new AnilistRateLimitHandler(new HttpClientHandler());
+        AnilistRateLimitHandler rateLimitHandler = new(new HttpClientHandler());
         
-        var graphQlHttpClient = new HttpClient(rateLimitHandler)
+        HttpClient graphQlHttpClient = new(rateLimitHandler)
         {
             BaseAddress = new Uri("https://graphql.anilist.co")
         };
 
-        var options = new GraphQLHttpClientOptions
+        GraphQLHttpClientOptions options = new()
         {
             EndPoint = new Uri("https://graphql.anilist.co")
         };
@@ -42,14 +42,6 @@ public class AnilistService : IAnimeProvider
         
         _httpClient = new HttpClient();
         _saveService = saveService;
-    }
-
-    private async Task<GraphQLResponse<TResponse>> SendQueryAsyncWrapper<TResponse>(GraphQLRequest request, string message,
-        CancellationToken cancellationToken = default)
-    {
-        Console.WriteLine($"{_requestCount}: {message}");
-        _requestCount++;
-        return await _client.SendQueryAsync<TResponse>(request, cancellationToken);
     }
     
     public void Init(string? accessToken)
@@ -67,11 +59,42 @@ public class AnilistService : IAnimeProvider
         }
     }
 
+    private async Task<GraphQLResponse<TResponse>?> TrySendQueryAsync<TResponse>(
+        GraphQLRequest request, string message, CancellationToken cancellationToken = default)
+    {
+        #if DEBUG
+        Debug.WriteLine($"Request: {message}");
+        #endif
+    
+        try
+        {
+            var response = await _client.SendQueryAsync<TResponse>(request, cancellationToken);
+       
+            if (response.Errors != null && response.Errors.Length > 0)
+            {
+                foreach (var error in response.Errors)
+                {
+                    Debug.WriteLine($"GraphQL Error: {error.Message}");
+                }
+                return null;
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Exception in TrySendQueryAsync: {ex.Message}");
+            return null;
+        }
+    }
+
+    #region  IAnimeProvider
+
     public async Task<UserData> GetUserDataAsync()
     {
         if (!_isLoggedIn) return new UserData();
 
-        var request = new GraphQLRequest
+        GraphQLRequest request = new()
         {
             Query = @"
                 query {
@@ -85,10 +108,8 @@ public class AnilistService : IAnimeProvider
                 }"
         };
 
-        var response = await SendQueryAsyncWrapper<ViewerResponse>(request, "GetUserDataAsync");
-
-        if (response.Data?.Viewer == null)
-            throw new InvalidOperationException("Failed to get user data");
+        GraphQLResponse<ViewerResponse>? response = await TrySendQueryAsync<ViewerResponse>(request, "GetUserDataAsync");
+        if(response == null || response.Data?.Viewer == null) return new UserData();
 
         return new UserData
         {
@@ -97,12 +118,12 @@ public class AnilistService : IAnimeProvider
             Picture = response.Data.Viewer.avatar?.large
         };
     }
-
+    
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus statusFilter = AnimeStatus.None)
     {
         if (!_isLoggedIn) return new List<AnimeDetails>();
 
-        var allFields = new HashSet<AnimeField>((AnimeField[])Enum.GetValues(typeof(AnimeField)));
+        HashSet<AnimeField> allFields = new(Enum.GetValues<AnimeField>());
 
         string myListStatusFormated = "";
         if (allFields.Contains(AnimeField.MY_LIST_STATUS))
@@ -114,12 +135,12 @@ public class AnilistService : IAnimeProvider
         {
             myListStatusFormated = "\n";
         }
-        var fragments = GetGraphQLFragments(allFields);
-        var innerQuery = string.Join("\n", fragments);
+        IEnumerable<string> fragments = GetGraphQLFragments(allFields);
+        string innerQuery = string.Join("\n", fragments);
 
         string statusText = statusFilter != AnimeStatus.None ? $", status: {ConvertToAnilistStatus(statusFilter)}" : "";
         
-        var request = new GraphQLRequest
+        GraphQLRequest request = new()
         {
             Query = @"
                 query ($userId: Int) {
@@ -140,42 +161,37 @@ public class AnilistService : IAnimeProvider
             }
         };
 
-        var response = await SendQueryAsyncWrapper<MediaListCollectionResponse>(request, "GetUserAnimeListAsync");
-        var animeList = new List<AnimeDetails>();
+        GraphQLResponse<MediaListCollectionResponse>? response = await TrySendQueryAsync<MediaListCollectionResponse>(request, "GetUserAnimeListAsync");
+        if (response == null) return [];
 
         if (response.Data?.MediaListCollection?.lists != null)
         {
-            foreach (var list in response.Data.MediaListCollection.lists)
+            List<AnimeDetails> animeList = new();
+            foreach (MediaList list in response.Data.MediaListCollection.lists)
             {
-                if (list.entries != null)
+                if (list.entries == null) continue;
+                foreach (MediaListEntry entry in list.entries)
                 {
-                    foreach (var entry in list.entries)
+                    AnilistMediaListStatus mediaListStatus = new()
                     {
-                        AnilistMediaListStatus mediaListStatus = new AnilistMediaListStatus()
-                        {
-                            progress = entry.progress,
-                            score = entry.score,
-                            status = entry.status
-                        };
-                        animeList.Add(await ConvertAnilistToUnified(entry.media, mediaListStatus));
-                    }
+                        progress = entry.progress,
+                        score = entry.score,
+                        status = entry.status
+                    };
+                    animeList.Add(await ConvertAnilistToUnified(entry.media, mediaListStatus));
                 }
             }
+            return animeList;
         }
 
-        return animeList;
+        return [];
     }
 
-    private class MediaListResponse
-    {
-        public MediaListEntry MediaList { get; set; } = null!;
-    }
-    
     public async Task RemoveFromUserListAsync(int animeId)
     {
         if (!_isLoggedIn) return;
 
-        var queryRequest = new GraphQLRequest
+        GraphQLRequest queryRequest = new()
         {
             Query = @"
             query ($mediaId: Int, $userId: Int) {
@@ -187,13 +203,12 @@ public class AnilistService : IAnimeProvider
             Variables = new { mediaId = animeId, userId = _currentUserId }
         };
 
-        var queryResponse = await SendQueryAsyncWrapper<MediaListResponse>(queryRequest, "RemoveFromUserListAsync");
-
-        if (queryResponse.Data?.MediaList == null) return;
+        GraphQLResponse<MediaListResponse>? queryResponse = await TrySendQueryAsync<MediaListResponse>(queryRequest, "RemoveFromUserListAsync");
+        if (queryResponse?.Data?.MediaList == null) return;
 
         int entryId = queryResponse.Data.MediaList.id;
 
-        var deleteRequest = new GraphQLRequest
+        GraphQLRequest deleteRequest = new()
         {
             Query = @"
             mutation ($id: Int) {
@@ -206,7 +221,7 @@ public class AnilistService : IAnimeProvider
 
         await _client.SendMutationAsync<object>(deleteRequest);
     }
-
+    
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
         await UpdateMediaListEntry(animeId, status: status);
@@ -221,12 +236,157 @@ public class AnilistService : IAnimeProvider
     {
         await UpdateMediaListEntry(animeId, progress: episodes);
     }
+    
+    public async Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields)
+    {
+        List<string> fragments = new() { "id" };
+        fragments.AddRange(GetGraphQLFragments(fields.ToHashSet()));
+
+        string query = $@"
+            query ($id: Int) {{
+                Media(id: $id, type: ANIME) {{
+                    {string.Join("\n", fragments)}
+                }}
+            }}";
+
+        GraphQLRequest request = new()
+        {
+            Query = query,
+            Variables = new Dictionary<string, object> { { "id", animeId } }
+        };
+
+        GraphQLResponse<MediaResponse>? response = await TrySendQueryAsync<MediaResponse>(request, $"FetchAnimeDetailsAsync {animeId} {string.Join(", ", fields)}");
+        if (response?.Data?.Media == null) return null;
+            
+        return await ConvertAnilistToUnified(response.Data.Media, response.Data.Media.mediaListEntry);
+    }
+    
+    public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
+    {
+        HashSet<AnimeField> allFields = new(Enum.GetValues<AnimeField>());
+        IEnumerable<string> fragments = GetGraphQLFragments(allFields);
+        string innerQuery = string.Join("\n", fragments);
+
+        GraphQLRequest request = new()
+        {
+            Query = $@"
+                query ($search: String) {{
+                    Page(page: 1, perPage: 20) {{
+                        media(search: $search, type: ANIME) {{
+                            {innerQuery}
+                        }}
+                    }}
+                }}",
+            Variables =  new Dictionary<string, object> { ["search"] = query }
+        };
+
+        GraphQLResponse<PageResponse>? response = await TrySendQueryAsync<PageResponse>(request, "SearchAnimeAsync");
+        if (response?.Data?.Page?.media == null) return [];
+        List<AnimeDetails> results = [];
+
+        foreach (AnilistMedia media in response.Data.Page.media)
+        {
+            results.Add(await ConvertAnilistToUnified(media, media.mediaListEntry));
+        }
+            
+        return results;
+    }
+    
+    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10)
+    {
+        (string? sort, string? status) = category switch
+        {
+            RankingCategory.Airing => ("TRENDING_DESC", "RELEASING"),
+            RankingCategory.Upcoming => ("POPULARITY_DESC", "NOT_YET_RELEASED"),
+            RankingCategory.ByPopularity => ("POPULARITY_DESC", null),
+            _ => ("SCORE_DESC", null)
+        };
+
+        HashSet<AnimeField> allFields = new(AnimeService.MAL_NODE_FIELD_TYPES);
+        IEnumerable<string> fragments = GetGraphQLFragments(allFields);
+
+        Dictionary<string, object> variables = new()
+        {
+            ["sort"] = sort,
+            ["perPage"] = limit
+        };
+        
+        if (status != null)
+        {
+            variables["status"] = status;
+        }
+        
+        string queryVariables = "($sort: [MediaSort], $perPage: Int";
+        if (status != null)
+        {
+            queryVariables += ", $status: MediaStatus";
+        }
+        queryVariables += ")";
+        
+        string mediaArgs = "type: ANIME, sort: $sort";
+        if (status != null)
+        {
+            mediaArgs += ", status: $status";
+        }
+
+        GraphQLRequest request = new()
+        {
+            Query = $@"
+                query {queryVariables} {{
+                    Page(page: 1, perPage: $perPage) {{
+                        media({mediaArgs}) {{
+                            {string.Join("\n", fragments)}
+                        }}
+                    }}
+                }}",
+            Variables = variables
+        };
+
+        GraphQLResponse<PageResponse>? response = await TrySendQueryAsync<PageResponse>(request, "GetTopAnimeAsync");
+        if (response?.Data?.Page?.media == null) return [];
+            
+        List<RankingEntry> results = new();
+
+        foreach (AnilistMedia media in response.Data.Page.media)
+        {
+            results.Add(new RankingEntry
+            {
+                Details = await ConvertAnilistToUnified(media, media.mediaListEntry),
+            });
+        }
+
+        return results;
+    }
+    
+    public async Task<Bitmap?> LoadAnimeImageAsync(int animeId, string? imageUrl)
+    {
+        if (_saveService.TryGetAnimeImage(animeId, out Bitmap? bitmap))
+        {
+            return bitmap;
+        }
+
+        if (string.IsNullOrEmpty(imageUrl)) return null;
+        try
+        {
+            byte[] imageData = await _httpClient.GetByteArrayAsync(imageUrl);
+            using MemoryStream ms = new(imageData);
+            Bitmap downloadedImage = new(ms);
+            _saveService.SaveImage(animeId, downloadedImage);
+            return downloadedImage;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+    
+    #endregion
 
     private async Task UpdateMediaListEntry(int mediaId, AnimeStatus? status = null, int? score = null, int? progress = null)
     {
         if (!_isLoggedIn) return;
 
-        var variables = new Dictionary<string, object>
+        Dictionary<string, object> variables = new()
         {
             ["mediaId"] = mediaId
         };
@@ -238,7 +398,7 @@ public class AnilistService : IAnimeProvider
         if (progress.HasValue)
             variables["progress"] = progress.Value;
 
-        var request = new GraphQLRequest
+        GraphQLRequest request = new()
         {
             Query = @"
                 mutation ($mediaId: Int, $status: MediaListStatus, $score: Float, $progress: Int) {
@@ -255,45 +415,138 @@ public class AnilistService : IAnimeProvider
         await _client.SendMutationAsync<object>(request);
     }
 
-    public async Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields)
+    private string? GetTrailerUrl(AnilistTrailer? trailer)
     {
-        Dictionary<string, object> variables = new() { { "id", animeId } };
-
-        var fragments = new List<string> {
-            "id"
-        };
-    
-        var fieldSet = new HashSet<AnimeField>(fields);
-
-        fragments.AddRange(GetGraphQLFragments(fieldSet));
+        if (trailer == null) return null;
         
-        string innerQuery = string.Join("\n", fragments);
-    
-        string query = $@"
-        query ($id: Int) {{
-            Media(id: $id, type: ANIME) {{
-                {innerQuery}
-            }}
-        }}";
-
-        var request = new GraphQLRequest
+        return trailer.site?.ToLower() switch
         {
-            Query = query,
-            Variables = variables
+            "youtube" => $"https://www.youtube.com/watch?v={trailer.id}",
+            _ => null
         };
-
-        try 
-        {
-            var response = await SendQueryAsyncWrapper<MediaResponse>(request, $"FetchAnimeDetailsAsync {animeId} {string.Join(", ", fields)}");
-            if (response.Data?.Media == null) return null;
-            return await ConvertAnilistToUnified(response.Data.Media, response.Data.Media.mediaListEntry);
-        }
-        catch
-        {
-            return null;
-        }
     }
+    
+    private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media, AnilistMediaListStatus? userStatus)
+    {
+        Bitmap? picture = await LoadAnimeImageAsync(media.id, media.coverImage?.large);
+        
+        AnimeStatistics stats = new()
+        {
+            NumListUsers = media.popularity ?? 0, 
+            StatusStats = new StatusStatistics()
+        };
+        
+        if (media.stats?.statusDistribution != null)
+        {
+            foreach (AnilistStatusDistribution dist in media.stats.statusDistribution)
+            {
+                switch (dist.status)
+                {
+                    case "CURRENT": stats.StatusStats.Watching = dist.amount; break;
+                    case "COMPLETED": stats.StatusStats.Completed = dist.amount; break;
+                    case "PAUSED": stats.StatusStats.OnHold = dist.amount; break;
+                    case "DROPPED": stats.StatusStats.Dropped = dist.amount; break;
+                    case "PLANNING": stats.StatusStats.PlanToWatch = dist.amount; break;
+                }
+            }
+        }
+        
+        List<RelatedAnime> relatedList = new();
+        if (media.relations?.edges != null)
+        {
+            foreach (AnilistRelationEdge edge in media.relations.edges)
+            {
+                if (edge.node == null) continue;
+                
+                relatedList.Add(new RelatedAnime
+                {
+                    Relation = ConvertRelationType(edge.relationType),
+                    Details = new AnimeDetails
+                    {
+                        Id = edge.node.id,
+                        Title = edge.node.title?.romaji ?? edge.node.title?.english,
+                        MainPicture = new AnimePicture 
+                        { 
+                            Medium = edge.node.coverImage?.medium ?? "",
+                            Large = edge.node.coverImage?.large ?? ""
+                        },
+                        NumEpisodes = edge.node.episodes,
+                        Status = edge.node.status,
+                        Mean = (edge.node.meanScore ?? 0) / 10f
+                    }
+                });
+            }
+        }
 
+        UserAnimeStatus? userAnimeStatus = null;
+        
+        if (userStatus != null)
+        {
+            userAnimeStatus = new UserAnimeStatus
+            {
+                Status = ConvertFromAnilistStatus(userStatus.status),
+                Score = (int)(userStatus.score ?? 0),
+                EpisodesWatched = userStatus.progress ?? 0
+            };
+        }
+
+        AnimeVideo[]? videos = null;
+        if (media.trailer != null)
+        {
+            videos =
+            [
+                new AnimeVideo
+                {
+                    Title = "Trailer",
+                    Url = GetTrailerUrl(media.trailer!) ?? "",
+                    Thumbnail = media.trailer.thumbnail ?? ""
+                }
+            ];
+        }
+
+        return new AnimeDetails(
+            id: media.id,
+            title: media.title?.romaji ?? media.title?.english ?? "Unknown Title",
+            mainPicture: media.coverImage != null ? new AnimePicture
+            {
+                Medium = media.coverImage.medium ?? "",
+                Large = media.coverImage.large ?? ""
+            } : null,
+            status: media.status,
+            synopsis: media.description,
+            alternativeTitles: new AlternativeTitles
+            {
+                English = media.title?.english,
+                Japanese = media.title?.native,
+                Synonyms = null 
+            },
+            userStatus: userAnimeStatus,
+            numEpisodes: media.episodes ?? 0,
+            popularity: media.popularity,
+            picture: picture,
+            studios: media.studios?.nodes?.Select(s => s.name).ToArray() ?? Array.Empty<string>(),
+            startDate: media.startDate == null ? null : $"{media.startDate.year:D4}-{media.startDate.month:D2}-{media.startDate.day:D2}",
+            mean: (media.meanScore ?? 0) / 10f,
+            genres: media.genres?.ToArray(),
+            trailerUrl: GetTrailerUrl(media.trailer),
+            numFavorites: media.favourites,
+            videos: videos,
+            relatedAnime: relatedList.ToArray(),
+            statistics: stats
+        );
+    }
+    
+    private RelatedAnime.RelationType ConvertRelationType(string? type)
+    {
+        if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.OTHER;
+        return type switch
+        {
+            "PREQUEL" => RelatedAnime.RelationType.PREQUEL,
+            "SEQUEL" => RelatedAnime.RelationType.SEQUEL,
+            _ => RelatedAnime.RelationType.OTHER
+        };
+    }
+    
     private IEnumerable<string> GetGraphQLFragments(HashSet<AnimeField> fields)
     {
         if (fields.Count > 0)
@@ -301,7 +554,7 @@ public class AnilistService : IAnimeProvider
             yield return "id";
         }
 
-        foreach (var field in fields)
+        foreach (AnimeField field in fields)
         {
             switch (field)
             {
@@ -415,278 +668,7 @@ public class AnilistService : IAnimeProvider
             }
         }
     }
-      
-    public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
-    {
-        var allFields = new HashSet<AnimeField>((AnimeField[])Enum.GetValues(typeof(AnimeField)));
-        var fragments = GetGraphQLFragments(allFields);
-        var innerQuery = string.Join("\n", fragments);
-
-        var variables = new Dictionary<string, object> { ["search"] = query };
-        
-        var queryVariables = "($search: String)";
-
-        var request = new GraphQLRequest
-        {
-            Query = $@"
-                query {queryVariables} {{
-                    Page(page: 1, perPage: 20) {{
-                        media(search: $search, type: ANIME) {{
-                            {innerQuery}
-                        }}
-                    }}
-                }}",
-            Variables = variables
-        };
-
-        var response = await SendQueryAsyncWrapper<PageResponse>(request, "SearchAnimeAsync");
-        var results = new List<AnimeDetails>();
-
-        if (response.Data?.Page?.media != null)
-        {
-            foreach (var media in response.Data.Page.media)
-            {
-                results.Add(await ConvertAnilistToUnified(media, media.mediaListEntry));
-            }
-        }
-
-        return results;
-    }
-
-    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10)
-    {
-        var (sort, status) = category switch
-        {
-            RankingCategory.Airing => ("TRENDING_DESC", "RELEASING"),
-            RankingCategory.Upcoming => ("POPULARITY_DESC", "NOT_YET_RELEASED"),
-            RankingCategory.ByPopularity => ("POPULARITY_DESC", null),
-            _ => ("SCORE_DESC", null)
-        };
-
-        var allFields = new HashSet<AnimeField>(AnimeService.MAL_NODE_FIELD_TYPES);
-        var fragments = GetGraphQLFragments(allFields);
-        var innerQuery = string.Join("\n", fragments);
-
-        var variables = new Dictionary<string, object>
-        {
-            ["sort"] = sort,
-            ["perPage"] = limit
-        };
-        if (status != null)
-        {
-            variables["status"] = status;
-        }
-        
-        var queryVariables = "($sort: [MediaSort], $perPage: Int";
-        if (status != null)
-        {
-            queryVariables += ", $status: MediaStatus";
-        }
-        queryVariables += ")";
-        
-        var mediaArgs = "type: ANIME, sort: $sort";
-        if (status != null)
-        {
-            mediaArgs += ", status: $status";
-        }
-
-        var request = new GraphQLRequest
-        {
-            Query = $@"
-                query {queryVariables} {{
-                    Page(page: 1, perPage: $perPage) {{
-                        media({mediaArgs}) {{
-                            {innerQuery}
-                        }}
-                    }}
-                }}",
-            Variables = variables
-        };
-
-        var response = await _client.SendQueryAsync<PageResponse>(request);
-        var results = new List<RankingEntry>();
-
-        if (response.Data?.Page?.media != null)
-        {
-            int rank = 1;
-            foreach (var media in response.Data.Page.media)
-            {
-                results.Add(new RankingEntry
-                {
-                    
-                    Details = await ConvertAnilistToUnified(media, media.mediaListEntry),
-                    Rank = rank++
-                });
-            }
-        }
-
-        return results;
-    }
-
-    public async Task<Bitmap?> LoadAnimeImageAsync(int animeId, string? imageUrl)
-    {
-        if (_saveService.TryGetAnimeImage(animeId, out Bitmap? bitmap))
-        {
-            return bitmap;
-        }
-
-        if (!string.IsNullOrEmpty(imageUrl))
-        {
-            try
-            {
-                var imageData = await _httpClient.GetByteArrayAsync(imageUrl);
-                using var ms = new MemoryStream(imageData);
-                var downloadedImage = new Bitmap(ms);
-                _saveService.SaveImage(animeId, downloadedImage);
-                return downloadedImage;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    private async Task<AnimeDetails> ConvertAnilistToUnified(AnilistMedia media, AnilistMediaListStatus? userStatus)
-    {
-        var picture = await LoadAnimeImageAsync(media.id, media.coverImage?.large);
-        
-        var stats = new AnimeStatistics
-        {
-            NumListUsers = media.popularity ?? 0, 
-            StatusStats = new StatusStatistics()
-        };
-        
-        if (media.stats?.statusDistribution != null)
-        {
-            foreach (var dist in media.stats.statusDistribution)
-            {
-                switch (dist.status)
-                {
-                    case "CURRENT": stats.StatusStats.Watching = dist.amount; break;
-                    case "COMPLETED": stats.StatusStats.Completed = dist.amount; break;
-                    case "PAUSED": stats.StatusStats.OnHold = dist.amount; break;
-                    case "DROPPED": stats.StatusStats.Dropped = dist.amount; break;
-                    case "PLANNING": stats.StatusStats.PlanToWatch = dist.amount; break;
-                }
-            }
-        }
-        
-        var relatedList = new List<RelatedAnime>();
-        if (media.relations?.edges != null)
-        {
-            foreach (var edge in media.relations.edges)
-            {
-                if (edge.node == null) continue;
-                
-                relatedList.Add(new RelatedAnime
-                {
-                    Relation = ConvertRelationType(edge.relationType),
-                    Details = new AnimeDetails
-                    {
-                        Id = edge.node.id,
-                        Title = edge.node.title?.romaji ?? edge.node.title?.english,
-                        MainPicture = new AnimePicture 
-                        { 
-                            Medium = edge.node.coverImage?.medium ?? "",
-                            Large = edge.node.coverImage?.large ?? ""
-                        },
-                        NumEpisodes = edge.node.episodes,
-                        Status = edge.node.status,
-                        Mean = (edge.node.meanScore ?? 0) / 10f
-                    }
-                });
-            }
-        }
-
-        UserAnimeStatus? userAnimeStatus = null;
-        
-        if (userStatus != null)
-        {
-            userAnimeStatus = new UserAnimeStatus
-            {
-                Status = ConvertFromAnilistStatus(userStatus.status),
-                Score = (int)(userStatus.score ?? 0),
-                EpisodesWatched = userStatus.progress ?? 0
-            };
-        }
-
-        AnimeVideo[]? vidoes = null;
-        if (media.trailer != null)
-        {
-            vidoes = new[]
-            {
-                new AnimeVideo
-                {
-                    Title = "Trailer",
-                    Url = GetTrailerUrl(media.trailer!) ?? "",
-                    Thumbnail = media.trailer.thumbnail ?? ""
-                }
-            };
-        }
-
-        return new AnimeDetails(
-            id: media.id,
-            title: media.title?.romaji ?? media.title?.english ?? "Unknown Title",
-            mainPicture: media.coverImage != null ? new AnimePicture
-            {
-                Medium = media.coverImage.medium ?? "",
-                Large = media.coverImage.large ?? ""
-            } : null,
-            status: media.status,
-            synopsis: media.description,
-            alternativeTitles: new AlternativeTitles
-            {
-                English = media.title?.english,
-                Japanese = media.title?.native,
-                Synonyms = null 
-            },
-            userStatus: userAnimeStatus,
-            numEpisodes: media.episodes ?? 0,
-            popularity: media.popularity,
-            picture: picture,
-            studios: media.studios?.nodes?.Select(s => s.name).ToArray() ?? Array.Empty<string>(),
-            startDate: FormatDate(media.startDate),
-            mean: (media.meanScore ?? 0) / 10f,
-            genres: media.genres?.ToArray(),
-            trailerUrl: GetTrailerUrl(media.trailer),
-            numFavorites: media.favourites,
-            videos: vidoes,
-            relatedAnime: relatedList.ToArray(),
-            statistics: stats
-        );
-    }
     
-    private RelatedAnime.RelationType ConvertRelationType(string? type)
-    {
-        if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.OTHER;
-        return type switch
-        {
-            "PREQUEL" => RelatedAnime.RelationType.PREQUEL,
-            "SEQUEL" => RelatedAnime.RelationType.SEQUEL,
-            _ => RelatedAnime.RelationType.OTHER
-        };
-    }
-
-    private string? FormatDate(AnilistDate? date)
-    {
-        if (date?.year == null) return null;
-        return $"{date.year:D4}-{date.month:D2}-{date.day:D2}";
-    }
-
-    private string? GetTrailerUrl(AnilistTrailer? trailer)
-    {
-        if (trailer == null) return null;
-        
-        return trailer.site?.ToLower() switch
-        {
-            "youtube" => $"https://www.youtube.com/watch?v={trailer.id}",
-            _ => null
-        };
-    }
-
     private string ConvertToAnilistStatus(AnimeStatus status)
     {
         return status switch

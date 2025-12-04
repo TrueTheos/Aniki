@@ -68,7 +68,7 @@ public partial class MainWindow : Window
 
     private async void OnSettingsRequested(object? sender, EventArgs e)
     {
-        var settingsViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<SettingsViewModel>();
+        SettingsViewModel settingsViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<SettingsViewModel>();
         settingsViewModel.LoadSettings();
         SettingsWindow settingsWindow = new()
         {

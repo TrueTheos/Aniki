@@ -40,7 +40,7 @@ public partial class AnimeBrowseView : UserControl
     {
         if ((sender as Button)?.CommandParameter is ScrollViewer scroller)
         {
-            var newOffset = scroller.Offset.X - ScrollAmount;
+            double newOffset = scroller.Offset.X - ScrollAmount;
             scroller.Offset = new Vector(newOffset, scroller.Offset.Y);
         }
     }
@@ -49,7 +49,7 @@ public partial class AnimeBrowseView : UserControl
     {
         if ((sender as Button)?.CommandParameter is ScrollViewer scroller)
         {
-            var newOffset = scroller.Offset.X + ScrollAmount;
+            double newOffset = scroller.Offset.X + ScrollAmount;
             scroller.Offset = new Vector(newOffset, scroller.Offset.Y);
         }
     }

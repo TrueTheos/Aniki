@@ -140,7 +140,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private void OnFileChanged(object sender, FileSystemEventArgs e)
     {
-        var videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
+        string[] videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
         if (!videoExtensions.Contains(Path.GetExtension(e.Name)?.ToLower()))
             return;
 
@@ -188,9 +188,9 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
+        string[] videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
 
-        var filePaths = Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
+        List<string> filePaths = Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
             .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower()))
             .ToList();
 
@@ -198,12 +198,12 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         int processed = 0;
         ProcessingProgress = $"Processing files: 0/{total}";
 
-        var options = new ParallelOptions { MaxDegreeOfParallelism = 8 };
+        ParallelOptions options = new() { MaxDegreeOfParallelism = 8 };
 
         await Parallel.ForEachAsync(filePaths, options, async (filePath, _) =>
         {
             string fileName = Path.GetFileName(filePath);
-            var parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
+            ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
 
             if (parsedFile.EpisodeNumber == null)
                 return;
@@ -213,9 +213,9 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 return;
 
             //TODO IMPORTANT CO JEZELI NIE MAMY MALID TUTAJ...
-            var animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, fields:[AnimeField.TITLE, AnimeField.EPISODES]);
+            AnimeDetails animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, fields:[AnimeField.TITLE, AnimeField.EPISODES]);
 
-            var episode = new DownloadedEpisode(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
+            DownloadedEpisode episode = new(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
                 parsedFile.AbsoluteEpisodeNumber,
                 animeFieldSet.Title!, malId.Value, parsedFile.Season);
 
@@ -312,7 +312,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var process = _videoPlayerService.OpenVideo(ep.FilePath);
+            Process? process = _videoPlayerService.OpenVideo(ep.FilePath);
             
             if (process != null)
             {
@@ -331,7 +331,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     {
         File.Delete(ep.FilePath);
         
-        var group = AnimeGroups.FirstOrDefault(g => g.Episodes.Contains(ep));
+        AnimeGroup? group = AnimeGroups.FirstOrDefault(g => g.Episodes.Contains(ep));
         if (group != null)
         {
             group.Episodes.Remove(ep);
@@ -376,7 +376,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 if (_lastPlayedEpisode == null) return;
                 if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    var animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.EPISODES);
+                    AnimeDetails animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.EPISODES);
                     ConfirmEpisodeWindow dialog = new() 
                     {
                         DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)

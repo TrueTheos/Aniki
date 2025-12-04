@@ -51,7 +51,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
 
         if (_details.Title != null)
         {
-            var list = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
+            List<NyaaTorrent> list = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
             TorrentsList = new ObservableCollection<NyaaTorrent>(list.OrderByDescending(x => x.Seeders));
         }
 

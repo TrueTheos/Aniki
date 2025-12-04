@@ -40,7 +40,7 @@ public class MalService : IAnimeProvider
     public MalService(ISaveService saveService, ITokenService tokenService)
     {
         StringBuilder urlFields = new();
-        foreach (AnimeField field in (AnimeField[])Enum.GetValues(typeof(AnimeField)))
+        foreach (AnimeField field in Enum.GetValues<AnimeField>())
         {
             urlFields.Append($"{FieldToString(field)},");
         }
@@ -486,7 +486,6 @@ public class MalService : IAnimeProvider
             return response.Data.Select(mal => new RankingEntry
             {
                 Details = ConvertMalToUnified(mal.Node),
-                Rank = mal.Ranking?.Rank ?? 0
             }).ToList();
         }
 

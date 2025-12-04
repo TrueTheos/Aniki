@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Aniki.Services.Interfaces;
 using Avalonia.Threading;
+using Microsoft.Win32;
 
 namespace Aniki.Services;
 
@@ -23,7 +24,7 @@ public class VideoPlayerService : IVideoPlayerService
         {
             _scannedPlayers.Clear();
 
-            var systemDefault = new VideoPlayerOption
+            VideoPlayerOption systemDefault = new()
             {
                 DisplayName = "System Default",
                 ExecutablePath = "",
@@ -42,15 +43,15 @@ public class VideoPlayerService : IVideoPlayerService
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var currentPath = SelectedPlayer?.ExecutablePath;
+                string? currentPath = SelectedPlayer?.ExecutablePath;
 
                 AvailablePlayers.Clear();
 
-                var sortedPlayers = _scannedPlayers.Values
+                IOrderedEnumerable<VideoPlayerOption> sortedPlayers = _scannedPlayers.Values
                     .OrderByDescending(x => x.IsSystemDefault)
                     .ThenBy(x => x.DisplayName);
 
-                foreach (var player in sortedPlayers)
+                foreach (VideoPlayerOption player in sortedPlayers)
                 {
                     AvailablePlayers.Add(player);
                 }
@@ -63,7 +64,7 @@ public class VideoPlayerService : IVideoPlayerService
 
     private async Task DetectWindowsPlayersAsync()
     {
-        var tasks = new List<Task>();
+        List<Task> tasks = new();
 
         foreach (string ext in _videoExtensions)
         {
@@ -77,13 +78,13 @@ public class VideoPlayerService : IVideoPlayerService
 
     private async Task DetectUnixPlayersAsync()
     {
-        var commonPlayers = new[] { "mpv", "vlc", "mplayer" };
+        string[] commonPlayers = new[] { "mpv", "vlc", "mplayer" };
         
-        var tasks = commonPlayers.Select(player => Task.Run(() =>
+        IEnumerable<Task> tasks = commonPlayers.Select(player => Task.Run(() =>
         {
             if (IsPlayerInstalled(player))
             {
-                var option = new VideoPlayerOption
+                VideoPlayerOption option = new()
                 {
                     DisplayName = player.ToUpper(),
                     ExecutablePath = player
@@ -97,7 +98,7 @@ public class VideoPlayerService : IVideoPlayerService
 
     private void DetectCommonWindowsPlayers()
     {
-        var commonPaths = new Dictionary<string, string[]>
+        Dictionary<string, string[]> commonPaths = new()
         {
             ["VLC"] = new[]
             {
@@ -121,13 +122,13 @@ public class VideoPlayerService : IVideoPlayerService
             }
         };
 
-        foreach (var (name, paths) in commonPaths)
+        foreach ((string name, string[] paths) in commonPaths)
         {
-            foreach (var path in paths)
+            foreach (string path in paths)
             {
                 if (File.Exists(path))
                 {
-                    var option = new VideoPlayerOption
+                    VideoPlayerOption option = new()
                     {
                         DisplayName = name,
                         ExecutablePath = path
@@ -146,16 +147,16 @@ public class VideoPlayerService : IVideoPlayerService
 
         try
         {
-            using var extensionKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(extension);
+            using RegistryKey? extensionKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(extension);
             if (extensionKey != null)
             {
-                var progId = extensionKey.GetValue("")?.ToString();
+                string? progId = extensionKey.GetValue("")?.ToString();
                 if (!string.IsNullOrEmpty(progId))
                 {
-                    using var progIdKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey($"{progId}\\shell\\open\\command");
+                    using RegistryKey? progIdKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey($"{progId}\\shell\\open\\command");
                     if (progIdKey != null)
                     {
-                        var command = progIdKey.GetValue("")?.ToString();
+                        string? command = progIdKey.GetValue("")?.ToString();
                         if (!string.IsNullOrEmpty(command))
                         {
                             AddPlayerFromCommand(command, " (Default)");
@@ -164,22 +165,22 @@ public class VideoPlayerService : IVideoPlayerService
                 }
             }
 
-            using var openWithKey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+            using RegistryKey? openWithKey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
                 @$"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{extension}\OpenWithList");
             
             if (openWithKey != null)
             {
-                var valueNames = openWithKey.GetValueNames().Where(n => n != "MRUList");
-                foreach (var valueName in valueNames)
+                IEnumerable<string> valueNames = openWithKey.GetValueNames().Where(n => n != "MRUList");
+                foreach (string valueName in valueNames)
                 {
-                    var appName = openWithKey.GetValue(valueName)?.ToString();
+                    string? appName = openWithKey.GetValue(valueName)?.ToString();
                     if (!string.IsNullOrEmpty(appName))
                     {
-                        var exePath = FindExecutableInSystem(appName);
+                        string? exePath = FindExecutableInSystem(appName);
                         if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
                         {
-                            var displayName = Path.GetFileNameWithoutExtension(exePath);
-                            var option = new VideoPlayerOption
+                            string displayName = Path.GetFileNameWithoutExtension(exePath);
+                            VideoPlayerOption option = new()
                             {
                                 DisplayName = displayName,
                                 ExecutablePath = exePath
@@ -198,11 +199,11 @@ public class VideoPlayerService : IVideoPlayerService
 
     private void AddPlayerFromCommand(string command, string suffix = "")
     {
-        var exePath = ExtractExecutablePath(command);
+        string exePath = ExtractExecutablePath(command);
         if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
         {
-            var appName = Path.GetFileNameWithoutExtension(exePath);
-            var option = new VideoPlayerOption
+            string appName = Path.GetFileNameWithoutExtension(exePath);
+            VideoPlayerOption option = new()
             {
                 DisplayName = $"{appName}{suffix}",
                 ExecutablePath = exePath
@@ -218,11 +219,11 @@ public class VideoPlayerService : IVideoPlayerService
         
         if (command.StartsWith("\""))
         {
-            var endQuote = command.IndexOf("\"", 1);
+            int endQuote = command.IndexOf("\"", 1);
             if (endQuote > 0) return command.Substring(1, endQuote - 1);
         }
         
-        var spaceIndex = command.IndexOf(" ");
+        int spaceIndex = command.IndexOf(" ");
         if (spaceIndex > 0) return command.Substring(0, spaceIndex);
         
         return command;
@@ -230,33 +231,33 @@ public class VideoPlayerService : IVideoPlayerService
 
     private string? FindExecutableInSystem(string exeName)
     {
-        var pathVar = Environment.GetEnvironmentVariable("PATH");
+        string? pathVar = Environment.GetEnvironmentVariable("PATH");
         if (pathVar != null)
         {
-            foreach (var path in pathVar.Split(Path.PathSeparator))
+            foreach (string path in pathVar.Split(Path.PathSeparator))
             {
                 try
                 {
-                    var fullPath = Path.Combine(path, exeName);
+                    string fullPath = Path.Combine(path, exeName);
                     if (File.Exists(fullPath)) return fullPath;
                 }
                 catch { /* Ignore invalid paths */ }
             }
         }
 
-        var programFiles = new[]
+        string[] programFiles = new[]
         {
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
         };
 
-        foreach (var baseDir in programFiles)
+        foreach (string baseDir in programFiles)
         {
             try
             {
                 if (!Directory.Exists(baseDir)) continue;
 
-                var file = Directory.EnumerateFiles(baseDir, exeName, new EnumerationOptions
+                string? file = Directory.EnumerateFiles(baseDir, exeName, new EnumerationOptions
                 {
                     RecurseSubdirectories = true,
                     MaxRecursionDepth = 2,
@@ -282,7 +283,7 @@ public class VideoPlayerService : IVideoPlayerService
             }
             else
             {
-                var startInfo = new ProcessStartInfo
+                ProcessStartInfo startInfo = new()
                 {
                     FileName = "which",
                     Arguments = playerExe,
@@ -291,7 +292,7 @@ public class VideoPlayerService : IVideoPlayerService
                     CreateNoWindow = true
                 };
 
-                using var process = Process.Start(startInfo);
+                using Process? process = Process.Start(startInfo);
                 if (process != null)
                 {
                     process.WaitForExit(1000);
@@ -331,10 +332,10 @@ public class VideoPlayerService : IVideoPlayerService
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var tempFile = Path.Combine(Path.GetTempPath(), $"aniki_temp_{Guid.NewGuid()}.m3u8");
+                string tempFile = Path.Combine(Path.GetTempPath(), $"aniki_temp_{Guid.NewGuid()}.m3u8");
                 File.WriteAllText(tempFile, url);
 
-                var process = Process.Start(new ProcessStartInfo
+                Process? process = Process.Start(new ProcessStartInfo
                 {
                     FileName = tempFile,
                     UseShellExecute = true
@@ -368,7 +369,7 @@ public class VideoPlayerService : IVideoPlayerService
     {
         try
         {
-            var playerName = Path.GetFileNameWithoutExtension(playerPath).ToLower();
+            string playerName = Path.GetFileNameWithoutExtension(playerPath).ToLower();
             
             string arguments = playerName switch
             {

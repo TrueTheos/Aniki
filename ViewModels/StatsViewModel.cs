@@ -32,7 +32,7 @@ public partial class StatsViewModel : ViewModelBase
     {
         if(!AnimeService.IsLoggedIn) return;
         
-        var animeList = await _malService.GetUserAnimeListAsync();
+        List<AnimeDetails>? animeList = await _malService.GetUserAnimeListAsync();
         if (animeList == null || !animeList.Any())
             return;
 
@@ -42,10 +42,10 @@ public partial class StatsViewModel : ViewModelBase
 
     private void CalculateAnimeStats(List<AnimeDetails> animeList)
     {
-        AnimeStats stats = new AnimeStats();
+        AnimeStats stats = new();
     
-        var validAnime = animeList.Where(a => a.UserStatus != null).ToList();
-        var scoredAnime = validAnime.Where(a => a.UserStatus!.Score > 0).ToList();
+        List<AnimeDetails> validAnime = animeList.Where(a => a.UserStatus != null).ToList();
+        List<AnimeDetails> scoredAnime = validAnime.Where(a => a.UserStatus!.Score > 0).ToList();
     
         if (!scoredAnime.Any())
         {
@@ -68,14 +68,14 @@ public partial class StatsViewModel : ViewModelBase
 
     private void CalculateGenreStats(List<AnimeDetails> animeList)
     {
-        var allGenres = animeList.SelectMany(a => a.Genres ?? []).ToList();
-        var totalGenres = allGenres.Count;
+        List<string> allGenres = animeList.SelectMany(a => a.Genres ?? []).ToList();
+        int totalGenres = allGenres.Count;
 
         GenreStats = allGenres
             .GroupBy(g => g)
             .Select(g =>
             {
-                var animeInGenre = animeList.Where(a => a.Genres?.Any(ag => ag == g.Key) == true && a.UserStatus?.Score > 0).ToList();
+                List<AnimeDetails> animeInGenre = animeList.Where(a => a.Genres?.Any(ag => ag == g.Key) == true && a.UserStatus?.Score > 0).ToList();
                 return new GenreStats
                 {
                     Name = g.Key,

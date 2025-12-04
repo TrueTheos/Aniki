@@ -52,7 +52,7 @@ public class DiscordService : IDiscordService, IDisposable
             InitializeClient();
         }
 
-        var assets = new Assets
+        Assets assets = new()
         {
             LargeImageKey = "aniki_logo",
             LargeImageText = "Aniki Player"

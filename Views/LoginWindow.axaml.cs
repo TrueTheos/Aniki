@@ -45,7 +45,7 @@ public partial class LoginWindow : Window
 
     private void OnNavigateToMainRequested(object? sender, EventArgs e)
     {
-        var mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+        MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         MainWindow mainWindow = new(mainViewModel);
         
         if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

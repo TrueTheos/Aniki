@@ -142,7 +142,6 @@ public class StatusStatistics
 public class RankingEntry
 {
     public required AnimeDetails Details { get; set; }
-    public int Rank { get; set; }
 }
 
 public enum AnimeStatus

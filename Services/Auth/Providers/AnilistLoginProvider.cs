@@ -34,7 +34,7 @@ public class AnilistLoginProvider : ILoginProvider
     
     public async Task SaveTokenAsync(string token)
     {
-        var tokenResponse = new TokenResponse
+        TokenResponse tokenResponse = new()
         {
             access_token = token,
             expires_in = 31536000

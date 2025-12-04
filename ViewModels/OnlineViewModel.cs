@@ -157,9 +157,9 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var results = await _scraperService.SearchAnimeAsync(query);
+            List<AllMangaSearchResult> results = await _scraperService.SearchAnimeAsync(query);
             
-            foreach (var result in results)
+            foreach (AllMangaSearchResult result in results)
             {
                 AnimeResults.Add(result);
             }
@@ -182,7 +182,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             _ = LoadEpisodesAsync(value);
 
-            var animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields:[AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS]);
+            AnimeDetails animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields:[AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS]);
 
             if (animeField.UserStatus != null)
             {
@@ -212,9 +212,9 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var episodes = await _scraperService.GetEpisodesAsync(anime.Url);
+            List<AllManagaEpisode> episodes = await _scraperService.GetEpisodesAsync(anime.Url);
             
-            foreach (var episode in episodes)
+            foreach (AllManagaEpisode episode in episodes)
             {
                 Episodes.Add(episode);
             }
@@ -291,7 +291,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                 _videoProcess.EnableRaisingEvents = true;
                 _videoProcess.Exited += OnVideoProcessExited;
                 
-                var playerName = SelectedPlayer?.DisplayName ?? "video player";
+                string playerName = SelectedPlayer?.DisplayName ?? "video player";
                 StatusText = $"Playing Episode {SelectedEpisode.Number} in {playerName}";
             }
             else
@@ -371,7 +371,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     {
         await SearchAnimeAsync(title);
 
-        var matchingAnime = AnimeResults.ToList().FirstOrDefault(x => x.MalId != null && x.MalId.Value == malId);
+        AllMangaSearchResult? matchingAnime = AnimeResults.ToList().FirstOrDefault(x => x.MalId != null && x.MalId.Value == malId);
         if (matchingAnime != null)
         {
             SelectedAnime = matchingAnime;

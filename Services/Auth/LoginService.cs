@@ -18,7 +18,7 @@ public class LoginService : ILoginService
 
     private void OnLogout()
     {
-        foreach (var provider in Providers)
+        foreach (ILoginProvider provider in Providers)
         {
             provider.Logout();
         }

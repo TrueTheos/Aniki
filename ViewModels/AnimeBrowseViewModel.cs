@@ -75,20 +75,20 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing, 20);
+            List<RankingEntry> airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing, 20);
             LoadAnimeCards(airing, PopularThisSeason);
             
             await LoadHeroAnimeAsync(airing);
 
-            var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming, 20);
+            List<RankingEntry> upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming, 20);
             LoadAnimeCards(upcoming, PopularUpcoming);
             
-            var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity, 20);
+            List<RankingEntry> allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity, 20);
             LoadAnimeCards(allTime, TrendingAllTime);
 
-            var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
+            List<AnimeScheduleItem> airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
             AiringToday.Clear();
-            foreach (var anime in airingToday)
+            foreach (AnimeScheduleItem anime in airingToday)
             {
                 if(anime.ProviderId.Keys.Count == 0 || anime.GetId() == null) continue;
                 
@@ -116,12 +116,12 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     {
         HeroAnimeList.Clear();
         
-        foreach (var anime in animeList)
+        foreach (RankingEntry anime in animeList)
         {
-            var details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS]);
+            AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS]);
             if (details?.Videos != null && details.Videos.Length > 0)
             {
-                var heroData = new HeroAnimeData
+                HeroAnimeData heroData = new()
                 {
                     AnimeId = details.Id,
                     Title = details.Title!,
@@ -233,14 +233,14 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     {
         SearchResults.Clear();
         
-        var pageResults = _allSearchResults
+        IEnumerable<AnimeDetails> pageResults = _allSearchResults
             .Skip((CurrentPage - 1) * PageSize)
             .Take(PageSize);
 
-        foreach (var result in pageResults)
+        foreach (AnimeDetails result in pageResults)
         {
             AnimePicture? picture = result.MainPicture;
-            var card = new AnimeCardData
+            AnimeCardData card = new()
             {
                 AnimeId = result.Id,
                 Title = result.Title,

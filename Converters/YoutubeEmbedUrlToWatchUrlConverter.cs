@@ -10,7 +10,7 @@ public class YoutubeEmbedUrlToWatchUrlConverter : IValueConverter
     {
         if (value is string embedUrl)
         {
-            var match = Regex.Match(embedUrl, @"embed/([a-zA-Z0-9_-]+)");
+            Match match = Regex.Match(embedUrl, @"embed/([a-zA-Z0-9_-]+)");
             if (match.Success)
             {
                 string videoId = match.Groups[1].Value;

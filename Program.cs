@@ -8,7 +8,7 @@ internal class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        var path = Path.Combine(
+        string path = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "Aniki", "logs", "app-.txt");
         Log.Logger = new LoggerConfiguration()

@@ -18,7 +18,7 @@ public class DependencyInjection
 
     public void BuildServiceProvider()
     {
-        var collection = new ServiceCollection();
+        ServiceCollection collection = new();
         collection.AddCommonServices();
         ServiceProvider = collection.BuildServiceProvider();
     }

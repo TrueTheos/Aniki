@@ -10,7 +10,7 @@ public class DateToYearConverter : IValueConverter
         if (value is not string dateString || string.IsNullOrEmpty(dateString))
             return "N/A";
         
-        if (DateTime.TryParse(dateString, out var date))
+        if (DateTime.TryParse(dateString, out DateTime date))
         {
             return date.Year.ToString();
         }

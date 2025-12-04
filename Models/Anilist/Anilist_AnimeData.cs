@@ -10,6 +10,11 @@ public class MediaListCollection
     public List<MediaList>? lists { get; set; }
 }
 
+public class MediaListResponse
+{
+    public MediaListEntry MediaList { get; set; } = null!;
+}
+
 public class MediaList
 {
     public List<MediaListEntry>? entries { get; set; }

@@ -285,7 +285,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if(Details == null) return;
         if(Details.Title == null) return;
         
-        var mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+        MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         WatchAnimeViewModel.GoToAnimeInOnlineView(Details.Id, Details.Title);
         _ = mainViewModel.ShowWatchPage();
     }

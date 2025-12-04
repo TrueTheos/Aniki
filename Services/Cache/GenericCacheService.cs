@@ -315,7 +315,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         {
             Dictionary<TFieldEnum, FieldChangeHandler<TEntity>> entityHandlers = _fieldSubscriptions.GetOrAdd(entityId, new Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>());
 
-            foreach (var field in fields)
+            foreach (TFieldEnum field in fields)
             {
                 if (entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
                 {
@@ -336,7 +336,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             if (!_fieldSubscriptions.TryGetValue(entityId, out Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>? entityHandlers))
                 return;
 
-            foreach (var field in fields)
+            foreach (TFieldEnum field in fields)
             {
                 if (!entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
                     return;
