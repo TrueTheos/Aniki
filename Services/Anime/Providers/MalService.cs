@@ -1,21 +1,20 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using Avalonia.Media.Imaging;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Aniki.Services.Anime;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
+using Avalonia.Media.Imaging;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Anime.Providers;
 
 public class MalService : IAnimeProvider
 {
-    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.MAL;
+    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.Mal;
     private bool _isLoggedIn;
     public bool IsLoggedIn => _isLoggedIn;
 
-    public enum AnimeRankingCategory { AIRING, UPCOMING, ALLTIME, BYPOPULARITY }
+    public enum AnimeRankingCategory { Airing, Upcoming, Alltime, Bypopularity }
     
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private HttpClient _client = new();
@@ -25,19 +24,17 @@ public class MalService : IAnimeProvider
     private readonly Stopwatch _sw = new();
     private int _requestCounter;
     
-    private const int RateLimit = 100;
-    private const int RateLimitWindowMs = 1000;
+    private const int RATE_LIMIT = 5;
+    private const int RATE_LIMIT_WINDOW_MS = 1000;
     private readonly SemaphoreSlim _rateLimitLock = new(1, 1);
     private readonly Queue<DateTime> _requestTimestamps = new();
     
     private readonly ISaveService _saveService;
-    private readonly ITokenService _tokenService;
 
     private string _accessToken = "";
+    private string _allFields;
 
-    private string _allFields = "";
-
-    public MalService(ISaveService saveService, ITokenService tokenService)
+    public MalService(ISaveService saveService)
     {
         StringBuilder urlFields = new();
         foreach (AnimeField field in Enum.GetValues<AnimeField>())
@@ -46,8 +43,7 @@ public class MalService : IAnimeProvider
         }
 
         _allFields = urlFields.ToString();
-        
-        _tokenService = tokenService;
+
         _saveService = saveService;
     }
 
@@ -79,16 +75,16 @@ public class MalService : IAnimeProvider
             DateTime now = DateTime.UtcNow;
 
             while (_requestTimestamps.Count > 0 &&
-                   (now - _requestTimestamps.Peek()).TotalMilliseconds >= RateLimitWindowMs)
+                   (now - _requestTimestamps.Peek()).TotalMilliseconds >= RATE_LIMIT_WINDOW_MS)
             {
                 _requestTimestamps.Dequeue();
             }
 
-            if (_requestTimestamps.Count >= RateLimit)
+            if (_requestTimestamps.Count >= RATE_LIMIT)
             {
                 DateTime oldestRequest = _requestTimestamps.Peek();
                 double timePassed = (now - oldestRequest).TotalMilliseconds;
-                int timeToWait = (int)(RateLimitWindowMs - timePassed);
+                int timeToWait = (int)(RATE_LIMIT_WINDOW_MS - timePassed);
 
                 if (timeToWait > 0)
                 {
@@ -96,7 +92,7 @@ public class MalService : IAnimeProvider
                 }
 
                 while (_requestTimestamps.Count > 0 &&
-                       (DateTime.UtcNow - _requestTimestamps.Peek()).TotalMilliseconds >= RateLimitWindowMs)
+                       (DateTime.UtcNow - _requestTimestamps.Peek()).TotalMilliseconds >= RATE_LIMIT_WINDOW_MS)
                 {
                     _requestTimestamps.Dequeue();
                 }
@@ -146,7 +142,7 @@ public class MalService : IAnimeProvider
     {
         if (!IsLoggedIn) return new();
         
-        MAL_UserData? userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
+        MalUserData? userData = await GetAndDeserializeAsync<MalUserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
         
         if(userData == null) throw new InvalidOperationException("Failed to deserialize user data");
         return new UserData
@@ -286,8 +282,8 @@ public class MalService : IAnimeProvider
         Bitmap? picture = null;
         foreach (AnimeField field in fields)
         {
-            if (field is AnimeField.MAIN_PICTURE && _saveService.TryGetAnimeImage(id, out picture)) {}
-            else if (field is not (AnimeField.PICTURE or AnimeField.TRAILER_URL or AnimeField.ID))
+            if (field is AnimeField.MainPicture && _saveService.TryGetAnimeImage(id, out picture)) {}
+            else if (field is not (AnimeField.Picture or AnimeField.TrailerUrl or AnimeField.Id))
             {
                 urlFields.Append($"{FieldToString(field)},");
             }
@@ -301,8 +297,8 @@ public class MalService : IAnimeProvider
         {
             animeResponse.Id = id;
             
-            if(fields.Contains(AnimeField.TRAILER_URL)) animeResponse.TrailerUrl = await GetAnimeTrailerUrlJikan(animeResponse.Id);
-            if (fields.Contains(AnimeField.PICTURE))
+            if(fields.Contains(AnimeField.TrailerUrl)) animeResponse.TrailerUrl = await GetAnimeTrailerUrlJikan(animeResponse.Id);
+            if (fields.Contains(AnimeField.Picture))
             {
                 if (picture != null )
                 {
@@ -324,25 +320,25 @@ public class MalService : IAnimeProvider
     {
         return field switch
         {
-            AnimeField.TITLE => "title",
-            AnimeField.MAIN_PICTURE => "main_picture",
-            AnimeField.STATUS => "status",
-            AnimeField.SYNOPSIS => "synopsis",
-            AnimeField.ALTER_TITLES => "alternative_titles",
-            AnimeField.MY_LIST_STATUS => "my_list_status",
-            AnimeField.EPISODES => "num_episodes",
-            AnimeField.POPULARITY => "popularity",
-            AnimeField.PICTURE => "",
-            AnimeField.STUDIOS => "studios",
-            AnimeField.START_DATE => "start_date",
-            AnimeField.MEAN => "mean",
-            AnimeField.GENRES => "genres",
-            AnimeField.RELATED_ANIME =>
+            AnimeField.Title => "title",
+            AnimeField.MainPicture => "main_picture",
+            AnimeField.Status => "status",
+            AnimeField.Synopsis => "synopsis",
+            AnimeField.AlterTitles => "alternative_titles",
+            AnimeField.MyListStatus => "my_list_status",
+            AnimeField.Episodes => "num_episodes",
+            AnimeField.Popularity => "popularity",
+            AnimeField.Picture => "",
+            AnimeField.Studios => "studios",
+            AnimeField.StartDate => "start_date",
+            AnimeField.Mean => "mean",
+            AnimeField.Genres => "genres",
+            AnimeField.RelatedAnime =>
                 "related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}",
-            AnimeField.VIDEOS => "videos",
-            AnimeField.NUM_FAV => "num_favorites",
-            AnimeField.STATS => "statistics",
-            AnimeField.TRAILER_URL => "",
+            AnimeField.Videos => "videos",
+            AnimeField.NumFav => "num_favorites",
+            AnimeField.Stats => "statistics",
+            AnimeField.TrailerUrl => "",
             _ => ""
         };
     }
@@ -454,15 +450,15 @@ public class MalService : IAnimeProvider
         return normalized.ToLower();
     }
     
-    private MalService.AnimeRankingCategory ConvertToMalRankingCategory(RankingCategory category)
+    private AnimeRankingCategory ConvertToMalRankingCategory(RankingCategory category)
     {
         return category switch
         {
-            RankingCategory.Airing => MalService.AnimeRankingCategory.AIRING,
-            RankingCategory.Upcoming => MalService.AnimeRankingCategory.UPCOMING,
-            RankingCategory.AllTime => MalService.AnimeRankingCategory.ALLTIME,
-            RankingCategory.ByPopularity => MalService.AnimeRankingCategory.BYPOPULARITY,
-            _ => MalService.AnimeRankingCategory.ALLTIME
+            RankingCategory.Airing => AnimeRankingCategory.Airing,
+            RankingCategory.Upcoming => AnimeRankingCategory.Upcoming,
+            RankingCategory.AllTime => AnimeRankingCategory.Alltime,
+            RankingCategory.ByPopularity => AnimeRankingCategory.Bypopularity,
+            _ => AnimeRankingCategory.Alltime
         };
     }
 
@@ -470,16 +466,16 @@ public class MalService : IAnimeProvider
     {
         string rankingType = ConvertToMalRankingCategory(category) switch
         {
-            AnimeRankingCategory.AIRING => "airing",
-            AnimeRankingCategory.UPCOMING => "upcoming",
-            AnimeRankingCategory.ALLTIME => "all",
-            AnimeRankingCategory.BYPOPULARITY => "bypopularity",
+            AnimeRankingCategory.Airing => "airing",
+            AnimeRankingCategory.Upcoming => "upcoming",
+            AnimeRankingCategory.Alltime => "all",
+            AnimeRankingCategory.Bypopularity => "bypopularity",
             _ => "all"
         };
 
         string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields={_allFields}&nsfw=true";
 
-        MAL_AnimeRankingResponse? response = await GetAndDeserializeAsync<MAL_AnimeRankingResponse>(url, "GetTopAnimeInCategory");
+        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory");
         
         if (response?.Data != null)
         {
@@ -553,12 +549,12 @@ public class MalService : IAnimeProvider
     
     private RelatedAnime.RelationType ConvertRelationType(string? type)
     {
-        if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.OTHER;
+        if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.Other;
         return type switch
         {
-            "prequel" => RelatedAnime.RelationType.PREQUEL,
-            "sequel" => RelatedAnime.RelationType.SEQUEL,
-            _ => RelatedAnime.RelationType.OTHER
+            "prequel" => RelatedAnime.RelationType.Prequel,
+            "sequel" => RelatedAnime.RelationType.Sequel,
+            _ => RelatedAnime.RelationType.Other
         };
     }
     
@@ -595,7 +591,7 @@ public class MalService : IAnimeProvider
             videos: mal.Videos,
             statistics: mal.Statistics?.ToAnimeStatistics() ?? new AnimeStatistics(),
             relatedAnime: mal.RelatedAnime?
-                .Select(r => new Models.RelatedAnime
+                .Select(r => new RelatedAnime
                 {
                     Details = r.Node != null ? ConvertMalToUnified(r.Node) : null,
                     Relation = ConvertRelationType(r.RelationType)

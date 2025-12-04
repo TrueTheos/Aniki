@@ -8,13 +8,7 @@ namespace Aniki.Services;
 public class NyaaService : INyaaService
 {
     private readonly HttpClient _http = new();
-    private readonly IAnimeNameParser _animeNameParser;
 
-    public NyaaService(IAnimeNameParser animeNameParser)
-    {
-        _animeNameParser = animeNameParser;
-    }
-    
    public async Task<List<NyaaTorrent>> SearchAsync(string animeName, string torrentSearchTerms)
     {
         string term = HttpUtility.UrlEncode($"{animeName}");
@@ -34,8 +28,6 @@ public class NyaaService : INyaaService
         {
             string? title = item.SelectSingleNode("title")?.InnerText;
             if(title == null) continue;
-                
-            string torrentLink = "";
 
             XmlNamespaceManager namespaceManager = new(doc.NameTable);
             namespaceManager.AddNamespace("nyaa", "https://nyaa.si/xmlns/nyaa");
@@ -45,7 +37,7 @@ public class NyaaService : INyaaService
             XmlNode? linkNode = item.SelectSingleNode("link");
                 
             if(linkNode == null) continue;
-            torrentLink = linkNode.InnerText;
+            string torrentLink = linkNode.InnerText;
 
             XmlNode? sizeNode = item.SelectSingleNode("nyaa:size", namespaceManager);
             string size = sizeNode?.InnerText ?? "";

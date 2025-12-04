@@ -1,8 +1,5 @@
-using Aniki.Misc;
-using Aniki.Models;
 using Aniki.Services.Anime;
 using Avalonia.Controls;
-using Aniki.Services.Interfaces;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +8,7 @@ namespace Aniki.Views;
 public partial class AnimeListStatusButton : UserControl
 {
     private bool _mouseOverRoot;
-    private AnimeCardData? _data = null;
+    private AnimeCardData? _data;
 
     private readonly IAnimeService _animeService;
 
@@ -21,10 +18,10 @@ public partial class AnimeListStatusButton : UserControl
         
         _animeService = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<IAnimeService>();
         
-        MainButton.PointerEntered += (_, __) => ShowStatusButtons();
-        MainButton.PointerExited += (_, __) => HideStatusButtons();
-        Root.PointerExited += (_, __) => RootPointerExited();
-        Root.PointerEntered += (_, __) => RootPointerEnter();
+        MainButton.PointerEntered += (_, _) => ShowStatusButtons();
+        MainButton.PointerExited += (_, _) => HideStatusButtons();
+        Root.PointerExited += (_, _) => RootPointerExited();
+        Root.PointerEntered += (_, _) => RootPointerEnter();
         
         Loaded += OnLoaded;
     }

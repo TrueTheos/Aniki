@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel;
-using Aniki.Misc;
-using Aniki.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -10,7 +8,7 @@ namespace Aniki.Views;
 
 public partial class AnimeCard : UserControl
 {
-    private AnimeCardData? _data = null;
+    private AnimeCardData? _data;
     
     public AnimeCard()
     {

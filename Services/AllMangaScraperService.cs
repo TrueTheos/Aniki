@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Web;
-using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
@@ -281,7 +280,7 @@ public class AllMangaScraperService : IAllMangaScraperService
         
         int score = FuzzySharp.Fuzz.TokenSortRatio(anime.Title, query);
         
-        if (anime.Title != null && anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+        if (anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
         {
             score += 50;
         }
@@ -419,7 +418,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                 foreach (JsonElement link in links.EnumerateArray())
                 {
                     if (link.TryGetProperty("link", out JsonElement linkProp) &&
-                        link.TryGetProperty("resolutionStr", out JsonElement resolution))
+                        link.TryGetProperty("resolutionStr", out JsonElement _))
                     {
                         string? url = linkProp.GetString();
                         if (!string.IsNullOrEmpty(url))

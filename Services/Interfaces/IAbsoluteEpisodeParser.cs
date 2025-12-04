@@ -1,4 +1,6 @@
-﻿namespace Aniki.Services.Interfaces;
+﻿using Aniki.Services.Save;
+
+namespace Aniki.Services.Interfaces;
 
 public interface IAbsoluteEpisodeParser
 {

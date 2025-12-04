@@ -1,7 +1,5 @@
-﻿using Aniki.Misc;
-using Aniki.ViewModels;
+﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +12,7 @@ public partial class AnimeBrowseView : UserControl
         InitializeComponent();
     }
 
-    protected override async void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    protected override async void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
         
@@ -32,15 +30,15 @@ public partial class AnimeBrowseView : UserControl
         }
     }
     
-    private const double CardWidth = 160;
-    private const double CardSpacing = 20;
-    private const double ScrollAmount = CardWidth + CardSpacing;
+    private const double CARD_WIDTH = 160;
+    private const double CARD_SPACING = 20;
+    private const double SCROLL_AMOUNT = CARD_WIDTH + CARD_SPACING;
 
     private void ScrollLeft(object? sender, RoutedEventArgs e)
     {
         if ((sender as Button)?.CommandParameter is ScrollViewer scroller)
         {
-            double newOffset = scroller.Offset.X - ScrollAmount;
+            double newOffset = scroller.Offset.X - SCROLL_AMOUNT;
             scroller.Offset = new Vector(newOffset, scroller.Offset.Y);
         }
     }
@@ -49,7 +47,7 @@ public partial class AnimeBrowseView : UserControl
     {
         if ((sender as Button)?.CommandParameter is ScrollViewer scroller)
         {
-            double newOffset = scroller.Offset.X + ScrollAmount;
+            double newOffset = scroller.Offset.X + SCROLL_AMOUNT;
             scroller.Offset = new Vector(newOffset, scroller.Offset.Y);
         }
     }

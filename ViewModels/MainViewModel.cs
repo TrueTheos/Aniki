@@ -31,15 +31,13 @@ public partial class MainViewModel : ViewModelBase
     private UserAnimeListViewModel _userAnimeListViewModel;
     #endregion
 
-    private readonly ICalendarService _calendarService;
     private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
     
-    public MainViewModel(ICalendarService calendarService, IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
+    public MainViewModel(IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
         UserAnimeListViewModel userAnimeListViewModel, IVideoPlayerService videoPlayerService) 
     {
-        _calendarService = calendarService;
         _animeService = animeService;
         _animeDetailsViewModel = animeDetailsViewModel;
         _watchViewModel = watchViewModel;

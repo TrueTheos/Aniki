@@ -1,6 +1,6 @@
-﻿using Aniki.Services.CustomTypeHandlers;
+﻿using Aniki.Services.Cache.CustomTypeHandlers;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Cache;
 
 public class CacheOptions
 {

@@ -43,7 +43,7 @@ public class AnimeNameParser : IAnimeNameParser
                 if (match.Success)
                 {
                     string animeName;
-                    int season = 1;
+                    int season;
                     int episodeNumber;
                     
                     if (pattern.Contains(@"S(\d+)E(\d+)"))

@@ -1,4 +1,4 @@
-﻿namespace Aniki.Services;
+﻿namespace Aniki.Services.Cache;
 
 public class CacheStorageEntry<TEntity, TFieldEnum> where TFieldEnum : Enum
 {

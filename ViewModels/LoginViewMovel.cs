@@ -1,6 +1,5 @@
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
-using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
@@ -183,7 +182,7 @@ public partial class LoginViewModel : ViewModelBase
     [RelayCommand]
     private void ContinueWithoutLoggingIn()
     {
-        _animeService.SetActiveProvider(ILoginProvider.ProviderType.MAL, null);
+        _animeService.SetActiveProvider(ILoginProvider.ProviderType.Mal, null);
         NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
     }
 

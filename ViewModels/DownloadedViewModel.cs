@@ -1,13 +1,11 @@
-using System.Text;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
-using Aniki.Misc;
-using Avalonia.Controls.ApplicationLifetimes;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
-using CommunityToolkit.Mvvm.Messaging;
 using Aniki.Views;
+using Avalonia.Controls.ApplicationLifetimes;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
@@ -40,13 +38,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string? _animeTitleFilter;
 
-    [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern uint AssocQueryString(AssocF flags, AssocStr str, string pszAssoc, string? pszExtra, [Out] StringBuilder? pszOut, ref uint pcchOut);
-
-    enum AssocF { None = 0 }
-
-    enum AssocStr { Executable = 2 }
-    
     private readonly IDiscordService _discordService;
     private readonly IAnimeService  _animeService;
     private readonly ISaveService  _saveService;
@@ -95,7 +86,10 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private void SetupFileWatcher()
     {
         _fileWatcher?.Dispose();
-        _debounceTimer?.Dispose();
+        lock (_debounceLock)
+        {
+            _debounceTimer?.Dispose();
+        }
 
         SettingsConfig? config = _saveService.GetSettingsConfig();
         string episodesFolder = config?.EpisodesFolder ?? _saveService.DefaultEpisodesFolder;
@@ -112,9 +106,12 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             }
         }
 
-        _debounceTimer = new System.Timers.Timer(500);
+        lock (_debounceLock)
+        {
+            _debounceTimer = new System.Timers.Timer(500);
+        }
         _debounceTimer.AutoReset = false;
-        _debounceTimer.Elapsed += async (s, e) => await LoadEpisodesFromFolder();
+        _debounceTimer.Elapsed += async (_, _) => await LoadEpisodesFromFolder();
 
         _fileWatcher = new FileSystemWatcher(episodesFolder)
         {
@@ -208,18 +205,19 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (parsedFile.EpisodeNumber == null)
                 return;
     
-            int? malId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season);
-            if (malId == null)
+            int? animeId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season);
+            if (animeId == null)
                 return;
+            
+            AnimeDetails? animeFieldSet = await _animeService.GetFieldsAsync(animeId.Value, fields: [AnimeField.Title, AnimeField.Episodes]);
+            if (animeFieldSet != null)
+            {
+                DownloadedEpisode episode = new(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
+                    parsedFile.AbsoluteEpisodeNumber,
+                    animeFieldSet.Title!, animeId.Value, parsedFile.Season);
 
-            //TODO IMPORTANT CO JEZELI NIE MAMY MALID TUTAJ...
-            AnimeDetails animeFieldSet = await _animeService.GetFieldsAsync(malId.Value, fields:[AnimeField.TITLE, AnimeField.EPISODES]);
-
-            DownloadedEpisode episode = new(filePath, int.Parse(parsedFile.EpisodeNumber ?? "0"),
-                parsedFile.AbsoluteEpisodeNumber,
-                animeFieldSet.Title!, malId.Value, parsedFile.Season);
-
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, animeFieldSet.Title!, animeFieldSet.NumEpisodes ?? 0, malId.Value));
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, animeFieldSet.Title!, animeFieldSet.NumEpisodes ?? 0, animeId.Value));
+            }
 
             int current = Interlocked.Increment(ref processed);
             ProcessingProgress = $"Processing files: {current}/{total}";
@@ -376,7 +374,8 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 if (_lastPlayedEpisode == null) return;
                 if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    AnimeDetails animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.EPISODES);
+                    AnimeDetails? animeData = await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.Episodes);
+                    if(animeData == null) return;
                     ConfirmEpisodeWindow dialog = new() 
                     {
                         DataContext = new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)

@@ -7,7 +7,7 @@ public class MediaListCollectionResponse
 
 public class MediaListCollection
 {
-    public List<MediaList>? lists { get; set; }
+    public List<MediaList>? Lists { get; set; }
 }
 
 public class MediaListResponse
@@ -17,16 +17,16 @@ public class MediaListResponse
 
 public class MediaList
 {
-    public List<MediaListEntry>? entries { get; set; }
+    public List<MediaListEntry>? Entries { get; set; }
 }
 
 public class MediaListEntry
 {
-    public int id { get; set; }
-    public string? status { get; set; }
-    public int? score { get; set; }
-    public int? progress { get; set; }
-    public AnilistMedia media { get; set; } = null!;
+    public int Id { get; set; }
+    public string? Status { get; set; }
+    public int? Score { get; set; }
+    public int? Progress { get; set; }
+    public AnilistMedia Media { get; set; } = null!;
 }
 
 public class MediaResponse
@@ -41,92 +41,92 @@ public class PageResponse
 
 public class AnilistPage
 {
-    public List<AnilistMedia>? media { get; set; }
+    public List<AnilistMedia>? Media { get; set; }
 }
 
 public class AnilistMedia
 {
-    public int id { get; set; }
-    public AnilistTitle? title { get; set; }
-    public AnilistCoverImage? coverImage { get; set; }
-    public string? status { get; set; }
-    public string? description { get; set; }
-    public int? episodes { get; set; }
-    public int? meanScore { get; set; }
-    public int? popularity { get; set; }
-    public AnilistStudios? studios { get; set; }
-    public AnilistDate? startDate { get; set; }
-    public List<string>? genres { get; set; }
-    public int? favourites { get; set; }
-    public AnilistTrailer? trailer { get; set; }
-    public AnilistRelations? relations { get; set; }
-    public AnilistMediaListStatus? mediaListEntry { get; set; }
-    public AnilistStats? stats { get; set; }
+    public int Id { get; set; }
+    public AnilistTitle? Title { get; set; }
+    public AnilistCoverImage? CoverImage { get; set; }
+    public string? Status { get; set; }
+    public string? Description { get; set; }
+    public int? Episodes { get; set; }
+    public int? MeanScore { get; set; }
+    public int? Popularity { get; set; }
+    public AnilistStudios? Studios { get; set; }
+    public AnilistDate? StartDate { get; set; }
+    public List<string>? Genres { get; set; }
+    public int? Favourites { get; set; }
+    public AnilistTrailer? Trailer { get; set; }
+    public AnilistRelations? Relations { get; set; }
+    public AnilistMediaListStatus? MediaListEntry { get; set; }
+    public AnilistStats? Stats { get; set; }
 }
 
 public class AnilistMediaListStatus
 {
-    public string? status { get; set; }
-    public float? score { get; set; }
-    public int? progress { get; set; }
+    public string? Status { get; set; }
+    public float? Score { get; set; }
+    public int? Progress { get; set; }
 }
 
 public class AnilistStats
 {
-    public List<AnilistStatusDistribution>? statusDistribution { get; set; }
+    public List<AnilistStatusDistribution>? StatusDistribution { get; set; }
 }
 
 public class AnilistStatusDistribution
 {
-    public string status { get; set; } = "";
-    public int amount { get; set; }
+    public string Status { get; set; } = "";
+    public int Amount { get; set; }
 }
 
 public class AnilistTitle
 {
-    public string? romaji { get; set; }
-    public string? english { get; set; }
-    public string? native { get; set; }
+    public string? Romaji { get; set; }
+    public string? English { get; set; }
+    public string? Native { get; set; }
 }
 
 public class AnilistCoverImage
 {
-    public string? large { get; set; }
-    public string? medium { get; set; }
+    public string? Large { get; set; }
+    public string? Medium { get; set; }
 }
 
 public class AnilistStudios
 {
-    public List<AnilistStudio>? nodes { get; set; }
+    public List<AnilistStudio>? Nodes { get; set; }
 }
 
 public class AnilistStudio
 {
-    public int id { get; set; }
-    public string name { get; set; } = "";
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
 }
 
 public class AnilistDate
 {
-    public int? year { get; set; }
-    public int? month { get; set; }
-    public int? day { get; set; }
+    public int? Year { get; set; }
+    public int? Month { get; set; }
+    public int? Day { get; set; }
 }
 
 public class AnilistTrailer
 {
-    public string? id { get; set; }
-    public string? site { get; set; }
-    public string? thumbnail { get; set; }
+    public string? Id { get; set; }
+    public string? Site { get; set; }
+    public string? Thumbnail { get; set; }
 }
 
 public class AnilistRelations
 {
-    public List<AnilistRelationEdge>? edges { get; set; }
+    public List<AnilistRelationEdge>? Edges { get; set; }
 }
 
 public class AnilistRelationEdge
 {
-    public string? relationType { get; set; }
-    public AnilistMedia? node { get; set; }
+    public string? RelationType { get; set; }
+    public AnilistMedia? Node { get; set; }
 }

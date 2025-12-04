@@ -1,4 +1,4 @@
-﻿namespace Aniki.Services;
+﻿namespace Aniki.Services.Cache;
 
 [AttributeUsage(AttributeTargets.Property)]
 public class CacheFieldAttribute(object fieldId, bool cacheInMemory = false) : Attribute

@@ -1,4 +1,3 @@
-using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
@@ -13,7 +12,7 @@ using Velopack.Sources;
 
 namespace Aniki;
 
-public partial class App : Application
+public class App : Application
 {
     public override void Initialize()
     {
@@ -57,7 +56,7 @@ public partial class App : Application
         
         DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
 
-        AppDomain.CurrentDomain.UnhandledException += (s, e) => 
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => 
             Log.Fatal(e.ExceptionObject as Exception, "Unhandled exception");
         
         base.OnFrameworkInitializationCompleted();
@@ -94,12 +93,10 @@ public partial class App : Application
         try
         {
             await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<ISaveService>().FlushAllCaches();
-            
-            if (sender is IClassicDesktopStyleApplicationLifetime lifetime)
-            {
-                lifetime.ShutdownRequested -= OnShutdownRequested;
-                lifetime.Shutdown();
-            }
+
+            if (sender is not IClassicDesktopStyleApplicationLifetime lifetime) return;
+            lifetime.ShutdownRequested -= OnShutdownRequested;
+            lifetime.Shutdown();
         }
         catch
         {

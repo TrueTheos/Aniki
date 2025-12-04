@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
@@ -129,7 +128,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     
         if (value != null)
         {
-            value.CollectionChanged += (s, e) =>
+            value.CollectionChanged += (_, _) =>
             {
                 OnPropertyChanged(nameof(SelectionStatusMessage));
                 OnPropertyChanged(nameof(ShowSelectionStatus));
@@ -182,19 +181,26 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             _ = LoadEpisodesAsync(value);
 
-            AnimeDetails animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields:[AnimeField.MY_LIST_STATUS, AnimeField.SYNOPSIS]);
+            AnimeDetails? animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields: [AnimeField.MyListStatus, AnimeField.Synopsis]);
 
-            if (animeField.UserStatus != null)
+            if (animeField != null)
             {
-                UpdateWatchedEpisodesText(animeField.UserStatus!.EpisodesWatched);
+                if (animeField.UserStatus != null)
+                {
+                    UpdateWatchedEpisodesText(animeField.UserStatus!.EpisodesWatched);
+                }
+                else
+                {
+                    UpdateWatchedEpisodesText(0);
+                }
+
+                AnimeDescription = animeField.Synopsis;
+                AnimeImageUrl = value.Banner;
             }
             else
             {
-                UpdateWatchedEpisodesText(0);
+                //todo this shouldn't happen :)
             }
-
-            AnimeDescription = animeField.Synopsis;
-            AnimeImageUrl = value.Banner;
         }
         else
         {
@@ -251,7 +257,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            _currentVideoUrl = await _scraperService.GetVideoUrlAsync(episode.Url!);
+            _currentVideoUrl = await _scraperService.GetVideoUrlAsync(episode.Url);
             CanPlayVideo = !string.IsNullOrEmpty(_currentVideoUrl);
             StatusText = $"Episode {episode.Number} ready - Click 'Play' to watch";
         }

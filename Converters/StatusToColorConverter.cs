@@ -6,7 +6,7 @@ namespace Aniki.Converters;
 
 public class StatusToColorConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not AnimeStatus status)
             return new SolidColorBrush(Color.Parse("#3A3A3A"));
@@ -22,7 +22,7 @@ public class StatusToColorConverter : IValueConverter
         };
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }

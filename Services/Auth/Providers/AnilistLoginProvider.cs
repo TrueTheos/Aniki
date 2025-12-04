@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
-using Aniki.Models;
-using Aniki.Models.Anilist;
 using Aniki.Services.Anime;
+using Aniki.Services.Anime.Providers;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Auth.Providers;
@@ -9,9 +8,9 @@ namespace Aniki.Services.Auth.Providers;
 public class AnilistLoginProvider : ILoginProvider
 {
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
-    private const string ClientId = "32652";
+    private const string CLIENT_ID = "32652";
 
-    public string LoginUrl => $"https://anilist.co/api/v2/oauth/authorize?client_id={ClientId}&response_type=token";
+    public string LoginUrl => $"https://anilist.co/api/v2/oauth/authorize?client_id={CLIENT_ID}&response_type=token";
 
     private readonly ITokenService _tokenService;
     private readonly IAnimeService _animeService;
@@ -36,8 +35,8 @@ public class AnilistLoginProvider : ILoginProvider
     {
         TokenResponse tokenResponse = new()
         {
-            access_token = token,
-            expires_in = 31536000
+            AccessToken = token,
+            ExpiresIn = 31536000
         };
         await _tokenService.SaveTokensAsync(Provider, tokenResponse);
     }

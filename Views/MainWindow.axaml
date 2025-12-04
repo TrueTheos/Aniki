@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
-    xmlns:services="clr-namespace:Aniki.Services"
     xmlns:anime="clr-namespace:Aniki.Services.Anime"
     Title="Aniki - Anime Client"
     d:DesignHeight="720"

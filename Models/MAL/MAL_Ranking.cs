@@ -2,22 +2,22 @@
 
 namespace Aniki.Models.MAL;
 
-public class MAL_AnimeRankingResponse
+public class MalAnimeRankingResponse
 {
-    public required MAL_RankingEntry[] Data { get; set; }
+    public required MalRankingEntry[] Data { get; set; }
     public MalPaging? Paging { get; set; }
 }
 
-public class MAL_RankingEntry
+public class MalRankingEntry
 {
     [JsonPropertyName("node")]
     public required MalAnimeDetails Node { get; set; }
     
     [JsonPropertyName("ranking")]
-    public MAL_RankingInfo? Ranking { get; set; }
+    public MalRankingInfo? Ranking { get; set; }
 }
 
-public class MAL_RankingInfo
+public class MalRankingInfo
 {
     [JsonPropertyName("rank")]
     public int Rank { get; set; }

@@ -7,12 +7,12 @@ public class ViewerResponse
 
 public class AnilistViewer
 {
-    public int id { get; set; }
-    public string? name { get; set; }
-    public AnilistAvatar? avatar { get; set; }
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public AnilistAvatar? Avatar { get; set; }
 }
 
 public class AnilistAvatar
 {
-    public string? large { get; set; }
+    public string? Large { get; set; }
 }

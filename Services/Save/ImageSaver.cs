@@ -1,12 +1,12 @@
 ﻿using Avalonia.Media.Imaging;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Save;
 
 public class ImageSaver(string path) : SaveEntity<Bitmap>(path)
 {
     public override void Save(string fileName, Bitmap data)
     {
-        string filePath = Path.Combine(_path, fileName);
+        string filePath = System.IO.Path.Combine(Path, fileName);
         using (FileStream stream = new(filePath, FileMode.Create))
         {
             data.Save(stream);
@@ -15,7 +15,7 @@ public class ImageSaver(string path) : SaveEntity<Bitmap>(path)
 
     public override Bitmap? Read(string fileName, Bitmap? defaultValue = null)
     {
-        string filePath = Path.Combine(_path, fileName);
+        string filePath = System.IO.Path.Combine(Path, fileName);
         if (!File.Exists(filePath)) return defaultValue;
 
         try

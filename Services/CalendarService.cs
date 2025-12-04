@@ -1,17 +1,16 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
-using Avalonia.Media.Imaging;
+using Newtonsoft.Json.Linq;
 
 namespace Aniki.Services;
 
 public class CalendarService : ICalendarService
 {
-    private const string GraphQlEndpoint = "https://graphql.anilist.co";
+    private const string GRAPH_QL_ENDPOINT = "https://graphql.anilist.co";
 
-    private const string Query = @"
+    private const string QUERY = @"
               query ($page: Int, $perPage: Int, $airingAt_greater: Int, $airingAt_lesser: Int) {
                 Page(page: $page, perPage: $perPage) {
                   pageInfo {
@@ -59,7 +58,7 @@ public class CalendarService : ICalendarService
         {
             JObject payload = new()
             {
-                ["query"] = Query,
+                ["query"] = QUERY,
                 ["variables"] = new JObject
                 {
                     ["page"] = currentPage,
@@ -70,7 +69,7 @@ public class CalendarService : ICalendarService
             };
 
             StringContent content = new(payload.ToString(), Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await _client.PostAsync(GraphQlEndpoint, content);
+            HttpResponseMessage response = await _client.PostAsync(GRAPH_QL_ENDPOINT, content);
             response.EnsureSuccessStatusCode();
 
             string body = await response.Content.ReadAsStringAsync();
@@ -220,7 +219,7 @@ public class CalendarService : ICalendarService
         };
 
         if (aniListId.HasValue) result.ProviderId[ILoginProvider.ProviderType.AniList] = aniListId.Value;
-        if (malId.HasValue) result.ProviderId[ILoginProvider.ProviderType.MAL] = malId.Value;
+        if (malId.HasValue) result.ProviderId[ILoginProvider.ProviderType.Mal] = malId.Value;
 
         return result;
     }
@@ -235,7 +234,7 @@ public class CalendarService : ICalendarService
                "";
     }
     
-    private async Task<Bitmap?> DownloadImageAsync(string url)
+    /*private async Task<Bitmap?> DownloadImageAsync(string url)
     {
         try
         {
@@ -247,5 +246,5 @@ public class CalendarService : ICalendarService
         {
             return null;
         }
-    }
+    }*/
 }

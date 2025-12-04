@@ -1,12 +1,9 @@
 using System.Reflection;
-using Aniki.Misc;
-using Aniki.Services.Interfaces;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;

@@ -2,7 +2,7 @@
 
 public interface ILoginProvider
 {
-    public enum ProviderType {MAL, AniList}
+    public enum ProviderType {Mal, AniList}
     
     ProviderType Provider { get; }
     string LoginUrl { get; }

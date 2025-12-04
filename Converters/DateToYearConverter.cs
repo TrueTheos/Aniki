@@ -5,7 +5,7 @@ namespace Aniki.Converters;
 
 public class DateToYearConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not string dateString || string.IsNullOrEmpty(dateString))
             return "N/A";
@@ -23,7 +23,7 @@ public class DateToYearConverter : IValueConverter
         return "N/A";
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }

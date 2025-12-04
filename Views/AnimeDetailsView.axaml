@@ -3,11 +3,9 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
-    xmlns:mal="clr-namespace:Aniki.Models.MAL;assembly=Aniki"
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
-    xmlns:services="clr-namespace:Aniki.Services"
     xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:AnimeDetailsViewModel">
     <Border

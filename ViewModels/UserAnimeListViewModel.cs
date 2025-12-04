@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using Aniki.Services.Anime;
-using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
@@ -46,7 +45,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
         foreach (string genreName in genres)
         {
             GenreViewModel genreVm = new(genreName);
-            genreVm.PropertyChanged += (sender, args) =>
+            genreVm.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(GenreViewModel.IsSelected))
                 {
@@ -155,7 +154,8 @@ public partial class UserAnimeListViewModel : ViewModelBase
         AnimeList.Clear();
         foreach (AnimeDetails element in list)
         {
-            AnimeList.Add(await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MAL_NODE_FIELD_TYPES));
+            AnimeDetails? details = await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MalNodeFieldTypes);
+            if (details != null) AnimeList.Add(details);
         }
         
         TotalCount = AnimeList.Count;
@@ -166,7 +166,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
     {
         if (!api.HasValue) return false;
         
-        string apiStatus = Regex.Replace(api!.Value.ToString().ToLower(), @"[^a-z0-9]", "");
+        string apiStatus = Regex.Replace(api.Value.ToString().ToLower(), @"[^a-z0-9]", "");
         string filterStatus = Regex.Replace(statusFilter.ToLower(), @"[^a-z0-9]", "");
 
         return apiStatus == filterStatus;

@@ -6,7 +6,7 @@ namespace Aniki.Converters;
 
 public class BoolToViewButtonBackgroundConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not bool isActive)
             return new SolidColorBrush(Color.Parse("#2A2A2A"));
@@ -21,7 +21,7 @@ public class BoolToViewButtonBackgroundConverter : IValueConverter
             : new SolidColorBrush(Color.Parse("#2A2A2A"));
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }

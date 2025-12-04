@@ -1,8 +1,6 @@
 using System.Diagnostics;
-using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
-using Aniki.Services.Interfaces;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
@@ -91,11 +89,11 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (_currentSubscribedId.HasValue && _currentSubscribedId != newId)
         {
-            _animeService.UnsubscribeFromFieldChange(_currentSubscribedId.Value, OnAnimeDataChanged, AnimeField.MY_LIST_STATUS);
+            _animeService.UnsubscribeFromFieldChange(_currentSubscribedId.Value, OnAnimeDataChanged, AnimeField.MyListStatus);
         }
 
         _currentSubscribedId = newId;
-        _animeService.SubscribeToFieldChange(newId, OnAnimeDataChanged, AnimeField.MY_LIST_STATUS);
+        _animeService.SubscribeToFieldChange(newId, OnAnimeDataChanged, AnimeField.MyListStatus);
     }
 
     private void OnAnimeDataChanged(AnimeDetails updatedEntity)
@@ -233,7 +231,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         string url = "";
         switch (AnimeService.CurrentProviderType)
         {
-            case ILoginProvider.ProviderType.MAL:
+            case ILoginProvider.ProviderType.Mal:
                 url = $"https://myanimelist.net/anime/{Details.Id}";
                 break;
             case ILoginProvider.ProviderType.AniList:
@@ -259,7 +257,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         
         switch (AnimeService.CurrentProviderType)
         {
-            case ILoginProvider.ProviderType.MAL:
+            case ILoginProvider.ProviderType.Mal:
                 _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.Id}");
                 break;
             case ILoginProvider.ProviderType.AniList:

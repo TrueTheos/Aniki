@@ -1,7 +1,7 @@
-using Aniki.Services.Interfaces;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Aniki.Services.Anime;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
@@ -31,7 +31,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty]
     private HeroAnimeData? _heroAnime;
     
-    private int _currentHeroIndex = 0;
+    private int _currentHeroIndex;
     
     [ObservableProperty]
     private string _searchQuery = string.Empty;
@@ -57,7 +57,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     private bool _canGoPrevious;
 
     private List<AnimeDetails> _allSearchResults = new();
-    private const int PageSize = 20;
+    private const int PAGE_SIZE = 20;
 
     public AnimeBrowseViewModel(IAnimeService animeService, ICalendarService calendarService)
     {
@@ -118,7 +118,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         
         foreach (RankingEntry anime in animeList)
         {
-            AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.TITLE, AnimeField.SYNOPSIS, AnimeField.MEAN, AnimeField.MY_LIST_STATUS, AnimeField.VIDEOS]);
+            AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.Title, AnimeField.Synopsis, AnimeField.Mean, AnimeField.MyListStatus, AnimeField.Videos]);
             if (details?.Videos != null && details.Videos.Length > 0)
             {
                 HeroAnimeData heroData = new()
@@ -150,7 +150,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         collection.Clear();
         foreach (var anime in animeList)
         {
-            if (anime != null && anime.Details != null)
+            if (anime.Details != null)
             {
                 collection.Add(anime.Details.ToCardData());
             }
@@ -214,7 +214,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
             _allSearchResults = await _animeService.SearchAnimeAsync(query);
             CurrentPage = 1;
-            TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PageSize);
+            TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE);
             
             LoadSearchResultsPage();
         }
@@ -234,8 +234,8 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         SearchResults.Clear();
         
         IEnumerable<AnimeDetails> pageResults = _allSearchResults
-            .Skip((CurrentPage - 1) * PageSize)
-            .Take(PageSize);
+            .Skip((CurrentPage - 1) * PAGE_SIZE)
+            .Take(PAGE_SIZE);
 
         foreach (AnimeDetails result in pageResults)
         {

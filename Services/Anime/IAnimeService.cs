@@ -1,11 +1,12 @@
 ﻿using Aniki.Services.Auth;
+using Aniki.Services.Cache;
 
 namespace Aniki.Services.Anime;
 
 public interface IAnimeService
 {
     public Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None);
-    public Task<AnimeDetails> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields);
+    public Task<AnimeDetails?> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields);
     public void RegisterProvider(ILoginProvider.ProviderType name, IAnimeProvider provider);
     public Task<List<AnimeDetails>> SearchAnimeAsync(string query);
 

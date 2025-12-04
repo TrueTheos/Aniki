@@ -1,27 +1,19 @@
 ﻿using System.Collections.Concurrent;
 using Aniki.Services.Auth;
-using Aniki.Services.Auth.Providers;
-using Aniki.Services.Interfaces;
+using Aniki.Services.Cache;
+using Aniki.Services.Save;
 
 namespace Aniki.Services.Anime;
 
 public class AnimeService : IAnimeService
 {
     private readonly Dictionary<ILoginProvider.ProviderType, IAnimeProvider> _providers = new();
-    private readonly ConcurrentDictionary<ILoginProvider.ProviderType, GenericCacheService<int, AnimeDetails, AnimeField>> _caches;
-    private readonly ISaveService _saveService;
-    
+    private readonly ConcurrentDictionary<ILoginProvider.ProviderType, GenericCacheService<int, AnimeDetails, AnimeField>> _caches = new();
+
     private IAnimeProvider? _currentProvider;
 
-    public static bool IsLoggedIn = false;
-    public static ILoginProvider.ProviderType CurrentProviderType = ILoginProvider.ProviderType.MAL;
-
-    public AnimeService(ISaveService saveService, ITokenService tokenService)
-    {
-        _saveService = saveService;
-
-        _caches = new();
-    }
+    public static bool IsLoggedIn;
+    public static ILoginProvider.ProviderType CurrentProviderType = ILoginProvider.ProviderType.Mal;
 
     public void RegisterProvider(ILoginProvider.ProviderType name, IAnimeProvider provider)
     {
@@ -30,7 +22,7 @@ public class AnimeService : IAnimeService
         CacheOptions options = new()
         {
             DefaultTimeToLive = TimeSpan.FromHours(8),
-            DiskCachePath = $"{SaveService.CACHE_PATH}/{name}",
+            DiskCachePath = $"{SaveService.CachePath}/{name}",
             DiskSyncInterval = TimeSpan.FromMinutes(2),
             EnableDiskCache = true
         };
@@ -53,7 +45,7 @@ public class AnimeService : IAnimeService
         _currentProvider.Init(accessToken);
 
         IsLoggedIn = _currentProvider.IsLoggedIn;
-        if (!IsLoggedIn) CurrentProviderType = ILoginProvider.ProviderType.MAL; //we just use MAL as default
+        if (!IsLoggedIn) CurrentProviderType = ILoginProvider.ProviderType.Mal; //we just use MAL as default
     }
 
     private IAnimeProvider GetCurrentProvider()
@@ -77,11 +69,11 @@ public class AnimeService : IAnimeService
             _caches[_currentProvider.Provider].UnsubscribeFromFieldChange(animeId, handler, fields);
     }
 
-    public async Task<AnimeDetails> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields)
+    public async Task<AnimeDetails?> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields)
     {
         if (_currentProvider != null)
             return await _caches[_currentProvider.Provider].GetOrFetchFieldsAsync(animeId, forceFetch, fields: fields);
-        throw new Exception("This shouldn't happen");
+        return null;
     }
 
     public async Task<AnimeDetails> GetAllFieldsAsync(int animeId)
@@ -112,10 +104,10 @@ public class AnimeService : IAnimeService
         return await GetCurrentProvider().GetUserDataAsync();
     }
     
-    public static readonly AnimeField[] MAL_NODE_FIELD_TYPES = new[]
+    public static readonly AnimeField[] MalNodeFieldTypes = new[]
     {
-        AnimeField.ID, AnimeField.MY_LIST_STATUS, AnimeField.STATUS, AnimeField.GENRES, AnimeField.SYNOPSIS, AnimeField.MAIN_PICTURE,
-        AnimeField.MEAN, AnimeField.POPULARITY, AnimeField.START_DATE, AnimeField.STUDIOS, AnimeField.TITLE, AnimeField.EPISODES
+        AnimeField.Id, AnimeField.MyListStatus, AnimeField.Status, AnimeField.Genres, AnimeField.Synopsis, AnimeField.MainPicture,
+        AnimeField.Mean, AnimeField.Popularity, AnimeField.StartDate, AnimeField.Studios, AnimeField.Title, AnimeField.Episodes
     };
 
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
@@ -129,7 +121,7 @@ public class AnimeService : IAnimeService
                 _caches[_currentProvider.Provider].UpdatePartial(
                     anime.Id,
                     anime,
-                    MAL_NODE_FIELD_TYPES
+                    MalNodeFieldTypes
                 );
             }
 
@@ -171,7 +163,7 @@ public class AnimeService : IAnimeService
 
     private async Task AfterUserStatusChange(int animeId)
     {
-        await GetFieldsAsync(animeId, true, AnimeField.MY_LIST_STATUS);
+        await GetFieldsAsync(animeId, true, AnimeField.MyListStatus);
     }
 
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
@@ -185,7 +177,7 @@ public class AnimeService : IAnimeService
                 _caches[_currentProvider.Provider].UpdatePartial(
                     result.Id,
                     result,
-                    MAL_NODE_FIELD_TYPES
+                    MalNodeFieldTypes
                 );
             }
         }
@@ -205,7 +197,7 @@ public class AnimeService : IAnimeService
                 _caches[_currentProvider.Provider].UpdatePartial(
                     entry.Details.Id,
                     entry.Details,
-                    MAL_NODE_FIELD_TYPES
+                    MalNodeFieldTypes
                 );
             }
         }

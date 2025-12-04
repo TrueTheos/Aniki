@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
+using Aniki.Services.Save;
 
 namespace Aniki.Services;
 
@@ -61,9 +62,9 @@ public class TokenService : ITokenService
     {
         StoredTokenData tokens = new()
         {
-            AccessToken = tokenResponse.access_token ?? string.Empty,
-            RefreshToken = tokenResponse.refresh_token,
-            ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.expires_in)
+            AccessToken = tokenResponse.AccessToken ?? string.Empty,
+            RefreshToken = tokenResponse.RefreshToken,
+            ExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
         };
 
         string json = JsonSerializer.Serialize(tokens);

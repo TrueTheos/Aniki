@@ -147,13 +147,13 @@ public class VideoPlayerService : IVideoPlayerService
 
         try
         {
-            using RegistryKey? extensionKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(extension);
+            using RegistryKey? extensionKey = Registry.ClassesRoot.OpenSubKey(extension);
             if (extensionKey != null)
             {
                 string? progId = extensionKey.GetValue("")?.ToString();
                 if (!string.IsNullOrEmpty(progId))
                 {
-                    using RegistryKey? progIdKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey($"{progId}\\shell\\open\\command");
+                    using RegistryKey? progIdKey = Registry.ClassesRoot.OpenSubKey($"{progId}\\shell\\open\\command");
                     if (progIdKey != null)
                     {
                         string? command = progIdKey.GetValue("")?.ToString();
@@ -165,7 +165,7 @@ public class VideoPlayerService : IVideoPlayerService
                 }
             }
 
-            using RegistryKey? openWithKey = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+            using RegistryKey? openWithKey = Registry.CurrentUser.OpenSubKey(
                 @$"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{extension}\OpenWithList");
             
             if (openWithKey != null)
@@ -344,7 +344,11 @@ public class VideoPlayerService : IVideoPlayerService
                 Task.Run(async () =>
                 {
                     await Task.Delay(5000);
-                    try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { }
+                    try { if (File.Exists(tempFile)) File.Delete(tempFile); }
+                    catch(Exception ex)
+                    {
+                        Log.Error($"Couldn't delete file {tempFile} {ex}");
+                    }
                 });
 
                 return process;
@@ -374,8 +378,7 @@ public class VideoPlayerService : IVideoPlayerService
             string arguments = playerName switch
             {
                 "mpv" or "mpvnet" => $"\"{url}\" --force-window=yes --title=\"Aniki Player\"",
-                "vlc" => $"\"{url}\" --meta-title=\"Aniki Player\"",
-                var n when n.Contains("mpc") => $"\"{url}\"", 
+                "vlc" => $"\"{url}\" --meta-title=\"Aniki Player\"", 
                 _ => $"\"{url}\""
             };
 

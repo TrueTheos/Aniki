@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using Aniki.Services.Anime;
-using Aniki.Services.Interfaces;
+﻿using Aniki.Services.Anime;
 
 namespace Aniki.ViewModels;
 

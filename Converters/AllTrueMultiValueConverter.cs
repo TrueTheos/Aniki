@@ -5,7 +5,7 @@ namespace Aniki.Converters;
 
 public class AllTrueMultiValueConverter : IMultiValueConverter
 {
-    public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(IList<object?>? values, Type targetType, object? parameter, CultureInfo culture)
     {
         if (values == null || values.Count == 0)
             return false;

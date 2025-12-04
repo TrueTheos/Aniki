@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Save;
 
 public class SaveEntity<T>
 {
-    protected string _path { get; private set; }
+    protected string Path { get; private set; }
 
     private readonly JsonSerializerOptions _options = new()
     {
@@ -14,19 +14,19 @@ public class SaveEntity<T>
     
     public SaveEntity(string path)
     {
-        _path = path;
+        Path = path;
     }
 
     public virtual void Save(string fileName, T data)
     {
         string json = JsonSerializer.Serialize(data, _options);
-        string newPath = Path.Combine(_path, fileName);
+        string newPath = System.IO.Path.Combine(Path, fileName);
         File.WriteAllText(newPath, json);
     }
 
     public virtual T? Read(string fileName, T? defaultValue = default)
     {
-        string newPath = Path.Combine(_path, fileName);
+        string newPath = System.IO.Path.Combine(Path, fileName);
         if (!File.Exists(newPath)) return defaultValue;
 
         try
@@ -43,9 +43,9 @@ public class SaveEntity<T>
 
     public long GetCacheSize()
     {
-        if (!Directory.Exists(_path)) return 0;
+        if (!Directory.Exists(Path)) return 0;
 
-        return Directory.GetFiles(_path, "*", SearchOption.AllDirectories)
+        return Directory.GetFiles(Path, "*", SearchOption.AllDirectories)
             .Sum(file => new FileInfo(file).Length);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
-using Tmds.DBus.Protocol;
 
 namespace Aniki.Models;
 

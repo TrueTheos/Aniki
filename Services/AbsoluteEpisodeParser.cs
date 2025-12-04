@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using Aniki.Services.Anime;
+using Aniki.Services.Cache;
 using Aniki.Services.Interfaces;
+using Aniki.Services.Save;
 
 namespace Aniki.Services;
 
@@ -23,7 +25,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     }
     private readonly ConcurrentDictionary<int, AnimeSeasonsMap> _animeIdToMapIndex = new();
 
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> _buildLocks = new();
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> BuildLocks = new();
     
     public AbsoluteEpisodeParser(ISaveService saveService, IAnimeService animeService)
     {
@@ -81,7 +83,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 return cachedMap;
             }
             
-            SemaphoreSlim lockObj = _buildLocks.GetOrAdd(animeTitle, _ => new SemaphoreSlim(1, 1));
+            SemaphoreSlim lockObj = BuildLocks.GetOrAdd(animeTitle, _ => new SemaphoreSlim(1, 1));
             await lockObj.WaitAsync();
 
             try
@@ -127,8 +129,6 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
     private void IndexMap(AnimeSeasonsMap map)
     {
-        if (map.Seasons == null) return;
-
         foreach (SeasonData season in map.Seasons.Values)
         {
             _animeIdToMapIndex.TryAdd(season.Id, map);
@@ -149,13 +149,13 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             {
                 if (!visitedIds.Add(currentId)) break;
 
-                AnimeDetails? details = await _animeService.GetFieldsAsync(currentId,  fields: [AnimeField.ALTER_TITLES, AnimeField.START_DATE,
-                    AnimeField.TITLE, AnimeField.EPISODES, AnimeField.RELATED_ANIME]);
+                AnimeDetails? details = await _animeService.GetFieldsAsync(currentId,  fields: [AnimeField.AlterTitles, AnimeField.StartDate,
+                    AnimeField.Title, AnimeField.Episodes, AnimeField.RelatedAnime]);
                 if (details == null) break;
                 
                 seasonChain.Insert(0, (currentId, details));
                 
-                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.PREQUEL);
+                RelatedAnime? prequel = details.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.Prequel);
                 if (prequel?.Details != null) currentId = prequel.Details.Id;
                 else break;
             }
@@ -163,17 +163,16 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             AnimeDetails? currentDetails = seasonChain.FirstOrDefault(x => x.id == animeId).details;
             
             if (currentDetails == null) currentDetails = seasonChain.Last().details; 
-            currentId = seasonChain.Last().id;
             
             while (currentDetails != null)
             {
-                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.SEQUEL);
+                RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.Sequel);
                 if (sequel?.Details != null && !visitedIds.Contains(sequel.Details.Id))
                 {
                     currentId = sequel.Details.Id;
                     visitedIds.Add(currentId);
-                    currentDetails = await _animeService.GetFieldsAsync(currentId, fields:[AnimeField.ALTER_TITLES, AnimeField.START_DATE, AnimeField.TITLE,
-                        AnimeField.EPISODES, AnimeField.RELATED_ANIME]);
+                    currentDetails = await _animeService.GetFieldsAsync(currentId, fields: [AnimeField.AlterTitles, AnimeField.StartDate, AnimeField.Title,
+                        AnimeField.Episodes, AnimeField.RelatedAnime]);
                     if (currentDetails != null)
                     {
                         seasonChain.Add((currentId, currentDetails));

@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models.MAL;
 
-public class MAL_UserData
+public class MalUserData
 {
     public int Id { get; set; }
     public string? Name { get; set; }

@@ -2,24 +2,20 @@
 
 namespace Aniki.Misc;
 
-class AnilistRateLimitHandler : DelegatingHandler
+internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : DelegatingHandler(innerHandler)
 {
-    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+    private static readonly SemaphoreSlim Semaphore = new(1, 1);
     
     private int _remainingRequests = 10;
     private DateTimeOffset _resetTime = DateTimeOffset.MinValue;
     
     private readonly Queue<DateTimeOffset> _requestTimestamps = new();
-    private const int MaxBurstRequests = 4;
+    private const int MAX_BURST_REQUESTS = 4;
     private static readonly TimeSpan BurstWindow = TimeSpan.FromSeconds(1);
-    
-    public AnilistRateLimitHandler(HttpMessageHandler innerHandler) : base(innerHandler)
-    {
-    }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        await _semaphore.WaitAsync(cancellationToken);
+        await Semaphore.WaitAsync(cancellationToken);
         try
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -41,7 +37,7 @@ class AnilistRateLimitHandler : DelegatingHandler
                 _requestTimestamps.Dequeue();
             }
             
-            if (_requestTimestamps.Count >= MaxBurstRequests)
+            if (_requestTimestamps.Count >= MAX_BURST_REQUESTS)
             {
                 DateTimeOffset oldestRequest = _requestTimestamps.Peek();
                 TimeSpan burstDelay = (oldestRequest + BurstWindow) - now;
@@ -59,7 +55,7 @@ class AnilistRateLimitHandler : DelegatingHandler
         }
         finally
         {
-            _semaphore.Release();
+            Semaphore.Release();
         }
 
         HttpResponseMessage response = await base.SendAsync(request, cancellationToken);

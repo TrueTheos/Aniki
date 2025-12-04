@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Aniki.Services.Cache;
+using Avalonia.Media.Imaging;
 
 namespace Aniki.Models;
 
@@ -11,16 +12,16 @@ public class UserData
 
 public class AnimeDetails : ObservableObject
 {
-    [CacheField(AnimeField.ID)] public int Id { get; set; }
-    [CacheField(AnimeField.TITLE)] public string? Title { get; set; }
-    [CacheField(AnimeField.MAIN_PICTURE)] public AnimePicture? MainPicture { get; set; }
-    [CacheField(AnimeField.STATUS)] public string? Status { get; set; }
-    [CacheField(AnimeField.SYNOPSIS)] public string? Synopsis { get; set; }
-    [CacheField(AnimeField.ALTER_TITLES)] public AlternativeTitles? AlternativeTitles { get; set; }
+    [CacheField(AnimeField.Id)] public int Id { get; set; }
+    [CacheField(AnimeField.Title)] public string? Title { get; set; }
+    [CacheField(AnimeField.MainPicture)] public AnimePicture? MainPicture { get; set; }
+    [CacheField(AnimeField.Status)] public string? Status { get; set; }
+    [CacheField(AnimeField.Synopsis)] public string? Synopsis { get; set; }
+    [CacheField(AnimeField.AlterTitles)] public AlternativeTitles? AlternativeTitles { get; set; }
     
     private UserAnimeStatus? _userStatus;
 
-    [CacheField(AnimeField.MY_LIST_STATUS, true)]
+    [CacheField(AnimeField.MyListStatus, true)]
     public UserAnimeStatus? UserStatus
     {
         get => _userStatus;
@@ -29,23 +30,23 @@ public class AnimeDetails : ObservableObject
             if (_userStatus != value)
             {
                 _userStatus = value;
-                OnPropertyChanged(nameof(UserStatus));
+                OnPropertyChanged();
             }
         }
     }
     
-    [CacheField(AnimeField.EPISODES)] public int? NumEpisodes { get; set; }
-    [CacheField(AnimeField.POPULARITY)] public int? Popularity { get; set; }
-    [CacheField(AnimeField.PICTURE)] public Bitmap? Picture { get; set; }
-    [CacheField(AnimeField.STUDIOS)] public string[]? Studios { get; set; }
-    [CacheField(AnimeField.START_DATE)] public string? StartDate { get; set; }
-    [CacheField(AnimeField.MEAN)] public float Mean { get; set; }
-    [CacheField(AnimeField.GENRES)] public string[]? Genres { get; set; }
-    [CacheField(AnimeField.RELATED_ANIME)] public RelatedAnime[]? RelatedAnime { get; set; }
-    [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
-    [CacheField(AnimeField.NUM_FAV)] public int? NumFavorites { get; set; }
-    [CacheField(AnimeField.STATS)] public AnimeStatistics? Statistics { get; set; }
-    [CacheField(AnimeField.VIDEOS)] public AnimeVideo[]? Videos { get; set; }
+    [CacheField(AnimeField.Episodes)] public int? NumEpisodes { get; set; }
+    [CacheField(AnimeField.Popularity)] public int? Popularity { get; set; }
+    [CacheField(AnimeField.Picture)] public Bitmap? Picture { get; set; }
+    [CacheField(AnimeField.Studios)] public string[]? Studios { get; set; }
+    [CacheField(AnimeField.StartDate)] public string? StartDate { get; set; }
+    [CacheField(AnimeField.Mean)] public float Mean { get; set; }
+    [CacheField(AnimeField.Genres)] public string[]? Genres { get; set; }
+    [CacheField(AnimeField.RelatedAnime)] public RelatedAnime[]? RelatedAnime { get; set; }
+    [CacheField(AnimeField.TrailerUrl)] public string? TrailerUrl { get; set; }
+    [CacheField(AnimeField.NumFav)] public int? NumFavorites { get; set; }
+    [CacheField(AnimeField.Stats)] public AnimeStatistics? Statistics { get; set; }
+    [CacheField(AnimeField.Videos)] public AnimeVideo[]? Videos { get; set; }
     
     public AnimeDetails(){}
     
@@ -116,9 +117,9 @@ public class RelatedAnime
 {
     public enum RelationType
     {
-        PREQUEL,
-        SEQUEL,
-        OTHER
+        Prequel,
+        Sequel,
+        Other
     };
     public AnimeDetails? Details { get; set; }
     public required RelationType Relation { get; set; }

@@ -1,6 +1,6 @@
-using Aniki.Services.Interfaces;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 

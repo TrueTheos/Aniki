@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
-using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +22,7 @@ public partial class CalendarViewModel : ViewModelBase
         ShowWindow();
     }
 
-    private readonly List<string> _watchingList = new() { };
+    private readonly List<string> _watchingList = [];
 
     [ObservableProperty]
     private bool _isLoading;

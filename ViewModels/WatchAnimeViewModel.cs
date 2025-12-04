@@ -1,19 +1,17 @@
 namespace Aniki.ViewModels;
 
-public partial class WatchAnimeViewModel : ViewModelBase
+public class WatchAnimeViewModel : ViewModelBase
 {
-    private int _selectedTabIndex;
-    
     public int SelectedTabIndex
     {
-        get => _selectedTabIndex;
+        get;
         set
         {
-            if (_selectedTabIndex != value)
+            if (field != value)
             {
-                _selectedTabIndex = value;
+                field = value;
                 OnPropertyChanged();
-                
+
                 if (value == 0)
                     _ = DownloadedViewModel.Enter();
                 else if (value == 1)
@@ -21,7 +19,7 @@ public partial class WatchAnimeViewModel : ViewModelBase
             }
         }
     }
-    
+
     public DownloadedViewModel DownloadedViewModel { get; }
     public OnlineViewModel OnlineViewModel { get; }
     

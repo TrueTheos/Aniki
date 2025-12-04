@@ -1,32 +1,31 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Aniki.Converters;
+using Aniki.Services.Cache;
 using Avalonia.Media.Imaging;
 
 namespace Aniki.Models.MAL;
 
 public enum AnimeField 
 {
-    ID,
-    TITLE, 
-    MAIN_PICTURE, 
-    STATUS, 
-    SYNOPSIS, 
-    ALTER_TITLES, 
-    MY_LIST_STATUS, 
-    EPISODES,
-    POPULARITY, 
-    PICTURE, 
-    STUDIOS, 
-    START_DATE, 
-    MEAN, 
-    GENRES, 
-    RELATED_ANIME, 
-    VIDEOS, 
-    NUM_FAV, 
-    STATS, 
-    TRAILER_URL
+    Id,
+    Title, 
+    MainPicture, 
+    Status, 
+    Synopsis, 
+    AlterTitles, 
+    MyListStatus, 
+    Episodes,
+    Popularity, 
+    Picture, 
+    Studios, 
+    StartDate, 
+    Mean, 
+    Genres, 
+    RelatedAnime, 
+    Videos, 
+    NumFav, 
+    Stats, 
+    TrailerUrl
 }
 
 public class MalUserAnimeListResponse
@@ -60,15 +59,15 @@ public class MalPaging
 
 public class MalAnimeDetails : ObservableObject
 {
-    [CacheField(AnimeField.ID)] public int Id { get; set; }
-    [CacheField(AnimeField.TITLE)] public string? Title { get; set; }
-    [CacheField(AnimeField.MAIN_PICTURE)][JsonPropertyName("main_picture")] public MalMainPicture? MainPicture { get; set; }
-    [CacheField(AnimeField.STATUS)] public string? Status { get; set; }
-    [CacheField(AnimeField.SYNOPSIS)] public string? Synopsis { get; set; }
-    [CacheField(AnimeField.ALTER_TITLES)][JsonPropertyName("alternative_titles")] public MalAlternativeTitles? AlternativeTitles { get; set; }
+    [CacheField(AnimeField.Id)] public int Id { get; set; }
+    [CacheField(AnimeField.Title)] public string? Title { get; set; }
+    [CacheField(AnimeField.MainPicture)][JsonPropertyName("main_picture")] public MalMainPicture? MainPicture { get; set; }
+    [CacheField(AnimeField.Status)] public string? Status { get; set; }
+    [CacheField(AnimeField.Synopsis)] public string? Synopsis { get; set; }
+    [CacheField(AnimeField.AlterTitles)][JsonPropertyName("alternative_titles")] public MalAlternativeTitles? AlternativeTitles { get; set; }
     
     private MalMyListStatus? _myListStatus;
-    [CacheField(AnimeField.MY_LIST_STATUS, true)]
+    [CacheField(AnimeField.MyListStatus, true)]
     [JsonPropertyName("my_list_status")]
     public MalMyListStatus? MyListStatus
     {
@@ -78,28 +77,28 @@ public class MalAnimeDetails : ObservableObject
             if (_myListStatus != value)
             {
                 _myListStatus = value;
-                OnPropertyChanged(nameof(MyListStatus));
+                OnPropertyChanged();
             }
         }
     }
-    [CacheField(AnimeField.EPISODES)][JsonPropertyName("num_episodes")] public int? NumEpisodes { get; set; }
-    [CacheField(AnimeField.POPULARITY)] public int? Popularity { get; set; }
-    [CacheField(AnimeField.PICTURE)] public Bitmap? Picture { get; set; }
-    [CacheField(AnimeField.STUDIOS)] public MalStudio[]? Studios { get; set; } 
-    [CacheField(AnimeField.START_DATE)][JsonPropertyName("start_date")] public string? StartDate { get; set; }
+    [CacheField(AnimeField.Episodes)][JsonPropertyName("num_episodes")] public int? NumEpisodes { get; set; }
+    [CacheField(AnimeField.Popularity)] public int? Popularity { get; set; }
+    [CacheField(AnimeField.Picture)] public Bitmap? Picture { get; set; }
+    [CacheField(AnimeField.Studios)] public MalStudio[]? Studios { get; set; } 
+    [CacheField(AnimeField.StartDate)][JsonPropertyName("start_date")] public string? StartDate { get; set; }
     private float _mean;
-    [CacheField(AnimeField.MEAN)] [JsonPropertyName("mean")]
+    [CacheField(AnimeField.Mean)] [JsonPropertyName("mean")]
     public float Mean 
     { 
         get => _mean;
         set => _mean = (float)Math.Round(value, 1);
     }
-    [CacheField(AnimeField.GENRES)] public MalGenre[]? Genres { get; set; }
-    [CacheField(AnimeField.RELATED_ANIME)][JsonPropertyName("related_anime")] public MalRelatedAnime[]? RelatedAnime { get; set; }
-    [CacheField(AnimeField.NUM_FAV)][JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
-    [CacheField(AnimeField.STATS)] public MalStatistics? Statistics { get; set; }
-    [CacheField(AnimeField.TRAILER_URL)] public string? TrailerUrl { get; set; }
-    [CacheField(AnimeField.VIDEOS)] public AnimeVideo[]? Videos { get; set; }
+    [CacheField(AnimeField.Genres)] public MalGenre[]? Genres { get; set; }
+    [CacheField(AnimeField.RelatedAnime)][JsonPropertyName("related_anime")] public MalRelatedAnime[]? RelatedAnime { get; set; }
+    [CacheField(AnimeField.NumFav)][JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
+    [CacheField(AnimeField.Stats)] public MalStatistics? Statistics { get; set; }
+    [CacheField(AnimeField.TrailerUrl)] public string? TrailerUrl { get; set; }
+    [CacheField(AnimeField.Videos)] public AnimeVideo[]? Videos { get; set; }
 }
 
 public class MalStudio

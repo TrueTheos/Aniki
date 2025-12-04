@@ -2,31 +2,30 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Aniki.Models;
-using Aniki.Models.MAL;
 using Aniki.Services.Anime;
+using Aniki.Services.Anime.Providers;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Auth.Providers;
 
 public class MalLoginProvider : ILoginProvider
 {
-    private const string ClientId = "dc4a7501af14aec92b98f719b666c37c";
-    private const string RedirectUri = "http://localhost:8000/callback";
+    private const string CLIENT_ID = "dc4a7501af14aec92b98f719b666c37c";
+    private const string REDIRECT_URI = "http://localhost:8000/callback";
     private string _codeVerifier = "";
     private readonly HttpListener _httpListener = new();
 
     private readonly ITokenService _tokenService;
     private readonly IAnimeService _animeService;
 
-    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.MAL;
+    public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.Mal;
 
     public string LoginUrl => $"https://myanimelist.net/v1/oauth2/authorize" +
                               $"?response_type=code" +
-                              $"&client_id={ClientId}" +
+                              $"&client_id={CLIENT_ID}" +
                               $"&code_challenge={_codeVerifier}" +
                               $"&code_challenge_method=plain" +
-                              $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}" +
+                              $"&redirect_uri={Uri.EscapeDataString(REDIRECT_URI)}" +
                               $"&state={Guid.NewGuid()}";
     
     public MalLoginProvider(ITokenService tokenService, IAnimeService animeService, MalService malService)
@@ -44,7 +43,7 @@ public class MalLoginProvider : ILoginProvider
             _codeVerifier = "this_is_a_long_string_for_pkce_but_mal_uses_plain_so_it_doesnt_matter";
 
             _httpListener.Prefixes.Clear();
-            _httpListener.Prefixes.Add(RedirectUri.EndsWith("/") ? RedirectUri : RedirectUri + "/");
+            _httpListener.Prefixes.Add(REDIRECT_URI.EndsWith("/") ? REDIRECT_URI : REDIRECT_URI + "/");
             _httpListener.Start();
 
             progressReporter.Report("Redirecting to MyAnimeList...");
@@ -81,7 +80,7 @@ public class MalLoginProvider : ILoginProvider
         }
         catch (HttpListenerException hlex) when (hlex.ErrorCode == 5)
         {
-            progressReporter.Report($"Error: Access denied starting listener on {RedirectUri}.\nTry running Aniki as Administrator OR use netsh http add urlacl url={RedirectUri}/ user=Everyone");
+            progressReporter.Report($"Error: Access denied starting listener on {REDIRECT_URI}.\nTry running Aniki as Administrator OR use netsh http add urlacl url={REDIRECT_URI}/ user=Everyone");
             return null;
         }
         catch (Exception ex)
@@ -132,11 +131,11 @@ public class MalLoginProvider : ILoginProvider
             using HttpClient client = new();
             FormUrlEncodedContent content = new(new[]
             {
-                new KeyValuePair<string, string>("client_id", ClientId),
+                new KeyValuePair<string, string>("client_id", CLIENT_ID),
                 new KeyValuePair<string, string>("code", code),
                 new KeyValuePair<string, string>("code_verifier", _codeVerifier),
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
-                new KeyValuePair<string, string>("redirect_uri", RedirectUri)
+                new KeyValuePair<string, string>("redirect_uri", REDIRECT_URI)
             });
 
             HttpResponseMessage response = await client.PostAsync("https://myanimelist.net/v1/oauth2/token", content);

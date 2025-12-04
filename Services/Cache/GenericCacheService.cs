@@ -1,10 +1,9 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json;
-using Aniki.Services.CustomTypeHandlers;
+using Aniki.Services.Cache.CustomTypeHandlers;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Cache;
 
 public delegate void FieldChangeHandler<TEntity>(TEntity updatedEntity);
 
@@ -61,7 +60,17 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             EnsureCacheDirectory();
             _ = LoadFromDiskAsync();
             
-            _diskSyncTimer = new Timer(async _ => await SyncToDiskAsync(), null, _options.DiskSyncInterval, _options.DiskSyncInterval);
+            _diskSyncTimer = new Timer(async void (_) =>
+            {
+                try
+                {
+                    await SyncToDiskAsync();
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Failed to save to disk {e}");
+                }
+            }, null, _options.DiskSyncInterval, _options.DiskSyncInterval);
         }
     }
 
@@ -108,7 +117,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                 
                 foreach (KeyValuePair<TFieldEnum, PropertyInfo> prop in _propertyMap)
                 {
-                    if (!stored.Entry.Data.TryGetProperty(prop.Key.ToString()!, out JsonElement value)) continue;
+                    if (!stored.Entry.Data.TryGetProperty(prop.Key.ToString(), out JsonElement value)) continue;
                     
                     Type propType = prop.Value.PropertyType;
 
@@ -215,11 +224,11 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                     handler.Serialize(val, fs);
                 }
 
-                dataDict[prop.Key.ToString()!] = $"file://{sidecarFileName}";
+                dataDict[prop.Key.ToString()] = $"file://{sidecarFileName}";
             }
             else
             {
-                dataDict[prop.Key.ToString()!] = val;
+                dataDict[prop.Key.ToString()] = val;
             }
         }
 
@@ -233,11 +242,11 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             
             if (entry.IsFieldFetched(field))
             {
-                fetchedFields.Add(field.ToString()!);
+                fetchedFields.Add(field.ToString());
                 DateTime? expiry = entry.GetFieldExpiration(field);
                 if (expiry.HasValue)
                 {
-                    fieldExpirations[field.ToString()!] = expiry.Value;
+                    fieldExpirations[field.ToString()] = expiry.Value;
                 }
             }
         }

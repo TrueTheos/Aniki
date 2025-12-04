@@ -1,11 +1,11 @@
 using System.Collections.Concurrent;
-using Avalonia.Media.Imaging;
-using System.Text.Json.Serialization;
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
+using Aniki.Services.Cache;
 using Aniki.Services.Interfaces;
+using Avalonia.Media.Imaging;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Save;
 
     
 public struct SeasonData
@@ -27,19 +27,18 @@ public class AnimeSeasonsMap
 
 public class SaveService : ISaveService
 {
-    public static readonly string MAIN_DIRECTORY = Path.Combine(
+    public static readonly string MainDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Aniki");
     
-    public static readonly string CACHE_PATH = Path.Combine(MAIN_DIRECTORY, "cache");
-    public static readonly string TokenDirectoryPath = Path.Combine(MAIN_DIRECTORY, "tokens");
+    public static readonly string CachePath = Path.Combine(MainDirectory, "cache");
+    public static readonly string TokenDirectoryPath = Path.Combine(MainDirectory, "tokens");
 
-    public string DefaultEpisodesFolder => Path.Combine(MAIN_DIRECTORY, "Episodes");
-    private string _imageCacheFolder => Path.Combine(MAIN_DIRECTORY, "ImageCache");
+    public string DefaultEpisodesFolder => Path.Combine(MainDirectory, "Episodes");
+    private string ImageCacheFolder => Path.Combine(MainDirectory, "ImageCache");
     
-
-    private ImageSaver _imageSaver;
-    private SaveEntity<SettingsConfig> _settingsSaver;
+    private readonly ImageSaver _imageSaver;
+    private readonly SaveEntity<SettingsConfig> _settingsSaver;
 
     private Dictionary<ILoginProvider.ProviderType,
         GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>> _seasonsCache;
@@ -55,13 +54,13 @@ public class SaveService : ISaveService
         {
             CacheOptions options = new()
             {
-                DiskCachePath = $"{CACHE_PATH}/SeasonMaps/{providerType}",
+                DiskCachePath = $"{CachePath}/SeasonMaps/{providerType}",
             };
             _seasonsCache[providerType] = CreateCache<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>(fetchHandler:null, options: options);
         }
 
-        _imageSaver = (ImageSaver)CreateSaveEntity<Bitmap>(_imageCacheFolder);
-        _settingsSaver = CreateSaveEntity<SettingsConfig>(MAIN_DIRECTORY);
+        _imageSaver = (ImageSaver)CreateSaveEntity<Bitmap>(ImageCacheFolder);
+        _settingsSaver = CreateSaveEntity<SettingsConfig>(MainDirectory);
 
         EnsureDirectoriesExist();
     }
@@ -86,8 +85,6 @@ public class SaveService : ISaveService
         where TEntity : class, new()
         where TFieldEnum : Enum
     {
-        Type cacheType = typeof(GenericCacheService<TKey, TEntity, TFieldEnum>);
-
         ICacheService cache = _caches.GetOrAdd(Guid.NewGuid(), _ =>
             new GenericCacheService<TKey, TEntity, TFieldEnum>(fetchHandler, options));
 
@@ -96,8 +93,8 @@ public class SaveService : ISaveService
 
     private void EnsureDirectoriesExist()
     {
-        if (!Directory.Exists(MAIN_DIRECTORY))
-            Directory.CreateDirectory(MAIN_DIRECTORY);
+        if (!Directory.Exists(MainDirectory))
+            Directory.CreateDirectory(MainDirectory);
 
         if (!Directory.Exists(DefaultEpisodesFolder))
             Directory.CreateDirectory(DefaultEpisodesFolder);
@@ -133,8 +130,8 @@ public class SaveService : ISaveService
 
     public void Wipe()
     {
-        DeleteFolder(CACHE_PATH);
-        DeleteFolder(_imageCacheFolder);
+        DeleteFolder(CachePath);
+        DeleteFolder(ImageCacheFolder);
         DeleteFolder(TokenDirectoryPath);
     }
 

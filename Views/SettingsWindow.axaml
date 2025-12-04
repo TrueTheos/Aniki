@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
-        xmlns:c="clr-namespace:Aniki.Converters;assembly=Aniki"
         mc:Ignorable="d"
         x:Class="Aniki.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
@@ -16,11 +15,6 @@
         Background="Transparent"
 		WindowStartupLocation="CenterOwner"
         ExtendClientAreaToDecorationsHint="True">
-
-	<Window.Resources>
-        <c:BytesToMegabytesConverter x:Key="BytesToMegabytesConverter"/>
-    </Window.Resources>
-
 	<Design.DataContext>
 		<vm:SettingsViewModel/>
 	</Design.DataContext>

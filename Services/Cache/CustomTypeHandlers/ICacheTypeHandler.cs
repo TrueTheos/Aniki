@@ -1,4 +1,4 @@
-﻿namespace Aniki.Services.CustomTypeHandlers;
+﻿namespace Aniki.Services.Cache.CustomTypeHandlers;
 
 public interface ICacheTypeHandler
 {

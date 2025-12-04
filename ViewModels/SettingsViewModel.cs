@@ -1,6 +1,6 @@
 ﻿using Aniki.Services.Interfaces;
-using Avalonia.Controls;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Win32;

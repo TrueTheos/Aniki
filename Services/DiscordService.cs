@@ -6,7 +6,7 @@ namespace Aniki.Services;
 
 public class DiscordService : IDiscordService, IDisposable
 {
-    private const string ClientId = "1371263147792535592"; 
+    private const string CLIENT_ID = "1371263147792535592"; 
     private DiscordRpcClient? _client;
 
     public DiscordService()
@@ -18,21 +18,21 @@ public class DiscordService : IDiscordService, IDisposable
     {
         try 
         {
-            _client = new DiscordRpcClient(ClientId);
+            _client = new DiscordRpcClient(CLIENT_ID);
 
             _client.Logger = new ConsoleLogger { Level = LogLevel.Warning };
 
-            _client.OnReady += (sender, e) => 
+            _client.OnReady += (_, e) => 
             {
                 Log.Information($"Discord RPC Ready. Connected to user: {e.User.Username}");
             };
 
-            _client.OnError += (sender, e) =>
+            _client.OnError += (_, e) =>
             {
                 Log.Error($"Discord RPC Error: {e.Code} - {e.Message}");
             };
             
-            _client.OnConnectionFailed += (sender, e) =>
+            _client.OnConnectionFailed += (_, e) =>
             {
                 Log.Error($"Discord RPC Connection Failed: {e}");
             };
@@ -64,7 +64,7 @@ public class DiscordService : IDiscordService, IDisposable
             State = $"Episode {episodeNumber}",
             Timestamps = Timestamps.Now,
             Assets = assets,
-            Buttons = new DiscordRPC.Button[]
+            Buttons = new Button[]
             {
                 new() { Label = "Get Aniki", Url = "https://github.com/TrueTheos/Aniki" }
             }
