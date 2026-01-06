@@ -426,19 +426,15 @@
                                                     <Grid ToolTip.Tip="Play Trailer">
                                                         <Image Stretch="UniformToFill" ClipToBounds="True"
                                                                asyncImageLoader:ImageLoader.Source="{Binding Details.Videos[0].Thumbnail}"/>
-                                                        <Border Background="#55000000">
-                                                            <Ellipse Width="32" 
-                                                                     Height="32"
-                                                                     Fill="#DDFFFFFF"
-                                                                     HorizontalAlignment="Center"
-                                                                     VerticalAlignment="Center"/>
-                                                        </Border>
-                                                        <PathIcon Data="M10 8v8l6-4z"
-                                                                  Width="16"
-                                                                  Height="16"
-                                                                  Foreground="{StaticResource RedColor}"
-                                                                  HorizontalAlignment="Center"
-                                                                  VerticalAlignment="Center"/>
+                                                        <Grid>
+                                                            <Ellipse Width="30" Height="30"
+                                                                     Fill="{StaticResource RedColor}"
+                                                                     Opacity="0.95"/>
+                                                            <PathIcon Data="M8 5v14l11-7z"
+                                                                      Width="16" Height="16"
+                                                                      Foreground="White"
+                                                                      Margin="6,0,0,0"/>
+                                                        </Grid>
                                                     </Grid>
                                                 </Button>
                                             </StackPanel>
@@ -551,7 +547,15 @@
                                                                         Background="#00000000"
                                                                         CommandParameter="{Binding Url}"
                                                                         Command="{Binding $parent[UserControl].((vm:AnimeDetailsViewModel)DataContext).OpenUrlCommand}">
-                                                                    <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="50" Height="50"/>
+                                                                    <Grid>
+                                                                        <Ellipse Width="50" Height="50"
+                                                                                Fill="{StaticResource RedColor}"
+                                                                                Opacity="0.95"/>
+                                                                        <PathIcon Data="M8 5v14l11-7z"
+                                                                                Width="25" Height="25"
+                                                                                Foreground="White"
+                                                                                Margin="6,0,0,0"/>
+                                                                    </Grid>
                                                                 </Button>
                                                             </Grid>
                                                         </Border>

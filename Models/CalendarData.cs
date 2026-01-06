@@ -28,6 +28,9 @@ public partial class AnimeScheduleItem : ObservableObject
 
     [ObservableProperty]
     private string _title = "";
+    
+    [ObservableProperty]
+    private string _description = "";
 
     [ObservableProperty]
     private DateTime _airingAt;

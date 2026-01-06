@@ -216,6 +216,7 @@ public partial class CalendarViewModel : ViewModelBase
         {
             Title = original.Title,
             AiringAt = original.AiringAt,
+            Description = original.Description,
             EpisodeInfo = original.EpisodeInfo ?? $"EP{original.Episode} • {original.Type}",
             Type = original.Type,
             Episode = original.Episode,

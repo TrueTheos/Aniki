@@ -37,6 +37,7 @@ public class CalendarService : ICalendarService
                       format
                       type
                       meanScore
+                      description
                     }
                     episode
                     airingAt
@@ -205,10 +206,13 @@ public class CalendarService : ICalendarService
         float? meanScoreScaled = meanScore.HasValue
             ? meanScore.Value / 10f
             : null;
+
+        string description = media["description"]?.ToString() ?? "No description";
         
         AnimeScheduleItem result = new()
         {
             Title = title,
+            Description = description,
             AiringAt = airingAt,
             Episode = episode,
             EpisodeInfo = episode > 0 ? $"EP{episode} • {format}" : format,

@@ -195,7 +195,7 @@
                                     
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Background="Transparent">
+                                            <StackPanel Background="Transparent" ToolTip.Tip="Click for details!">
                                                 <!--  Air time  -->
                                                 <TextBlock
                                                     Margin="8,4,0,0"
@@ -213,7 +213,7 @@
                                                     CornerRadius="8"
                                                     BoxShadow="0 2 8 0 #4D000000">
 
-                                                    <Grid>
+                                                    <Grid Cursor="Hand">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="48" />
                                                             <ColumnDefinition Width="*" />
@@ -237,8 +237,7 @@
                                                             Grid.Column="1"
                                                             Margin="12,6"
                                                             VerticalAlignment="Center"
-                                                            Cursor="Hand"
-                                                            ToolTip.Tip="Click click to show details">
+                                                            Cursor="Hand">
 
                                                             <!--  Title  -->
                                                             <TextBlock
