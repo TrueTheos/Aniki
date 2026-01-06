@@ -29,8 +29,8 @@ public partial class AnimeCard : UserControl
     {
         if (_data != null && sender is AnimeCardData data)
         {
-            if (e.PropertyName == nameof(AnimeCardData.MyListStatus))
-                _data.MyListStatus = data.MyListStatus;
+            if (e.PropertyName == nameof(AnimeCardData.UserStatus))
+                _data.UserStatus = data.UserStatus;
         }
     }
 

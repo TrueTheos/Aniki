@@ -14,5 +14,5 @@ public partial class AnimeCardData : ObservableObject
     [ObservableProperty] private float _score;
     
     [ObservableProperty]
-    private AnimeStatus? _myListStatus;
+    private AnimeStatus? _userStatus;
 }

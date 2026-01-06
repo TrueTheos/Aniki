@@ -82,7 +82,7 @@ public class AnimeDetails : ObservableObject
             Title = Title,
             ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
             Score = Mean,
-            MyListStatus = UserStatus?.Status ?? AnimeStatus.None
+            UserStatus = UserStatus?.Status ?? AnimeStatus.None
         };
     }
 }

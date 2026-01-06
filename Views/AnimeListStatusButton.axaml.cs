@@ -40,9 +40,9 @@ public partial class AnimeListStatusButton : UserControl
         CompletedButton.Classes.Add("visible");
         RemoveButton.Classes.Add("visible");
 
-        if (_data!.MyListStatus != null)
+        if (_data!.UserStatus != null)
         {
-            switch (_data.MyListStatus.Value)
+            switch (_data.UserStatus.Value)
             {
                 case AnimeStatus.None:
                     RemoveButton.IsVisible = false;
@@ -128,7 +128,7 @@ public partial class AnimeListStatusButton : UserControl
                     _animeService.SetAnimeStatusAsync(_data!.AnimeId, StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus());
                 }
 
-                _data!.MyListStatus = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
+                _data!.UserStatus = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
                 HideStatusButtons();
                 ShowStatusButtons();
             }

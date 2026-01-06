@@ -366,15 +366,14 @@
                                     Click="ScrollRight"
                                     CommandParameter="{Binding #TrendingAllTimeScroller}"
                                     Foreground="White"
-                                    Width="50" Height="50"
+                                    Width="30" Height="30"
                                     CornerRadius="25"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
-                                    Margin="0,0,-40,0"
+                                    Margin="0,0,-40,30"
                                     ZIndex="10"
-                                    BorderThickness="0"
-                                    Opacity="0.9">
-                                <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
+                                    BorderThickness="0">
+                                <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="30" Height="30" />
                             </Button>
                         </Grid>
                     </StackPanel>

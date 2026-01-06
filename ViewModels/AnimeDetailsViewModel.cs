@@ -55,10 +55,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         get => _selectedStatus;
         set
         {
-            if (SetProperty(ref _selectedStatus, value))
-            {
-                _ = UpdateAnimeStatus(value);
-            }
+            SetProperty(ref _selectedStatus, value);
         }
     }
 
@@ -197,6 +194,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details == null) return;
     
         SelectedStatus = status.ToAnimeStatus();
+        _ = UpdateAnimeStatus(SelectedStatus);
     }
 
     [RelayCommand]

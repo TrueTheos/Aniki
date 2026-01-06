@@ -118,6 +118,7 @@ public class AnimeService : IAnimeService
             
             foreach (AnimeDetails anime in animeList)
             {
+                //todo, dont use the inner list of animes in provider. cuz it doesnt update. we need to make sure it updates each time we make a change or just use cache
                 _caches[_currentProvider.Provider].UpdatePartial(
                     anime.Id,
                     anime,

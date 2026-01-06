@@ -98,7 +98,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
                     Title = anime.Title,
                     ImageUrl = anime.ImageUrl,
                     Score = anime.Mean,
-                    MyListStatus = null
+                    UserStatus = null
                 });
             }
         }
@@ -239,16 +239,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
         foreach (AnimeDetails result in pageResults)
         {
-            AnimePicture? picture = result.MainPicture;
-            AnimeCardData card = new()
-            {
-                AnimeId = result.Id,
-                Title = result.Title,
-                MyListStatus  = null,
-                ImageUrl = picture!.Large != null ? picture.Large : picture.Medium
-            };
-            
-            SearchResults.Add(card);
+            SearchResults.Add(result.ToCardData());
         }
 
         UpdatePaginationState();

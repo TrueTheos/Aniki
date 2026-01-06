@@ -14,12 +14,12 @@ public class MalService : IAnimeProvider
     private bool _isLoggedIn;
     public bool IsLoggedIn => _isLoggedIn;
 
-    public enum AnimeRankingCategory { Airing, Upcoming, Alltime, Bypopularity }
+    private enum AnimeRankingCategory { Airing, Upcoming, Alltime, Bypopularity }
     
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private HttpClient _client = new();
-    
-    private List<AnimeDetails>? _userAnimeList;
+
+    private Dictionary<int, AnimeDetails>? _userAnimeDict;
 
     private readonly Stopwatch _sw = new();
     private int _requestCounter;
@@ -32,7 +32,7 @@ public class MalService : IAnimeProvider
     private readonly ISaveService _saveService;
 
     private string _accessToken = "";
-    private string _allFields;
+    private readonly string _allFields;
 
     public MalService(ISaveService saveService)
     {
@@ -43,10 +43,8 @@ public class MalService : IAnimeProvider
         }
 
         _allFields = urlFields.ToString();
-
         _saveService = saveService;
     }
-
 
     public void Init(string? accessToken)
     {
@@ -182,16 +180,15 @@ public class MalService : IAnimeProvider
     {
         if (!IsLoggedIn) return new();
         
-        if (_userAnimeList != null)
+        if (_userAnimeDict != null)
         {
             return status == AnimeStatus.None 
-                ? _userAnimeList 
-                : _userAnimeList.Where(a => a.UserStatus?.Status == status).ToList();
+                ? _userAnimeDict.Values.ToList()
+                : _userAnimeDict.Values.Where(a => a.UserStatus?.Status == status).ToList();
         }
 
         try
         {
-            List<AnimeDetails> animeList = new();
             Console.WriteLine("2 GetUserAnimeListAsync");
             string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={_allFields}&limit=1000&nsfw=true";
             
@@ -202,43 +199,56 @@ public class MalService : IAnimeProvider
 
             string? nextPageUrl = baseUrl;
             
+            List<AnimeDetails> fetchedList = new();
             while (nextPageUrl != null)
             {
                 MalUserAnimeListResponse? response = await GetAndDeserializeAsync<MalUserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
                 if (response?.Data != null)
                 {
-                    animeList.AddRange( response.Data.Select(x => ConvertMalToUnified(x.Node)).ToList());
+                    fetchedList.AddRange( response.Data.Select(x => ConvertMalToUnified(x.Node)).ToList());
                 }
                 nextPageUrl = response?.Paging?.Next;
             }
 
             if (status == AnimeStatus.None)
             {
-                _userAnimeList = animeList;
+                _userAnimeDict = new();
+                foreach (var anime in fetchedList)
+                {
+                    _userAnimeDict[anime.Id] = anime;
+                }
             }
-            return animeList;
+            return fetchedList;
         }
         catch (Exception ex)
         {
             throw new($"Error loading anime list: {ex.Message}", ex);
         }
     }
+
+    public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
+    {
+        var success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString());
+        if (success) _userAnimeDict?[animeId]?.UserStatus?.Status = status;
+    }
+
+    public async Task SetAnimeScoreAsync(int animeId, int score)
+    {
+        var success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString());
+        if (success) _userAnimeDict?[animeId]?.UserStatus?.Score = score;
+    }
+
+    public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
+    {
+        var success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString());
+        if (success) _userAnimeDict?[animeId]?.UserStatus?.EpisodesWatched = episodes;
+    }
     
-    public Task SetAnimeStatusAsync(int animeId, AnimeStatus status) 
-        => SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString());
-
-    public Task SetAnimeScoreAsync(int animeId, int score) 
-        => SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString());
-
-    public Task SetEpisodesWatchedAsync(int animeId, int episodes) 
-        => SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString());
-
-    
-    private async Task SetMyListStatusField(int  animeId, UserAnimeStatus.UserAnimeStatusField field, string value)
+    private async Task<bool> SetMyListStatusField(int animeId, UserAnimeStatus.UserAnimeStatusField field, string value)
     {
         if (!IsLoggedIn)
         {
-            return;
+            return false;
         }
 
         string fieldName = field switch
@@ -258,6 +268,8 @@ public class MalService : IAnimeProvider
         {
             throw new($"Failed to update anime: {response.StatusCode}");
         }
+
+        return true;
     }
     
     public async Task RemoveFromUserListAsync(int animeId)
@@ -270,8 +282,10 @@ public class MalService : IAnimeProvider
         {
             throw new($"Failed to remove anime from list: {response.StatusCode}");
         }
-
-        _userAnimeList = null;
+        else
+        {
+            _userAnimeDict?.Remove(animeId);
+        }
     }
 
     #endregion
