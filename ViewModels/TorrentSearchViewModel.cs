@@ -34,7 +34,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     public void Update(AnimeDetails? details, int episodesWatched)
     {
         _details = details;
-        
+        TorrentSearchTerms = "";
         TorrentsList.Clear();
 
         _ = SearchTorrents();

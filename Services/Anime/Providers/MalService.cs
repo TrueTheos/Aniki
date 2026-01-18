@@ -269,6 +269,12 @@ public class MalService : IAnimeProvider
             throw new($"Failed to update anime: {response.StatusCode}");
         }
 
+        if (_userAnimeDict != null && !_userAnimeDict.ContainsKey(animeId))
+        {
+            AnimeDetails? details = await FetchAnimeDetailsAsync(animeId, Enum.GetValues<AnimeField>());
+            if (details != null) _userAnimeDict[animeId] = details;
+        }
+        
         return true;
     }
     

@@ -95,9 +95,14 @@ public class MalLoginProvider : ILoginProvider
         }
     }
     
-    public Task SaveTokenAsync(string token)
+    public async Task SaveTokenAsync(string token)
     {
-        return Task.CompletedTask;
+        TokenResponse tokenResponse = new()
+        {
+            AccessToken = token,
+            ExpiresIn = 2415600
+        };
+        await _tokenService.SaveTokensAsync(Provider, tokenResponse);
     }
 
     public async Task<string?> CheckExistingLoginAsync()

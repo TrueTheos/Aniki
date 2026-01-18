@@ -54,7 +54,7 @@ public partial class CalendarViewModel : ViewModelBase
 
     public override async Task Enter()
     {
-        _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+        _windowStartDate = DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
         await LoadUserAnimeList();
         await LoadScheduleAsync();
     }
@@ -136,9 +136,9 @@ public partial class CalendarViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task GoToToday()
+    private async Task GoToStart()
     {
-        _windowStartDate = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
+        _windowStartDate = DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
         await LoadScheduleAsync(true);
     }
 
