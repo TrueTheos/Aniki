@@ -174,7 +174,6 @@
                                         <MenuItem Header="Popularity" Command="{Binding SetSortCommand}" CommandParameter="Popularity"/>
                                         <MenuItem Header="Start Date (Newest)" Command="{Binding SetSortCommand}" CommandParameter="DateDesc"/>
                                         <MenuItem Header="Start Date (Oldest)" Command="{Binding SetSortCommand}" CommandParameter="DateAsc"/>
-                                        <MenuItem Header="Recently Added" Command="{Binding SetSortCommand}" CommandParameter="RecentlyAdded"/>
                                     </MenuFlyout>
                                 </Button.Flyout>
                                 <StackPanel Orientation="Horizontal" Spacing="10">

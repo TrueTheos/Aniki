@@ -9,14 +9,18 @@
         x:Name="Root"
         Padding="16"
         HorizontalAlignment="Stretch"
-        Margin="30,0,30,0"
+        Margin="30,4,30,0"
         VerticalAlignment="Stretch"
         Background="{StaticResource BackgroundBlack}">
         <TabControl SelectedIndex="{Binding SelectedTabIndex}">
-            <TabItem Header="Downloaded">
+            <TabItem Header="Downloaded"
+                     FontSize="24"
+                     FontWeight="Normal">
                 <views:DownloadedView DataContext="{Binding DownloadedViewModel}"/>
             </TabItem>
-            <TabItem Header="Online">
+            <TabItem Header="Online"
+                     FontSize="24"
+                     FontWeight="Normal">
                 <views:OnlineView DataContext="{Binding OnlineViewModel}"/>
             </TabItem>
         </TabControl>

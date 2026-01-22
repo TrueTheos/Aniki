@@ -21,7 +21,11 @@
                          Text="{Binding TorrentSearchTerms}" 
                          Watermark="Additional search terms..."
                          Margin="20,0"
-                         VerticalContentAlignment="Center"/>
+                         VerticalContentAlignment="Center">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchTorrentsCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
                 <Button
                         Command="{Binding SearchTorrentsCommand}"
                         Background="#E50914"
