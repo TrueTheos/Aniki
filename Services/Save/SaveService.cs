@@ -12,6 +12,7 @@ public struct SeasonData
 {
     public int Id { get; set; }
     public int Episodes { get; set; }
+    public MediaType MediaType { get; set; }
 }
 
 public class AnimeSeasonsMap

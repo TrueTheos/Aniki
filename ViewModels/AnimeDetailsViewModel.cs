@@ -261,9 +261,6 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             case ILoginProvider.ProviderType.AniList:
                 _ = provider.SetTextAsync($"https://anilist.com/anime/{Details.Id}");
                 break;
-            default:
-                //todo do something
-                break;
         }
     }
 

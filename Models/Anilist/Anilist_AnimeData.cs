@@ -62,6 +62,7 @@ public class AnilistMedia
     public AnilistRelations? Relations { get; set; }
     public AnilistMediaListStatus? MediaListEntry { get; set; }
     public AnilistStats? Stats { get; set; }
+    public string? Format { get; set; }
 }
 
 public class AnilistMediaListStatus

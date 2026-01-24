@@ -242,6 +242,13 @@
                                                         FontSize="14"
                                                         Foreground="#AAAAAA">
                                             </TextBlock>
+                                            <TextBlock Text="•" 
+                                                       FontSize="14"
+                                                       Foreground="#777777"/>
+                                            <TextBlock  Text="{Binding Details.MediaType}"
+                                                        FontSize="14"
+                                                        Foreground="#AAAAAA">
+                                            </TextBlock>
                                         </StackPanel>
                                         
                                         <!-- Action Buttons -->

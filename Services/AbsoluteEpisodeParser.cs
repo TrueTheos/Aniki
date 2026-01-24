@@ -55,6 +55,13 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             {
                 return (seasonNumber, absoluteEpisode - accumulatedEpisodes);
             }
+            
+            if(season.Value.MediaType is
+               MediaType.Movie or
+               MediaType.Unknown or
+               MediaType.TV_Special or
+               MediaType.TV_Short) continue;
+            
             accumulatedEpisodes += episodesInSeason;
         }
 
@@ -190,7 +197,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 seasonMap.Seasons[i + 1] = new SeasonData 
                 { 
                     Episodes = details.NumEpisodes ?? 0, 
-                    Id = id 
+                    Id = id,
+                    MediaType = details.MediaType
                 };
             }
             

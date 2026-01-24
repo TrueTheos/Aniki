@@ -352,6 +352,7 @@ public class MalService : IAnimeProvider
             AnimeField.Studios => "studios",
             AnimeField.StartDate => "start_date",
             AnimeField.Mean => "mean",
+            AnimeField.MediaType => "media_type",
             AnimeField.Genres => "genres",
             AnimeField.RelatedAnime =>
                 "related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}",
@@ -610,6 +611,7 @@ public class MalService : IAnimeProvider
             numFavorites: mal.NumFavorites,
             videos: mal.Videos,
             statistics: mal.Statistics?.ToAnimeStatistics() ?? new AnimeStatistics(),
+            mediaType: mal.MediaType ?? MediaType.Unknown,
             relatedAnime: mal.RelatedAnime?
                 .Select(r => new RelatedAnime
                 {

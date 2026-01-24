@@ -465,7 +465,8 @@ public class AnilistService : IAnimeProvider
                         },
                         NumEpisodes = edge.Node.Episodes,
                         Status = edge.Node.Status,
-                        Mean = (edge.Node.MeanScore ?? 0) / 10f
+                        Mean = (edge.Node.MeanScore ?? 0) / 10f,
+                        MediaType = ConvertStringToMediaType(edge.Node.Format)
                     }
                 });
             }
@@ -525,7 +526,8 @@ public class AnilistService : IAnimeProvider
             numFavorites: media.Favourites,
             videos: videos,
             relatedAnime: relatedList.ToArray(),
-            statistics: stats
+            statistics: stats,
+            mediaType: ConvertStringToMediaType(media.Format)
         );
     }
     
@@ -607,6 +609,10 @@ public class AnilistService : IAnimeProvider
                 case AnimeField.Mean:
                     yield return "meanScore";
                     break;
+                
+                case AnimeField.MediaType:
+                    yield return "format";
+                    break;
 
                 case AnimeField.MyListStatus:
                     yield return @" mediaListEntry {
@@ -649,7 +655,8 @@ public class AnilistService : IAnimeProvider
                                         coverImage { medium }
                                         episodes
                                         status
-                                        meanScore
+                                        meanScore,
+                                        format
                                     }
                                 }
                             }";
@@ -686,6 +693,24 @@ public class AnilistService : IAnimeProvider
             "PLANNING" => AnimeStatus.PlanToWatch,
             "REPEATING" => AnimeStatus.Watching,
             _ => AnimeStatus.None
+        };
+    }
+
+    private MediaType ConvertStringToMediaType(string? mediaType)
+    {
+        return mediaType switch
+        {
+            "TV" => MediaType.TV,
+            "TV_SHORT" => MediaType.TV_Short,
+            "MOVIE" => MediaType.Movie,
+            "SPECIAL" => MediaType.Special,
+            "OVA" => MediaType.OVA,
+            "ONA" => MediaType.ONA,
+            "MUSIC" => MediaType.Music,
+            "MANGA" => MediaType.Manga,
+            "NOVEL" => MediaType.Novel,
+            "ONE_SHOT" => MediaType.One_Shot,
+            _ => MediaType.Unknown,
         };
     }
 }

@@ -47,12 +47,13 @@ public class AnimeDetails : ObservableObject
     [CacheField(AnimeField.NumFav)] public int? NumFavorites { get; set; }
     [CacheField(AnimeField.Stats)] public AnimeStatistics? Statistics { get; set; }
     [CacheField(AnimeField.Videos)] public AnimeVideo[]? Videos { get; set; }
+    [CacheField(AnimeField.MediaType)] public MediaType MediaType { get; set; }
     
     public AnimeDetails(){}
     
     public AnimeDetails(int id, string? title, AnimePicture? mainPicture, string? status, string? synopsis, AlternativeTitles? alternativeTitles,
         UserAnimeStatus? userStatus, int? numEpisodes, int? popularity, Bitmap? picture, string[]? studios, string? startDate,
-        float mean, string[]? genres, string? trailerUrl, int? numFavorites, AnimeVideo[]? videos, RelatedAnime[] relatedAnime, AnimeStatistics statistics)
+        float mean, string[]? genres, string? trailerUrl, int? numFavorites, AnimeVideo[]? videos, RelatedAnime[] relatedAnime, AnimeStatistics statistics, MediaType mediaType)
     {
         Id = id;
         Title = title;
@@ -72,6 +73,7 @@ public class AnimeDetails : ObservableObject
         NumFavorites = numFavorites;
         Statistics = statistics;
         Videos = videos;
+        MediaType = mediaType;
     }
     
     public AnimeCardData ToCardData()
@@ -161,6 +163,23 @@ public enum RankingCategory
     Upcoming,
     AllTime,
     ByPopularity
+}
+
+public enum MediaType
+{
+    Unknown,
+    TV,
+    PV,
+    TV_Short,
+    TV_Special,
+    OVA,
+    ONA,
+    Movie,
+    Special,
+    Music,
+    Manga,
+    Novel,
+    One_Shot
 }
 
 public class AnimeVideo

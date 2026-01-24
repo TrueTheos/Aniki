@@ -6,7 +6,7 @@ namespace Aniki.Models;
 public partial class AnimeGroup : ObservableObject
 {
     public string Title { get; }
-    public ObservableCollection<DownloadedEpisode> Episodes { get; }
+    public ObservableCollection<DownloadedEpisode> Episodes { get; } = new();
     public int MaxEpisodes { get; }
     [ObservableProperty] private int _watchedEpisodes;
     public int MalId { get; }
@@ -16,11 +16,11 @@ public partial class AnimeGroup : ObservableObject
         IAnimeService animeService)
     {
         Title = title;
+        Episodes.CollectionChanged += (_, _) => UpdateEpisodes();
         Episodes = episodes;
         MaxEpisodes = maxEp;
         MalId = malId;
 
-        Episodes.CollectionChanged += (_, _) => UpdateEpisodes();
 
         animeService.SubscribeToFieldChange(MalId, OnEpisodesCompletedCollectionChanged, AnimeField.MyListStatus);
     }
@@ -60,6 +60,6 @@ public partial class DownloadedEpisode : ObservableObject
         AbsoluteEpisodeNumber = absoluteEpisodeNumber;
         AnimeTitle = animeTitle;
         Id = id;
-        Season = season;    
+        Season = season;
     }
 }

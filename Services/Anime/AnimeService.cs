@@ -107,7 +107,7 @@ public class AnimeService : IAnimeService
     public static readonly AnimeField[] MalNodeFieldTypes = new[]
     {
         AnimeField.Id, AnimeField.MyListStatus, AnimeField.Status, AnimeField.Genres, AnimeField.Synopsis, AnimeField.MainPicture,
-        AnimeField.Mean, AnimeField.Popularity, AnimeField.StartDate, AnimeField.Studios, AnimeField.Title, AnimeField.Episodes
+        AnimeField.Mean, AnimeField.Popularity, AnimeField.StartDate, AnimeField.Studios, AnimeField.Title, AnimeField.Episodes, AnimeField.MediaType
     };
 
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)

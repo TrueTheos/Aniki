@@ -25,7 +25,8 @@ public enum AnimeField
     Videos, 
     NumFav, 
     Stats, 
-    TrailerUrl
+    TrailerUrl,
+    MediaType
 }
 
 public class MalUserAnimeListResponse
@@ -99,6 +100,11 @@ public class MalAnimeDetails : ObservableObject
     [CacheField(AnimeField.Stats)] public MalStatistics? Statistics { get; set; }
     [CacheField(AnimeField.TrailerUrl)] public string? TrailerUrl { get; set; }
     [CacheField(AnimeField.Videos)] public AnimeVideo[]? Videos { get; set; }
+
+    [CacheField(AnimeField.MediaType)]
+    [JsonPropertyName("media_type")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public MediaType? MediaType { get; set; }
 }
 
 public class MalStudio

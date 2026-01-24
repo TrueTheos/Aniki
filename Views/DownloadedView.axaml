@@ -122,7 +122,7 @@
                                                                 FontSize="14"
                                                                 FontWeight="SemiBold"
                                                                 Foreground="{StaticResource White}"
-                                                                Text="{Binding EpisodeNumber, StringFormat='Episode {0:00}'}" />
+                                                                Text="{Binding EpisodeNumber, StringFormat='Episode {0}'}" />
                                                             
                                                             <Border Background="{StaticResource DarkerRedColor}"
                                                                     CornerRadius="12"
