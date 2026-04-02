@@ -140,7 +140,7 @@ public class MalService : IAnimeProvider
     {
         if (!IsLoggedIn) return new();
         
-        MalUserData? userData = await GetAndDeserializeAsync<MalUserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
+        MAL_UserData? userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
         
         if(userData == null) throw new InvalidOperationException("Failed to deserialize user data");
         return new UserData
@@ -164,7 +164,7 @@ public class MalService : IAnimeProvider
         };
     }
     
-    private UserAnimeStatus? ConvertMalListStatus(MalMyListStatus? malStatus)
+    private UserAnimeStatus? ConvertMalListStatus(MAL_MyListStatus? malStatus)
     {
         if (malStatus == null) return null;
         
@@ -202,7 +202,7 @@ public class MalService : IAnimeProvider
             List<AnimeDetails> fetchedList = new();
             while (nextPageUrl != null)
             {
-                MalUserAnimeListResponse? response = await GetAndDeserializeAsync<MalUserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
+                MAL_UserAnimeListResponse? response = await GetAndDeserializeAsync<MAL_UserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
                 if (response?.Data != null)
                 {
                     fetchedList.AddRange( response.Data.Select(x => ConvertMalToUnified(x.Node)).ToList());
@@ -311,7 +311,7 @@ public class MalService : IAnimeProvider
         
         string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={urlFields}&nsfw=true";
         
-        MalAnimeDetails? animeResponse = await GetAndDeserializeAsync<MalAnimeDetails>(url, $"FetchFields {id} {urlFields}");
+        MAL_Anime? animeResponse = await GetAndDeserializeAsync<MAL_Anime>(url, $"FetchFields {id} {urlFields}");
 
         if (animeResponse != null)
         {
@@ -418,18 +418,18 @@ public class MalService : IAnimeProvider
     {
         string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={_allFields}&nsfw=true";
 
-        MalAnimeSearchListResponse? responseData = await GetAndDeserializeAsync<MalAnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}");
+        MAL_AnimeSearchListResponse? responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}");
 
-        List<MalSearchEntry> results = responseData?.Data?
+        List<MAL_SearchEntry> results = responseData?.Data?
             .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
             .OrderByDescending(x => x.Score)
             .Select(x => x.Entry)
-            .ToList() ?? new List<MalSearchEntry>();
+            .ToList() ?? new List<MAL_SearchEntry>();
 
         return results.Select(mal => ConvertMalToUnified(mal.Node)).ToList();
     }
 
-    private int CalculateSearchScore(MalAnimeDetails anime, string query)
+    private int CalculateSearchScore(MAL_Anime anime, string query)
     {
         if (DoesTitleMatch(anime, query))
         {
@@ -446,7 +446,7 @@ public class MalService : IAnimeProvider
         return score;
     }
 
-    private bool DoesTitleMatch(MalAnimeDetails malAnime, string query)
+    private bool DoesTitleMatch(MAL_Anime malAnime, string query)
     {
         string normalizedQuery = NormalizeTitleToLower(query);
         string normalizedTitle = NormalizeTitleToLower(malAnime.Title);
@@ -579,7 +579,7 @@ public class MalService : IAnimeProvider
         };
     }
     
-    private AnimeDetails ConvertMalToUnified(MalAnimeDetails mal)
+    private AnimeDetails ConvertMalToUnified(MAL_Anime mal)
     {
         return new AnimeDetails(
             id: mal.Id,

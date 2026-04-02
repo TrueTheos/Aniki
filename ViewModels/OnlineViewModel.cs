@@ -50,14 +50,12 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private ObservableCollection<AllManagaEpisode> _episodes = new();
 
-    private AllManagaEpisode? _selectedEpisode;
-    
     public AllManagaEpisode? SelectedEpisode
     {
-        get => _selectedEpisode;
+        get;
         set
         {
-            if (SetProperty(ref _selectedEpisode, value))
+            if (SetProperty(ref field, value))
             {
                 OnPropertyChanged(nameof(SelectionStatusMessage));
                 OnPropertyChanged(nameof(ShowSelectionStatus));

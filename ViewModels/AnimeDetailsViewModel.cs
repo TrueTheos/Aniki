@@ -35,28 +35,23 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     
     public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString();
 
-    private int _selectedScore;
     public int SelectedScore
     {
-        get => _selectedScore;
+        get;
         set
         {
-            if (SetProperty(ref _selectedScore, value))
+            if (SetProperty(ref field, value))
             {
                 _ = UpdateAnimeScore(value);
                 OnPropertyChanged(nameof(ScoreText));
             }
         }
     }
-    
-    private AnimeStatusTranslated _selectedStatus;
+
     public AnimeStatusTranslated SelectedStatus
     {
-        get => _selectedStatus;
-        set
-        {
-            SetProperty(ref _selectedStatus, value);
-        }
+        get;
+        set { SetProperty(ref field, value); }
     }
 
     private int? _currentSubscribedId;

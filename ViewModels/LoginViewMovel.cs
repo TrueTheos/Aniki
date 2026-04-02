@@ -10,48 +10,42 @@ public partial class LoginViewModel : ViewModelBase
     public IReadOnlyList<ILoginProvider> LoginProviders => _loginService.Providers;
 
     private ILoginProvider? _currentProvider;
-    private bool _isLoading;
-    private string _statusMessage = "";
-    private bool _isLoggedIn;
-    private string _username = "";
-    private bool _isTokenInputVisible;
-    private string _token = "";
 
     public bool IsLoading
     {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public string StatusMessage
     {
-        get => _statusMessage;
-        set => SetProperty(ref _statusMessage, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = "";
 
     public bool IsLoggedIn
     {
-        get => _isLoggedIn;
-        set => SetProperty(ref _isLoggedIn, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public string Username
     {
-        get => _username;
-        set => SetProperty(ref _username, value);
-    }
-    
+        get;
+        set => SetProperty(ref field, value);
+    } = "";
+
     public bool IsTokenInputVisible
     {
-        get => _isTokenInputVisible;
-        set => SetProperty(ref _isTokenInputVisible, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public string Token
     {
-        get => _token;
-        set => SetProperty(ref _token, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = "";
 
     public event EventHandler? NavigateToMainRequested;
 

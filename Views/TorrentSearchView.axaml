@@ -19,7 +19,7 @@
             <StackPanel Orientation="Horizontal">
                 <TextBox Width="500"
                          Text="{Binding TorrentSearchTerms}" 
-                         Watermark="Additional search terms..."
+                         Watermark="Custom search..."
                          Margin="20,0"
                          VerticalContentAlignment="Center">
                     <TextBox.KeyBindings>

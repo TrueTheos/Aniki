@@ -9,13 +9,12 @@ namespace Aniki.ViewModels;
 
 public partial class SettingsViewModel : ViewModelBase
 {
-    private bool _autoStart;
     public bool AutoStart
     {
-        get => _autoStart;
+        get;
         set
         {
-            if (SetProperty(ref _autoStart, value))
+            if (SetProperty(ref field, value))
             {
                 ChangeAutoStart(value);
             }

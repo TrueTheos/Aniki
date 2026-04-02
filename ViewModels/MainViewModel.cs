@@ -29,6 +29,8 @@ public partial class MainViewModel : ViewModelBase
     private AnimeBrowseViewModel _animeBrowseViewModel;
     [ObservableProperty]
     private UserAnimeListViewModel _userAnimeListViewModel;
+    [ObservableProperty]
+    private ReadViewModel _readViewMode;
     #endregion
 
     private readonly IAnimeService _animeService;
@@ -36,16 +38,17 @@ public partial class MainViewModel : ViewModelBase
     
     public MainViewModel(IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
-        UserAnimeListViewModel userAnimeListViewModel, IVideoPlayerService videoPlayerService) 
+        UserAnimeListViewModel userAnimeListViewModel, ReadViewModel readViewModel, IVideoPlayerService videoPlayerService) 
     {
-        _animeService = animeService;
-        _animeDetailsViewModel = animeDetailsViewModel;
-        _watchViewModel = watchViewModel;
-        _calendarViewModel = calendarViewModel;
-        _statsViewModel = statsViewModel;
-        _animeBrowseViewModel = animeBrowseViewModel;
+        _animeService           = animeService;
+        _animeDetailsViewModel  = animeDetailsViewModel;
+        _watchViewModel         = watchViewModel;
+        _calendarViewModel      = calendarViewModel;
+        _statsViewModel         = statsViewModel;
+        _animeBrowseViewModel   = animeBrowseViewModel;
         _userAnimeListViewModel = userAnimeListViewModel;
-        _videoPlayerService = videoPlayerService;
+        _videoPlayerService     = videoPlayerService;
+        _readViewMode           = readViewModel;
         
         _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
@@ -89,6 +92,13 @@ public partial class MainViewModel : ViewModelBase
     public async Task ShowUserAnimeListPage()
     {
         CurrentViewModel = UserAnimeListViewModel; 
+        await CurrentViewModel.Enter();
+    }
+    
+    [RelayCommand]
+    public async Task ShowReadPage()
+    {
+        CurrentViewModel = ReadViewMode; 
         await CurrentViewModel.Enter();
     }
 

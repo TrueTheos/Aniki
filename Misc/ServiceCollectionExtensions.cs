@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<SettingsViewModel>();
         collection.AddSingleton<StatsViewModel>();
         collection.AddSingleton<TorrentSearchViewModel>();
+        collection.AddSingleton<ReadViewModel>();
         collection.AddSingleton<WatchAnimeViewModel>();
         collection.AddSingleton<AnimeBrowseViewModel>();
         collection.AddSingleton<DownloadedViewModel>();

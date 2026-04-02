@@ -73,43 +73,35 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     private async Task LoadCategoriesAsync()
     {
         IsLoading = true;
-        try
+        
+        List<RankingEntry> airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing, 20);
+        LoadAnimeCards(airing, PopularThisSeason);
+            
+        await LoadHeroAnimeAsync(airing);
+
+        List<RankingEntry> upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming, 20);
+        LoadAnimeCards(upcoming, PopularUpcoming);
+            
+        List<RankingEntry> allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity, 20);
+        LoadAnimeCards(allTime, TrendingAllTime);
+
+        List<AnimeScheduleItem> airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
+        AiringToday.Clear();
+        foreach (AnimeScheduleItem anime in airingToday)
         {
-            List<RankingEntry> airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing, 20);
-            LoadAnimeCards(airing, PopularThisSeason);
-            
-            await LoadHeroAnimeAsync(airing);
-
-            List<RankingEntry> upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming, 20);
-            LoadAnimeCards(upcoming, PopularUpcoming);
-            
-            List<RankingEntry> allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity, 20);
-            LoadAnimeCards(allTime, TrendingAllTime);
-
-            List<AnimeScheduleItem> airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
-            AiringToday.Clear();
-            foreach (AnimeScheduleItem anime in airingToday)
-            {
-                if(anime.ProviderId.Keys.Count == 0 || anime.GetId() == null) continue;
+            if(anime.ProviderId.Keys.Count == 0 || anime.GetId() == null) continue;
                 
-                AiringToday.Add(new AnimeCardData
-                {
-                    AnimeId = anime.GetId()!.Value,
-                    Title = anime.Title,
-                    ImageUrl = anime.ImageUrl,
-                    Score = anime.Mean,
-                    UserStatus = null
-                });
-            }
+            AiringToday.Add(new AnimeCardData
+            {
+                AnimeId    = anime.GetId()!.Value,
+                Title      = anime.Title,
+                ImageUrl   = anime.ImageUrl,
+                Score      = anime.Mean,
+                UserStatus = null
+            });
         }
-        catch (Exception ex)
-        {
-            Log.Information($"Error loading categories: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+
+        IsLoading = false;
     }
 
     private async Task LoadHeroAnimeAsync(List<RankingEntry> animeList)
@@ -121,20 +113,23 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.Title, AnimeField.Synopsis, AnimeField.Mean, AnimeField.MyListStatus, AnimeField.Videos]);
             if (details?.Videos != null && details.Videos.Length > 0)
             {
-                HeroAnimeData heroData = new()
+                AnimeVideo? videoWithThumbnail = details.Videos.FirstOrDefault(x => x.Thumbnail != null);
+                if (videoWithThumbnail != null)
                 {
-                    AnimeId = details.Id,
-                    Title = details.Title!,
-                    Synopsis = details.Synopsis!,
-                    Score = details.Mean,
-                    Status = details.UserStatus?.Status ?? AnimeStatus.None,
-                    VideoUrl = details.Videos[0].Url,
-                    VideoThumbnail = details.Videos[0].Thumbnail,
-                    IsCurrentHero = HeroAnimeList.Count == 0
-                };
+                    HeroAnimeData heroData = new()
+                    {
+                        AnimeId        = details.Id,
+                        Title          = details.Title!,
+                        Synopsis       = details.Synopsis!,
+                        Score          = details.Mean,
+                        Status         = details.UserStatus?.Status ?? AnimeStatus.None,
+                        VideoUrl       = videoWithThumbnail.Url,
+                        VideoThumbnail = videoWithThumbnail.Thumbnail!,
+                        IsCurrentHero  = HeroAnimeList.Count == 0
+                    };
                 
-                HeroAnimeList.Add(heroData);
-                
+                    HeroAnimeList.Add(heroData);
+                }
                 if (HeroAnimeList.Count >= 5) break;
             }
         }

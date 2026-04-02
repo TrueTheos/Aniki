@@ -10,6 +10,30 @@ public class UserData
     public string? Picture { get; set; }
 }
 
+public enum AnimeField 
+{
+    Id,
+    Title, 
+    MainPicture, 
+    Status, 
+    Synopsis, 
+    AlterTitles, 
+    MyListStatus, 
+    Episodes,
+    Popularity, 
+    Picture, 
+    Studios, 
+    StartDate, 
+    Mean, 
+    Genres, 
+    RelatedAnime, 
+    Videos, 
+    NumFav, 
+    Stats, 
+    TrailerUrl,
+    MediaType
+}
+
 public class AnimeDetails : ObservableObject
 {
     [CacheField(AnimeField.Id)] public int Id { get; set; }
@@ -18,23 +42,21 @@ public class AnimeDetails : ObservableObject
     [CacheField(AnimeField.Status)] public string? Status { get; set; }
     [CacheField(AnimeField.Synopsis)] public string? Synopsis { get; set; }
     [CacheField(AnimeField.AlterTitles)] public AlternativeTitles? AlternativeTitles { get; set; }
-    
-    private UserAnimeStatus? _userStatus;
 
     [CacheField(AnimeField.MyListStatus, true)]
     public UserAnimeStatus? UserStatus
     {
-        get => _userStatus;
+        get;
         set
         {
-            if (_userStatus != value)
+            if (field != value)
             {
-                _userStatus = value;
+                field = value;
                 OnPropertyChanged();
             }
         }
     }
-    
+
     [CacheField(AnimeField.Episodes)] public int? NumEpisodes { get; set; }
     [CacheField(AnimeField.Popularity)] public int? Popularity { get; set; }
     [CacheField(AnimeField.Picture)] public Bitmap? Picture { get; set; }
@@ -186,5 +208,5 @@ public class AnimeVideo
 {
     public required string Title { get; set; }
     public required string Url { get; set; }
-    public required string Thumbnail { get; set; }
+    public string? Thumbnail { get; set; }
 }

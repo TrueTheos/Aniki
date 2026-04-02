@@ -149,6 +149,24 @@
                         </StackPanel>
                     </Button>
                     
+                    <TextBlock
+                        Margin="30,20,0,10"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        TextWrapping="Wrap"
+                        Foreground="{StaticResource White}"
+                        Text="MANGA" />
+                    <Button
+                        Name="ReadButton"
+                        Classes="MenuButton"
+                        Command="{Binding ShowReadPageCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="20" Height="20"/>
+                            <TextBlock VerticalAlignment="Center" Text="Read" Foreground="Gray" />
+                        </StackPanel>
+                    </Button>
                     
                     <TextBlock
                         Margin="30,20,0,10"

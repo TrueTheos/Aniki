@@ -48,6 +48,10 @@
     <Compile Update="Views\TorrentSearchView.axaml.cs">
       <DependentUpon>TorrentSearchView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\ReadView.axaml.cs">
+      <DependentUpon>ReadView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

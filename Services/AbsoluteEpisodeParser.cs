@@ -11,16 +11,15 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     private readonly ISaveService _saveService;
     private readonly IAnimeService _animeService;
 
-    private GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>? _seasonCache;
     public GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> AnimeSeasonCache
     {
         get
         {
-            if (_seasonCache == null)
+            if (field == null)
             {
-                _seasonCache = _saveService.GetSeasonCache();
+                field = _saveService.GetSeasonCache();
             }
-            return _seasonCache;
+            return field;
         }
     }
     private readonly ConcurrentDictionary<int, AnimeSeasonsMap> _animeIdToMapIndex = new();
