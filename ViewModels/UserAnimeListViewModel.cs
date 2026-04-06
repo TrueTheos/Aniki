@@ -7,10 +7,10 @@ namespace Aniki.ViewModels;
 public partial class UserAnimeListViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private ObservableCollection<AnimeDetails> _animeList = new();
+    private ObservableCollection<AnimeDetails> _animeList = [];
     
     [ObservableProperty]
-    private ObservableCollection<AnimeDetails> _filteredAnimeList = new();
+    private ObservableCollection<AnimeDetails> _filteredAnimeList = [];
     
     [ObservableProperty]
     private string _statusFilter = "All";
@@ -35,13 +35,13 @@ public partial class UserAnimeListViewModel : ViewModelBase
     public UserAnimeListViewModel(IAnimeService animeService)
     {
         _animeService = animeService;
-        List<string> genres = new()
-        {
+        List<string> genres =
+        [
             "Action", "Adventure", "Comedy", "Drama", "Fantasy",
             "Horror", "Mystery", "Psychological", "Romance", "Sci-Fi",
             "Slice of Life", "Sports", "Supernatural", "Thriller"
-        };
-        AvailableGenres = new ObservableCollection<GenreViewModel>();
+        ];
+        AvailableGenres = [];
         foreach (string genreName in genres)
         {
             GenreViewModel genreVm = new(genreName);

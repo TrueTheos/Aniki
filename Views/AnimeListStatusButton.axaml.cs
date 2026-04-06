@@ -1,6 +1,7 @@
 using Aniki.Services.Anime;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Svg.Skia;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;
@@ -31,6 +32,7 @@ public partial class AnimeListStatusButton : UserControl
         if (DataContext is AnimeCardData data)
         {
             _data = data;
+            UpdateMainButtonIcon();
         }
     }
     private void ShowStatusButtons()
@@ -131,7 +133,28 @@ public partial class AnimeListStatusButton : UserControl
                 _data!.UserStatus = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
                 HideStatusButtons();
                 ShowStatusButtons();
+                UpdateMainButtonIcon();
             }
         }
+    }
+    
+    private void UpdateMainButtonIcon()
+    {
+        var (iconPath, statusLabel) = _data?.UserStatus switch
+        {
+            null                    => ("add_icon", "Not in list"),
+            AnimeStatus.None        => ("add_icon", "Not in list"),
+            AnimeStatus.PlanToWatch => ("calendarAdd_icon", "Plan to Watch"),
+            AnimeStatus.Watching    => ("play_icon", "Watching"),
+            AnimeStatus.Completed   => ("check_icon", "Completed"),
+            AnimeStatus.Dropped     => ("delete_icon", "Dropped"),
+            AnimeStatus.OnHold      => ("add_icon", "On Hold"),
+            _                       => ("add_icon", "Not in list")
+        };
+        var uri = new Uri($"avares://Aniki/Resources/Icons/{iconPath}.svg");
+        var source = SvgSource.Load(uri.AbsoluteUri, new Uri("avares://Aniki/"));
+        MainButtonIcon.Source = new SvgImage { Source = source };
+        
+        ToolTip.SetTip(MainButton, $"Current status: {statusLabel}");
     }
 }

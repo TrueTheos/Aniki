@@ -24,8 +24,8 @@ public class AnimeNameParser : IAnimeNameParser
         cleanedFilename = Regex.Replace(cleanedFilename, @"[._]", " ");
         cleanedFilename = Regex.Replace(cleanedFilename, @"\s+", " ").Trim();
 
-        List<string> patterns = new()
-        {
+        List<string> patterns =
+        [
             @"^(.+?)\s+S(\d+)\s*-\s*(\d+)(?:v\d+)?$",
             @"^(.+?)\s+Season\s*(\d+)\s*-\s*(\d+)(?:v\d+)?$",
             @"^(.+?)\s*-\s*S(\d+)E(\d+)(?:v\d+)?$",
@@ -33,7 +33,7 @@ public class AnimeNameParser : IAnimeNameParser
             @"^(.+?)\s*-\s*(\d{1,3})(?:v\d+)?$",
             @"^(.+?)\s+(\d{1,3})(?:v\d+)?$",
             @"^(.+?)\.(\d{1,3})(?:v\d+)?$"
-        };
+        ];
 
         foreach (string pattern in patterns)
         {

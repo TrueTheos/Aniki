@@ -10,11 +10,11 @@ namespace Aniki.Services;
 
 public class VideoPlayerService : IVideoPlayerService
 {
-    public ObservableCollection<VideoPlayerOption> AvailablePlayers { get; } = new();
+    public ObservableCollection<VideoPlayerOption> AvailablePlayers { get; } = [];
     
     public VideoPlayerOption? SelectedPlayer { get; set; }
 
-    private readonly List<string> _videoExtensions = new() { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".m3u8" };
+    private readonly List<string> _videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".m3u8"];
     
     private readonly ConcurrentDictionary<string, VideoPlayerOption> _scannedPlayers = new(StringComparer.OrdinalIgnoreCase);
 
@@ -64,7 +64,7 @@ public class VideoPlayerService : IVideoPlayerService
 
     private async Task DetectWindowsPlayersAsync()
     {
-        List<Task> tasks = new();
+        List<Task> tasks = [];
 
         foreach (string ext in _videoExtensions)
         {
@@ -78,7 +78,7 @@ public class VideoPlayerService : IVideoPlayerService
 
     private async Task DetectUnixPlayersAsync()
     {
-        string[] commonPlayers = new[] { "mpv", "vlc", "mplayer" };
+        string[] commonPlayers = ["mpv", "vlc", "mplayer"];
         
         IEnumerable<Task> tasks = commonPlayers.Select(player => Task.Run(() =>
         {
@@ -100,26 +100,26 @@ public class VideoPlayerService : IVideoPlayerService
     {
         Dictionary<string, string[]> commonPaths = new()
         {
-            ["VLC"] = new[]
-            {
+            ["VLC"] =
+            [
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VideoLAN", "VLC", "vlc.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VideoLAN", "VLC", "vlc.exe")
-            },
-            ["MPV"] = new[]
-            {
+            ],
+            ["MPV"] =
+            [
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "mpv", "mpv.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mpv", "mpv.exe")
-            },
-            ["MPC-HC"] = new[]
-            {
+            ],
+            ["MPC-HC"] =
+            [
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "MPC-HC", "mpc-hc64.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "MPC-HC", "mpc-hc.exe")
-            },
-            ["MPC-BE"] = new[]
-            {
+            ],
+            ["MPC-BE"] =
+            [
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "MPC-BE", "mpc-be64.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "MPC-BE", "mpc-be.exe")
-            }
+            ]
         };
 
         foreach ((string name, string[] paths) in commonPaths)
@@ -245,11 +245,11 @@ public class VideoPlayerService : IVideoPlayerService
             }
         }
 
-        string[] programFiles = new[]
-        {
+        string[] programFiles =
+        [
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
-        };
+        ];
 
         foreach (string baseDir in programFiles)
         {

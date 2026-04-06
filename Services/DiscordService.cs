@@ -64,10 +64,10 @@ public class DiscordService : IDiscordService, IDisposable
             State = $"Episode {episodeNumber}",
             Timestamps = Timestamps.Now,
             Assets = assets,
-            Buttons = new Button[]
-            {
+            Buttons =
+            [
                 new() { Label = "Get Aniki", Url = "https://github.com/TrueTheos/Aniki" }
-            }
+            ]
         });
     }
 

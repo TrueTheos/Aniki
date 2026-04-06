@@ -119,7 +119,7 @@ public class AnilistService : IAnimeProvider
     
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus statusFilter = AnimeStatus.None)
     {
-        if (!_isLoggedIn) return new List<AnimeDetails>();
+        if (!_isLoggedIn) return [];
 
         HashSet<AnimeField> allFields = new(Enum.GetValues<AnimeField>());
 
@@ -162,7 +162,7 @@ public class AnilistService : IAnimeProvider
         GraphQLResponse<Anilist_MediaListCollectionResponse>? response = await TrySendQueryAsync<Anilist_MediaListCollectionResponse>(request, "GetUserAnimeListAsync");
         if (response?.Data?.MediaListCollection?.Lists == null) return [];
 
-        List<AnimeDetails> animeList = new();
+        List<AnimeDetails> animeList = [];
         foreach (Anilist_MediaList list in response.Data.MediaListCollection.Lists)
         {
             if (list.Entries == null) continue;
@@ -232,7 +232,7 @@ public class AnilistService : IAnimeProvider
     
     public async Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields)
     {
-        List<string> fragments = new() { "id" };
+        List<string> fragments = ["id"];
         fragments.AddRange(GetGraphQlFragments(fields.ToHashSet()));
 
         string query = $@"
@@ -285,7 +285,7 @@ public class AnilistService : IAnimeProvider
         return results;
     }
     
-    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10)
+    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
         (string? sort, string? status) = category switch
         {
@@ -301,7 +301,7 @@ public class AnilistService : IAnimeProvider
         Dictionary<string, object> variables = new()
         {
             ["sort"] = sort,
-            ["perPage"] = limit
+            ["perPage"] = 100
         };
         
         if (status != null)
@@ -338,7 +338,7 @@ public class AnilistService : IAnimeProvider
         GraphQLResponse<Anilist_PageResponse>? response = await TrySendQueryAsync<Anilist_PageResponse>(request, "GetTopAnimeAsync");
         if (response?.Data?.Page?.Media == null) return [];
             
-        List<RankingEntry> results = new();
+        List<RankingEntry> results = [];
 
         foreach (Anilist_Anime media in response.Data.Page.Media)
         {
@@ -444,7 +444,7 @@ public class AnilistService : IAnimeProvider
             }
         }
         
-        List<RelatedAnime> relatedList = new();
+        List<RelatedAnime> relatedList = [];
         if (anime.Relations?.Edges != null)
         {
             foreach (Anilist_RelationEdge edge in anime.Relations.Edges)
@@ -518,7 +518,7 @@ public class AnilistService : IAnimeProvider
             numEpisodes: anime.Episodes ?? 0,
             popularity: anime.Popularity,
             picture: picture,
-            studios: anime.Studios?.Nodes?.Select(s => s.Name).ToArray() ?? Array.Empty<string>(),
+            studios: anime.Studios?.Nodes?.Select(s => s.Name).ToArray() ?? [],
             startDate: anime.StartDate == null ? null : $"{anime.StartDate.Year:D4}-{anime.StartDate.Month:D2}-{anime.StartDate.Day:D2}",
             mean: (anime.MeanScore ?? 0) / 10f,
             genres: anime.Genres?.ToArray(),

@@ -90,7 +90,7 @@
                 Margin="10"
                 CornerRadius="25"
                 Background="{StaticResource Background1}">
-            <Image Source="{SvgImage /Resources/Icons/add_icon.svg}" Width="15" Height="15"/>
+            <Image x:Name="MainButtonIcon" Source="{SvgImage /Resources/Icons/add_icon.svg}" Width="15" Height="15"/>
         </Button>
     </Grid>
 </UserControl>

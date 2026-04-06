@@ -30,7 +30,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private string _processingProgress = "";
 
     [ObservableProperty]
-    private ObservableCollection<AnimeGroup> _animeGroups = new();
+    private ObservableCollection<AnimeGroup> _animeGroups = [];
 
     [ObservableProperty]
     private string _episodesFolderMessage = "";
@@ -137,7 +137,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private void OnFileChanged(object sender, FileSystemEventArgs e)
     {
-        string[] videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
+        string[] videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv"];
         if (!videoExtensions.Contains(Path.GetExtension(e.Name)?.ToLower()))
             return;
 
@@ -185,7 +185,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        string[] videoExtensions = new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv" };
+        string[] videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv"];
 
         List<string> filePaths = Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
             .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower()))
@@ -243,7 +243,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
         else
         {
-            AnimeGroup newGroup = new(downloadedEpisode.AnimeTitle, new ObservableCollection<DownloadedEpisode> { downloadedEpisode }, animeTotalEpisodes, malId, _animeService);
+            AnimeGroup newGroup = new(downloadedEpisode.AnimeTitle, [downloadedEpisode], animeTotalEpisodes, malId, _animeService);
             InsertGroupInSortedOrder(newGroup);
         }
     }

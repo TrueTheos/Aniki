@@ -74,15 +74,15 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     {
         IsLoading = true;
         
-        List<RankingEntry> airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing, 20);
+        List<RankingEntry> airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing);
         LoadAnimeCards(airing, PopularThisSeason);
             
         await LoadHeroAnimeAsync(airing);
 
-        List<RankingEntry> upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming, 20);
+        List<RankingEntry> upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming);
         LoadAnimeCards(upcoming, PopularUpcoming);
             
-        List<RankingEntry> allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity, 20);
+        List<RankingEntry> allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity);
         LoadAnimeCards(allTime, TrendingAllTime);
 
         List<AnimeScheduleItem> airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);

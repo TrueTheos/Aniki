@@ -104,11 +104,11 @@ public class AnimeService : IAnimeService
         return await GetCurrentProvider().GetUserDataAsync();
     }
     
-    public static readonly AnimeField[] MalNodeFieldTypes = new[]
-    {
+    public static readonly AnimeField[] MalNodeFieldTypes =
+    [
         AnimeField.Id, AnimeField.MyListStatus, AnimeField.Status, AnimeField.Genres, AnimeField.Synopsis, AnimeField.MainPicture,
         AnimeField.Mean, AnimeField.Popularity, AnimeField.StartDate, AnimeField.Studios, AnimeField.Title, AnimeField.Episodes, AnimeField.MediaType
-    };
+    ];
 
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
@@ -129,7 +129,7 @@ public class AnimeService : IAnimeService
             return animeList;
         }
         
-        return new();
+        return [];
     }
 
     public async Task RemoveFromUserListAsync(int animeId)
@@ -186,9 +186,9 @@ public class AnimeService : IAnimeService
         return results;
     }
 
-    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit)
+    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        List<RankingEntry> rankings = await GetCurrentProvider().GetTopAnimeAsync(category, limit);
+        List<RankingEntry> rankings = await GetCurrentProvider().GetTopAnimeAsync(category);
         
         // Update cache with ranking data
         if (_currentProvider != null)

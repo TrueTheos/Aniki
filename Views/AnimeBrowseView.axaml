@@ -229,20 +229,18 @@
                             
                             <!-- Anime Cards -->
                             <ScrollViewer Name="PopularThisSeasonScroller"
-                                          HorizontalScrollBarVisibility="Hidden"
-                                         VerticalScrollBarVisibility="Disabled">
-                                <ItemsControl ItemsSource="{Binding PopularThisSeason}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" Spacing="20"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
+                                          HorizontalScrollBarVisibility="Visible"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <ItemsRepeater ItemsSource="{Binding PopularThisSeason}">
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Orientation="Horizontal" Spacing="20"/>
+                                    </ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
                                         <DataTemplate DataType="models:AnimeCardData">
                                             <local:AnimeCard/>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
                             </ScrollViewer>
                             
                             <!-- Right Navigation Arrow -->
@@ -287,22 +285,21 @@
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
-                            <ScrollViewer Name="PopularUpcomingScroller" 
-                                          HorizontalScrollBarVisibility="Hidden"
-                                         VerticalScrollBarVisibility="Disabled">
-                                <ItemsControl ItemsSource="{Binding PopularUpcoming}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" Spacing="20"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
+                            <ScrollViewer Name="PopularUpcomingScroller"
+                                          HorizontalScrollBarVisibility="Visible"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <ItemsRepeater ItemsSource="{Binding PopularUpcoming}">
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Orientation="Horizontal" Spacing="20"/>
+                                    </ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
                                         <DataTemplate DataType="models:AnimeCardData">
                                             <local:AnimeCard/>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
                             </ScrollViewer>
+
                             
                             <Button Background="#00000000"
                                     Click="ScrollRight"
@@ -345,22 +342,21 @@
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
-                            <ScrollViewer Name="TrendingAllTimeScroller" 
-                                          HorizontalScrollBarVisibility="Hidden"
-                                         VerticalScrollBarVisibility="Disabled">
-                                <ItemsControl ItemsSource="{Binding TrendingAllTime}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" Spacing="20"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
+                            <ScrollViewer Name="TrendingAllTimeScroller"
+                                          HorizontalScrollBarVisibility="Visible"
+                                          VerticalScrollBarVisibility="Disabled">
+                                <ItemsRepeater ItemsSource="{Binding TrendingAllTime}">
+                                    <ItemsRepeater.Layout>
+                                        <StackLayout Orientation="Horizontal" Spacing="20"/>
+                                    </ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
                                         <DataTemplate DataType="models:AnimeCardData">
                                             <local:AnimeCard/>
                                         </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
                             </ScrollViewer>
+
                             
                             <Button Background="#00000000" 
                                     Click="ScrollRight"

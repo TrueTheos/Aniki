@@ -14,7 +14,7 @@ public class MalService : IAnimeProvider
     private bool _isLoggedIn;
     public bool IsLoggedIn => _isLoggedIn;
 
-    private enum AnimeRankingCategory { Airing, Upcoming, Alltime, Bypopularity }
+    private enum AnimeRankingCategory { Season, Upcoming, Alltime, Bypopularity }
     
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private HttpClient _client = new();
@@ -178,7 +178,7 @@ public class MalService : IAnimeProvider
 
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
-        if (!IsLoggedIn) return new();
+        if (!IsLoggedIn) return [];
         
         if (_userAnimeDict != null)
         {
@@ -199,7 +199,7 @@ public class MalService : IAnimeProvider
 
             string? nextPageUrl = baseUrl;
             
-            List<AnimeDetails> fetchedList = new();
+            List<AnimeDetails> fetchedList = [];
             while (nextPageUrl != null)
             {
                 MAL_UserAnimeListResponse? response = await GetAndDeserializeAsync<MAL_UserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
@@ -213,7 +213,7 @@ public class MalService : IAnimeProvider
             if (status == AnimeStatus.None)
             {
                 _userAnimeDict = new();
-                foreach (var anime in fetchedList)
+                foreach (AnimeDetails anime in fetchedList)
                 {
                     _userAnimeDict[anime.Id] = anime;
                 }
@@ -228,19 +228,19 @@ public class MalService : IAnimeProvider
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
-        var success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString());
+        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString());
         if (success) _userAnimeDict?[animeId]?.UserStatus?.Status = status;
     }
 
     public async Task SetAnimeScoreAsync(int animeId, int score)
     {
-        var success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString());
+        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString());
         if (success) _userAnimeDict?[animeId]?.UserStatus?.Score = score;
     }
 
     public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
     {
-        var success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString());
+        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString());
         if (success) _userAnimeDict?[animeId]?.UserStatus?.EpisodesWatched = episodes;
     }
     
@@ -424,7 +424,7 @@ public class MalService : IAnimeProvider
             .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
             .OrderByDescending(x => x.Score)
             .Select(x => x.Entry)
-            .ToList() ?? new List<MAL_SearchEntry>();
+            .ToList() ?? [];
 
         return results.Select(mal => ConvertMalToUnified(mal.Node)).ToList();
     }
@@ -475,7 +475,7 @@ public class MalService : IAnimeProvider
     {
         return category switch
         {
-            RankingCategory.Airing => AnimeRankingCategory.Airing,
+            RankingCategory.Airing => AnimeRankingCategory.Season,
             RankingCategory.Upcoming => AnimeRankingCategory.Upcoming,
             RankingCategory.AllTime => AnimeRankingCategory.Alltime,
             RankingCategory.ByPopularity => AnimeRankingCategory.Bypopularity,
@@ -483,21 +483,22 @@ public class MalService : IAnimeProvider
         };
     }
 
-    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, int limit = 10)
+    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
+        if (category == RankingCategory.Airing) return await GetSeasonalAnimeAsync();
+    
         string rankingType = ConvertToMalRankingCategory(category) switch
         {
-            AnimeRankingCategory.Airing => "airing",
-            AnimeRankingCategory.Upcoming => "upcoming",
-            AnimeRankingCategory.Alltime => "all",
+            AnimeRankingCategory.Upcoming     => "upcoming",
+            AnimeRankingCategory.Alltime      => "all",
             AnimeRankingCategory.Bypopularity => "bypopularity",
-            _ => "all"
+            _                                 => "all"
         };
 
-        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit={limit}&fields={_allFields}&nsfw=true";
+        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit=100&fields={_allFields}&nsfw=true";
 
         MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory");
-        
+    
         if (response?.Data != null)
         {
             return response.Data.Select(mal => new RankingEntry
@@ -506,9 +507,35 @@ public class MalService : IAnimeProvider
             }).ToList();
         }
 
-        return new List<RankingEntry>();
+        return [];
     }
 
+    private async Task<List<RankingEntry>> GetSeasonalAnimeAsync()
+    {
+        string season = DateTime.Now.Month switch
+        {
+            1 or 2 or 3    => "winter",
+            4 or 5 or 6    => "spring",
+            7 or 8 or 9    => "summer",
+            10 or 11 or 12 => "fall",
+            _              => throw new ArgumentOutOfRangeException()
+        };
+    
+        string url = $"https://api.myanimelist.net/v2/anime/season/{DateTime.Now.Year}/{season}?limit=100&fields={_allFields}&nsfw=true";
+
+        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory");
+    
+        if (response?.Data != null)
+        {
+            return response.Data.Select(mal => new RankingEntry
+            {
+                Details = ConvertMalToUnified(mal.Node),
+            }).OrderBy(x => x.Details.Popularity).ToList();
+        }
+
+        return [];
+    }
+    
     private AnimeStatusApi ConvertToMalStatus(AnimeStatus status)
     {
         return status switch

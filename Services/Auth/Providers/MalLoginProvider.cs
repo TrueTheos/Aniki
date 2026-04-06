@@ -134,14 +134,13 @@ public class MalLoginProvider : ILoginProvider
         try
         {
             using HttpClient client = new();
-            FormUrlEncodedContent content = new(new[]
-            {
+            FormUrlEncodedContent content = new([
                 new KeyValuePair<string, string>("client_id", CLIENT_ID),
                 new KeyValuePair<string, string>("code", code),
                 new KeyValuePair<string, string>("code_verifier", _codeVerifier),
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
                 new KeyValuePair<string, string>("redirect_uri", REDIRECT_URI)
-            });
+            ]);
 
             HttpResponseMessage response = await client.PostAsync("https://myanimelist.net/v1/oauth2/token", content);
             string responseBody = await response.Content.ReadAsStringAsync();
