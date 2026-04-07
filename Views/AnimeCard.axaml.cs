@@ -13,16 +13,18 @@ public partial class AnimeCard : UserControl
     public AnimeCard()
     {
         InitializeComponent();
-        Loaded += OnLoaded;
+        DataContextChanged += OnDataContextChanged;
     }
 
-    private void OnLoaded(object? sender, RoutedEventArgs e)
+    private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (DataContext is AnimeCardData data)
-        {
-            _data = data;
+        if (_data != null)
+            _data.PropertyChanged -= OnDataPropertyChanged;
+
+        _data = DataContext as AnimeCardData;
+
+        if (_data != null)
             _data.PropertyChanged += OnDataPropertyChanged;
-        }
     }
 
     private void OnDataPropertyChanged(object? sender, PropertyChangedEventArgs e)
