@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -36,13 +37,9 @@ public class MalService : IAnimeProvider
 
     public MalService(ISaveService saveService)
     {
-        StringBuilder urlFields = new();
-        foreach (AnimeField field in Enum.GetValues<AnimeField>())
-        {
-            urlFields.Append($"{FieldToString(field)},");
-        }
-
-        _allFields = urlFields.ToString();
+        _allFields = string.Join(",", Enum.GetValues<AnimeField>()
+                                          .Select(FieldToString)
+                                          .Where(f => !string.IsNullOrEmpty(f)));
         _saveService = saveService;
     }
 
@@ -123,6 +120,7 @@ public class MalService : IAnimeProvider
 
     private async Task<T?> GetAndDeserializeAsync<T>(string url, string message) where T : class
     {
+        url = url.Replace("%20", "+").Replace(" ", "+");
         HttpResponseMessage response = await GetAsync(url, message);
         
         if (!response.IsSuccessStatusCode)
@@ -189,7 +187,6 @@ public class MalService : IAnimeProvider
 
         try
         {
-            Console.WriteLine("2 GetUserAnimeListAsync");
             string baseUrl = $"https://api.myanimelist.net/v2/users/@me/animelist?fields={_allFields}&limit=1000&nsfw=true";
             
             if (status != AnimeStatus.None)
@@ -356,11 +353,12 @@ public class MalService : IAnimeProvider
             AnimeField.Genres => "genres",
             AnimeField.RelatedAnime =>
                 "related_anime{id,title,num_episodes,media_type,synopsis,status,alternative_titles}",
-            AnimeField.Videos => "videos",
-            AnimeField.NumFav => "num_favorites",
-            AnimeField.Stats => "statistics",
+            AnimeField.Videos     => "videos",
+            AnimeField.NumFav     => "num_favorites",
+            AnimeField.Stats      => "statistics",
             AnimeField.TrailerUrl => "",
-            _ => ""
+            AnimeField.Id         => "",
+            _                     => ""
         };
     }
 

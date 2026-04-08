@@ -11,11 +11,11 @@ public partial class UserAnimeListView : UserControl
         InitializeComponent();
     }
     
-    private void GoToAnime(object? sender, RoutedEventArgs e)
+    private async void GoToAnime(object? sender, RoutedEventArgs e)
     {
         if (sender is Button { DataContext: AnimeDetails anime })
         {
-            DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id);
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id);
         }
     }
 }

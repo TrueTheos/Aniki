@@ -22,11 +22,11 @@ public partial class AnimeBrowseView : UserControl
         }
     }
     
-    private void OnDoubleTapped(object? sender, RoutedEventArgs e)
+    private async void OnDoubleTapped(object? sender, RoutedEventArgs e)
     {
         if (sender is Border { DataContext: AnimeCardData anime })
         {
-            DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.AnimeId);
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.AnimeId);
         }
     }
     

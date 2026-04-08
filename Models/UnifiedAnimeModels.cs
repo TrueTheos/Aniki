@@ -201,7 +201,8 @@ public enum MediaType
     Music,
     Manga,
     Novel,
-    One_Shot
+    One_Shot,
+    CM
 }
 
 public class AnimeVideo

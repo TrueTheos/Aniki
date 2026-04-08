@@ -363,12 +363,12 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    private void GoToAnimeDetails()
+    private async Task GoToAnimeDetails()
     {
         MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         if (_selectedAnime != null && _selectedAnime.MalId != null)
         {
-            vm.GoToAnime(_selectedAnime.MalId.Value);
+            await vm.GoToAnime(_selectedAnime.MalId.Value);
         }
     }
 

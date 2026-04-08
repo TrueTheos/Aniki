@@ -10,14 +10,14 @@ public partial class CalendarView : UserControl
         InitializeComponent();
     }
 
-    private void DoubleClickAnime(object? sender, Avalonia.Input.TappedEventArgs e)
+    private async void DoubleClickAnime(object? sender, Avalonia.Input.TappedEventArgs _)
     {
         if (sender is ListBox lb )
         {
             if (lb.SelectedItem is not AnimeScheduleItem asi) return;
             if (DataContext is CalendarViewModel vm)
             {
-                vm.GoToClickedAnime(asi);
+                await vm.GoToClickedAnime(asi);
             }
         }
     }

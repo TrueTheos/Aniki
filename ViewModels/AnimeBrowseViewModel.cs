@@ -202,26 +202,15 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
     public async Task SearchAnimeByTitle(string query)
     {
-        try
-        {
-            IsLoading = true;
-            ViewMode = AnimeBrowseViewMode.Search;
+        IsLoading = true;
+        ViewMode  = AnimeBrowseViewMode.Search;
 
-            _allSearchResults = await _animeService.SearchAnimeAsync(query);
-            CurrentPage = 1;
-            TotalPages = (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE);
+        _allSearchResults = await _animeService.SearchAnimeAsync(query);
+        CurrentPage       = 1;
+        TotalPages        = (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE);
             
-            LoadSearchResultsPage();
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            Log.Information($"Error searching: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        LoadSearchResultsPage();
+        IsLoading = false;
     }
     
     private void LoadSearchResultsPage()

@@ -129,10 +129,10 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    public void OpenAnimeDetails(int malId)
+    public async Task OpenAnimeDetails(int malId)
     {
         MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
-        vm.GoToAnime(malId);
+        await vm.GoToAnime(malId);
     }
 
     private void OnFileChanged(object sender, FileSystemEventArgs e)

@@ -108,16 +108,16 @@ public partial class CalendarViewModel : ViewModelBase
         IsLoading = false;
     }
 
-    public void GoToClickedAnime(AnimeScheduleItem anime)
+    public async Task GoToClickedAnime(AnimeScheduleItem anime)
     {
         MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         if (anime.GetId() != null && anime.GetId()!.Value > 0)
         {
-            vm.GoToAnime(anime.GetId()!.Value);
+            await vm.GoToAnime(anime.GetId()!.Value);
         }
         else
         {
-            vm.GoToAnime(anime.Title);
+            await vm.GoToAnime(anime.Title);
         }
     }
 

@@ -37,9 +37,9 @@ public partial class AnimeCard : UserControl
     }
 
     
-    private void OnTapped(object? sender, TappedEventArgs e)
+    private async void OnTapped(object? sender, TappedEventArgs e)
     {
         if (_data is null) return;
-        DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(_data.AnimeId);
+        await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(_data.AnimeId);
     }
 }
