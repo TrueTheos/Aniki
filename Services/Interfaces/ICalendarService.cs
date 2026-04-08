@@ -3,7 +3,7 @@
 public interface ICalendarService
 {
     public Task<List<DaySchedule>> GetScheduleAsync(
-        IEnumerable<string> watchingList,
+        IEnumerable<int> watchingList,
         DateTime startDate,
         DateTime endDate,
         int perPage = 150);

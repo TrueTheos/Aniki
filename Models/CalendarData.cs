@@ -56,32 +56,21 @@ public partial class AnimeScheduleItem : ObservableObject
     [ObservableProperty] 
     private float _mean;
 
-    public string EpisodeText => Episode > 0 ? $"EP{Episode}" : "";
+    public AnimeScheduleItem(string title, string description, DateTime airingAt, int episode, string episodeInfo, string type, string imageUrl, float mean)
+    {
+        Title        = title;
+        Description  = description;
+        AiringAt     = airingAt;
+        Episode      = episode;
+        EpisodeInfo  = episodeInfo;
+        Type         = type;
+        ImageUrl     = imageUrl;
+        Mean         = mean;
+    }
 
     public int? GetId()
     {
         if (!ProviderId.TryGetValue(AnimeService.CurrentProviderType, out int id)) return null;
         return id;
-    }
-
-    public TimeSpan TimeUntilAiring
-    {
-        get
-        {
-            DateTime now = DateTime.Now;
-            DateTime airTime = AiringAt;
-
-            if (airTime.Date == now.Date && airTime > now)
-            {
-                return airTime - now;
-            }
-
-            if (airTime.Date > now.Date)
-            {
-                return airTime - now;
-            }
-
-            return TimeSpan.Zero;
-        }
     }
 }

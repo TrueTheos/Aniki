@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using Aniki.Services.Anime;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,7 +23,7 @@ public partial class CalendarViewModel : ViewModelBase
         ShowWindow();
     }
 
-    private readonly List<string> _watchingList = [];
+    private readonly List<int> _watchingList = [];
 
     [ObservableProperty]
     private bool _isLoading;
@@ -70,11 +71,11 @@ public partial class CalendarViewModel : ViewModelBase
 
         foreach (AnimeDetails anime in watching)
         {
-            if(anime.Title != null) _watchingList.Add(anime.Title);
+            _watchingList.Add(anime.Id);
         }
         foreach (AnimeDetails anime in planToWatch)
         {
-            if(anime.Title != null) _watchingList.Add(anime.Title);
+            _watchingList.Add(anime.Id);
         }
     }
 
@@ -175,7 +176,7 @@ public partial class CalendarViewModel : ViewModelBase
             if (_cachedDays.TryGetValue(currentDate.Date, out DaySchedule? cachedDaySchedule))
             {
                 IEnumerable<AnimeScheduleItem> filteredItems = cachedDaySchedule.Items
-                    .Where(item => !ShowOnlyMyAnime || _watchingList.Contains(item.Title))
+                    .Where(item => !ShowOnlyMyAnime || (item.GetId() is {} id && _watchingList.Contains(id)))
                     .Select(item => EnhanceAnimeItem(item, currentDate));
 
                 DaySchedule displayDaySchedule = new()
@@ -212,18 +213,8 @@ public partial class CalendarViewModel : ViewModelBase
 
     private AnimeScheduleItem EnhanceAnimeItem(AnimeScheduleItem original, DateTime dayDate)
     {
-        return new()
-        {
-            Title = original.Title,
-            AiringAt = original.AiringAt,
-            Description = original.Description,
-            EpisodeInfo = original.EpisodeInfo ?? $"EP{original.Episode} • {original.Type}",
-            Type = original.Type,
-            Episode = original.Episode,
-            IsBookmarked = _watchingList.Contains(original.Title),
-            IsAiringNow = IsCurrentlyAiring(original.AiringAt, dayDate),
-            ImageUrl = original.ImageUrl
-        };
+        original.IsAiringNow = IsCurrentlyAiring(original.AiringAt, dayDate);
+        return original;
     }
 
     private bool IsCurrentlyAiring(DateTime airingTime, DateTime dayDate)

@@ -96,7 +96,7 @@ public class CalendarService : ICalendarService
     }
 
     public async Task<List<DaySchedule>> GetScheduleAsync(
-        IEnumerable<string> watchingList,
+        IEnumerable<int> watchingList,
         DateTime startDate,
         DateTime endDate,
         int perPage = 150)
@@ -106,7 +106,7 @@ public class CalendarService : ICalendarService
 
         JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix, perPage);
 
-        HashSet<string> watchSet = new(watchingList, StringComparer.OrdinalIgnoreCase);
+        HashSet<int> watchSet = new(watchingList);
 
         List<DaySchedule> daySchedules = [];
         for (DateTime date = startDate.Date; date < endDate.Date; date = date.AddDays(1))
@@ -178,7 +178,7 @@ public class CalendarService : ICalendarService
         return animeItems;
     }
 
-    private AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<string> watchSet)
+    private AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<int> watchSet)
     {
         JToken? media = schedule["media"];
         if (media == null) return null;
@@ -209,21 +209,14 @@ public class CalendarService : ICalendarService
 
         string description = media["description"]?.ToString() ?? "No description";
         
-        AnimeScheduleItem result = new()
-        {
-            Title = title,
-            Description = description,
-            AiringAt = airingAt,
-            Episode = episode,
-            EpisodeInfo = episode > 0 ? $"EP{episode} • {format}" : format,
-            Type = format,
-            IsBookmarked = watchSet.Contains(title),
-            ImageUrl = imageUrl,
-            Mean = meanScoreScaled ?? 0
-        };
+        AnimeScheduleItem result = new(title: title, description: description, airingAt: airingAt, episode: episode,
+            episodeInfo: episode > 0 ? $"EP{episode} • {format}" : format, type: format, imageUrl: imageUrl, mean: meanScoreScaled ?? 0);
 
         if (aniListId.HasValue) result.ProviderId[ILoginProvider.ProviderType.AniList] = aniListId.Value;
         if (malId.HasValue) result.ProviderId[ILoginProvider.ProviderType.Mal] = malId.Value;
+        
+        result.IsBookmarked = watchSet.Contains(aniListId.GetValueOrDefault()) || 
+                              watchSet.Contains(malId.GetValueOrDefault());
 
         return result;
     }
