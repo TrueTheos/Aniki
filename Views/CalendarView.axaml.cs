@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
@@ -10,15 +11,12 @@ public partial class CalendarView : UserControl
         InitializeComponent();
     }
 
-    private async void DoubleClickAnime(object? sender, Avalonia.Input.TappedEventArgs _)
+    private async void OnAnimeTapped(object? sender, TappedEventArgs _)
     {
-        if (sender is ListBox lb )
+        if (sender is StackPanel { DataContext: AnimeScheduleItem asi } &&
+            DataContext is CalendarViewModel vm)
         {
-            if (lb.SelectedItem is not AnimeScheduleItem asi) return;
-            if (DataContext is CalendarViewModel vm)
-            {
-                await vm.GoToClickedAnime(asi);
-            }
+            await vm.GoToClickedAnime(asi);
         }
     }
 
