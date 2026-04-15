@@ -221,7 +221,7 @@ public class CalendarService : ICalendarService
         return result;
     }
 
-    private  string GetBestTitle(JToken? titleObject)
+    private string GetBestTitle(JToken? titleObject)
     {
         if (titleObject == null) return "";
 
