@@ -22,7 +22,7 @@
         <Style Selector="ToolTip">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="0" />
+            <Setter Property="Padding" Value="16" />
         </Style>
 
         <Style Selector="ListBoxItem">
@@ -198,7 +198,8 @@
                                                         MaxWidth="380"
                                                         MaxHeight="200"
                                                         ClipToBounds="True"
-                                                        BoxShadow="0 4 16 0 #80000000">
+                                                        BorderBrush="#555555"
+                                                        BorderThickness="1.5">
                                                         <Grid ColumnDefinitions="120,*">
                                                             <Border
                                                                 Grid.Column="0"
