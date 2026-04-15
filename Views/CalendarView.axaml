@@ -25,6 +25,22 @@
             <Setter Property="Padding" Value="16" />
         </Style>
 
+        <Style Selector="Border.anime-card">
+            <Setter Property="RenderTransform" Value="scaleX(1) scaleY(1)" />
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.anime-card:pointerover">
+            <Setter Property="RenderTransform" Value="scaleX(1.04) scaleY(1.04)" />
+            <Setter Property="Opacity" Value="0.9" />
+        </Style>
+
         <Style Selector="ListBoxItem">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Padding" Value="0" />
@@ -260,6 +276,7 @@
                                                     Text="{Binding AiringAt, StringFormat='h:mm tt'}" />
 
                                                 <Border
+                                                    Classes="anime-card"
                                                     Width="180"
                                                     Margin="8,2,8,4"
                                                     Padding="0"
