@@ -19,6 +19,12 @@
             <Setter Property="Height" Value="32" />
         </Style>
 
+        <Style Selector="ToolTip">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
         <Style Selector="ListBoxItem">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Padding" Value="0" />
@@ -183,7 +189,68 @@
                                     
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Background="Transparent" ToolTip.Tip="Click for details!">
+                                            <StackPanel Background="Transparent">
+                                                <ToolTip.Tip>
+                                                    <Border
+                                                        Background="{StaticResource BackgroundBlack}"
+                                                        CornerRadius="10"
+                                                        Padding="0"
+                                                        MaxWidth="380"
+                                                        MaxHeight="200"
+                                                        ClipToBounds="True"
+                                                        BoxShadow="0 4 16 0 #80000000">
+                                                        <Grid ColumnDefinitions="120,*">
+                                                            <Border
+                                                                Grid.Column="0"
+                                                                CornerRadius="10,0,0,10"
+                                                                ClipToBounds="True">
+                                                                <Image
+                                                                    asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}"
+                                                                    Stretch="UniformToFill" />
+                                                            </Border>
+
+                                                            <StackPanel Grid.Column="1" Margin="14,12,14,14" Spacing="6">
+                                                                <TextBlock
+                                                                    Text="{Binding Title}"
+                                                                    FontSize="15"
+                                                                    FontWeight="Bold"
+                                                                    Foreground="{StaticResource White}"
+                                                                    TextWrapping="Wrap"
+                                                                    MaxLines="2"
+                                                                    TextTrimming="CharacterEllipsis" />
+
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock
+                                                                        Text="{Binding EpisodeInfo}"
+                                                                        FontSize="12"
+                                                                        Foreground="#AAAAAA" />
+                                                                    <TextBlock
+                                                                        Text="{Binding AiringAt, StringFormat='h:mm tt'}"
+                                                                        FontSize="12"
+                                                                        Foreground="#AAAAAA" />
+                                                                </StackPanel>
+
+                                                                <TextBlock
+                                                                    Text="{Binding Genres}"
+                                                                    FontSize="11"
+                                                                    Foreground="{StaticResource RedColor}"
+                                                                    FontWeight="Medium"
+                                                                    TextWrapping="Wrap"
+                                                                    IsVisible="{Binding Genres, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                                                                <TextBlock
+                                                                    Text="{Binding Description}"
+                                                                    FontSize="12"
+                                                                    Foreground="#CCCCCC"
+                                                                    TextWrapping="Wrap"
+                                                                    MaxLines="5"
+                                                                    LineHeight="18"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </ToolTip.Tip>
+
                                                 <!--  Air time  -->
                                                 <TextBlock
                                                     Margin="8,4,0,0"
