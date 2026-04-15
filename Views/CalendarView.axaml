@@ -23,6 +23,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="16" />
+            <Setter Property="MaxWidth" Value="520" />
         </Style>
 
         <Style Selector="Border.anime-card">
@@ -210,7 +211,7 @@
                                                         Background="{StaticResource BackgroundBlack}"
                                                         CornerRadius="10"
                                                         Padding="0"
-                                                        MaxWidth="380"
+                                                        MaxWidth="480"
                                                         MaxHeight="200"
                                                         ClipToBounds="True"
                                                         BorderBrush="#555555"
