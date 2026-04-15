@@ -45,6 +45,7 @@ public class MalService : IAnimeProvider
 
     public void Init(string? accessToken)
     {
+        _client.Dispose();
         _client = new();
         
         if (accessToken != null)

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Aniki.Services.Interfaces;
+using Aniki.ViewModels;
 using Avalonia.Threading;
 using Microsoft.Win32;
 
@@ -17,6 +18,14 @@ public class VideoPlayerService : IVideoPlayerService
     private readonly List<string> _videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".m3u8"];
     
     private readonly ConcurrentDictionary<string, VideoPlayerOption> _scannedPlayers = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly string? _preferredPlayerPath;
+
+    public VideoPlayerService(ISaveService saveService)
+    {
+        SettingsConfig? config = saveService.GetSettingsConfig();
+        _preferredPlayerPath = config?.PreferredVideoPlayerPath;
+    }
 
     public async Task RefreshPlayersAsync()
     {
@@ -43,7 +52,7 @@ public class VideoPlayerService : IVideoPlayerService
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                string? currentPath = SelectedPlayer?.ExecutablePath;
+                string? currentPath = SelectedPlayer?.ExecutablePath ?? _preferredPlayerPath;
 
                 AvailablePlayers.Clear();
 

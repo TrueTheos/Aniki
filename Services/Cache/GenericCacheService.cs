@@ -526,7 +526,14 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     public void Dispose()
     {
         _diskSyncTimer?.Dispose();
-        SyncToDiskAsync().GetAwaiter().GetResult();
+        try
+        {
+            SyncToDiskAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Failed to sync cache to disk during dispose: {e}");
+        }
         _diskWriteLock.Dispose();
     }
 }

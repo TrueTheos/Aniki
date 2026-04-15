@@ -11,7 +11,7 @@
     d:DesignHeight="720"
     d:DesignWidth="1080"
     x:DataType="vm:MainViewModel"
-    Background="#000000"
+    Background="{StaticResource BackgroundBlack}"
     ExtendClientAreaTitleBarHeightHint="30"
     ExtendClientAreaToDecorationsHint="True"
     mc:Ignorable="d">
@@ -40,7 +40,7 @@
             <Setter Property="Background" Value="{StaticResource Background0}" />
         </Style>
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#3E3E3E" />
+            <Setter Property="Background" Value="{StaticResource Surface3}" />
             <Setter Property="Foreground" Value="{StaticResource White}" />
             <Setter Property="CornerRadius" Value="4" />
         </Style>
@@ -118,7 +118,7 @@
                         Command="{Binding ShowAnimeBrowsePageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Main Page" Foreground="Gray" />
+                            <TextBlock VerticalAlignment="Center" Text="Main Page" Foreground="{StaticResource TextSecondary}" />
                         </StackPanel>
                     </Button>
                     <Button
@@ -127,7 +127,7 @@
                         Command="{Binding ShowAnimeDetailsPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Anime Details" Foreground="Gray" />
+                            <TextBlock VerticalAlignment="Center" Text="Anime Details" Foreground="{StaticResource TextSecondary}" />
                         </StackPanel>
                     </Button>
                     <Button
@@ -136,7 +136,7 @@
                         Command="{Binding ShowWatchPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Watch" Foreground="Gray"/>
+                            <TextBlock VerticalAlignment="Center" Text="Watch" Foreground="{StaticResource TextSecondary}"/>
                         </StackPanel>
                     </Button>
                     <Button
@@ -145,7 +145,7 @@
                         Command="{Binding ShowCalendarPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Calendar" Foreground="Gray" />
+                            <TextBlock VerticalAlignment="Center" Text="Calendar" Foreground="{StaticResource TextSecondary}" />
                         </StackPanel>
                     </Button>
                     
@@ -183,7 +183,7 @@
                         Command="{Binding ShowStatsPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Profile" Foreground="Gray" />
+                            <TextBlock VerticalAlignment="Center" Text="Profile" Foreground="{StaticResource TextSecondary}" />
                         </StackPanel>
                     </Button>
                     <Button
@@ -192,7 +192,7 @@
                         Command="{Binding ShowUserAnimeListPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/book_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Your Library" Foreground="Gray" />
+                            <TextBlock VerticalAlignment="Center" Text="Your Library" Foreground="{StaticResource TextSecondary}" />
                         </StackPanel>
                     </Button>
                     
@@ -211,7 +211,7 @@
                         Command="{Binding OpenSettingsCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/settings_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Settings" Foreground="Gray" />
+                            <TextBlock VerticalAlignment="Center" Text="Settings" Foreground="{StaticResource TextSecondary}" />
                         </StackPanel>
                     </Button>
                     <Button
@@ -220,7 +220,7 @@
                         Click="LogOut">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/logout_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Log Out" Foreground="Gray" />
+                            <TextBlock VerticalAlignment="Center" Text="Log Out" Foreground="{StaticResource TextSecondary}" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -289,7 +289,7 @@
                                                            FontSize="28"
                                                            HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Please log in to view your list!" 
-                                                           Foreground="#888888" 
+                                                           Foreground="{StaticResource TextSecondary}" 
                                                            FontSize="22" 
                                                            HorizontalAlignment="Center"/>
                                             </StackPanel>
@@ -313,7 +313,7 @@
                                                            FontSize="28"
                                                            HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Please log in to view your stats!" 
-                                                           Foreground="#888888" 
+                                                           Foreground="{StaticResource TextSecondary}" 
                                                            FontSize="22" 
                                                            HorizontalAlignment="Center"/>
                                             </StackPanel>

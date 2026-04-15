@@ -62,7 +62,7 @@ public class AllMangaScraperService : IAllMangaScraperService
             string requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(searchGql)}";
             
             string response = await _httpClient.GetStringAsync(requestUrl);
-            JsonDocument jsonDoc = JsonDocument.Parse(response);
+            using JsonDocument jsonDoc = JsonDocument.Parse(response);
             
             List<AllMangaSearchResult> results = new();
             
@@ -76,24 +76,16 @@ public class AllMangaScraperService : IAllMangaScraperService
                     string? name = edge.GetProperty("name").GetString();
                     
                     int? malId = null;
-                    if (edge.TryGetProperty("malId", out JsonElement malIdProp) && 
-                        malIdProp.ValueKind == JsonValueKind.String)
+                    if (edge.TryGetProperty("malId", out JsonElement malIdProp))
                     {
-                        if (malIdProp.ValueKind == JsonValueKind.String)
+                        if (malIdProp.ValueKind == JsonValueKind.String &&
+                            int.TryParse(malIdProp.GetString(), out int parsed))
                         {
-                            string? malIdString = malIdProp.GetString();
-                            if (malIdString != null)
-                            {
-                                malId = Int32.Parse(malIdString);
-                            }
+                            malId = parsed;
                         }
                         else if (malIdProp.ValueKind == JsonValueKind.Number)
                         {
                             malId = malIdProp.GetInt32();
-                        }
-                        else
-                        {
-                            Log.Error($"{name} has wrong malidtype {malIdProp.ValueKind}");
                         }
                     }
                     
@@ -169,7 +161,7 @@ public class AllMangaScraperService : IAllMangaScraperService
             string requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(detailsGql)}";
             
             string response = await _httpClient.GetStringAsync(requestUrl);
-            JsonDocument jsonDoc = JsonDocument.Parse(response);
+            using JsonDocument jsonDoc = JsonDocument.Parse(response);
             
             if (jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) &&
                 data.TryGetProperty("show", out JsonElement show))
@@ -213,7 +205,7 @@ public class AllMangaScraperService : IAllMangaScraperService
         }
     }
 
-    public async Task<List<AllManagaEpisode>> GetEpisodesAsync(string animeIdOrUrl)
+    public async Task<List<AllMangaEpisode>> GetEpisodesAsync(string animeIdOrUrl)
     {
         try
         {
@@ -236,9 +228,9 @@ public class AllMangaScraperService : IAllMangaScraperService
             string requestUrl = $"{ALLANIME_API}/api?variables={HttpUtility.UrlEncode(JsonSerializer.Serialize(variables))}&query={HttpUtility.UrlEncode(episodesGql)}";
             
             string response = await _httpClient.GetStringAsync(requestUrl);
-            JsonDocument jsonDoc = JsonDocument.Parse(response);
+            using JsonDocument jsonDoc = JsonDocument.Parse(response);
             
-            List<AllManagaEpisode> episodes = new();
+            List<AllMangaEpisode> episodes = new();
             
             if (jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) &&
                 data.TryGetProperty("show", out JsonElement show) &&
@@ -250,7 +242,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                     string? epString = ep.GetString();
                     if (float.TryParse(epString, out float epNum))
                     {
-                        episodes.Add(new AllManagaEpisode
+                        episodes.Add(new AllMangaEpisode
                         {
                             Id = $"{showId}-{epString}",
                             Number = (int)epNum,
@@ -332,7 +324,7 @@ public class AllMangaScraperService : IAllMangaScraperService
             
             string response = await _httpClient.GetStringAsync(requestUrl);
             
-            JsonDocument jsonDoc = JsonDocument.Parse(response);
+            using JsonDocument jsonDoc = JsonDocument.Parse(response);
             
             if (jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) &&
                 data.TryGetProperty("episode", out JsonElement episode) &&
@@ -411,7 +403,7 @@ public class AllMangaScraperService : IAllMangaScraperService
         try
         {
             string response = await _httpClient.GetStringAsync($"https://{ALLANIME_BASE}{sourceUrl}");
-            JsonDocument jsonDoc = JsonDocument.Parse(response);
+            using JsonDocument jsonDoc = JsonDocument.Parse(response);
             
             if (jsonDoc.RootElement.TryGetProperty("links", out JsonElement links))
             {

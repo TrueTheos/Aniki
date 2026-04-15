@@ -30,7 +30,6 @@
                 <TabItem>
                     <ScrollViewer Padding="0" Margin="0">
                         <Grid RowDefinitions="Auto,Auto">
-                            <!-- Hero Section with Blurred Background -->
                             <Grid Row="0" Height="600" Margin="0">
                                 <!-- Blurred Background Image -->
                                 <Image asyncImageLoader:ImageLoader.Source="{Binding Details.MainPicture.Large}"
@@ -254,7 +253,6 @@
                                         <!-- Action Buttons -->
                                         <Grid Margin="0,0,0,30">
                                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
-                                                <!-- Status Button with Dropdown -->
                                                 <Button Background="{StaticResource RedColor}" 
                                                         BorderThickness="0"
                                                         CornerRadius="6"

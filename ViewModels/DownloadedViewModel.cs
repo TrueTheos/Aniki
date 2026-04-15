@@ -408,6 +408,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
+        WeakReferenceMessenger.Default.Unregister<SettingsChangedMessage>(this);
         _fileWatcher?.Dispose();
         _debounceTimer?.Dispose();
     }

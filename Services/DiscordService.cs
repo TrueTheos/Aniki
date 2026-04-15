@@ -1,4 +1,5 @@
 ﻿using Aniki.Services.Interfaces;
+using Aniki.ViewModels;
 using DiscordRPC;
 using DiscordRPC.Logging;
 
@@ -9,9 +10,29 @@ public class DiscordService : IDiscordService, IDisposable
     private const string CLIENT_ID = "1371263147792535592"; 
     private DiscordRpcClient? _client;
 
-    public DiscordService()
+    public bool IsEnabled { get; private set; } = true;
+
+    public DiscordService(ISaveService saveService)
     {
-        InitializeClient();
+        SettingsConfig? config = saveService.GetSettingsConfig();
+        if (config != null)
+        {
+            IsEnabled = config.EnableDiscordPresence;
+        }
+
+        if (IsEnabled)
+        {
+            InitializeClient();
+        }
+    }
+
+    public void SetEnabled(bool enabled)
+    {
+        IsEnabled = enabled;
+        if (!enabled)
+        {
+            Reset();
+        }
     }
 
     private void InitializeClient()
@@ -47,6 +68,8 @@ public class DiscordService : IDiscordService, IDisposable
 
     public void SetPresenceEpisode(string animeTitle, int episodeNumber)
     {
+        if (!IsEnabled) return;
+
         if (_client == null || _client.IsDisposed)
         {
             InitializeClient();

@@ -28,7 +28,7 @@
                 </TextBox>
                 <Button
                         Command="{Binding SearchTorrentsCommand}"
-                        Background="#E50914"
+                        Background="{StaticResource AccentRed}"
                         CornerRadius="6"
                         Padding="20,12">
                     <Grid ColumnDefinitions="*,Auto">

@@ -49,7 +49,7 @@ public partial class LoginViewModel : ViewModelBase
 
     public event EventHandler? NavigateToMainRequested;
 
-    private IAnimeService _animeService;
+    private readonly IAnimeService _animeService;
     
     public LoginViewModel(ILoginService loginService, IAnimeService animeService)
     {

@@ -20,7 +20,7 @@ public class AllMangaAnimeDetails
     public string? Thumbnail { get; set; }
 }
 
-public class AllManagaEpisode
+public class AllMangaEpisode
 {
     public string Id { get; set; } = string.Empty;
     public int Number { get; set; }
