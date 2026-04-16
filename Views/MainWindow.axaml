@@ -359,50 +359,36 @@
                             </UserControl.DataTemplates>
                             <ContentControl Content="{Binding CurrentViewModel}" />
                         </UserControl>
-
-                        <StackPanel
-                            Margin="-7,5,0,0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Orientation="Horizontal"
-                            Spacing="-15"
-                            ZIndex="10000"
-                            IsHitTestVisible="True">
-                            <Button
-                                Classes="NavArrow"
-                                Command="{Binding NavigateBackCommand}"
-                                IsEnabled="{Binding CanNavigateBack}"
-                                ToolTip.Tip="Back">
-                                <Border
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch"
-                                    Background="#01000000">
-                                    <PathIcon
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Data="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-                                </Border>
-                            </Button>
-                            <Button
-                                Classes="NavArrow"
-                                Command="{Binding NavigateForwardCommand}"
-                                IsEnabled="{Binding CanNavigateForward}"
-                                ToolTip.Tip="Forward">
-                                <Border
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch"
-                                    Background="#01000000">
-                                    <PathIcon
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Data="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
-                                </Border>
-                            </Button>
-                        </StackPanel>
                         </Panel>
                     </Grid>
                 </Grid>
             </Border>
+
+            <StackPanel
+                Grid.Column="1"
+                Margin="-7,5,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Orientation="Horizontal"
+                Spacing="-15"
+                ZIndex="102"
+                IsHitTestVisible="True"
+                IsVisible="{Binding !IsLoading}">
+                <Button
+                    Classes="NavArrow"
+                    Command="{Binding NavigateBackCommand}"
+                    IsEnabled="{Binding CanNavigateBack}"
+                    ToolTip.Tip="Back">
+                    <PathIcon Data="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                </Button>
+                <Button
+                    Classes="NavArrow"
+                    Command="{Binding NavigateForwardCommand}"
+                    IsEnabled="{Binding CanNavigateForward}"
+                    ToolTip.Tip="Forward">
+                    <PathIcon Data="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                </Button>
+            </StackPanel>
         </Grid>
     </Panel>
 </Window>
