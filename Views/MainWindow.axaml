@@ -68,6 +68,41 @@
         <Style Selector="Panel.detailPanel TextBlock.value">
             <Setter Property="Foreground" Value="White" />
         </Style>
+        <Style Selector="Button.NavArrow">
+            <!--  Non-zero alpha keeps the full control bounds hit-testable with Fluent theme.  -->
+            <Setter Property="Background" Value="#01000000" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinWidth" Value="40" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="Button.NavArrow /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.NavArrow:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.NavArrow PathIcon">
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="14" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.NavArrow:pointerover PathIcon">
+            <Setter Property="Foreground" Value="{StaticResource White}" />
+        </Style>
+        <Style Selector="Button.NavArrow:disabled PathIcon">
+            <Setter Property="Opacity" Value="0.35" />
+        </Style>
     </Window.Styles>
 
     <Panel>
@@ -258,6 +293,7 @@
                     </Grid>
 
                     <Grid Grid.Row="0" IsVisible="{Binding !IsLoading}">
+                        <Panel>
                         <UserControl Background="{StaticResource BackgroundBlack}">
                             <UserControl.DataTemplates>
                                 <DataTemplate DataType="vm:AnimeDetailsViewModel">
@@ -323,6 +359,47 @@
                             </UserControl.DataTemplates>
                             <ContentControl Content="{Binding CurrentViewModel}" />
                         </UserControl>
+
+                        <StackPanel
+                            Margin="-7,5,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal"
+                            Spacing="-15"
+                            ZIndex="10000"
+                            IsHitTestVisible="True">
+                            <Button
+                                Classes="NavArrow"
+                                Command="{Binding NavigateBackCommand}"
+                                IsEnabled="{Binding CanNavigateBack}"
+                                ToolTip.Tip="Back">
+                                <Border
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Background="#01000000">
+                                    <PathIcon
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Data="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                                </Border>
+                            </Button>
+                            <Button
+                                Classes="NavArrow"
+                                Command="{Binding NavigateForwardCommand}"
+                                IsEnabled="{Binding CanNavigateForward}"
+                                ToolTip.Tip="Forward">
+                                <Border
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Background="#01000000">
+                                    <PathIcon
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Data="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                                </Border>
+                            </Button>
+                        </StackPanel>
+                        </Panel>
                     </Grid>
                 </Grid>
             </Border>
