@@ -5,6 +5,7 @@ using Aniki.Services.Auth.Providers;
 using Aniki.Services.Interfaces;
 using Aniki.Services.Save;
 using Microsoft.Extensions.DependencyInjection;
+using Aniki.Services;
 
 namespace Aniki.Misc;
 
@@ -24,6 +25,7 @@ public static class ServiceCollectionExtensions
         collection.AddSingleton<IAllMangaScraperService, AllMangaScraperService>();
         collection.AddSingleton<IVideoPlayerService, VideoPlayerService>();
 
+        collection.AddSingleton<IJikanService, JikanService>();
         collection.AddSingleton<AnilistService>();
         collection.AddSingleton<MalService>();
         

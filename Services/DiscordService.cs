@@ -45,24 +45,24 @@ public class DiscordService : IDiscordService, IDisposable
 
             _client.OnReady += (_, e) => 
             {
-                Log.Information($"Discord RPC Ready. Connected to user: {e.User.Username}");
+                Console.WriteLine($"Discord RPC Ready. Connected to user: {e.User.Username}");
             };
 
             _client.OnError += (_, e) =>
             {
-                Log.Error($"Discord RPC Error: {e.Code} - {e.Message}");
+                Console.WriteLine($"Discord RPC Error: {e.Code} - {e.Message}");
             };
             
             _client.OnConnectionFailed += (_, e) =>
             {
-                Log.Error($"Discord RPC Connection Failed: {e}");
+                Console.WriteLine($"Discord RPC Connection Failed: {e}");
             };
 
             _client.Initialize();
         }
         catch (Exception ex)
         {
-            Log.Error($"Failed to initialize Discord RPC: {ex.Message}");
+            Console.WriteLine($"Failed to initialize Discord RPC: {ex.Message}");
         }
     }
 

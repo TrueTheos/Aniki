@@ -121,7 +121,7 @@ public class AnimeNameParser : IAnimeNameParser
             }
             catch (Exception ex)
             {
-                Log.Error($"{originalFilename}: {ex.Message}");
+                Console.WriteLine($"{originalFilename}: {ex.Message}");
             }
         }
 

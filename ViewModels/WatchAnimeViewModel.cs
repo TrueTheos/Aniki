@@ -29,6 +29,13 @@ public class WatchAnimeViewModel : ViewModelBase
         OnlineViewModel = onlineViewModel;
     }
 
+    public override Task Enter() => SelectedTabIndex switch
+    {
+        0 => DownloadedViewModel.Enter(),
+        1 => OnlineViewModel.Enter(),
+        _ => Task.CompletedTask
+    };
+
     public void GoToAnimeInOnlineView(int malId, string title)
     {
         SelectedTabIndex = 1;

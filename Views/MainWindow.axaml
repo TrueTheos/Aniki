@@ -69,7 +69,6 @@
             <Setter Property="Foreground" Value="White" />
         </Style>
         <Style Selector="Button.NavArrow">
-            <!--  Non-zero alpha keeps the full control bounds hit-testable with Fluent theme.  -->
             <Setter Property="Background" Value="#01000000" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="0" />

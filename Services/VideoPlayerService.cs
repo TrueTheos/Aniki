@@ -356,7 +356,7 @@ public class VideoPlayerService : IVideoPlayerService
                     try { if (File.Exists(tempFile)) File.Delete(tempFile); }
                     catch(Exception ex)
                     {
-                        Log.Error($"Couldn't delete file {tempFile} {ex}");
+                        Console.WriteLine($"Couldn't delete file {tempFile} {ex}");
                     }
                 });
 

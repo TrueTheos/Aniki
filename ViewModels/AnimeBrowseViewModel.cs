@@ -167,7 +167,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
-                Log.Information($"Error opening video: {ex.Message}");
+                Console.WriteLine($"Error opening video: {ex.Message}");
             }
         }
     }

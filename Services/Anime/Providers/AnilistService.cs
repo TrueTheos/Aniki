@@ -15,9 +15,9 @@ public class AnilistService : IAnimeProvider
     private readonly GraphQLHttpClient _client;
     private readonly HttpClient _httpClient;
     private readonly ISaveService _saveService;
-    
-    private bool _isLoggedIn;
-    public bool IsLoggedIn => _isLoggedIn;
+
+    public bool IsLoggedIn { get; private set; }
+
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
     
     private int? _currentUserId;
@@ -47,12 +47,12 @@ public class AnilistService : IAnimeProvider
         if (!string.IsNullOrEmpty(accessToken))
         {
             _client.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            _isLoggedIn = true;
+            IsLoggedIn = true;
             Task.Run(async () => { _currentUserId = (await GetUserDataAsync()).Id; });
         }
         else
         {
-            _isLoggedIn = false;
+            IsLoggedIn = false;
             _currentUserId = null;
         }
     }
@@ -85,12 +85,52 @@ public class AnilistService : IAnimeProvider
             return null;
         }
     }
+    
+    private readonly Dictionary<int, int> _releasedEpisodeCache = new();
+    
+    public async Task<int> GetReleasedEpisodeCountAsync(int malId)
+    {
+        if (_releasedEpisodeCache.TryGetValue(malId, out int cached))
+            return cached;
+
+        GraphQLRequest request = new()
+        {
+            Query = @"
+                query ($idMal: Int) {
+                    Media(idMal: $idMal, type: ANIME) {
+                        episodes
+                        nextAiringEpisode {
+                            episode
+                        }
+                    }
+                }",
+            Variables = new { idMal = malId }
+        };
+
+        GraphQLResponse<AiringInfoResponse>? response =
+            await TrySendQueryAsync<AiringInfoResponse>(request, $"GetReleasedEpisodeCountAsync {malId}");
+
+        int released = 0;
+        if (response?.Data?.Media is { } media)
+        {
+            released = media.NextAiringEpisode?.Episode is int next
+                ? next - 1
+                : media.Episodes ?? 0;
+        }
+
+        _releasedEpisodeCache[malId] = released;
+        return released;
+    }
+
+    private record AiringInfoResponse(AiringMedia? Media);
+    private record AiringMedia(int? Episodes, NextAiringEpisode? NextAiringEpisode);
+    private record NextAiringEpisode(int Episode);
 
     #region  IAnimeProvider
 
     public async Task<UserData> GetUserDataAsync()
     {
-        if (!_isLoggedIn) return new UserData();
+        if (!IsLoggedIn) return new UserData();
 
         GraphQLRequest request = new()
         {
@@ -119,7 +159,7 @@ public class AnilistService : IAnimeProvider
     
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus statusFilter = AnimeStatus.None)
     {
-        if (!_isLoggedIn) return [];
+        if (!IsLoggedIn) return [];
 
         HashSet<AnimeField> allFields = new(Enum.GetValues<AnimeField>());
 
@@ -182,7 +222,7 @@ public class AnilistService : IAnimeProvider
 
     public async Task RemoveFromUserListAsync(int animeId)
     {
-        if (!_isLoggedIn) return;
+        if (!IsLoggedIn) return;
 
         GraphQLRequest queryRequest = new()
         {
@@ -377,7 +417,7 @@ public class AnilistService : IAnimeProvider
 
     private async Task UpdateMediaListEntry(int mediaId, AnimeStatus? status = null, int? score = null, int? progress = null)
     {
-        if (!_isLoggedIn) return;
+        if (!IsLoggedIn) return;
 
         Dictionary<string, object> variables = new()
         {

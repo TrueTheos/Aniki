@@ -14,9 +14,10 @@
         Background="{StaticResource BackgroundBlack}">
         <Grid>
             <TabControl x:Name="MainTabControl"
-                        Padding="0" 
+                        Padding="0"
                         Margin="0"
-                        TabStripPlacement="Top">
+                        TabStripPlacement="Top"
+                        SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                 <TabControl.Styles>
                     <Style Selector="TabControl">
                         <Setter Property="Background" Value="Transparent"/>

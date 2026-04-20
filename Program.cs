@@ -11,11 +11,6 @@ internal class Program
         string path = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "Aniki", "logs", "app-.txt");
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.File( path,
-                rollingInterval: RollingInterval.Day)
-            .CreateLogger();
         VelopackApp.Build().Run();
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
