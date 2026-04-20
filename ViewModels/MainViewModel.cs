@@ -19,6 +19,13 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase? _currentViewModel;
 
+    [ObservableProperty] private bool _isMainPageNavSelected;
+    [ObservableProperty] private bool _isAnimeDetailsNavSelected;
+    [ObservableProperty] private bool _isWatchNavSelected;
+    [ObservableProperty] private bool _isCalendarNavSelected;
+    [ObservableProperty] private bool _isStatsNavSelected;
+    [ObservableProperty] private bool _isLibraryNavSelected;
+
     [ObservableProperty] private AnimeDetailsViewModel _animeDetailsViewModel;
     [ObservableProperty]
     private WatchAnimeViewModel _watchViewModel;
@@ -61,6 +68,16 @@ public partial class MainViewModel : ViewModelBase
         _readViewMode           = readViewModel;
         
         _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
+    }
+
+    partial void OnCurrentViewModelChanged(ViewModelBase? value)
+    {
+        IsMainPageNavSelected = ReferenceEquals(value, AnimeBrowseViewModel);
+        IsAnimeDetailsNavSelected = ReferenceEquals(value, AnimeDetailsViewModel);
+        IsWatchNavSelected = ReferenceEquals(value, WatchViewModel);
+        IsCalendarNavSelected = ReferenceEquals(value, CalendarViewModel);
+        IsStatsNavSelected = ReferenceEquals(value, StatsViewModel);
+        IsLibraryNavSelected = ReferenceEquals(value, UserAnimeListViewModel);
     }
 
     private void RefreshNavigationAvailability()

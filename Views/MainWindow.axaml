@@ -150,37 +150,53 @@
                     <Button
                         Name="MainPageButton"
                         Classes="MenuButton"
+                        Background="{Binding IsMainPageNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
                         Command="{Binding ShowAnimeBrowsePageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Main Page" Foreground="{StaticResource TextSecondary}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="Main Page"
+                                Foreground="{Binding IsMainPageNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
                         </StackPanel>
                     </Button>
                     <Button
                         Name="AnimeDetailsButton"
                         Classes="MenuButton"
+                        Background="{Binding IsAnimeDetailsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
                         Command="{Binding ShowAnimeDetailsPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Anime Details" Foreground="{StaticResource TextSecondary}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="Anime Details"
+                                Foreground="{Binding IsAnimeDetailsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
                         </StackPanel>
                     </Button>
                     <Button
                         Name="WatchPageButton"
                         Classes="MenuButton"
+                        Background="{Binding IsWatchNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
                         Command="{Binding ShowWatchPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Watch" Foreground="{StaticResource TextSecondary}"/>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="Watch"
+                                Foreground="{Binding IsWatchNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
                         </StackPanel>
                     </Button>
                     <Button
                         Name="CalendarPageButton"
                         Classes="MenuButton"
+                        Background="{Binding IsCalendarNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
                         Command="{Binding ShowCalendarPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Calendar" Foreground="{StaticResource TextSecondary}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="Calendar"
+                                Foreground="{Binding IsCalendarNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
                         </StackPanel>
                     </Button>
                     
@@ -215,19 +231,27 @@
                     <Button
                         Name="StatsPageButton"
                         Classes="MenuButton"
+                        Background="{Binding IsStatsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
                         Command="{Binding ShowStatsPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock VerticalAlignment="Center" Text="Profile" Foreground="{StaticResource TextSecondary}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="Profile"
+                                Foreground="{Binding IsStatsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
                         </StackPanel>
                     </Button>
                     <Button
                         Name="YourLibraryButton"
                         Classes="MenuButton"
+                        Background="{Binding IsLibraryNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
                         Command="{Binding ShowUserAnimeListPageCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Image Source="{SvgImage /Resources/Icons/book_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Your Library" Foreground="{StaticResource TextSecondary}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="Your Library"
+                                Foreground="{Binding IsLibraryNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
                         </StackPanel>
                     </Button>
                     
