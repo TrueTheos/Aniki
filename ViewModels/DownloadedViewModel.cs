@@ -404,8 +404,8 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         await mainVm.GoToAnime(group.MalId);
 
         detailsVm.SelectedTabIndex = 1;
-        detailsVm.TorrentSearchViewModel.TorrentSearchTerms = $"{epNum:D2}";
-        _ = detailsVm.TorrentSearchViewModel.SearchTorrentsCommand.ExecuteAsync(null);
+        detailsVm.TorrentSearchViewModel.TorrentSearchTerms = $"{group.Title} {epNum:D2}";
+        _ = detailsVm.TorrentSearchViewModel.SearchTorrents();
     }
 
     [RelayCommand]
@@ -416,7 +416,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    private void LaunchEpisode(DownloadedEpisode ep)
+    public void LaunchEpisode(DownloadedEpisode ep)
     {
         _lastPlayedEpisode = ep;
         _discordService.SetPresenceEpisode(ep.AnimeTitle, ep.EpisodeNumber);
