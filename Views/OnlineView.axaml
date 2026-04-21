@@ -6,288 +6,533 @@
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:OnlineViewModel">
-    
+
     <UserControl.Styles>
         <Style Selector="Button">
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
-        <Style Selector="Button:disabled">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="#666666"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        
-        <Style Selector="TextBox">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
+
+        <!-- Search Box -->
+        <Style Selector="TextBox.search-box">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="4,0,4,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
-        <Style Selector="TextBox:focus">
-            <Setter Property="BorderBrush" Value="#007ACC"/>
+        <Style Selector="TextBox.search-box /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
-        
-        <Style Selector="ListBox">
+        <Style Selector="TextBox.search-box:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}"/>
+        </Style>
+        <Style Selector="TextBox.search-box:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentRed}"/>
+        </Style>
+        <Style Selector="TextBox.search-box /template/ TextBlock#PART_Watermark">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBox.search-box /template/ TextPresenter#PART_TextPresenter">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Sidebar panel -->
+        <Style Selector="Border.panel">
+            <Setter Property="Background" Value="{StaticResource Background0}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+            <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+
+        <!-- Results ListBox -->
+        <Style Selector="ListBox.results">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6"/>
         </Style>
-        
-        <Style Selector="Ellipse.PlayButton:pointerover">
-            <Setter Property="Fill" Value="{StaticResource DarkerRedColor}"/>
-        </Style>
-        <Style Selector="ListBoxItem">
+        <Style Selector="ListBox.results ListBoxItem">
             <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="0,2"/>
         </Style>
-        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2D2D30"/>
+        <Style Selector="ListBox.results ListBoxItem /template/ ContentPresenter">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
-        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#007ACC"/>
+        <Style Selector="ListBox.results ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
         </Style>
-        
-        <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
+        <Style Selector="ListBox.results ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33DC143C"/>
+        </Style>
+        <Style Selector="ListBox.results ListBoxItem:selected:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#44DC143C"/>
+        </Style>
+
+        <!-- ComboBox -->
+        <Style Selector="ComboBox.filled">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <!-- Primary action button -->
+        <Style Selector="Button.primary-action">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14,8"/>
+        </Style>
+        <Style Selector="Button.primary-action /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.primary-action:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FF1E4E"/>
+        </Style>
+        <Style Selector="Button.primary-action:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRedDark}"/>
+        </Style>
+        <Style Selector="Button.primary-action:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="TextElement.Foreground" Value="{StaticResource TextMuted}"/>
+        </Style>
+
+        <!-- Play button circle -->
+        <Style Selector="Button.play-fab">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.play-fab:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.08)"/>
+        </Style>
+        <Style Selector="Button.play-fab:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.95)"/>
+        </Style>
+        <Style Selector="Button.play-fab Ellipse.PlayBg">
+            <Setter Property="Fill" Value="{StaticResource AccentRed}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Fill" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.play-fab:pointerover Ellipse.PlayBg">
+            <Setter Property="Fill" Value="#FF1E4E"/>
+        </Style>
+
+        <!-- Section label -->
+        <Style Selector="TextBlock.section-label">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+            <Setter Property="LetterSpacing" Value="1.2"/>
+        </Style>
+
+        <!-- Clickable search icon button -->
+        <Style Selector="Button.search-icon-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.search-icon-btn /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.search-icon-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+        </Style>
+        <Style Selector="Button.search-icon-btn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+        </Style>
+        <Style Selector="Button.search-icon-btn PathIcon">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.search-icon-btn:pointerover PathIcon">
+            <Setter Property="Foreground" Value="{StaticResource White}"/>
         </Style>
     </UserControl.Styles>
-    
-    <Grid RowDefinitions="Auto,*" ColumnDefinitions="300,*" ColumnSpacing="20"> 
-        <!-- Search Bar -->
-        <Border
-            Background="{StaticResource BackgroundGray}"
-            CornerRadius="12"
-            Padding="12,8"
-            Margin="10,5"
-            Cursor="Hand"
-            Width="300">
-            <Grid ColumnDefinitions="Auto,*">
-                <PathIcon Grid.Column="0"
-                          Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
-                          Width="16" Height="16"
-                          Foreground="#666666"
-                          Margin="0,0,10,0"/>
-                <TextBox Grid.Column="1"
+
+    <Grid ColumnDefinitions="320,*" ColumnSpacing="16">
+
+        <!-- LEFT: Search + Results -->
+        <Border Grid.Column="0" Classes="panel" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,Auto,*">
+
+                <!-- Search -->
+                <TextBox Grid.Row="0"
+                         x:Name="SearchTextBox"
+                         Classes="search-box"
+                         Margin="12,12,12,10"
                          Text="{Binding SearchQuery, Mode=TwoWay}"
-                         Watermark="Type to Search..."
-                         Foreground="#999999"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         MinWidth="200"
-                         VerticalContentAlignment="Center">
-                    <TextBox.KeyBindings>
-                        <KeyBinding Gesture="Enter" Command="{Binding SearchAnimeCommand}" />
-                    </TextBox.KeyBindings>
-                </TextBox>
-            </Grid>
-        </Border>
-        
-        <!-- Left Panel - Search Results -->
-        <Border Grid.Column="0" 
-                Grid.Row="1"
-                Background="#1E1E1E"
-                CornerRadius="8"
-                BoxShadow="0 2 8 0 #20000000">
-            <Grid RowDefinitions="Auto,*">
-                <Border Grid.Row="0"
-                        Background="#2D2D30"
-                        CornerRadius="8,8,0,0"
-                        Padding="16,12">
-                    <TextBlock Text="Search Results" 
-                               FontWeight="Bold" 
-                               FontSize="15"
-                               Foreground="White" />
-                </Border>
-                    
-                <ScrollViewer Grid.Row="1" 
-                              VerticalScrollBarVisibility="Auto"
-                              Padding="8,8,8,-20">
-                    <ListBox ItemsSource="{Binding AnimeResults}"
-                             SelectedItem="{Binding SelectedAnime}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Title}" 
-                                               TextWrapping="NoWrap"
-                                               TextTrimming="CharacterEllipsis"
-                                               FontSize="13"
-                                               Foreground="White" />
-                                    <TextBlock Text="{Binding Episodes, StringFormat='Episodes: {0}'}" 
-                                               FontSize="11"
-                                               Foreground="{StaticResource Green}"
-                                               Margin="0,2,0,0" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </ScrollViewer>
-            </Grid>
-        </Border>
-        <Grid Grid.Column="1" Grid.Row="1" RowDefinitions="Auto,*" Margin="0,0,20,0">
-            <!-- Episode Selection -->
-            <Border Grid.Row="0" 
-                Background="#1E1E1E"
-                CornerRadius="8"
-                BoxShadow="0 2 8 0 #20000000"
-                Padding="20"
-                Margin="0,0,0,20"
-                IsVisible="{Binding Episodes.Count}">
-                <StackPanel Spacing="10">
-                    
-                    <TextBlock Text="{Binding SelectedAnime.Title}" 
-                               FontWeight="Bold"
-                               FontSize="16"
-                               Foreground="White"
-                               TextWrapping="Wrap"/>
-                    
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Background="{StaticResource RedColor}" 
-                                BorderThickness="0"
-                                CornerRadius="6"
-                                Padding="12,4"
-                                ToolTip.Tip="Go to website"
-                                Command="{Binding GoToAnimeDetailsCommand}"
-                                IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="22" Height="22"/>
-                                <TextBlock Text="Details" 
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           Foreground="White"/>
-                            </StackPanel>
+                         Watermark="Search anime…"
+                         KeyDown="OnSearchKeyDown">
+                    <TextBox.InnerLeftContent>
+                        <Button Classes="search-icon-btn"
+                                Command="{Binding SearchAnimeCommand}"
+                                ToolTip.Tip="Search">
+                            <PathIcon Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                      Width="15" Height="15"
+                                      Foreground="{StaticResource TextSecondary}"/>
                         </Button>
-                        <Border Background="#2D2D30"
-                                CornerRadius="12"
-                                Padding="12,4"
-                                HorizontalAlignment="Left"
-                                IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}">
-                            <TextBlock Text="{Binding WatchedEpisodesText}"
-                                       FontSize="11"
-                                       VerticalAlignment="Center"
-                                       Foreground="{StaticResource Green}"
-                                       FontWeight="SemiBold" />
+                    </TextBox.InnerLeftContent>
+                    <TextBox.InnerRightContent>
+                        <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                            <ProgressBar IsIndeterminate="True"
+                                         IsVisible="{Binding IsLoading}"
+                                         Width="60" Height="3"
+                                         Margin="0,0,8,0"
+                                         VerticalAlignment="Center"
+                                         Background="Transparent"
+                                         Foreground="{StaticResource AccentRed}"/>
+                        </StackPanel>
+                    </TextBox.InnerRightContent>
+                </TextBox>
+
+                <!-- Header strip -->
+                <Grid Grid.Row="1" Margin="16,4,16,8" ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Classes="section-label" Text="RESULTS" VerticalAlignment="Center"/>
+                    <Border Grid.Column="1"
+                            Background="{StaticResource Surface2}"
+                            CornerRadius="10"
+                            Padding="8,2"
+                            IsVisible="{Binding AnimeResults.Count}">
+                        <TextBlock Text="{Binding AnimeResults.Count}"
+                                   FontSize="11"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource TextSecondary}"/>
+                    </Border>
+                </Grid>
+
+                <!-- Results list or empty state -->
+                <Grid Grid.Row="2">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  IsVisible="{Binding AnimeResults.Count}">
+                        <ListBox Classes="results"
+                                 ItemsSource="{Binding AnimeResults}"
+                                 SelectedItem="{Binding SelectedAnime}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{Binding Title}"
+                                                   TextWrapping="NoWrap"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource White}"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <PathIcon Data="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"
+                                                      Width="10" Height="10"
+                                                      VerticalAlignment="Center"
+                                                      Foreground="{StaticResource Green}"/>
+                                            <TextBlock Text="{Binding Episodes, StringFormat='{}{0} episodes'}"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource Green}"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="10"
+                                Margin="20"
+                                IsVisible="{Binding !AnimeResults.Count}">
+                        <Border Width="48" Height="48"
+                                CornerRadius="24"
+                                Background="{StaticResource Surface2}"
+                                HorizontalAlignment="Center">
+                            <PathIcon Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                      Width="22" Height="22"
+                                      Foreground="{StaticResource TextMuted}"/>
                         </Border>
+                        <TextBlock Text="No results yet"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Type a title above and press Enter"
+                                   FontSize="11"
+                                   Foreground="{StaticResource TextMuted}"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"/>
                     </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
 
-                    <Grid ColumnDefinitions="Auto,Auto, 15, Auto,Auto, 10, Auto, *, Auto" 
-                          Margin="0,8,0,0">
-                        
-                        <TextBlock Grid.Column="0"
-                                   Text="Player:"
-                                   VerticalAlignment="Center"
-                                   Foreground="#A0A0A0"
-                                   FontSize="13"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,8,0"/>
-                        
-                        <ComboBox Grid.Column="1"
-                                  ItemsSource="{Binding AvailablePlayers}"
-                                  SelectedItem="{Binding SelectedPlayer}"
-                                  MinWidth="140">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayName}" Foreground="White" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+        <!-- RIGHT: Episode controls + video placeholder -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="16">
 
-                        <TextBlock Grid.Column="3"
-                                   Text="Episode:"
-                                   VerticalAlignment="Center"
-                                   Foreground="#A0A0A0"
-                                   FontSize="13"
-                                   FontWeight="SemiBold"
-                                   Margin="0,0,8,0"/>
-                        
-                        <ComboBox Grid.Column="4"
-                                  ItemsSource="{Binding Episodes}"
-                                  SelectedItem="{Binding SelectedEpisode}"
-                                  MinWidth="100">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Number, StringFormat='Episode {0}'}" Foreground="White" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
+            <!-- Episode / Player controls -->
+            <Border Grid.Row="0"
+                    Classes="panel"
+                    Padding="20,18"
+                    IsVisible="{Binding Episodes.Count}">
+                <StackPanel Spacing="14">
 
-                        <ProgressBar Grid.Column="8"
-                                     IsIndeterminate="True"
-                                     IsVisible="{Binding IsLoading}"
-                                     Width="100"
-                                     Height="4"
-                                     VerticalAlignment="Center"
-                                     Foreground="#007ACC" />
+                    <!-- Title row -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="6">
+                            <TextBlock Classes="section-label" Text="NOW SELECTED"/>
+                            <TextBlock Text="{Binding SelectedAnime.Title}"
+                                       FontWeight="Bold"
+                                       FontSize="20"
+                                       Foreground="{StaticResource White}"
+                                       TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="2"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="10"
+                                    VerticalAlignment="Center">
+                            <Border Background="#14301A"
+                                    CornerRadius="10"
+                                    Padding="10,6"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}">
+                                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <Ellipse Width="6" Height="6" Fill="#66BB6A" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding WatchedEpisodesText}"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="#8ED994"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Button Classes="primary-action"
+                                    ToolTip.Tip="Open anime details"
+                                    Command="{Binding GoToAnimeDetailsCommand}"
+                                    IsEnabled="{Binding SelectedAnime.MalId, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="16" Height="16"/>
+                                    <TextBlock Text="Details"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Divider -->
+                    <Border Height="1" Background="{StaticResource Border}"/>
+
+                    <!-- Selectors -->
+                    <Grid ColumnDefinitions="Auto,Auto,20,Auto,*"
+                          VerticalAlignment="Center">
+
+                        <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <TextBlock Classes="section-label" Text="PLAYER"/>
+                            <ComboBox Classes="filled"
+                                      ItemsSource="{Binding AvailablePlayers}"
+                                      SelectedItem="{Binding SelectedPlayer}"
+                                      MinWidth="160">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <PathIcon Data="M21 3H3c-1.11 0-2 .89-2 2v12c0 1.1.89 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.11-.9-2-2-2zm0 14H3V5h18v12z"
+                                                      Width="12" Height="12"
+                                                      Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       Foreground="{StaticResource White}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                            <TextBlock Classes="section-label" Text="EPISODE"/>
+                            <ComboBox Classes="filled"
+                                      ItemsSource="{Binding Episodes}"
+                                      SelectedItem="{Binding SelectedEpisode}"
+                                      MinWidth="140">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Number, StringFormat='Episode {0}'}"
+                                                   Foreground="{StaticResource White}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4"
+                                    Orientation="Horizontal"
+                                    Spacing="10"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom"
+                                    Margin="0,0,0,8"
+                                    IsVisible="{Binding IsLoading}">
+                            <ProgressBar IsIndeterminate="True"
+                                         Width="120" Height="4"
+                                         VerticalAlignment="Center"
+                                         Background="{StaticResource Surface2}"
+                                         Foreground="{StaticResource AccentRed}"/>
+                            <TextBlock Text="Loading…"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextSecondary}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
 
-            <!-- Video Placeholder -->
-            <Grid Grid.Row="1">
-                <Grid ClipToBounds="True" IsVisible="{Binding SelectedEpisode, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Image asyncImageLoader:ImageLoader.Source="{Binding AnimeImageUrl}"
-                           Stretch="UniformToFill">
-                        <Image.Effect>
-                            <BlurEffect Radius="20"/>
-                        </Image.Effect>
-                    </Image>
-                            
-                    <Border>
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                <GradientStop Color="#DD000000" Offset="0"/>
-                                <GradientStop Color="#00000000" Offset="0.5"/>
-                                <GradientStop Color="#DD000000" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                    </Border>
-                            
-                    <Border>
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
-                                <GradientStop Color="#00000000" Offset="0"/>
-                                <GradientStop Color="#DD000000" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                    </Border>
-                    
-                    <Button Command="{Binding PlayInBrowserCommand}"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                        <Grid>
-                            <Ellipse Width="80" Height="80"
-                                     Classes="PlayButton"
-                                     Fill="{StaticResource RedColor}"
-                                     Opacity="0.95"/>
-                            <PathIcon Data="M8 5v14l11-7z"
-                                      Width="28" Height="28"
-                                      Foreground="White"
-                                      Margin="6,0,0,0"/>
-                        </Grid>
-                    </Button>
+            <!-- Video / Placeholder Area -->
+            <Border Grid.Row="1"
+                    Classes="panel"
+                    ClipToBounds="True">
+                <Grid>
+                    <!-- Episode selected: show hero with play button -->
+                    <Grid IsVisible="{Binding SelectedEpisode, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <Image asyncImageLoader:ImageLoader.Source="{Binding AnimeImageUrl}"
+                               Stretch="UniformToFill">
+                            <Image.Effect>
+                                <BlurEffect Radius="30"/>
+                            </Image.Effect>
+                        </Image>
+
+                        <!-- Side gradient -->
+                        <Border>
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                    <GradientStop Color="#CC000000" Offset="0"/>
+                                    <GradientStop Color="#55000000" Offset="0.5"/>
+                                    <GradientStop Color="#CC000000" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <!-- Vertical gradient -->
+                        <Border>
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+                                    <GradientStop Color="#44000000" Offset="0"/>
+                                    <GradientStop Color="#CC000000" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+
+                        <!-- Central play + CTA -->
+                        <StackPanel HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="22">
+
+                            <Button Classes="play-fab"
+                                    Command="{Binding PlayInBrowserCommand}"
+                                    HorizontalAlignment="Center">
+                                <Grid>
+                                    <Ellipse Width="80" Height="80"
+                                             Classes="PlayBg"/>
+                                    <PathIcon Data="M8 5v14l11-7z"
+                                              Width="32" Height="32"
+                                              Foreground="White"
+                                              Margin="6,0,0,0"/>
+                                </Grid>
+                            </Button>
+
+                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding SelectedEpisode.Number, StringFormat='Episode {0}'}"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding SelectedPlayer.DisplayName, StringFormat='Ready to play in {0}'}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#BBBBBB"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- No episode: show empty state -->
+                    <Grid IsVisible="{Binding SelectedEpisode, Converter={x:Static ObjectConverters.IsNull}}">
+                        <StackPanel VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    Spacing="18">
+                            <Image Source="/Resources/nothingtoseehere_transparent_small.png"
+                                   Width="280"
+                                   RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                            <TextBlock Text="{Binding SelectionStatusMessage}"
+                                       IsVisible="{Binding ShowSelectionStatus}"
+                                       Foreground="{StaticResource White}"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Search, pick an anime, then choose an episode to play."
+                                       Foreground="{StaticResource TextMuted}"
+                                       FontSize="13"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="420"/>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
-                <Grid ClipToBounds="True" IsVisible="{Binding SelectedEpisode, Converter={x:Static ObjectConverters.IsNull}}">
-                    <StackPanel VerticalAlignment="Center" 
-                                HorizontalAlignment="Center" 
-                                Spacing="20">
-                        <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
-                               Width="300" 
-                               RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                        <TextBlock Text="{Binding SelectionStatusMessage}" 
-                                   IsVisible="{Binding ShowSelectionStatus}"
-                                   Foreground="#888888" 
-                                   FontSize="22" 
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
-            </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

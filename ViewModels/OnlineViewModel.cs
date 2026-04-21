@@ -131,8 +131,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         
         _previousAnimeResults = value;
         
-        if (value != null)
-            value.CollectionChanged += OnAnimeResultsCollectionChanged;
+        value.CollectionChanged += OnAnimeResultsCollectionChanged;
     }
     
     private void OnAnimeResultsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -172,7 +171,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            StatusText = $"Search error: {ex.Message}";
+            Console.WriteLine(ex);
         }
         finally
         {
