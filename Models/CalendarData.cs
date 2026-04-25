@@ -19,6 +19,9 @@ public partial class DaySchedule : ObservableObject
     private bool _isToday;
 
     [ObservableProperty]
+    private int _columnIndex;
+
+    [ObservableProperty]
     private ObservableCollection<AnimeScheduleItem> _items = new();
 }
 

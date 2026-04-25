@@ -185,6 +185,7 @@ public partial class CalendarViewModel : ViewModelBase
                     DayName = cachedDaySchedule.DayName,
                     Date = cachedDaySchedule.Date,
                     IsToday = cachedDaySchedule.IsToday,
+                    ColumnIndex = i,
                     Items = new ObservableCollection<AnimeScheduleItem>(filteredItems)
                 };
                 newDays.Add(displayDaySchedule);
@@ -199,6 +200,7 @@ public partial class CalendarViewModel : ViewModelBase
                     DayName = currentDate.ToString("dddd", CultureInfo.InvariantCulture),
                     Date = currentDate,
                     IsToday = currentDate.Date == DateTime.Today,
+                    ColumnIndex = i,
                     Items = new()
                 });
             }

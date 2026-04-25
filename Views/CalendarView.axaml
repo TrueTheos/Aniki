@@ -152,8 +152,8 @@
                     <DataTemplate>
                         <Border
                             Margin="0"
-                            BorderBrush="#2A2A2A"
-                            BorderThickness="0,0,1,0"
+                            BorderBrush="{StaticResource BorderLight}"
+                            BorderThickness="{Binding ColumnIndex, Converter={StaticResource CalendarColumnBorderThicknessConverter}}"
                             Background="{StaticResource BackgroundGray}">
 
                             <Grid Background="{StaticResource BackgroundGray}">
@@ -196,7 +196,14 @@
                                     Grid.Row="1"
                                     ItemsSource="{Binding Items}" 
                                     Background="{StaticResource BackgroundGray}">
-                                    
+                                    <ItemsControl.Styles>
+                                        <Style Selector="ContentPresenter &gt; StackPanel.calendar-anime-row">
+                                            <Setter Property="Background" Value="#1E1E1E" />
+                                        </Style>
+                                        <Style Selector="ContentPresenter:nth-child(odd) &gt; StackPanel.calendar-anime-row">
+                                            <Setter Property="Background" Value="#252525" />
+                                        </Style>
+                                    </ItemsControl.Styles>
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel />
@@ -205,7 +212,7 @@
                                     
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Background="Transparent" Tapped="OnAnimeTapped">
+                                            <StackPanel Classes="calendar-anime-row" Tapped="OnAnimeTapped">
                                                 <ToolTip.Tip>
                                                     <Border
                                                         Background="{StaticResource BackgroundBlack}"
