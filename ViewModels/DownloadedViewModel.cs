@@ -357,7 +357,11 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         _debounceTimer.AutoReset = false;
         _debounceTimer.Elapsed += async (_, _) =>
         {
-            try { await LoadDiskAsync(); }
+            try
+            {
+                await LoadDiskAsync();
+                await LoadWatchingListAsync();
+            }
             catch (Exception ex) { Console.WriteLine(ex); }
         };
 
