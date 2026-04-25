@@ -68,7 +68,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                 }
                 catch (Exception e)
                 {
-                    Log.Error($"Failed to save to disk {e}");
+                    Console.WriteLine($"Failed to save to disk {e}");
                 }
             }, null, _options.DiskSyncInterval, _options.DiskSyncInterval);
         }
@@ -526,7 +526,14 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     public void Dispose()
     {
         _diskSyncTimer?.Dispose();
-        SyncToDiskAsync().GetAwaiter().GetResult();
+        try
+        {
+            SyncToDiskAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Failed to sync cache to disk during dispose: {e}");
+        }
         _diskWriteLock.Dispose();
     }
 }

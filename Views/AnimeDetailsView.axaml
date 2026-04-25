@@ -14,9 +14,10 @@
         Background="{StaticResource BackgroundBlack}">
         <Grid>
             <TabControl x:Name="MainTabControl"
-                        Padding="0" 
+                        Padding="0"
                         Margin="0"
-                        TabStripPlacement="Top">
+                        TabStripPlacement="Top"
+                        SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                 <TabControl.Styles>
                     <Style Selector="TabControl">
                         <Setter Property="Background" Value="Transparent"/>
@@ -30,7 +31,6 @@
                 <TabItem>
                     <ScrollViewer Padding="0" Margin="0">
                         <Grid RowDefinitions="Auto,Auto">
-                            <!-- Hero Section with Blurred Background -->
                             <Grid Row="0" Height="600" Margin="0">
                                 <!-- Blurred Background Image -->
                                 <Image asyncImageLoader:ImageLoader.Source="{Binding Details.MainPicture.Large}"
@@ -114,7 +114,34 @@
                                                     BorderThickness="0">
                                                     <Image Source="{SvgImage /Resources/Icons/minus_icon.svg}" Width="20" Height="20" />
                                                 </Button>
-                                                <TextBlock Text="{Binding WatchedEpisodes}" VerticalAlignment="Center" Margin="8,0"/>
+                                                <Panel VerticalAlignment="Center" Margin="8,0" MinWidth="40">
+                                                    <Button Command="{Binding StartEditingEpisodesCommand}"
+                                                            IsVisible="{Binding !IsEditingEpisodes}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Padding="6,2"
+                                                            Cursor="Hand"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Center"
+                                                            ToolTip.Tip="Click to edit">
+                                                        <TextBlock Text="{Binding WatchedEpisodes}"
+                                                                   Foreground="White"
+                                                                   HorizontalAlignment="Center"/>
+                                                    </Button>
+                                                    <TextBox x:Name="EpisodesInputBox"
+                                                             IsVisible="{Binding IsEditingEpisodes}"
+                                                             Text="{Binding EpisodesInput, Mode=TwoWay}"
+                                                             MinWidth="40"
+                                                             Padding="4,2"
+                                                             VerticalAlignment="Center"
+                                                             HorizontalContentAlignment="Center"
+                                                             LostFocus="OnEpisodesInputLostFocus">
+                                                        <TextBox.KeyBindings>
+                                                            <KeyBinding Gesture="Enter" Command="{Binding CommitEpisodesInputCommand}"/>
+                                                            <KeyBinding Gesture="Escape" Command="{Binding CancelEditingEpisodesCommand}"/>
+                                                        </TextBox.KeyBindings>
+                                                    </TextBox>
+                                                </Panel>
                                                 <Button
                                                     Command="{Binding IncrementWatchedEpisodesCommand}"
                                                     Background="#00000000"
@@ -254,7 +281,6 @@
                                         <!-- Action Buttons -->
                                         <Grid Margin="0,0,0,30">
                                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
-                                                <!-- Status Button with Dropdown -->
                                                 <Button Background="{StaticResource RedColor}" 
                                                         BorderThickness="0"
                                                         CornerRadius="6"

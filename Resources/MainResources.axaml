@@ -1,11 +1,40 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Brand Colors -->
+    <SolidColorBrush x:Key="AccentRed" Color="#DC143C" />
+    <SolidColorBrush x:Key="AccentRedDark" Color="#850922" />
     <SolidColorBrush x:Key="Green" Color="#00D4AA" />
-    <SolidColorBrush x:Key="Background0" Color="#FF202324" />
-    <SolidColorBrush x:Key="BackgroundBlack" Color="#0A0A0A " />
-    <SolidColorBrush x:Key="Background1" Color="#FF2C2F31" />
-    <SolidColorBrush x:Key="BackgroundGray" Color="#1A1A1A" />
-    <SolidColorBrush x:Key="Border" Color="#1A1A1A" />
-    <SolidColorBrush x:Key="White" Color="#E0E0E0" />
     <Color x:Key="RedColor">#DC143C</Color>
     <Color x:Key="DarkerRedColor">#850922</Color>
+    
+    <!-- Surface Colors -->
+    <SolidColorBrush x:Key="Background0" Color="#FF202324" />
+    <SolidColorBrush x:Key="BackgroundBlack" Color="#0A0A0A" />
+    <SolidColorBrush x:Key="Background1" Color="#FF2C2F31" />
+    <SolidColorBrush x:Key="BackgroundGray" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="Surface2" Color="#2A2A2A" />
+    <SolidColorBrush x:Key="Surface3" Color="#3A3A3A" />
+    <SolidColorBrush x:Key="SurfaceHover" Color="#333333" />
+    
+    <!-- Border Colors -->
+    <SolidColorBrush x:Key="Border" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="BorderLight" Color="#333333" />
+    <SolidColorBrush x:Key="BorderHover" Color="#555555" />
+    
+    <!-- Text Colors -->
+    <SolidColorBrush x:Key="White" Color="#E0E0E0" />
+    <SolidColorBrush x:Key="TextSecondary" Color="#999999" />
+    <SolidColorBrush x:Key="TextMuted" Color="#666666" />
+    
+    <!-- Status Colors -->
+    <SolidColorBrush x:Key="StatusWatching" Color="#4CAF50" />
+    <SolidColorBrush x:Key="StatusCompleted" Color="#2196F3" />
+    <SolidColorBrush x:Key="StatusOnHold" Color="#FF9800" />
+    <SolidColorBrush x:Key="StatusDropped" Color="#F44336" />
+    <SolidColorBrush x:Key="StatusPlanToWatch" Color="#9C27B0" />
+    
+    <Color x:Key="StatusWatchingColor">#4CAF50</Color>
+    <Color x:Key="StatusCompletedColor">#2196F3</Color>
+    <Color x:Key="StatusOnHoldColor">#FF9800</Color>
+    <Color x:Key="StatusDroppedColor">#F44336</Color>
+    <Color x:Key="StatusPlanToWatchColor">#9C27B0</Color>
 </ResourceDictionary>

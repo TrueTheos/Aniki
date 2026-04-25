@@ -1,4 +1,5 @@
-﻿using Aniki.Services.Anime;
+using System.Collections.Generic;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -18,6 +19,13 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase? _currentViewModel;
 
+    [ObservableProperty] private bool _isMainPageNavSelected;
+    [ObservableProperty] private bool _isAnimeDetailsNavSelected;
+    [ObservableProperty] private bool _isWatchNavSelected;
+    [ObservableProperty] private bool _isCalendarNavSelected;
+    [ObservableProperty] private bool _isStatsNavSelected;
+    [ObservableProperty] private bool _isLibraryNavSelected;
+
     [ObservableProperty] private AnimeDetailsViewModel _animeDetailsViewModel;
     [ObservableProperty]
     private WatchAnimeViewModel _watchViewModel;
@@ -35,6 +43,15 @@ public partial class MainViewModel : ViewModelBase
 
     private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
+
+    private readonly Stack<ViewModelBase> _navigationBackStack = new();
+    private readonly Stack<ViewModelBase> _navigationForwardStack = new();
+
+    [ObservableProperty]
+    private bool _canNavigateBack;
+
+    [ObservableProperty]
+    private bool _canNavigateForward;
     
     public MainViewModel(IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
@@ -53,53 +70,111 @@ public partial class MainViewModel : ViewModelBase
         _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
 
+    partial void OnCurrentViewModelChanged(ViewModelBase? value)
+    {
+        IsMainPageNavSelected = ReferenceEquals(value, AnimeBrowseViewModel);
+        IsAnimeDetailsNavSelected = ReferenceEquals(value, AnimeDetailsViewModel);
+        IsWatchNavSelected = ReferenceEquals(value, WatchViewModel);
+        IsCalendarNavSelected = ReferenceEquals(value, CalendarViewModel);
+        IsStatsNavSelected = ReferenceEquals(value, StatsViewModel);
+        IsLibraryNavSelected = ReferenceEquals(value, UserAnimeListViewModel);
+    }
+
+    private void RefreshNavigationAvailability()
+    {
+        CanNavigateBack = _navigationBackStack.Count > 0;
+        CanNavigateForward = _navigationForwardStack.Count > 0;
+    }
+
+    private async Task NavigateToViewAsync(ViewModelBase target)
+    {
+        if (ReferenceEquals(CurrentViewModel, target))
+        {
+            await target.Enter();
+            return;
+        }
+
+        if (CurrentViewModel is not null)
+        {
+            _navigationBackStack.Push(CurrentViewModel);
+            _navigationForwardStack.Clear();
+        }
+
+        CurrentViewModel = target;
+        RefreshNavigationAvailability();
+        await CurrentViewModel!.Enter();
+    }
+
+    [RelayCommand]
+    public async Task NavigateBackAsync()
+    {
+        if (_navigationBackStack.Count == 0 || CurrentViewModel is null)
+        {
+            return;
+        }
+
+        ViewModelBase previous = _navigationBackStack.Pop();
+        _navigationForwardStack.Push(CurrentViewModel);
+        CurrentViewModel = previous;
+        RefreshNavigationAvailability();
+        await CurrentViewModel.Enter();
+    }
+
+    [RelayCommand]
+    public async Task NavigateForwardAsync()
+    {
+        if (_navigationForwardStack.Count == 0 || CurrentViewModel is null)
+        {
+            return;
+        }
+
+        ViewModelBase next = _navigationForwardStack.Pop();
+        _navigationBackStack.Push(CurrentViewModel);
+        CurrentViewModel = next;
+        RefreshNavigationAvailability();
+        await CurrentViewModel.Enter();
+    }
+
     [RelayCommand]
     public async Task ShowAnimeBrowsePage()
     {
-        CurrentViewModel = AnimeBrowseViewModel;
-        await CurrentViewModel.Enter();
+        await NavigateToViewAsync(AnimeBrowseViewModel);
     }
 
     [RelayCommand]
     public async Task ShowAnimeDetailsPage()
     {
-        CurrentViewModel = AnimeDetailsViewModel;
-        await CurrentViewModel.Enter();
+        await NavigateToViewAsync(AnimeDetailsViewModel);
     }
 
     [RelayCommand]
     public async Task ShowWatchPage()
     {
-        CurrentViewModel = WatchViewModel;
-        await CurrentViewModel.Enter();
+        await NavigateToViewAsync(WatchViewModel);
     }
 
     [RelayCommand]
     public async Task ShowCalendarPage()
     {
-        CurrentViewModel = CalendarViewModel; 
-        await CurrentViewModel.Enter();
+        await NavigateToViewAsync(CalendarViewModel);
     }
 
     [RelayCommand]
     public async Task ShowStatsPage()
     {
-        CurrentViewModel = StatsViewModel; 
-        await CurrentViewModel.Enter();
+        await NavigateToViewAsync(StatsViewModel);
     }
     
     [RelayCommand]
     public async Task ShowUserAnimeListPage()
     {
-        CurrentViewModel = UserAnimeListViewModel; 
-        await CurrentViewModel.Enter();
+        await NavigateToViewAsync(UserAnimeListViewModel);
     }
     
     [RelayCommand]
     public async Task ShowReadPage()
     {
-        CurrentViewModel = ReadViewMode; 
-        await CurrentViewModel.Enter();
+        await NavigateToViewAsync(ReadViewMode);
     }
 
     public async Task GoToAnime(string title)

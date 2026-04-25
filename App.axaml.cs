@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Velopack;
 using Velopack.Sources;
@@ -38,6 +39,8 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Dispatcher.UIThread.UnhandledException += OnUnhandledException;
+
         _ = PostInitialization();
     }
 
@@ -57,7 +60,7 @@ public class App : Application
         DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
 
         AppDomain.CurrentDomain.UnhandledException += (_, e) => 
-            Log.Fatal(e.ExceptionObject as Exception, "Unhandled exception");
+            OnUnhandledException(_, (DispatcherUnhandledExceptionEventArgs)e.ExceptionObject );
         
         base.OnFrameworkInitializationCompleted();
     }
@@ -82,7 +85,7 @@ public class App : Application
         }
         catch (Exception ex)
         {
-            Log.Information($"Update check failed: {ex.Message}");
+            Console.WriteLine($"Update check failed: {ex.Message}");
         }
     }
     
@@ -102,5 +105,12 @@ public class App : Application
         {
             // ignored
         }
+    }
+    
+    private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        Console.WriteLine(e.Exception);
+
+        e.Handled = true;
     }
 }

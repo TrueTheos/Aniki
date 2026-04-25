@@ -1,4 +1,5 @@
-﻿using Aniki.Services.Interfaces;
+﻿using System.Collections.ObjectModel;
+using Aniki.Services.Interfaces;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -22,16 +23,44 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     [ObservableProperty]
+    private bool _startMinimized;
+
+    [ObservableProperty]
+    private bool _enableDiscordPresence = true;
+
+    [ObservableProperty]
     private string? _episodesFolder;
 
     [ObservableProperty]
     private long _cacheSize;
 
-    private readonly ISaveService _saveService;
+    [ObservableProperty]
+    private bool _isClearingCache;
 
-    public SettingsViewModel(ISaveService saveService)
+    private readonly ISaveService _saveService;
+    private readonly IVideoPlayerService _videoPlayerService;
+    private readonly IDiscordService _discordService;
+
+    public ObservableCollection<VideoPlayerOption> AvailablePlayers => _videoPlayerService.AvailablePlayers;
+
+    public VideoPlayerOption? SelectedPlayer
+    {
+        get => _videoPlayerService.SelectedPlayer;
+        set
+        {
+            if (_videoPlayerService.SelectedPlayer != value)
+            {
+                _videoPlayerService.SelectedPlayer = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public SettingsViewModel(ISaveService saveService, IVideoPlayerService videoPlayerService, IDiscordService discordService)
     {
         _saveService = saveService;
+        _videoPlayerService = videoPlayerService;
+        _discordService = discordService;
         
         LoadSettings();
     }
@@ -40,15 +69,27 @@ public partial class SettingsViewModel : ViewModelBase
     {
         SettingsConfig? config = _saveService.GetSettingsConfig();
 
-        if(config == null)
+        if (config == null)
         {
             AutoStart = false;
+            StartMinimized = false;
+            EnableDiscordPresence = true;
             EpisodesFolder = _saveService.DefaultEpisodesFolder;
         }
         else
         {
             AutoStart = config.AutoStart;
+            StartMinimized = config.StartMinimized;
+            EnableDiscordPresence = config.EnableDiscordPresence;
             EpisodesFolder = config.EpisodesFolder;
+
+            if (!string.IsNullOrEmpty(config.PreferredVideoPlayerPath))
+            {
+                VideoPlayerOption? match = AvailablePlayers
+                    .FirstOrDefault(p => p.ExecutablePath == config.PreferredVideoPlayerPath);
+                if (match != null)
+                    SelectedPlayer = match;
+            }
         }
     }
 
@@ -78,13 +119,27 @@ public partial class SettingsViewModel : ViewModelBase
                 if (newValue)
                 {
                     string exePath = Environment.ProcessPath ?? "";
-                    key?.SetValue("Avalonia", $"{exePath} --background");
+                    key?.SetValue("Aniki", $"{exePath} --background");
                 }
                 else
                 {
-                    key?.DeleteValue("Avalonia", false);
+                    key?.DeleteValue("Aniki", false);
                 }
             }
+        }
+    }
+
+    [RelayCommand]
+    private async Task ClearCache()
+    {
+        IsClearingCache = true;
+        try
+        {
+            await _saveService.FlushAllCaches();
+        }
+        finally
+        {
+            IsClearingCache = false;
         }
     }
 
@@ -94,11 +149,16 @@ public partial class SettingsViewModel : ViewModelBase
         SettingsConfig config = new()
         {
             AutoStart = AutoStart,
-            EpisodesFolder = EpisodesFolder
+            StartMinimized = StartMinimized,
+            EnableDiscordPresence = EnableDiscordPresence,
+            EpisodesFolder = EpisodesFolder,
+            PreferredVideoPlayerPath = SelectedPlayer?.ExecutablePath
         };
 
         _saveService.SaveSettings(config);
-        
+
+        _discordService.SetEnabled(EnableDiscordPresence);
+
         WeakReferenceMessenger.Default.Send(new SettingsChangedMessage());
     }
 }
@@ -106,7 +166,10 @@ public partial class SettingsViewModel : ViewModelBase
 public class SettingsConfig
 {
     public bool AutoStart;
+    public bool StartMinimized;
+    public bool EnableDiscordPresence = true;
     public string? EpisodesFolder;
+    public string? PreferredVideoPlayerPath;
 }
 
 public class SettingsChangedMessage { }

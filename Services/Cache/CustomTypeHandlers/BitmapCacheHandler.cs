@@ -6,10 +6,7 @@ public class BitmapCacheHandler : ICacheTypeHandler
     {
         if (value is Avalonia.Media.Imaging.Bitmap bmp)
         {
-            using (destination)
-            {
-                bmp.Save(destination);
-            }
+            bmp.Save(destination);
         }
     }
 

@@ -48,9 +48,9 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     private string? _animeImageUrl;
 
     [ObservableProperty]
-    private ObservableCollection<AllManagaEpisode> _episodes = new();
+    private ObservableCollection<AllMangaEpisode> _episodes = new();
 
-    public AllManagaEpisode? SelectedEpisode
+    public AllMangaEpisode? SelectedEpisode
     {
         get;
         set
@@ -119,19 +119,25 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         _discordService = discordService;
     }
     
+    private ObservableCollection<AllMangaSearchResult>? _previousAnimeResults;
+    
     partial void OnAnimeResultsChanged(ObservableCollection<AllMangaSearchResult> value)
     {
         OnPropertyChanged(nameof(SelectionStatusMessage));
         OnPropertyChanged(nameof(ShowSelectionStatus));
     
-        if (value != null)
-        {
-            value.CollectionChanged += (_, _) =>
-            {
-                OnPropertyChanged(nameof(SelectionStatusMessage));
-                OnPropertyChanged(nameof(ShowSelectionStatus));
-            };
-        }
+        if (_previousAnimeResults != null)
+            _previousAnimeResults.CollectionChanged -= OnAnimeResultsCollectionChanged;
+        
+        _previousAnimeResults = value;
+        
+        value.CollectionChanged += OnAnimeResultsCollectionChanged;
+    }
+    
+    private void OnAnimeResultsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(SelectionStatusMessage));
+        OnPropertyChanged(nameof(ShowSelectionStatus));
     }
 
     [RelayCommand]
@@ -165,7 +171,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            StatusText = $"Search error: {ex.Message}";
+            Console.WriteLine(ex);
         }
         finally
         {
@@ -217,9 +223,9 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            List<AllManagaEpisode> episodes = await _scraperService.GetEpisodesAsync(anime.Url);
+            List<AllMangaEpisode> episodes = await _scraperService.GetEpisodesAsync(anime.Url);
             
-            foreach (AllManagaEpisode episode in episodes)
+            foreach (AllMangaEpisode episode in episodes)
             {
                 Episodes.Add(episode);
             }
@@ -238,7 +244,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async void OnSelectedEpisodeChanged(AllManagaEpisode? value)
+    private async void OnSelectedEpisodeChanged(AllMangaEpisode? value)
     {
         CanPlayVideo = false;
         _currentVideoUrl = null;
@@ -249,7 +255,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task PrepareVideoAsync(AllManagaEpisode episode)
+    private async Task PrepareVideoAsync(AllMangaEpisode episode)
     {
         IsLoading = true;
         StatusText = "Preparing video...";
@@ -385,6 +391,9 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
+        if (_previousAnimeResults != null)
+            _previousAnimeResults.CollectionChanged -= OnAnimeResultsCollectionChanged;
+        
         if (_videoProcess != null)
         {
             _videoProcess.Exited -= OnVideoProcessExited;

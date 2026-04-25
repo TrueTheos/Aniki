@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Newtonsoft.Json.Linq;
@@ -38,6 +39,7 @@ public class CalendarService : ICalendarService
                       type
                       meanScore
                       description
+                      genres
                     }
                     episode
                     airingAt
@@ -207,10 +209,15 @@ public class CalendarService : ICalendarService
             ? meanScore.Value / 10f
             : null;
 
-        string description = media["description"]?.ToString() ?? "No description";
-        
+        string rawDescription = media["description"]?.ToString() ?? "No description";
+        string description = Regex.Replace(rawDescription, "<.*?>", "").Trim();
+
+        string genres = media["genres"] is JArray genresArray
+            ? string.Join(", ", genresArray.Select(g => g.ToString()))
+            : "";
+
         AnimeScheduleItem result = new(title: title, description: description, airingAt: airingAt, episode: episode,
-            episodeInfo: episode > 0 ? $"EP{episode} • {format}" : format, type: format, imageUrl: imageUrl, mean: meanScoreScaled ?? 0);
+            episodeInfo: episode > 0 ? $"EP{episode} • {format}" : format, type: format, imageUrl: imageUrl, mean: meanScoreScaled ?? 0, genres: genres);
 
         if (aniListId.HasValue) result.ProviderId[ILoginProvider.ProviderType.AniList] = aniListId.Value;
         if (malId.HasValue) result.ProviderId[ILoginProvider.ProviderType.Mal] = malId.Value;

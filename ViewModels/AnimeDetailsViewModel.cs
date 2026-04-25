@@ -21,9 +21,18 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isLoading;
+
+    [ObservableProperty]
+    private bool _isEditingEpisodes;
+
+    [ObservableProperty]
+    private string _episodesInput = string.Empty;
     
     public bool CanIncreaseEpisodeCount => WatchedEpisodes < (Details?.NumEpisodes ?? 0);
     public bool CanDecreaseEpisodeCount => WatchedEpisodes > 0;
+
+    [ObservableProperty]
+    private int _selectedTabIndex = 0;
 
     [ObservableProperty]
     private WatchAnimeViewModel _watchAnimeViewModel;
@@ -127,6 +136,50 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public void DecrementWatchedEpisodes()
     {
         _ = UpdateEpisodeCount(-1);
+    }
+
+    [RelayCommand]
+    private void StartEditingEpisodes()
+    {
+        if (Details?.UserStatus == null) return;
+
+        EpisodesInput = WatchedEpisodes.ToString();
+        IsEditingEpisodes = true;
+    }
+
+    [RelayCommand]
+    private void CommitEpisodesInput()
+    {
+        if (!IsEditingEpisodes) return;
+
+        if (Details?.UserStatus == null)
+        {
+            IsEditingEpisodes = false;
+            return;
+        }
+
+        if (int.TryParse(EpisodesInput, out int newCount))
+        {
+            if (newCount < 0) newCount = 0;
+            if (Details.NumEpisodes is > 0 && newCount > Details.NumEpisodes)
+            {
+                newCount = Details.NumEpisodes.Value;
+            }
+
+            int delta = newCount - WatchedEpisodes;
+            if (delta != 0)
+            {
+                _ = UpdateEpisodeCount(delta);
+            }
+        }
+
+        IsEditingEpisodes = false;
+    }
+
+    [RelayCommand]
+    private void CancelEditingEpisodes()
+    {
+        IsEditingEpisodes = false;
     }
 
     [RelayCommand]

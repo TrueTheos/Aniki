@@ -30,7 +30,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<GenreViewModel> _availableGenres;
 
-    private IAnimeService _animeService;
+    private readonly IAnimeService _animeService;
 
     public UserAnimeListViewModel(IAnimeService animeService)
     {

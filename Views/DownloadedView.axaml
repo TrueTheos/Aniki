@@ -5,225 +5,591 @@
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:models="clr-namespace:Aniki.Models"
     xmlns:anime="clr-namespace:Aniki.Services.Anime"
+    xmlns:converters="clr-namespace:Aniki.Converters;assembly=Aniki"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     x:DataType="vm:DownloadedViewModel">
-    <Grid RowDefinitions="38,*">
-        <StackPanel Orientation="Horizontal" 
-                    HorizontalAlignment="Right"
-                    Spacing="10"
-                    Margin="0,10">
-            <TextBlock Text="Player:"
-                       VerticalAlignment="Center"
-                       Foreground="#A0A0A0"
-                       FontSize="13"
-                       FontWeight="SemiBold"
-                       Margin="0,0,8,0"/>
-            
-            <ComboBox ItemsSource="{Binding AvailablePlayers}"
-                      SelectedItem="{Binding SelectedPlayer}"
-                      MinWidth="100"
-                      VerticalAlignment="Center">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding DisplayName}" Foreground="White" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-            
-            <Button VerticalAlignment="Center"
-                    CornerRadius="12"
-                    ToolTip.Tip="Open folder with episodes"
-                    Width="34"
-                    Height="34"
-                    Command="{Binding OpenEpisodesFolderCommand}">
-                <Image Source="{SvgImage /Resources/Icons/folderOpen_icon.svg}" Width="22" Height="22"/>
-            </Button>
-        </StackPanel>
-        
-        <StackPanel Grid.Row="1" HorizontalAlignment="Center" IsVisible="{Binding IsLoading}">
-            <ProgressBar Width="300" IsIndeterminate="True" Background="{StaticResource Background0}"
-                            Foreground="{StaticResource RedColor}" />
-            <TextBlock
-                Margin="0,5,0,5"
-                HorizontalAlignment="Center"
-                FontSize="16"
-                Foreground="{StaticResource White}"
-                Text="{Binding ProcessingProgress}" />
-        </StackPanel>
 
-        <ScrollViewer Grid.Row="1" IsVisible="{Binding IsEpisodesViewVisible}" VerticalScrollBarVisibility="Visible">
-            <ItemsControl ItemsSource="{Binding AnimeGroups}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="models:AnimeGroup">
-                        <Border Margin="0,0,0,16" Background="{StaticResource Background0}" CornerRadius="8" Padding="16">
-                            <StackPanel>
-                                <!-- Anime Title Header -->
-                                <Grid Margin="0,0,0,12" ColumnDefinitions="*,Auto">
-                                    <TextBlock
-                                        Grid.Column="0"
-                                        FontSize="20"
-                                        FontWeight="Bold"
-                                        Foreground="{StaticResource White}"
-                                        Text="{Binding Title}" />
-                                    <Border
-                                        Grid.Column="1"
-                                        Background="Transparent"
-                                        CornerRadius="12"
-                                        Padding="8,4">
-                                        <StackPanel Orientation="Horizontal" Spacing="10">
-                                            <Button Background="{StaticResource RedColor}" 
-                                                    BorderThickness="0"
-                                                    CornerRadius="6"
-                                                    Padding="12,4"
-                                                    ToolTip.Tip="Go to website"
-                                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).OpenAnimeDetailsCommand}"
-                                                    CommandParameter="{Binding MalId}">
-                                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                                    <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="22" Height="22"/>
-                                                    <TextBlock Text="Details" 
-                                                               FontSize="15"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="White"/>
-                                                </StackPanel>
-                                            </Button> 
-                                            <ProgressBar
-                                                         Minimum="0" 
-                                                         Maximum="{Binding MaxEpisodes}" 
-                                                         Width="100"
-                                                         Value="{Binding WatchedEpisodes}"
-                                                         ShowProgressText="True"
-                                                         ProgressTextFormat="{}{0}/{3}"
-                                                         Background="{StaticResource Background1}"
-                                                         Foreground="{StaticResource RedColor}"
-                                                         IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}"/>
-                                        </StackPanel>
-                                       
-                                    </Border>
-                                </Grid>
-                                
-                                <!-- Episodes List -->
-                                <ItemsControl ItemsSource="{Binding Episodes}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="models:DownloadedEpisode">
-                                            <Border
-                                                Margin="0,2,0,2"
-                                                Padding="12"
-                                                Background="{StaticResource Background1}"
-                                                CornerRadius="6">
-                                                <Grid VerticalAlignment="Center" ColumnDefinitions="*,Auto,Auto">
-                                                    <StackPanel Margin="0,0,12,0">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock
-                                                                FontSize="14"
-                                                                FontWeight="SemiBold"
-                                                                Foreground="{StaticResource White}"
-                                                                Text="{Binding Season, StringFormat='Season {0}'}" />
-                                                            <TextBlock
-                                                                Margin="8,0,0,0"
-                                                                FontSize="14"
-                                                                FontWeight="SemiBold"
-                                                                Foreground="{StaticResource White}"
-                                                                Text="{Binding EpisodeNumber, StringFormat='Episode {0}'}" />
-                                                            
-                                                            <Border Background="{StaticResource DarkerRedColor}"
-                                                                    CornerRadius="12"
-                                                                    Padding="8,4"
-                                                                    Margin="8,0,0,0"
-                                                                    VerticalAlignment="Center"
-                                                                    IsVisible="{Binding Watched}">
-                                                                <TextBlock Text="Watched"
-                                                                           FontSize="11"
-                                                                           VerticalAlignment="Center"
-                                                                           Foreground="{StaticResource White}"
-                                                                           FontWeight="SemiBold" />
-                                                            </Border>
-                                                            
-                                                        </StackPanel>
-                                                        
-                                                        <TextBlock
-                                                            Margin="0,4,0,0"
-                                                            FontSize="10"
-                                                            Foreground="LightGray"
-                                                            Text="{Binding FilePath}"
-                                                            TextTrimming="CharacterEllipsis" />
-                                                    </StackPanel>
+    <UserControl.Resources>
+        <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <converters:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
+        <converters:EqualToZeroConverter x:Key="EqualToZeroConverter"/>
+    </UserControl.Resources>
 
-                                                    <!--  Play Button  -->
-                                                    <Button
-                                                        Grid.Column="1"
-                                                        Width="36"
-                                                        Height="36"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Center"
-                                                        Background="#3A3A4A"
-                                                        CornerRadius="6"
-                                                        Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).LaunchEpisodeCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip.Tip="Watch!">
-                                                        <Viewbox Width="16" Height="16">
-                                                            <Path Data="M0,0 L0,10 L10,5 Z" Fill="White" />
-                                                        </Viewbox>
-                                                    </Button>
+    <UserControl.Styles>
 
-                                                    <!--  Delete Button  -->
-                                                    <Button
-                                                        Grid.Column="2"
-                                                        Width="36"
-                                                        Height="36"
-                                                        Margin="8,0,0,0"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Center"
-                                                        Background="{StaticResource RedColor}"
-                                                        CornerRadius="6"
-                                                        Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).DeleteEpisodeCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        ToolTip.Tip="Delete">
-                                                        <Viewbox
-                                                            Width="16"
-                                                            Height="16"
-                                                            HorizontalAlignment="Center"
-                                                            VerticalAlignment="Center">
-                                                            <Canvas Width="24" Height="24">
-                                                                <Path
-                                                                    Data="M3,6 L5,6 L21,6 M19,6 L17.5,20.5 C17.4,21.3 16.7,22 16,22 L8,22 C7.3,22 6.6,21.3 6.5,20.5 L5,6 M8,6 L8,4 C8,3.4 8.4,3 9,3 L15,3 C15.6,3 16,3.4 16,4 L16,6"
-                                                                    Fill="Transparent"
-                                                                    Stroke="White"
-                                                                    StrokeThickness="2" />
-                                                            </Canvas>
-                                                        </Viewbox>
-                                                    </Button>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+        <Style Selector="Border.anime-card">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#2A2E30"/>
+            <Setter Property="Background" Value="{StaticResource Background0}"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.22"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.22"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.anime-card:pointerover">
+            <Setter Property="BorderBrush" Value="#5A5E60"/>
+            <Setter Property="Background" Value="#25292B"/>
+        </Style>
+
+        <Style Selector="Border.chip">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="9,3"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.primary-action">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.primary-action /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.primary-action:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FF1E4E"/>
+        </Style>
+        <Style Selector="Button.primary-action:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRedDark}"/>
+        </Style>
+
+        <Style Selector="Button.success-action">
+            <Setter Property="Background" Value="#1B3A22"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,7"/>
+        </Style>
+        <Style Selector="Button.success-action /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1B3A22"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.success-action:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#245530"/>
+        </Style>
+        <Style Selector="Button.success-action:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#143019"/>
+        </Style>
+
+        <Style Selector="Border.episode-row">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#2C1F1F"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.episode-row.watched">
+            <Setter Property="Background" Value="#282B2C"/>
+        </Style>
+        <Style Selector="Border.episode-row:pointerover">
+            <Setter Property="Background" Value="#3A2525"/>
+        </Style>
+        <Style Selector="Border.episode-row.watched:pointerover">
+            <Setter Property="Background" Value="#373A3B"/>
+        </Style>
+
+        <Style Selector="Border.episode-row Rectangle.ep-stripe">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.15"/>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+            <Setter Property="Width" Value="4"/>
+            <Setter Property="Opacity" Value="0.85"/>
+        </Style>
+        <Style Selector="Border.episode-row:pointerover Rectangle.ep-stripe">
+            <Setter Property="Width" Value="6"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <Style Selector="Button.ep-icon-btn">
+            <Setter Property="Width" Value="38"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="CornerRadius" Value="19"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.ep-icon-btn:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.1)"/>
+        </Style>
+        <Style Selector="Button.ep-icon-btn:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.94)"/>
+        </Style>
+
+        <Style Selector="Button.ep-play /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2E7D4F"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.ep-play:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1F5C3A"/>
+        </Style>
+        <Style Selector="Button.ep-play:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#26332C"/>
+        </Style>
+
+        <Style Selector="Button.ep-delete /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33232A"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.ep-delete:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+        </Style>
+        <Style Selector="Button.ep-delete:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRedDark}"/>
+        </Style>
+
+        <Style Selector="Button.toolbar-btn">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.toolbar-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Surface3}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}"/>
+        </Style>
+        <Style Selector="Button.toolbar-btn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SurfaceHover}"/>
+        </Style>
+
+        <Style Selector="TextBox.search-box">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="4,0,4,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="TextBox.search-box /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="TextBox.search-box:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}"/>
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+        </Style>
+        <Style Selector="TextBox.search-box /template/ TextBlock#PART_Watermark">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBox.search-box /template/ TextPresenter#PART_TextPresenter">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.search-icon-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.search-icon-btn /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.search-icon-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+        </Style>
+        <Style Selector="Button.search-icon-btn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+        </Style>
+        <Style Selector="Button.search-icon-btn PathIcon">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.search-icon-btn:pointerover PathIcon">
+            <Setter Property="Foreground" Value="{StaticResource White}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0"
+                Background="Transparent"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{StaticResource Border}"
+                Padding="0,10,0,10">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+
+                <TextBox Grid.Column="0"
+                         x:Name="SearchTextBox"
+                         Classes="search-box"
+                         Text="{Binding SearchText}"
+                         Watermark="Search anime…"
+                         VerticalAlignment="Center"
+                         Margin="0,0,10,0">
+                    <TextBox.InnerLeftContent>
+                        <Button Classes="search-icon-btn"
+                                Click="OnSearchIconClick"
+                                ToolTip.Tip="Focus search">
+                            <PathIcon Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                      Width="15" Height="15"
+                                      Foreground="{StaticResource TextSecondary}"/>
+                        </Button>
+                    </TextBox.InnerLeftContent>
+                    <TextBox.InnerRightContent>
+                        <Button Background="Transparent" BorderThickness="0" Padding="6,0"
+                                VerticalAlignment="Center"
+                                Command="{Binding ClearSearchCommand}"
+                                IsVisible="{Binding SearchText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                                      Width="12" Height="12"
+                                      Foreground="{StaticResource TextSecondary}"/>
+                        </Button>
+                    </TextBox.InnerRightContent>
+                </TextBox>
+
+                <Button Grid.Column="1" Classes="toolbar-btn"
+                        Padding="14,0" Height="38" MinWidth="170"
+                        VerticalAlignment="Center" Margin="0,0,8,0">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuItem Header="Name (A-Z)"      Command="{Binding SetSortCommand}" CommandParameter="NameAsc"/>
+                            <MenuItem Header="Name (Z-A)"      Command="{Binding SetSortCommand}" CommandParameter="NameDesc"/>
+                            <Separator/>
+                            <MenuItem Header="Most on Disk"    Command="{Binding SetSortCommand}" CommandParameter="OnDiskDesc"/>
+                            <MenuItem Header="Least on Disk"   Command="{Binding SetSortCommand}" CommandParameter="OnDiskAsc"/>
+                            <Separator/>
+                            <MenuItem Header="Most Watched"    Command="{Binding SetSortCommand}" CommandParameter="ProgressDesc"/>
+                            <MenuItem Header="Least Watched"   Command="{Binding SetSortCommand}" CommandParameter="ProgressAsc"/>
+                            <Separator/>
+                            <MenuItem Header="Most Episodes"   Command="{Binding SetSortCommand}" CommandParameter="TotalDesc"/>
+                            <MenuItem Header="Fewest Episodes" Command="{Binding SetSortCommand}" CommandParameter="TotalAsc"/>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                        <PathIcon Grid.Column="0"
+                                  Data="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"
+                                  Width="15" Height="15"
+                                  Foreground="{StaticResource TextSecondary}"
+                                  VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center">
+                            <TextBlock Text="Sort by" FontSize="9"
+                                       Foreground="{StaticResource TextMuted}"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,-1"/>
+                            <TextBlock Text="{Binding SortText}"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{StaticResource White}"/>
+                        </StackPanel>
+                        <PathIcon Grid.Column="2"
+                                  Data="M7 10l5 5 5-5z"
+                                  Width="14" Height="14"
+                                  Foreground="{StaticResource TextSecondary}"
+                                  VerticalAlignment="Center"/>
+                    </Grid>
+                </Button>
+
+                <Rectangle Grid.Column="2" Width="1" Height="22" Margin="0,0,8,0"
+                           Fill="{StaticResource Border}" VerticalAlignment="Center"/>
+
+                <ComboBox Grid.Column="3"
+                          ItemsSource="{Binding AvailablePlayers}"
+                          SelectedItem="{Binding SelectedPlayer}"
+                          MinWidth="140" Height="38"
+                          CornerRadius="8"
+                          VerticalAlignment="Center" Margin="0,0,8,0"
+                          ToolTip.Tip="Video player">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <PathIcon Data="M21 3H3c-1.11 0-2 .89-2 2v12c0 1.1.89 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.11-.9-2-2-2zm0 14H3V5h18v12z"
+                                          Width="12" Height="12"
+                                          Foreground="{StaticResource TextSecondary}"/>
+                                <TextBlock Text="{Binding DisplayName}" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
                             </StackPanel>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-        
-        <Grid Grid.Row="1" ClipToBounds="True"
-              IsVisible="{Binding IsNoEpisodesViewVisible}">
-            <StackPanel VerticalAlignment="Center" 
-                        HorizontalAlignment="Center" 
-                        Spacing="20">
-                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
-                       Width="300" 
-                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Foreground="{StaticResource White}">
-                    Nothing to see here!
-                </TextBlock>
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    FontSize="18"
-                    Foreground="{StaticResource White}"
-                    Text="{Binding EpisodesFolderMessage}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Button Grid.Column="4" Classes="toolbar-btn"
+                        Width="38" Height="38"
+                        VerticalAlignment="Center"
+                        ToolTip.Tip="Open episodes folder"
+                        Command="{Binding OpenEpisodesFolderCommand}">
+                    <Image Source="{SvgImage /Resources/Icons/folderOpen_icon.svg}" Width="18" Height="18"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsLoading}">
+                <ProgressBar Width="300" IsIndeterminate="True"
+                             Background="{StaticResource Background0}"
+                             Foreground="{StaticResource RedColor}"/>
+                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center"
+                           FontSize="14" Foreground="{StaticResource White}"
+                           Text="{Binding ProcessingProgress}"/>
             </StackPanel>
+
+            <ScrollViewer IsVisible="{Binding IsEpisodesViewVisible}" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding FilteredAnimeGroups}" Margin="0,8,0,16">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="models:AnimeGroup">
+
+                            <Border Classes="anime-card" Margin="0,0,0,12" ClipToBounds="True">
+                                <StackPanel>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+
+                                        <Border Grid.Column="0"
+                                                Width="90" Height="126"
+                                                CornerRadius="12,0,0,0"
+                                                ClipToBounds="True">
+                                            <Image asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
+                                                   Stretch="UniformToFill"/>
+                                        </Border>
+                                        
+                                        <StackPanel Grid.Column="1" Margin="18,14,14,14"
+                                                    VerticalAlignment="Center" Spacing="10">
+
+                                            <TextBlock FontSize="17" FontWeight="Bold"
+                                                       Foreground="{StaticResource White}"
+                                                       Text="{Binding Title}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                
+                                                <Border Classes="chip" Background="#14301A"
+                                                        IsVisible="{Binding HasUnwatchedOnDisk}"
+                                                        ToolTip.Tip="Episodes downloaded and ready to watch">
+                                                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                                        <Ellipse Width="6" Height="6" Fill="#66BB6A" VerticalAlignment="Center"/>
+                                                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#8ED994"
+                                                                   Text="{Binding UnwatchedOnDiskCount, StringFormat='{}{0} ready'}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                
+                                                <Border Classes="chip" Background="#32220A"
+                                                        IsVisible="{Binding HasUnseenReleased}"
+                                                        ToolTip.Tip="Episodes released that you haven't watched yet">
+                                                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                                        <Ellipse Width="6" Height="6" Fill="#F0A040" VerticalAlignment="Center"/>
+                                                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#F0B86A"
+                                                                   Text="{Binding UnseenReleasedCount, StringFormat='{}{0} unseen aired'}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                
+                                                <Border Classes="chip" Background="{StaticResource Background1}"
+                                                        IsVisible="{Binding OnDiskCount, Converter={StaticResource EqualToZeroConverter}}">
+                                                    <TextBlock FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextMuted}"
+                                                               Text="No episodes downloaded"/>
+                                                </Border>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Orientation="Horizontal" Spacing="10"
+                                                        IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}}">
+                                                <ProgressBar Width="200" Height="6"
+                                                             Minimum="0"
+                                                             Maximum="{Binding MaxEpisodes}"
+                                                             Value="{Binding WatchedEpisodes}"
+                                                             Background="{StaticResource Background1}"
+                                                             Foreground="{StaticResource AccentRed}"
+                                                             VerticalAlignment="Center"/>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextSecondary}"
+                                                           Text="{Binding EpisodesProgressText}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                                                    VerticalAlignment="Center" Margin="0,0,14,0">
+                                            
+                                            <Button IsVisible="{Binding CanDownloadNext}"
+                                                    Classes="success-action"
+                                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).DownloadNextEpisodeCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip.Tip="Find torrent for next episode">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Image Source="{SvgImage /Resources/Icons/download_icon.svg}" Width="13" Height="13"/>
+                                                    <TextBlock Text="{Binding NextEpisodeToDownloadText}"
+                                                               FontSize="12" FontWeight="SemiBold" Foreground="#8ED994"/>
+                                                </StackPanel>
+                                            </Button>
+                                            
+                                            <Button Classes="primary-action"
+                                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).OpenAnimeDetailsCommand}"
+                                                    CommandParameter="{Binding MalId}"
+                                                    ToolTip.Tip="Anime details">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="13" Height="13"/>
+                                                    <TextBlock Text="Details" FontSize="12" FontWeight="SemiBold" Foreground="White"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                    
+                                    <Border IsVisible="{Binding OnDiskCount, Converter={StaticResource GreaterThanZeroConverter}}"
+                                            BorderThickness="0,1,0,0"
+                                            BorderBrush="{StaticResource Border}">
+                                        <ItemsControl ItemsSource="{Binding Episodes}" Padding="10,10,10,10">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="models:DownloadedEpisode">
+                                                    <Border Classes="episode-row"
+                                                            Classes.watched="{Binding Watched}"
+                                                            Margin="0,2,0,2"
+                                                            DoubleTapped="OnDoubleTapEpisode">
+                                                        <Grid ColumnDefinitions="8,*,Auto,Auto">
+
+                                                            <Rectangle Grid.Column="0" Classes="ep-stripe"
+                                                                       HorizontalAlignment="Left"
+                                                                       VerticalAlignment="Stretch"
+                                                                       Fill="{Binding Watched, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#4CAF50:#DC143C'}"/>
+
+                                                            <StackPanel Grid.Column="1" Margin="14,10,12,10" VerticalAlignment="Center" Spacing="3">
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock FontSize="14" FontWeight="Bold"
+                                                                               Foreground="{StaticResource White}"
+                                                                               Text="{Binding EpisodeNumber, StringFormat='Ep {0}'}"/>
+                                                                    <TextBlock FontSize="11" FontWeight="SemiBold"
+                                                                               Foreground="{StaticResource TextSecondary}"
+                                                                               VerticalAlignment="Center"
+                                                                               Text="{Binding Season, StringFormat='S{0}'}"/>
+
+                                                                    <Border CornerRadius="4" Padding="6,2"
+                                                                            Background="#1A3A1F"
+                                                                            VerticalAlignment="Center"
+                                                                            IsVisible="{Binding Watched}">
+                                                                        <TextBlock Text="WATCHED" FontSize="9" FontWeight="Bold" Foreground="#8ED994"/>
+                                                                    </Border>
+                                                                    <Border CornerRadius="4" Padding="6,2"
+                                                                            Background="#3A1414"
+                                                                            VerticalAlignment="Center"
+                                                                            IsVisible="{Binding IsUnwatched}">
+                                                                        <TextBlock Text="READY" FontSize="9" FontWeight="Bold" Foreground="#FF6B6B"/>
+                                                                    </Border>
+                                                                </StackPanel>
+                                                                <TextBlock FontSize="10"
+                                                                           Foreground="{StaticResource TextMuted}"
+                                                                           Text="{Binding FilePath}"
+                                                                           TextTrimming="CharacterEllipsis"/>
+                                                            </StackPanel>
+
+                                                            <Button Grid.Column="2"
+                                                                    Classes="ep-icon-btn ep-play"
+                                                                    Margin="0,0,8,0"
+                                                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).LaunchEpisodeCommand}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip.Tip="Watch">
+                                                                <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="20" Height="20"/>
+                                                            </Button>
+
+                                                            <Button Grid.Column="3"
+                                                                    Classes="ep-icon-btn ep-delete"
+                                                                    Margin="0,0,12,0"
+                                                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).DeleteEpisodeCommand}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip.Tip="Delete file">
+                                                                <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}" Width="16" Height="16"/>
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
+
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Grid ClipToBounds="True" IsVisible="{Binding IsNoEpisodesViewVisible}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                    <Image Source="/Resources/nothingtoseehere_transparent_small.png"
+                           Width="300" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                    <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="Bold"
+                               Foreground="{StaticResource White}">
+                        Nothing to see here!
+                    </TextBlock>
+                    <TextBlock HorizontalAlignment="Center" FontSize="18"
+                               Foreground="{StaticResource White}"
+                               Text="{Binding EpisodesFolderMessage}"/>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

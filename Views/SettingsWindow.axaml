@@ -7,63 +7,207 @@
         x:Class="Aniki.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
 
-        Width="400"
-        Height="360"
+        Width="520"
+        Height="560"
         CanResize="False"
         SystemDecorations="None"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
-		WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterOwner"
         ExtendClientAreaToDecorationsHint="True">
-	<Design.DataContext>
-		<vm:SettingsViewModel/>
-	</Design.DataContext>
 
-	<Border CornerRadius="8" Padding="16">
-		<StackPanel Spacing="12">
-			<ExperimentalAcrylicBorder IsHitTestVisible="False">
-				<ExperimentalAcrylicBorder.Material>
-					<ExperimentalAcrylicMaterial
-						BackgroundSource="Digger"
-						TintColor="Black"
-						TintOpacity="1"
-						MaterialOpacity="1" />
-				</ExperimentalAcrylicBorder.Material>
-			</ExperimentalAcrylicBorder>
+    <Design.DataContext>
+        <vm:SettingsViewModel/>
+    </Design.DataContext>
 
-			<TextBlock Text="SETTINGS" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+    <Window.Styles>
+        <Style Selector="TextBlock.section-header">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="Margin" Value="0,4,0,8"/>
+        </Style>
+        <Style Selector="Border.setting-card">
+            <Setter Property="Background" Value="#FF181A1B"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        <Style Selector="TextBlock.setting-label">
+            <Setter Property="Foreground" Value="{StaticResource White}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.setting-desc">
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+        <Style Selector="ToggleSwitch">
+            <Setter Property="OnContent" Value=""/>
+            <Setter Property="OffContent" Value=""/>
+        </Style>
+        <Style Selector="Button.action-btn">
+            <Setter Property="Background" Value="{StaticResource Background1}"/>
+            <Setter Property="Foreground" Value="{StaticResource White}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+        <Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Surface3}"/>
+        </Style>
+    </Window.Styles>
 
-			<Separator/>
+    <Border CornerRadius="8">
+        <Panel>
+            <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="8">
+                <ExperimentalAcrylicBorder.Material>
+                    <ExperimentalAcrylicMaterial
+                        BackgroundSource="Digger"
+                        TintColor="Black"
+                        TintOpacity="1"
+                        MaterialOpacity="1" />
+                </ExperimentalAcrylicBorder.Material>
+            </ExperimentalAcrylicBorder>
 
-			<Grid ColumnDefinitions="*, Auto">
-				<TextBlock Grid.Column="0" Text="Auto Start on Windows Startup" VerticalAlignment="Center"/>
-				<CheckBox Grid.Column="1" IsChecked="{Binding AutoStart, Mode=TwoWay}" HorizontalAlignment="Right"/>
-			</Grid>
+            <Grid RowDefinitions="Auto,*,Auto" Margin="24,20">
 
-			<Grid ColumnDefinitions="*, Auto">
-				<TextBlock Grid.Column="0" Text="Download Folder:" VerticalAlignment="Center"/>
-				<Button Grid.Column="1" Command="{Binding BrowseEpisodesFolderCommand}" HorizontalAlignment="Right">
-					<PathIcon Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
-				</Button>
-			</Grid>
-			
-			<Separator/>
-			
-			<!--
-			<Grid ColumnDefinitions="*, Auto">
-				<StackPanel Grid.Column="0" Orientation="Horizontal">
-					<TextBlock Text="Cache size: " VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding CacheSize, Converter={StaticResource BytesToMegabytesConverter}}" VerticalAlignment="Center"/>
-				</StackPanel>
-				<Button Grid.Column="1" Command="{Binding ClearCacheCommand}" HorizontalAlignment="Right" ToolTip.Tip="Clear cache">
-					<Image Source="{SvgImage /Resources/Icons/delete_icon.svg}" Width="20" Height="20"/>
-				</Button>
-			</Grid> -->
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                    <TextBlock Text="Settings"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource White}"/>
+                </StackPanel>
 
-			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-				<Button Content="Cancel" Click="OnCancel"/>
-				<Button Content="Save" Command="{Binding SaveCommand}" Background="#7E57C2" Foreground="White" Click="OnSave"/>
-			</StackPanel>
-		</StackPanel>
-	</Border>
+                <ScrollViewer Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Spacing="4">
+
+                        <TextBlock Classes="section-header" Text="GENERAL"/>
+
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Classes="setting-label" Text="Auto Start"/>
+                                    <TextBlock Classes="setting-desc" Text="Launch Aniki when Windows starts"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding AutoStart, Mode=TwoWay}"
+                                              VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Classes="setting-label" Text="Start Minimized"/>
+                                    <TextBlock Classes="setting-desc" Text="Start in the background on launch"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding StartMinimized, Mode=TwoWay}"
+                                              VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Classes="setting-label" Text="Discord Rich Presence"/>
+                                    <TextBlock Classes="setting-desc" Text="Show what you're watching on Discord"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding EnableDiscordPresence, Mode=TwoWay}"
+                                              VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Classes="section-header" Text="PLAYBACK" Margin="0,12,0,8"/>
+
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="setting-label" Text="Episodes Folder"/>
+                                    <TextBlock Classes="setting-desc" Text="Where your downloaded episodes are stored"/>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,0">
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding EpisodesFolder, Mode=TwoWay}"
+                                             IsReadOnly="True"
+                                             FontSize="12"
+                                             VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1"
+                                            Classes="action-btn"
+                                            Command="{Binding BrowseEpisodesFolderCommand}"
+                                            Content="Browse"
+                                            Margin="8,0,0,0"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="setting-card">
+                            <StackPanel Spacing="8">
+                                <StackPanel>
+                                    <TextBlock Classes="setting-label" Text="Video Player"/>
+                                    <TextBlock Classes="setting-desc" Text="Preferred player for watching anime"/>
+                                </StackPanel>
+                                <ComboBox ItemsSource="{Binding AvailablePlayers}"
+                                          SelectedItem="{Binding SelectedPlayer, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          FontSize="12"
+                                          Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Classes="section-header" Text="DATA" Margin="0,12,0,8"/>
+
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Classes="setting-label" Text="Clear Cache"/>
+                                    <TextBlock Classes="setting-desc" Text="Flush cached anime data and images"/>
+                                </StackPanel>
+                                <Button Grid.Column="1"
+                                        Classes="action-btn"
+                                        Command="{Binding ClearCacheCommand}"
+                                        IsEnabled="{Binding !IsClearingCache}"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                                                  Width="14" Height="14"
+                                                  Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Text="Clear" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,16,0,0">
+                    <Button Grid.Column="1"
+                            Content="Cancel"
+                            Classes="action-btn"
+                            Click="OnCancel"
+                            Margin="0,0,8,0"/>
+                    <Button Grid.Column="2"
+                            Command="{Binding SaveCommand}"
+                            Click="OnSave"
+                            Background="{StaticResource AccentRed}"
+                            Foreground="White"
+                            CornerRadius="6"
+                            Padding="20,8"
+                            FontWeight="SemiBold"
+                            FontSize="13">
+                        <TextBlock Text="Save"/>
+                    </Button>
+                </Grid>
+
+            </Grid>
+        </Panel>
+    </Border>
 </Window>

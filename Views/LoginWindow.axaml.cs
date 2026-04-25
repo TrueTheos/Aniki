@@ -1,3 +1,5 @@
+using Aniki.Services.Interfaces;
+using Aniki.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -10,10 +12,22 @@ namespace Aniki.Views;
 public partial class LoginWindow : Window
 {
     private LoginViewModel _viewModel;
+    private readonly bool _startMinimized;
 
     public LoginWindow()
     {
         _viewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<LoginViewModel>();
+
+        SettingsConfig? config = DependencyInjection.Instance.ServiceProvider!
+            .GetRequiredService<ISaveService>().GetSettingsConfig();
+        _startMinimized = config?.StartMinimized == true;
+
+        if (_startMinimized)
+        {
+            WindowState = WindowState.Minimized;
+            ShowInTaskbar = false;
+        }
+
         InitializeComponent();
 #if DEBUG
         this.AttachDevTools();
@@ -46,7 +60,12 @@ public partial class LoginWindow : Window
     {
         MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         MainWindow mainWindow = new(mainViewModel);
-        
+
+        if (_startMinimized)
+        {
+            mainWindow.WindowState = WindowState.Minimized;
+        }
+
         if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = mainWindow;

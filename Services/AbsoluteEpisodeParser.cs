@@ -205,7 +205,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         }
         catch (Exception ex)
         {
-            Log.Information($"Error building season map for anime ID {animeId}: {ex.Message}");
+            Console.WriteLine($"Error building season map for anime ID {animeId}: {ex.Message}");
             return null;
         }
     }

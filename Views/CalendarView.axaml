@@ -19,16 +19,39 @@
             <Setter Property="Height" Value="32" />
         </Style>
 
-        <Style Selector="ListBoxItem">
+        <Style Selector="ToolTip">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="MaxWidth" Value="520" />
         </Style>
-        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent" />
+
+        <Style Selector="Border.anime-card">
+            <Setter Property="RenderTransform" Value="scaleX(1) scaleY(1)" />
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
         </Style>
-        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent" />
+        <Style Selector="Border.anime-card:pointerover">
+            <Setter Property="RenderTransform" Value="scaleX(1.04) scaleY(1.04)" />
+            <Setter Property="Opacity" Value="0.9" />
+        </Style>
+
+        <Style Selector="ScrollViewer /template/ ScrollBar">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="AllowAutoHide" Value="False" />
+        </Style>
+        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb">
+            <Setter Property="Background" Value="#444444" />
+            <Setter Property="MinHeight" Value="40" />
+        </Style>
+        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb:pointerover">
+            <Setter Property="Background" Value="#666666" />
         </Style>
     </UserControl.Styles>
 
@@ -109,9 +132,11 @@
         </Border>
 
         <ScrollViewer
+            x:Name="MainScrollViewer"
             Background="{StaticResource BackgroundBlack}"
             HorizontalScrollBarVisibility="Auto"
-            VerticalScrollBarVisibility="Auto">
+            VerticalScrollBarVisibility="Visible"
+            Margin="0,0,6,0">
 
             <ItemsControl 
                 Margin="8,0" 
@@ -167,23 +192,82 @@
                                     </Grid>
                                 </Border>
 
-                                <ListBox 
+                                <ItemsControl 
                                     Grid.Row="1"
-                                    Tapped="DoubleClickAnime" 
                                     ItemsSource="{Binding Items}" 
-                                    Background="{StaticResource BackgroundGray}"
-                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                    ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    Background="{StaticResource BackgroundGray}">
                                     
-                                    <ListBox.ItemsPanel>
+                                    <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <VirtualizingStackPanel />
+                                            <StackPanel />
                                         </ItemsPanelTemplate>
-                                    </ListBox.ItemsPanel>
+                                    </ItemsControl.ItemsPanel>
                                     
-                                    <ListBox.ItemTemplate>
+                                    <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Background="Transparent" ToolTip.Tip="Click for details!">
+                                            <StackPanel Background="Transparent" Tapped="OnAnimeTapped">
+                                                <ToolTip.Tip>
+                                                    <Border
+                                                        Background="{StaticResource BackgroundBlack}"
+                                                        CornerRadius="10"
+                                                        Padding="0"
+                                                        MaxWidth="480"
+                                                        MaxHeight="200"
+                                                        ClipToBounds="True"
+                                                        BorderBrush="#555555"
+                                                        BorderThickness="1.5">
+                                                        <Grid ColumnDefinitions="120,*">
+                                                            <Border
+                                                                Grid.Column="0"
+                                                                CornerRadius="10,0,0,10"
+                                                                ClipToBounds="True">
+                                                                <Image
+                                                                    asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}"
+                                                                    Stretch="UniformToFill" />
+                                                            </Border>
+
+                                                            <StackPanel Grid.Column="1" Margin="14,12,14,14" Spacing="6">
+                                                                <TextBlock
+                                                                    Text="{Binding Title}"
+                                                                    FontSize="15"
+                                                                    FontWeight="Bold"
+                                                                    Foreground="{StaticResource White}"
+                                                                    TextWrapping="Wrap"
+                                                                    MaxLines="2"
+                                                                    TextTrimming="CharacterEllipsis" />
+
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <TextBlock
+                                                                        Text="{Binding EpisodeInfo}"
+                                                                        FontSize="12"
+                                                                        Foreground="#AAAAAA" />
+                                                                    <TextBlock
+                                                                        Text="{Binding AiringAt, StringFormat='h:mm tt'}"
+                                                                        FontSize="12"
+                                                                        Foreground="#AAAAAA" />
+                                                                </StackPanel>
+
+                                                                <TextBlock
+                                                                    Text="{Binding Genres}"
+                                                                    FontSize="11"
+                                                                    Foreground="{StaticResource RedColor}"
+                                                                    FontWeight="Medium"
+                                                                    TextWrapping="Wrap"
+                                                                    IsVisible="{Binding Genres, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                                                                <TextBlock
+                                                                    Text="{Binding Description}"
+                                                                    FontSize="12"
+                                                                    Foreground="#CCCCCC"
+                                                                    TextWrapping="Wrap"
+                                                                    MaxLines="5"
+                                                                    LineHeight="18"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </ToolTip.Tip>
+
                                                 <!--  Air time  -->
                                                 <TextBlock
                                                     Margin="8,4,0,0"
@@ -192,14 +276,14 @@
                                                     Text="{Binding AiringAt, StringFormat='h:mm tt'}" />
 
                                                 <Border
+                                                    Classes="anime-card"
                                                     Width="180"
                                                     Margin="8,2,8,4"
                                                     Padding="0"
                                                     Background="{StaticResource BackgroundBlack}"
                                                     BorderBrush="{Binding Type, Converter={StaticResource AnimeTypeToColorConverter}}"
                                                     BorderThickness="3,0,3,0"
-                                                    CornerRadius="8"
-                                                    BoxShadow="0 2 8 0 #4D000000">
+                                                    CornerRadius="8">
 
                                                     <Grid Cursor="Hand">
                                                         <Grid.ColumnDefinitions>
@@ -254,8 +338,7 @@
                                                             VerticalAlignment="Top"
                                                             Background="{StaticResource RedColor}"
                                                             CornerRadius="4"
-                                                            IsVisible="{Binding IsAiringNow}"
-                                                            BoxShadow="0 0 6 0 #CC0000" />
+                                                            IsVisible="{Binding IsAiringNow}" />
                                                         
                                                         <Path
                                                             Grid.Column="2"
@@ -271,8 +354,8 @@
                                                 </Border>
                                             </StackPanel>
                                         </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </Grid>
                         </Border>
                     </DataTemplate>

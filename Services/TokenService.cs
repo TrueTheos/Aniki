@@ -53,7 +53,7 @@ public class TokenService : ITokenService
         }
         catch (Exception ex)
         {
-            Log.Information($"Error loading tokens for {providerId}: {ex.Message}");
+            Console.WriteLine($"Error loading tokens for {providerId}: {ex.Message}");
             return null;
         }
     }

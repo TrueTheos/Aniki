@@ -484,7 +484,6 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Right Sidebar - Only visible in Main view -->
         <Border Grid.Column="1" 
                 Grid.Row="0"
                 Width="320"

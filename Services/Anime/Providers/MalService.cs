@@ -31,12 +31,14 @@ public class MalService : IAnimeProvider
     private readonly Queue<DateTime> _requestTimestamps = new();
     
     private readonly ISaveService _saveService;
+    private readonly IJikanService _jikanService;
 
     private string _accessToken = "";
     private readonly string _allFields;
 
-    public MalService(ISaveService saveService)
+    public MalService(ISaveService saveService, IJikanService jikanService)
     {
+        _jikanService = jikanService;
         _allFields = string.Join(",", Enum.GetValues<AnimeField>()
                                           .Select(FieldToString)
                                           .Where(f => !string.IsNullOrEmpty(f)));
@@ -45,6 +47,7 @@ public class MalService : IAnimeProvider
 
     public void Init(string? accessToken)
     {
+        _client.Dispose();
         _client = new();
         
         if (accessToken != null)
@@ -314,7 +317,7 @@ public class MalService : IAnimeProvider
         {
             animeResponse.Id = id;
             
-            if(fields.Contains(AnimeField.TrailerUrl)) animeResponse.TrailerUrl = await GetAnimeTrailerUrlJikan(animeResponse.Id);
+            if(fields.Contains(AnimeField.TrailerUrl)) animeResponse.TrailerUrl = await _jikanService.GetAnimeTrailerUrlAsync(animeResponse.Id);
             if (fields.Contains(AnimeField.Picture))
             {
                 if (picture != null )
@@ -393,7 +396,7 @@ public class MalService : IAnimeProvider
         }
         catch (Exception ex)
         {
-            Log.Information($"Error getting anime picture: {ex.Message}");
+            Console.WriteLine($"Error getting anime picture: {ex.Message}");
             return null;
         }
     }
@@ -547,51 +550,6 @@ public class MalService : IAnimeProvider
         };
     }
     
-    private async Task<string?> GetAnimeTrailerUrlJikan(int animeId)
-    {
-        try
-        {
-            string url = $"https://api.jikan.moe/v4/anime/{animeId}/videos";
-
-            HttpResponseMessage response = await GetAsync(url, "GetAnimeTrailerUrlJikan");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Log.Information($"Failed to get trailer from Jikan: {response.StatusCode}");
-                return null;
-            }
-
-            string json = await response.Content.ReadAsStringAsync();
-            using JsonDocument doc = JsonDocument.Parse(json);
-
-            if (doc.RootElement.TryGetProperty("data", out JsonElement dataElem) &&
-                dataElem.TryGetProperty("promo", out JsonElement promoArray) &&
-                promoArray.ValueKind == JsonValueKind.Array &&
-                promoArray.GetArrayLength() > 0)
-            {
-                JsonElement firstPromo = promoArray[0];
-                if (firstPromo.TryGetProperty("trailer", out JsonElement trailerElem))
-                {
-                    if (trailerElem.TryGetProperty("embed_url", out JsonElement urlElem))
-                    {
-                        return urlElem.GetString();
-                    }
-                    if (trailerElem.TryGetProperty("youtube_id", out JsonElement youtubeIdElem))
-                    {
-                        string youtubeId = youtubeIdElem.GetString() ?? "";
-                        return string.IsNullOrEmpty(youtubeId) ? null : $"https://www.youtube.com/watch?v={youtubeId}";
-                    }
-                }
-            }
-
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Log.Information($"Error getting trailer from Jikan: {ex.Message}");
-            return null;
-        }
-    }
     
     private RelatedAnime.RelationType ConvertRelationType(string? type)
     {

@@ -56,7 +56,10 @@ public partial class AnimeScheduleItem : ObservableObject
     [ObservableProperty] 
     private float _mean;
 
-    public AnimeScheduleItem(string title, string description, DateTime airingAt, int episode, string episodeInfo, string type, string imageUrl, float mean)
+    [ObservableProperty]
+    private string _genres = "";
+
+    public AnimeScheduleItem(string title, string description, DateTime airingAt, int episode, string episodeInfo, string type, string imageUrl, float mean, string genres = "")
     {
         Title        = title;
         Description  = description;
@@ -66,6 +69,7 @@ public partial class AnimeScheduleItem : ObservableObject
         Type         = type;
         ImageUrl     = imageUrl;
         Mean         = mean;
+        Genres       = genres;
     }
 
     public int? GetId()
