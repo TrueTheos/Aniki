@@ -103,3 +103,27 @@ Delete folders `tokens` `cache` and `ImageCache`.
 
 - Built with [Avalonia UI](https://avaloniaui.net/).
 
+## Disclaimer
+
+This project is intended for educational and informational purposes only.
+
+The application does not host, store, or distribute any media content. All content is provided by third-party sources that are not affiliated with this project. The project simply acts as a client interface for publicly accessible resources on the internet.
+
+The developer does not control, own, or take responsibility for any content provided by external services. Availability, legality, and licensing of such content are determined solely by the respective content providers.
+
+Users are responsible for ensuring that their use of this software complies with all applicable local laws and regulations. The developer assumes no liability for misuse of this project.
+
+---
+
+## Copyright & DMCA
+
+If you are a copyright owner or authorized agent and believe that content accessible through this project infringes your rights, please direct your request to the appropriate content hosting provider.
+
+This project does not host any content and therefore cannot remove or modify externally hosted material.
+
+---
+
+## Contact
+
+For questions or concerns regarding this repository, please open an issue on GitHub.
+
