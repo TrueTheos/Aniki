@@ -504,6 +504,15 @@
                                            FontWeight="SemiBold"
                                            Foreground="#BBBBBB"
                                            HorizontalAlignment="Center"/>
+                                <TextBlock Text="The stream server may be having issues, so episodes might not load or play. Developers are working on it."
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMuted}"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           MaxWidth="360"
+                                           Margin="0,4,0,0"
+                                           IsVisible="{Binding ShowStreamProviderNote}"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -528,7 +537,16 @@
                                        HorizontalAlignment="Center"
                                        TextAlignment="Center"
                                        TextWrapping="Wrap"
-                                       MaxWidth="420"/>
+                                       MaxWidth="420"
+                                       IsVisible="{Binding !ShowStreamProviderNote}"/>
+                            <TextBlock Text="The stream server may be having issues, so episodes might not load or play. Developers are working on it."
+                                       Foreground="{StaticResource TextMuted}"
+                                       FontSize="11"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="420"
+                                       IsVisible="{Binding ShowStreamProviderNote}"/>
                         </StackPanel>
                     </Grid>
                 </Grid>

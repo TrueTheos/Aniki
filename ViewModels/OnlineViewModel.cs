@@ -36,6 +36,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
             {
                 OnPropertyChanged(nameof(SelectionStatusMessage));
                 OnPropertyChanged(nameof(ShowSelectionStatus));
+                OnPropertyChanged(nameof(ShowStreamProviderNote));
                 _ = OnSelectedAnimeChanged(value);
             }
         }
@@ -59,6 +60,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
             {
                 OnPropertyChanged(nameof(SelectionStatusMessage));
                 OnPropertyChanged(nameof(ShowSelectionStatus));
+                OnPropertyChanged(nameof(ShowStreamProviderNote));
                 OnSelectedEpisodeChanged(value);
             }
         }
@@ -101,13 +103,21 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
                 return "Select anime";
         
             if (SelectedEpisode == null)
+            {
+                if (!IsLoading && Episodes.Count == 0)
+                    return "No episodes";
                 return "Select episode";
+            }
         
             return "";
         }
     }
 
     public bool ShowSelectionStatus => !string.IsNullOrEmpty(SelectionStatusMessage);
+
+    public bool ShowStreamProviderNote =>
+        (SelectedAnime != null && !IsLoading && Episodes.Count == 0) ||
+        (SelectedEpisode != null && !IsLoading && !CanPlayVideo);
 
     public OnlineViewModel(IAllMangaScraperService scraperService, IAnimeService animeService,
         IVideoPlayerService videoPlayerService, IDiscordService discordService)
@@ -117,10 +127,27 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         _animeService = animeService;
         _videoPlayerService = videoPlayerService;
         _discordService = discordService;
+        Episodes.CollectionChanged += OnEpisodesCollectionChanged;
+    }
+
+    private void OnEpisodesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(ShowStreamProviderNote));
+        OnPropertyChanged(nameof(SelectionStatusMessage));
+        OnPropertyChanged(nameof(ShowSelectionStatus));
     }
     
     private ObservableCollection<AllMangaSearchResult>? _previousAnimeResults;
     
+    partial void OnIsLoadingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowStreamProviderNote));
+        OnPropertyChanged(nameof(SelectionStatusMessage));
+        OnPropertyChanged(nameof(ShowSelectionStatus));
+    }
+
+    partial void OnCanPlayVideoChanged(bool value) => OnPropertyChanged(nameof(ShowStreamProviderNote));
+
     partial void OnAnimeResultsChanged(ObservableCollection<AllMangaSearchResult> value)
     {
         OnPropertyChanged(nameof(SelectionStatusMessage));
@@ -391,6 +418,8 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
+        Episodes.CollectionChanged -= OnEpisodesCollectionChanged;
+
         if (_previousAnimeResults != null)
             _previousAnimeResults.CollectionChanged -= OnAnimeResultsCollectionChanged;
         
