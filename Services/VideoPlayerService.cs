@@ -11,6 +11,11 @@ namespace Aniki.Services;
 
 public class VideoPlayerService : IVideoPlayerService
 {
+    private const string ALLANIME_STREAM_REFERER = "https://allmanga.to/";
+
+    private const string ALLANIME_BROWSER_USER_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
+
     public ObservableCollection<VideoPlayerOption> AvailablePlayers { get; } = [];
     
     public VideoPlayerOption? SelectedPlayer { get; set; }
@@ -335,6 +340,21 @@ public class VideoPlayerService : IVideoPlayerService
         }
     }
 
+    /// <summary>CDNs that hotlink-check Referer, without it VLC/mpv get 403 or empty.</summary>
+    private static bool ShouldSendAllanimeReferrer(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
+            return false;
+
+        bool isWeb = uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+            || uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
+        if (!isWeb)
+            return false;
+
+        return url.Contains("fast4speed", StringComparison.OrdinalIgnoreCase)
+            || url.Contains("bysekoze.com", StringComparison.OrdinalIgnoreCase);
+    }
+
     private Process? OpenWithSystemDefault(string url)
     {
         try
@@ -346,7 +366,7 @@ public class VideoPlayerService : IVideoPlayerService
 
                 Process? process = Process.Start(new ProcessStartInfo
                 {
-                    FileName = tempFile,
+                    FileName        = tempFile,
                     UseShellExecute = true
                 });
 
@@ -362,11 +382,13 @@ public class VideoPlayerService : IVideoPlayerService
 
                 return process;
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 return Process.Start(new ProcessStartInfo("xdg-open", url) { UseShellExecute = false });
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 return Process.Start(new ProcessStartInfo("open", url) { UseShellExecute = false });
             }
@@ -383,11 +405,18 @@ public class VideoPlayerService : IVideoPlayerService
         try
         {
             string playerName = Path.GetFileNameWithoutExtension(playerPath).ToLower();
-            
+            bool useAllanimeReferer = ShouldSendAllanimeReferrer(url);
             string arguments = playerName switch
             {
-                "mpv" or "mpvnet" => $"\"{url}\" --force-window=yes --title=\"Aniki Player\"",
-                "vlc" => $"\"{url}\" --meta-title=\"Aniki Player\"", 
+                "mpv" or "mpvnet" => useAllanimeReferer
+                    ? $"\"{url}\" --user-agent=\"{ALLANIME_BROWSER_USER_AGENT}\" " +
+                      $"--http-header-fields=\"Referer: {ALLANIME_STREAM_REFERER}; Origin: https://allmanga.to\" " +
+                      $"--force-window=yes --title=\"Aniki Player\""
+                    : $"\"{url}\" --force-window=yes --title=\"Aniki Player\"",
+                "vlc" => useAllanimeReferer
+                    ? $"--http-referrer=\"{ALLANIME_STREAM_REFERER}\" --http-user-agent=\"{ALLANIME_BROWSER_USER_AGENT}\" " +
+                      $"\"{url}\" --meta-title=\"Aniki Player\""
+                    : $"\"{url}\" --meta-title=\"Aniki Player\"",
                 _ => $"\"{url}\""
             };
 
