@@ -23,6 +23,7 @@
                     <conv:DateToYearConverter x:Key="DateToYearConverter" />
                     <conv:AllTrueMultiValueConverter x:Key="AllTrueMultiValueConverter" />
                     <conv:CalendarColumnBorderThicknessConverter x:Key="CalendarColumnBorderThicknessConverter" />
+                    <conv:HexToBrushConverter x:Key="HexToBrushConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

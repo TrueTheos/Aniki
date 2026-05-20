@@ -16,25 +16,49 @@
 
         <!-- Search Controls -->
         <Grid Grid.Row="0" Margin="0,0,0,20">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" Spacing="12">
                 <TextBox Width="500"
                          Text="{Binding TorrentSearchTerms}" 
                          Watermark="Custom search..."
-                         Margin="20,0"
+                         Margin="20,0,0,0"
+                         Height="38"
+                         VerticalAlignment="Center"
                          VerticalContentAlignment="Center">
                     <TextBox.KeyBindings>
                         <KeyBinding Gesture="Enter" Command="{Binding SearchTorrentsCommand}" />
                     </TextBox.KeyBindings>
                 </TextBox>
+                <ComboBox MinWidth="160"
+                          Height="38"
+                          CornerRadius="8"
+                          Background="{StaticResource Surface2}"
+                          BorderBrush="Transparent"
+                          Padding="12,0"
+                          VerticalAlignment="Center"
+                          VerticalContentAlignment="Center"
+                          ItemsSource="{Binding AvailableSubbers}"
+                          SelectedItem="{Binding SelectedSubber}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="models:KnownSubber">
+                            <TextBlock Text="{Binding Name}"
+                                       FontWeight="SemiBold"
+                                       FontSize="13"
+                                       Foreground="{Binding Color, Converter={StaticResource HexToBrushConverter}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <Button
                         Command="{Binding SearchTorrentsCommand}"
                         Background="{StaticResource AccentRed}"
                         CornerRadius="6"
-                        Padding="20,12">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Text="Search" FontWeight="SemiBold" FontSize="15" Foreground="White" Margin="0,0,15,0"/>
-                        <Image Grid.Column="1" Source="{SvgImage /Resources/Icons/search_icon.svg}" Width="16" Height="16" HorizontalAlignment="Right"/>
-                    </Grid>
+                        Padding="16,0"
+                        Height="38"
+                        VerticalAlignment="Center"
+                        VerticalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <TextBlock Text="Search" FontWeight="SemiBold" FontSize="15" Foreground="White"/>
+                        <Image Source="{SvgImage /Resources/Icons/search_icon.svg}" Width="16" Height="16"/>
+                    </StackPanel>
                 </Button>
             </StackPanel>
             
@@ -95,10 +119,23 @@
                     <DataTemplate DataType="models:NyaaTorrent">
                         <Border Background="{StaticResource BackgroundGray}" CornerRadius="8" Padding="15" Margin="0,0,0,10">
                             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-                                <TextBlock Grid.Column="0" 
-                                           Text="{Binding FileName}" 
-                                           Foreground="#E0E0E0" 
-                                           VerticalAlignment="Center"/>
+                                <ItemsControl Grid.Column="0"
+                                              ItemsSource="{Binding FileNameSegments}"
+                                              VerticalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="models:TorrentFileNameSegment">
+                                            <TextBlock Text="{Binding Text}"
+                                                       FontSize="14"
+                                                       Foreground="{Binding Color, Converter={StaticResource HexToBrushConverter}}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" Margin="20,0">
                                     <TextBlock Text="{Binding Size}" 
