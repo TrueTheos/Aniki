@@ -47,6 +47,65 @@ public partial class AnimeGroup : ObservableObject
 
     public string NextEpisodeToDownloadText => NextEpisodeToDownload.HasValue ? $"Download Ep {NextEpisodeToDownload}" : "";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FirstDisplayedEpisode))]
+    [NotifyPropertyChangedFor(nameof(AdditionalDisplayedEpisodes))]
+    [NotifyPropertyChangedFor(nameof(IsCollapsed))]
+    private bool _isExpanded;
+
+    public bool HasMoreEpisodes => Episodes.Count > 1;
+    public bool IsCollapsed => !IsExpanded;
+
+    public DownloadedEpisode? FirstDisplayedEpisode
+    {
+        get
+        {
+            if (!HasOnDisk)
+                return null;
+
+            if (IsExpanded)
+                return Episodes.FirstOrDefault();
+
+            return PreviewEpisode;
+        }
+    }
+
+    public IEnumerable<DownloadedEpisode> AdditionalDisplayedEpisodes =>
+        IsExpanded && Episodes.Count > 1 ? Episodes.Skip(1) : [];
+
+    public DownloadedEpisode? PreviewEpisode
+    {
+        get
+        {
+            if (Episodes.Count == 0)
+                return null;
+
+            int nextEpisode = WatchedEpisodes + 1;
+            DownloadedEpisode? exactNext = Episodes
+                .Where(ep => ep.EpisodeNumber == nextEpisode)
+                .OrderBy(ep => ep.Season)
+                .ThenBy(ep => ep.EpisodeNumber)
+                .FirstOrDefault();
+
+            if (exactNext != null)
+                return exactNext;
+
+            DownloadedEpisode? firstUnwatched = Episodes
+                .Where(ep => !ep.Watched)
+                .OrderBy(ep => ep.Season)
+                .ThenBy(ep => ep.EpisodeNumber)
+                .FirstOrDefault();
+
+            if (firstUnwatched != null)
+                return firstUnwatched;
+
+            return Episodes
+                .OrderByDescending(ep => ep.Season)
+                .ThenByDescending(ep => ep.EpisodeNumber)
+                .First();
+        }
+    }
+
     public AnimeGroup(string title, string? thumbnailUrl, ObservableCollection<DownloadedEpisode> episodes,
         int maxEp, int watchedEp, int malId, IAnimeService animeService)
     {
@@ -85,6 +144,20 @@ public partial class AnimeGroup : ObservableObject
         OnPropertyChanged(nameof(NextEpisodeToDownloadText));
         OnPropertyChanged(nameof(UnseenReleasedCount));
         OnPropertyChanged(nameof(HasUnseenReleased));
+        OnPropertyChanged(nameof(HasMoreEpisodes));
+        OnPropertyChanged(nameof(IsCollapsed));
+        OnPropertyChanged(nameof(FirstDisplayedEpisode));
+        OnPropertyChanged(nameof(AdditionalDisplayedEpisodes));
+        OnPropertyChanged(nameof(PreviewEpisode));
+    }
+
+    [RelayCommand]
+    private void ToggleExpanded()
+    {
+        if (!HasMoreEpisodes)
+            return;
+
+        IsExpanded = !IsExpanded;
     }
 
     private void OnEpisodesCompletedCollectionChanged(AnimeDetails e)
