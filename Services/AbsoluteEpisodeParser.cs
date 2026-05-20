@@ -35,9 +35,9 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         // make the map invalid after like 1 day or something
     }
 
-    public async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode)
+    public async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode, int? preferredYear = null)
     {
-        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle);
+        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredYear);
 
         if (seasonMap == null || seasonMap.Seasons.Count == 0)
         {
@@ -68,9 +68,9 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         return (lastKnownSeason + 1, absoluteEpisode - accumulatedEpisodes);
     }
 
-    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber)
+    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int? preferredYear = null)
     {
-        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle);
+        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredYear);
         if (seasonMap != null && seasonMap.Seasons.TryGetValue(seasonNumber, out SeasonData seasonData))
         {
             return seasonData.Id;
@@ -78,37 +78,42 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         return null;
     }
 
-    public async Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle)
+    public async Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle, int? preferredYear = null)
     {
         try
         {
-            AnimeSeasonsMap? cachedMap = AnimeSeasonCache.GetWithoutFetching(animeTitle);
+            (string cleanTitle, int? titleYear) = AnimeTitleYearParser.Split(animeTitle);
+            int? year = preferredYear ?? titleYear;
+            string cacheKey = AnimeTitleYearParser.BuildCacheKey(cleanTitle, year);
+
+            AnimeSeasonsMap? cachedMap = AnimeSeasonCache.GetWithoutFetching(cacheKey);
             if (cachedMap != null)
             {
                 IndexMap(cachedMap);
                 return cachedMap;
             }
             
-            SemaphoreSlim lockObj = BuildLocks.GetOrAdd(animeTitle, _ => new SemaphoreSlim(1, 1));
+            SemaphoreSlim lockObj = BuildLocks.GetOrAdd(cacheKey, _ => new SemaphoreSlim(1, 1));
             await lockObj.WaitAsync();
 
             try
             {
-                cachedMap = AnimeSeasonCache.GetWithoutFetching(animeTitle);
+                cachedMap = AnimeSeasonCache.GetWithoutFetching(cacheKey);
                 if (cachedMap != null)
                 {
                     IndexMap(cachedMap);
                     return cachedMap;
                 }
 
-                List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(animeTitle);
+                List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
                 if (searchResult.Count == 0) return null;
 
-                int foundAnimeId = searchResult.First().Id;
+                AnimeDetails bestMatch = PickBestSearchResult(searchResult, year);
+                int foundAnimeId = bestMatch.Id;
 
                 if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out AnimeSeasonsMap? existingMap))
                 {
-                    AnimeSeasonCache.Update(animeTitle, existingMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+                    AnimeSeasonCache.Update(cacheKey, existingMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
                     return existingMap;
                 }
 
@@ -116,7 +121,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
                 if (newMap?.Seasons != null && newMap.Seasons.Count > 0)
                 {
-                    AnimeSeasonCache.Update(animeTitle, newMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+                    AnimeSeasonCache.Update(cacheKey, newMap, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
                     IndexMap(newMap);
                 }
 
@@ -131,6 +136,42 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         {
             return null;
         }
+    }
+
+    private static AnimeDetails PickBestSearchResult(List<AnimeDetails> results, int? preferredYear)
+    {
+        if (preferredYear == null)
+            return results[0];
+
+        return results
+            .Select((anime, index) => new { Anime = anime, Index = index, YearScore = ScoreYearMatch(anime.StartDate, preferredYear.Value) })
+            .OrderByDescending(x => x.YearScore)
+            .ThenBy(x => x.Index)
+            .First()
+            .Anime;
+    }
+
+    private static int ScoreYearMatch(string? startDate, int preferredYear)
+    {
+        int? year = ParseStartYear(startDate);
+        if (year == null)
+            return 0;
+
+        return Math.Abs(year.Value - preferredYear) switch
+        {
+            0 => 1000,
+            1 => 500,
+            2 => 100,
+            _ => 0
+        };
+    }
+
+    private static int? ParseStartYear(string? startDate)
+    {
+        if (string.IsNullOrWhiteSpace(startDate) || startDate.Length < 4)
+            return null;
+
+        return int.TryParse(startDate[..4], out int year) ? year : null;
     }
 
     private void IndexMap(AnimeSeasonsMap map)

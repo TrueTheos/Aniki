@@ -35,7 +35,9 @@ public class AnimeNameParser : IAnimeNameParser
             : StripReleaseMetadata(cleaned);
 
         animeName = Regex.Replace(animeName, @"\s+", " ").Trim();
-        return new FolderParseResult(animeName, season);
+
+        (string cleanName, int? year) = AnimeTitleYearParser.Split(animeName);
+        return new FolderParseResult(cleanName, season, year);
     }
 
     public EpisodeParseResult? ParseEpisodeFromFilename(string filename, int defaultSeason = 1)
@@ -99,6 +101,7 @@ public class AnimeNameParser : IAnimeNameParser
     public async Task<ParseResult> ParseAnimeFilename(string filename)
     {
         string originalFilename = StripExtension(filename);
+        (_, int? fileYear) = AnimeTitleYearParser.Split(originalFilename.Replace('.', ' ').Replace('_', ' '));
         string cleanedFilename = CleanFilename(filename);
 
         List<string> patterns =
@@ -164,32 +167,36 @@ public class AnimeNameParser : IAnimeNameParser
                 animeName = animeName.Trim('-', ' ');
                 animeName = Regex.Replace(animeName, @"\s+", " ");
                 animeName = Regex.Replace(animeName, @"\s+(S|Season)\s*\d+\s*$", "", RegexOptions.IgnoreCase).Trim();
+                (animeName, int? nameYear) = AnimeTitleYearParser.Split(animeName);
+                int? year = nameYear ?? fileYear;
 
                 if (episodeNumber < 1 || episodeNumber > 999)
                     continue;
 
                 if (season > 1)
                 {
-                    await _absoluteEpisodeParser.GetOrCreateSeasonMap(animeName);
+                    await _absoluteEpisodeParser.GetOrCreateSeasonMap(animeName, year);
                     return new ParseResult
                     {
                         AnimeName = animeName,
                         Season = season,
                         EpisodeNumber = episodeNumber.ToString(),
                         AbsoluteEpisodeNumber = episodeNumber,
-                        FileName = originalFilename
+                        FileName = originalFilename,
+                        Year = year
                     };
                 }
 
                 (int finalSeason, int relativeEpisode) =
-                    await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber);
+                    await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber, year);
                 return new ParseResult
                 {
                     AnimeName = animeName,
                     Season = finalSeason,
                     EpisodeNumber = relativeEpisode.ToString(),
                     AbsoluteEpisodeNumber = episodeNumber,
-                    FileName = originalFilename
+                    FileName = originalFilename,
+                    Year = year
                 };
             }
             catch (Exception ex)
@@ -198,11 +205,13 @@ public class AnimeNameParser : IAnimeNameParser
             }
         }
 
+        (string fallbackTitle, int? fallbackYear) = AnimeTitleYearParser.Split(cleanedFilename);
         return new ParseResult
         {
-            AnimeName = cleanedFilename,
+            AnimeName = fallbackTitle,
             EpisodeNumber = null,
-            FileName = originalFilename
+            FileName = originalFilename,
+            Year = fallbackYear ?? fileYear
         };
     }
 
@@ -240,6 +249,7 @@ public class ParseResult
     public int Season { get; set; } = 1;
     public string? EpisodeNumber { get; set; }
     public int? AbsoluteEpisodeNumber { get; set; }
+    public int? Year { get; set; }
     public string FileName { get; set; } = "";
 
     public override string ToString()

@@ -7,6 +7,6 @@ public interface IAnimeNameParser
     EpisodeParseResult? ParseEpisodeFromFilename(string filename, int defaultSeason = 1);
 }
 
-public record FolderParseResult(string AnimeName, int Season);
+public record FolderParseResult(string AnimeName, int Season, int? Year = null);
 
 public record EpisodeParseResult(int Season, int EpisodeNumber);
