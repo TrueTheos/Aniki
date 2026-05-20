@@ -164,46 +164,40 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             }
 
             string[] videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv"];
-            List<string> filePaths = Directory.GetFiles(episodesFolder, "*.*", SearchOption.AllDirectories)
-                .Where(f => videoExtensions.Contains(Path.GetExtension(f).ToLower()))
+            bool IsVideo(string path) =>
+                videoExtensions.Contains(Path.GetExtension(path).ToLowerInvariant());
+
+            List<string> looseFiles = Directory.GetFiles(episodesFolder, "*.*", SearchOption.TopDirectoryOnly)
+                .Where(IsVideo)
                 .ToList();
 
-            int total = filePaths.Count;
+            List<(string FolderName, List<string> Files)> animeFolders = [];
+            foreach (string dir in Directory.GetDirectories(episodesFolder))
+            {
+                string folderName = Path.GetFileName(dir);
+                if (string.IsNullOrWhiteSpace(folderName))
+                    continue;
+
+                List<string> files = Directory.GetFiles(dir, "*.*", SearchOption.TopDirectoryOnly)
+                    .Where(IsVideo)
+                    .ToList();
+
+                if (files.Count > 0)
+                    animeFolders.Add((folderName, files));
+            }
+
+            int total = looseFiles.Count + animeFolders.Sum(f => f.Files.Count);
             int processed = 0;
 
             await Dispatcher.UIThread.InvokeAsync(() =>
                 ProcessingProgress = $"Scanning episodes: 0/{total}");
 
-            await Parallel.ForEachAsync(filePaths, new ParallelOptions { MaxDegreeOfParallelism = 8 },
+            await Parallel.ForEachAsync(looseFiles, new ParallelOptions { MaxDegreeOfParallelism = 8 },
                 async (filePath, _) =>
                 {
                     try
                     {
-                        string fileName = Path.GetFileName(filePath);
-                        ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
-
-                        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season);
-                        if (animeId == null) return;
-
-                        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
-                            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture]);
-
-                        if (details != null)
-                        {
-                            string epNum = parsedFile.EpisodeNumber
-                                ?? (details.NumEpisodes is > 1 ? "0" : "1");
-
-                            DownloadedEpisode episode = new(
-                                filePath,
-                                int.Parse(epNum),
-                                parsedFile.AbsoluteEpisodeNumber,
-                                details.Title!,
-                                animeId.Value,
-                                parsedFile.Season);
-
-                            await Dispatcher.UIThread.InvokeAsync(() =>
-                                AddEpisodeToGroup(episode, details));
-                        }
+                        await ProcessLooseFileAsync(filePath);
                     }
                     catch (Exception ex)
                     {
@@ -213,6 +207,23 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                     {
                         int current = Interlocked.Increment(ref processed);
                         ProcessingProgress = $"Scanning episodes: {current}/{total}";
+                    }
+                });
+
+            await Parallel.ForEachAsync(animeFolders, new ParallelOptions { MaxDegreeOfParallelism = 8 },
+                async (folder, _) =>
+                {
+                    try
+                    {
+                        await ProcessAnimeFolderAsync(folder.FolderName, folder.Files, () =>
+                        {
+                            int current = Interlocked.Increment(ref processed);
+                            ProcessingProgress = $"Scanning episodes: {current}/{total}";
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex + " " + folder.FolderName);
                     }
                 });
 
@@ -232,6 +243,87 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 IsLoading = false;
                 ApplyFiltersAndSort();
             });
+        }
+    }
+
+    private async Task ProcessLooseFileAsync(string filePath)
+    {
+        string fileName = Path.GetFileName(filePath);
+        ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
+
+        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season);
+        if (animeId == null) return;
+
+        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
+            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture]);
+
+        if (details == null) return;
+
+        string epNum = parsedFile.EpisodeNumber
+            ?? (details.NumEpisodes is > 1 ? "0" : "1");
+
+        DownloadedEpisode episode = new(
+            filePath,
+            int.Parse(epNum),
+            parsedFile.AbsoluteEpisodeNumber,
+            details.Title!,
+            animeId.Value,
+            parsedFile.Season);
+
+        await Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, details));
+    }
+
+    private async Task ProcessAnimeFolderAsync(string folderName, List<string> filePaths, Action onFileProcessed)
+    {
+        FolderParseResult folderInfo = _animeNameParser.ParseReleaseFolder(folderName);
+
+        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(folderInfo.AnimeName, folderInfo.Season);
+        if (animeId == null)
+        {
+            for (int i = 0; i < filePaths.Count; i++)
+                onFileProcessed();
+            return;
+        }
+
+        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
+            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture]);
+
+        if (details == null)
+        {
+            for (int i = 0; i < filePaths.Count; i++)
+                onFileProcessed();
+            return;
+        }
+
+        foreach (string filePath in filePaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileName(filePath);
+                EpisodeParseResult? episodeInfo =
+                    _animeNameParser.ParseEpisodeFromFilename(fileName, folderInfo.Season);
+
+                if (episodeInfo == null)
+                    continue;
+
+                DownloadedEpisode episode = new(
+                    filePath,
+                    episodeInfo.EpisodeNumber,
+                    episodeInfo.EpisodeNumber,
+                    details.Title!,
+                    animeId.Value,
+                    episodeInfo.Season);
+
+                await Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, details));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex + " " + filePath);
+            }
+            finally
+            {
+                onFileProcessed();
+            }
         }
     }
 
