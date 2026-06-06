@@ -269,6 +269,17 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         await _animeService.SetAnimeStatusAsync(Details.Id, status.TranslatedToAnimeStatus());
         if (Details.UserStatus != null) Details.UserStatus.Status = status.TranslatedToAnimeStatus();
     }
+
+    private void SaveToClipboard(string? data)
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+            desktop.MainWindow?.Clipboard is not { } provider)
+            return;
+        
+        if(data == null) return;
+
+        _ = provider.SetTextAsync(data);
+    }
     
     [RelayCommand]
     private void OpenMalPage()
@@ -295,21 +306,24 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     [RelayCommand]
     private void CopyPageUrl()
     {
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
-            desktop.MainWindow?.Clipboard is not { } provider)
-            return;
-        
         if (Details == null) return;
-        
+
         switch (AnimeService.CurrentProviderType)
         {
             case ILoginProvider.ProviderType.Mal:
-                _ = provider.SetTextAsync($"https://myanimelist.net/anime/{Details.Id}");
+                SaveToClipboard($"https://myanimelist.net/anime/{Details.Id}");
                 break;
             case ILoginProvider.ProviderType.AniList:
-                _ = provider.SetTextAsync($"https://anilist.com/anime/{Details.Id}");
+                SaveToClipboard($"https://anilist.com/anime/{Details.Id}");
                 break;
         }
+    }
+    
+    [RelayCommand]
+    private void CopyAnimeTitle()
+    {
+        if (Details == null) return;
+        SaveToClipboard(Details.Title);
     }
 
     [RelayCommand]

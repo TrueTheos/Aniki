@@ -38,4 +38,12 @@ public partial class AnimeDetailsView : UserControl
             vm.CommitEpisodesInputCommand.Execute(null);
         }
     }
+
+    private void OnTitleTap(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is AnimeDetailsViewModel vm && vm.IsEditingEpisodes)
+        {
+            vm.CopyAnimeTitleCommand.Execute(null);
+        }
+    }
 }

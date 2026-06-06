@@ -249,6 +249,9 @@
                                                    FontWeight="Bold"
                                                    Foreground="White"
                                                    TextWrapping="Wrap"
+                                                   Cursor="Hand"
+                                                   Tapped="OnTitleTap"
+                                                   ToolTip.Tip="Copy title to clipboard"
                                                    Margin="0,0,0,6"/>
                                         
                                         <!-- Japanese Title + Metadata -->

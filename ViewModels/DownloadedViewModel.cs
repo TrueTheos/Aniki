@@ -178,7 +178,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 if (string.IsNullOrWhiteSpace(folderName))
                     continue;
 
-                List<string> files = Directory.GetFiles(dir, "*.*", SearchOption.TopDirectoryOnly)
+                List<string> files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories)
                     .Where(IsVideo)
                     .ToList();
 
