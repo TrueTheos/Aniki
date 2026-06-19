@@ -9,7 +9,6 @@ public delegate void FieldChangeHandler<TEntity>(TEntity updatedEntity);
 
 public interface ICacheService
 {
-    public Task FlushAsync();
     public void ClearMemory();
     public Task ClearAllAsync();
     public void Dispose();
@@ -480,11 +479,6 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         return null;
     }
     
-    public async Task FlushAsync()
-    {
-        await SyncToDiskAsync();
-    }
-
     public void ClearMemory()
     {
         foreach (CachedEntity<TEntity, TFieldEnum> item in _cache.Values)
@@ -521,6 +515,8 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                 _diskWriteLock.Release();
             }
         }
+        
+        await SyncToDiskAsync();
     }
 
     public void Dispose()

@@ -35,43 +35,48 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         // make the map invalid after like 1 day or something
     }
 
-    public async Task<(int season, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode, int? preferredYear = null)
+    public async Task<(int season, int part, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode, int? preferredYear = null)
     {
         AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredYear);
 
         if (seasonMap == null || seasonMap.Seasons.Count == 0)
         {
-            return (1, absoluteEpisode);
+            return (1, 1, absoluteEpisode);
         }
 
         int accumulatedEpisodes = 0;
-        foreach (KeyValuePair<int, SeasonData> season in seasonMap.Seasons.OrderBy(kvp => kvp.Key))
+        foreach (int seasonNumber in seasonMap.Seasons.Keys.Order())
         {
-            int seasonNumber = season.Key;
-            int episodesInSeason = season.Value.Episodes;
-
-            if (absoluteEpisode <= accumulatedEpisodes + episodesInSeason || episodesInSeason == 0)
+            foreach (SeasonData seasonData in seasonMap.Seasons[seasonNumber].OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value))
             {
-                return (seasonNumber, absoluteEpisode - accumulatedEpisodes);
+                int episodesInPart = seasonData.Episodes;
+
+                if (absoluteEpisode <= accumulatedEpisodes + episodesInPart || episodesInPart == 0)
+                {
+                    return (seasonNumber, seasonData.Part, absoluteEpisode - accumulatedEpisodes);
+                }
+
+                if (seasonData.MediaType is
+                    MediaType.Movie or
+                    MediaType.Unknown or
+                    MediaType.TV_Special or
+                    MediaType.TV_Short) continue;
+
+                accumulatedEpisodes += episodesInPart;
             }
-            
-            if(season.Value.MediaType is
-               MediaType.Movie or
-               MediaType.Unknown or
-               MediaType.TV_Special or
-               MediaType.TV_Short) continue;
-            
-            accumulatedEpisodes += episodesInSeason;
         }
 
         int lastKnownSeason = seasonMap.Seasons.Keys.Max();
-        return (lastKnownSeason + 1, absoluteEpisode - accumulatedEpisodes);
+        int lastKnownPart = seasonMap.Seasons[lastKnownSeason].Keys.Max();
+        return (lastKnownSeason, lastKnownPart, absoluteEpisode - accumulatedEpisodes);
     }
 
-    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int? preferredYear = null)
+    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int? preferredYear = null, int part = 1)
     {
         AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredYear);
-        if (seasonMap != null && seasonMap.Seasons.TryGetValue(seasonNumber, out SeasonData seasonData))
+        if (seasonMap != null &&
+            seasonMap.Seasons.TryGetValue(seasonNumber, out Dictionary<int, SeasonData>? parts) &&
+            parts.TryGetValue(part, out SeasonData seasonData))
         {
             return seasonData.Id;
         }
@@ -176,9 +181,12 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
     private void IndexMap(AnimeSeasonsMap map)
     {
-        foreach (SeasonData season in map.Seasons.Values)
+        foreach (Dictionary<int, SeasonData> parts in map.Seasons.Values)
         {
-            _animeIdToMapIndex.TryAdd(season.Id, map);
+            foreach (SeasonData season in parts.Values)
+            {
+                _animeIdToMapIndex.TryAdd(season.Id, map);
+            }
         }
     }
 
@@ -231,14 +239,32 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 }
             }
             
+            int currentSeason = 0;
             for (int i = 0; i < seasonChain.Count; i++)
             {
                 (int id, AnimeDetails details) = seasonChain[i];
-                seasonMap.Seasons[i + 1] = new SeasonData 
-                { 
-                    Episodes = details.NumEpisodes ?? 0, 
+                string title = details.Title ?? string.Empty;
+                int part = AnimeTitleSeasonPartParser.ExtractPart(title);
+                int? titleSeason = AnimeTitleSeasonPartParser.ExtractSeason(title);
+
+                if (titleSeason.HasValue)
+                    currentSeason = titleSeason.Value;
+                else if (part == 1)
+                    currentSeason++;
+
+                if (!seasonMap.Seasons.TryGetValue(currentSeason, out Dictionary<int, SeasonData>? parts))
+                {
+                    parts = new Dictionary<int, SeasonData>();
+                    seasonMap.Seasons[currentSeason] = parts;
+                }
+
+                parts[part] = new SeasonData
+                {
+                    Episodes = details.NumEpisodes ?? 0,
                     Id = id,
-                    MediaType = details.MediaType
+                    MediaType = details.MediaType,
+                    Title = details.Title,
+                    Part = part
                 };
             }
             

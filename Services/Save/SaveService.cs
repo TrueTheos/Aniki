@@ -14,6 +14,7 @@ public struct SeasonData
     public int Episodes { get; set; }
     public MediaType MediaType { get; set; }
     public string? Title { get; set; }
+    public int Part { get; set; }
 }
 
 public class AnimeSeasonsMap
@@ -24,7 +25,7 @@ public class AnimeSeasonsMap
     }
 
     [CacheField(AnimeSeasonMapField.SeasonData)]
-    public Dictionary<int, SeasonData> Seasons { get; set; } = new();
+    public Dictionary<int, Dictionary<int, SeasonData>> Seasons { get; set; } = new();
 }
 
 public class SaveService : ISaveService
@@ -126,7 +127,7 @@ public class SaveService : ISaveService
     {
         foreach (KeyValuePair<Guid, ICacheService> cache in _caches)
         {
-            await cache.Value.FlushAsync();
+            await cache.Value.ClearAllAsync();
         }
     }
 

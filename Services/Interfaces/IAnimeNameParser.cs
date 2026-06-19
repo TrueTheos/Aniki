@@ -4,9 +4,9 @@ public interface IAnimeNameParser
 {
     Task<ParseResult> ParseAnimeFilename(string filename);
     FolderParseResult ParseReleaseFolder(string folderName);
-    EpisodeParseResult? ParseEpisodeFromFilename(string filename, int defaultSeason = 1);
+    EpisodeParseResult? ParseEpisodeFromFilename(string filename, int defaultSeason = 1, int defaultPart = 1);
 }
 
-public record FolderParseResult(string AnimeName, int Season, int? Year = null);
+public record FolderParseResult(string AnimeName, int Season, int Part = 1, int? Year = null);
 
-public record EpisodeParseResult(int Season, int EpisodeNumber);
+public record EpisodeParseResult(int Season, int Part, int EpisodeNumber);
