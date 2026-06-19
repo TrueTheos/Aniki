@@ -236,7 +236,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         if (desiredSeason == null) return 0;
 
         int? extractedSeason = AnimeTitleSeasonPartParser.ExtractSeason(title ?? string.Empty);
-        if (extractedSeason == null) return 0;
+        if (extractedSeason == null) return 0;  
 
         return extractedSeason.Value == desiredSeason.Value ? 1000 : -1000;
     }

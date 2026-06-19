@@ -13,7 +13,7 @@ public partial class AnimeGroup : ObservableObject
     [ObservableProperty] private int _watchedEpisodes;
     public int MalId { get; }
 
-    public string EpisodesProgressText => $"{WatchedEpisodes} / {MaxEpisodes} watched";
+    public string EpisodesProgressText => $"{WatchedEpisodes} / {(MaxEpisodes == 0 ? "?" : $"{MaxEpisodes}")} watched";
 
     public int OnDiskCount => Episodes.Count;
     public bool HasOnDisk => Episodes.Count > 0;
