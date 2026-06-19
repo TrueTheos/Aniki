@@ -35,9 +35,9 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         // make the map invalid after like 1 day or something
     }
 
-    public async Task<(int season, int part, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode, int? preferredYear = null)
+    public async Task<(int season, int part, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle, int absoluteEpisode, int preferredPart, int? preferredYear = null)
     {
-        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredYear);
+        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredPart, preferredYear);
 
         if (seasonMap == null || seasonMap.Seasons.Count == 0)
         {
@@ -71,19 +71,85 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         return (lastKnownSeason, lastKnownPart, absoluteEpisode - accumulatedEpisodes);
     }
 
-    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int? preferredYear = null, int part = 1)
+    public async Task<SeasonMapMatch?> ResolveSeasonEntry(string animeTitle, int part, int? preferredYear = null, int? seasonHint = null)
     {
-        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredYear);
-        if (seasonMap != null &&
-            seasonMap.Seasons.TryGetValue(seasonNumber, out Dictionary<int, SeasonData>? parts) &&
-            parts.TryGetValue(part, out SeasonData seasonData))
+        try
         {
-            return seasonData.Id;
+            (string cleanTitle, int? titleYear) = AnimeTitleYearParser.Split(animeTitle);
+            int?   year     = preferredYear ?? titleYear;
+            string cacheKey = AnimeTitleYearParser.BuildCacheKey(cleanTitle, year);
+
+            List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
+            if (searchResult.Count == 0) return null;
+
+            AnimeDetails bestMatch = PickBestSearchResult(searchResult, part, year, seasonHint);
+            
+            int foundAnimeId = bestMatch.Id;
+
+            AnimeSeasonsMap? map;
+            if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out AnimeSeasonsMap? existingMap))
+            {
+                map = existingMap;
+                AnimeSeasonCache.Update(cacheKey, map, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+            }
+            else
+            {
+                SemaphoreSlim lockObj = BuildLocks.GetOrAdd(cacheKey, _ => new SemaphoreSlim(1, 1));
+                await lockObj.WaitAsync();
+                try
+                {
+                    if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out existingMap))
+                    {
+                        map = existingMap;
+                    }
+                    else
+                    {
+                        map = await BuildSeasonMap(foundAnimeId);
+                        if (map?.Seasons != null && map.Seasons.Count > 0)
+                            IndexMap(map);
+                    }
+
+                    if (map != null)
+                        AnimeSeasonCache.Update(cacheKey, map, AnimeSeasonsMap.AnimeSeasonMapField.SeasonData);
+                }
+                finally
+                {
+                    lockObj.Release();
+                }
+            }
+
+            if (map == null) return null;
+
+            var matched = map.Seasons
+                             .SelectMany(kvp => kvp.Value.Select(p => new { Season = kvp.Key, Data = p.Value }))
+                             .FirstOrDefault(x => x.Data.Id == foundAnimeId);
+
+            if (matched == null) return null;
+
+            return new SeasonMapMatch
+                { Map = map, Season = matched.Season, Part = matched.Data.Part, Id = matched.Data.Id };
         }
-        return null;
+        catch
+        {
+            return null;
+        }
+    }
+    
+    public class SeasonMapMatch
+    {
+        public required AnimeSeasonsMap Map { get; init; }
+        public required int Season { get; init; }
+        public required int Part { get; init; }
+        public required int Id { get; init; }
     }
 
-    public async Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle, int? preferredYear = null)
+    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int part, int? preferredYear = null, int? seasonHint = null)
+    {
+        SeasonMapMatch? match = await ResolveSeasonEntry(animeTitle, part, preferredYear, seasonHint);
+        return match?.Id;
+    }
+
+    public async Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle, int preferredPart, int? preferredYear = null)
     {
         try
         {
@@ -113,8 +179,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
                 if (searchResult.Count == 0) return null;
 
-                AnimeDetails bestMatch = PickBestSearchResult(searchResult, year);
-                int foundAnimeId = bestMatch.Id;
+                AnimeDetails bestMatch    = PickBestSearchResult(searchResult, preferredPart, year, null);
+                int          foundAnimeId = bestMatch.Id;
 
                 if (_animeIdToMapIndex.TryGetValue(foundAnimeId, out AnimeSeasonsMap? existingMap))
                 {
@@ -143,26 +209,54 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         }
     }
 
-    private static AnimeDetails PickBestSearchResult(List<AnimeDetails> results, int? preferredYear)
+    private static AnimeDetails PickBestSearchResult(List<AnimeDetails> results, int part, int? preferredYear, int? seasonHint)
     {
-        if (preferredYear == null)
+        if (preferredYear == null && seasonHint == null && part <= 1)
             return results[0];
 
         return results
-            .Select((anime, index) => new { Anime = anime, Index = index, YearScore = ScoreYearMatch(anime.StartDate, preferredYear.Value) })
-            .OrderByDescending(x => x.YearScore)
-            .ThenBy(x => x.Index)
-            .First()
-            .Anime;
+               .Select((anime, index) => new
+               {
+                   Anime       = anime,
+                   Index       = index,
+                   SeasonScore = ScoreSeasonMatch(anime.Title, seasonHint),
+                   PartScore = ScorePartMatch(anime.Title, part),
+                   YearScore = ScoreYearMatch(anime.StartDate, preferredYear)
+               })
+               .OrderByDescending(x => x.SeasonScore)
+               .ThenByDescending(x => x.PartScore)
+               .ThenByDescending(x => x.YearScore)
+               .ThenBy(x => x.Index)
+               .First()
+               .Anime;
+    }
+    
+    private static int ScoreSeasonMatch(string? title, int? desiredSeason)
+    {
+        if (desiredSeason == null) return 0;
+
+        int? extractedSeason = AnimeTitleSeasonPartParser.ExtractSeason(title ?? string.Empty);
+        if (extractedSeason == null) return 0;
+
+        return extractedSeason.Value == desiredSeason.Value ? 1000 : -1000;
+    }
+    
+    private static int ScorePartMatch(string? title, int? desiredPart)
+    {
+        if (desiredPart == null) return 0;
+
+        int extractedPart = AnimeTitleSeasonPartParser.ExtractPart(title ?? string.Empty);
+        return extractedPart == desiredPart.Value ? 1000 : 0;
     }
 
-    private static int ScoreYearMatch(string? startDate, int preferredYear)
+    private static int ScoreYearMatch(string? startDate, int? preferredYear)
     {
-        int? year = ParseStartYear(startDate);
-        if (year == null)
-            return 0;
+        if (preferredYear == null) return 0;
 
-        return Math.Abs(year.Value - preferredYear) switch
+        int? year = ParseStartYear(startDate);
+        if (year == null) return 0;
+
+        return Math.Abs(year.Value - preferredYear.Value) switch
         {
             0 => 1000,
             1 => 500,

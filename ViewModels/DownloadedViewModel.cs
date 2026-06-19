@@ -251,7 +251,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         string fileName = Path.GetFileName(filePath);
         ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
 
-        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season, parsedFile.Year, parsedFile.Part);
+        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season, parsedFile.Part, parsedFile.Year, parsedFile.Season);
         if (animeId == null) return;
 
         AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
@@ -277,7 +277,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     {
         FolderParseResult folderInfo = _animeNameParser.ParseReleaseFolder(folderName);
 
-        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(folderInfo.AnimeName, folderInfo.Season, folderInfo.Year, folderInfo.Part);
+        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(folderInfo.AnimeName, folderInfo.Season, folderInfo.Part, folderInfo.Year, folderInfo.Season);
         if (animeId == null)
         {
             for (int i = 0; i < filePaths.Count; i++)

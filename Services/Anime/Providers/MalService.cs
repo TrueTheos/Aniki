@@ -421,7 +421,7 @@ public class MalService : IAnimeProvider
 
         MAL_AnimeSearchListResponse? responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}");
 
-        List<MAL_SearchEntry> results = responseData?.Data?
+        List<MAL_SearchEntry> results = responseData?.Data?.OrderBy(x => Math.Abs(x.Node.Title?.Length - query.Length ?? 0))
             .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
             .OrderByDescending(x => x.Score)
             .Select(x => x.Entry)
@@ -432,9 +432,9 @@ public class MalService : IAnimeProvider
 
     private int CalculateSearchScore(MAL_Anime anime, string query)
     {
-        if (DoesTitleMatch(anime, query))
+        if (DoesTitleMatch(anime, query, out int s))
         {
-            return 1000;
+            return s;
         }
         
         int score = FuzzySharp.Fuzz.TokenSortRatio(anime.Title, query);
@@ -447,20 +447,50 @@ public class MalService : IAnimeProvider
         return score;
     }
 
-    private bool DoesTitleMatch(MAL_Anime malAnime, string query)
+    /// so because MAL is fucking stupid and when u search for `One Piece` the top 3 results are:
+    /// One Piece Film: Z
+    /// One Piece Film: Gold
+    /// One Piece
+    /// and watchout cuz One Piece Film: Gold has japanese title ONE PIECE. So basically this returns as a perfect match.
+    /// Thats why I need to give lower scores 
+    
+    private bool DoesTitleMatch(MAL_Anime malAnime, string query, out int score)
     {
         string normalizedQuery = NormalizeTitleToLower(query);
         string normalizedTitle = NormalizeTitleToLower(malAnime.Title);
-        
-        if (normalizedTitle == normalizedQuery) return true;
-        if (malAnime.AlternativeTitles == null) return false;
+
+        if (normalizedTitle == normalizedQuery)
+        {
+            score = 1000;
+            return true;
+        }
+        if (malAnime.AlternativeTitles == null)
+        {
+            score = 0;
+            return false;
+        }
         
         string normalizedEn = NormalizeTitleToLower(malAnime.AlternativeTitles.En);
         string normalizedJp = NormalizeTitleToLower(malAnime.AlternativeTitles.Ja);
-        
-        if (normalizedJp == normalizedQuery || normalizedEn == normalizedQuery) return true;
-        
-        return malAnime.AlternativeTitles.Synonyms?.Any(x => NormalizeTitleToLower(x) == normalizedQuery) == true;
+
+        if (normalizedJp == normalizedQuery)
+        {
+            score = 900;
+            return true;
+        }
+        if (normalizedEn == normalizedQuery)
+        {
+            score = 1000;
+            return true;
+        }
+
+        if (malAnime.AlternativeTitles.Synonyms?.Any(x => NormalizeTitleToLower(x) == normalizedQuery) == true)
+        {
+            score = 800;
+            return true;
+        }
+        score = 0;
+        return false;
     }
 
     private string NormalizeTitleToLower(string? title)

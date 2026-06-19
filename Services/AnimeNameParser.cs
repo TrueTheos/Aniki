@@ -98,7 +98,6 @@ public class AnimeNameParser : IAnimeNameParser
         return null;
     }
     
-    //todo we dont need all these patterns here, this is redundant. we have stuff like AnimeTitleSeasonPartParser or AnimeTitleYearParser
     public async Task<ParseResult> ParseAnimeFilename(string filename)
     {
         string originalFilename = StripExtension(filename);
@@ -116,10 +115,10 @@ public class AnimeNameParser : IAnimeNameParser
             @"^(?<name>.+?)\s*-\s*S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?$",
             @"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?$",
             @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*E(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d{1,3})(?:v\d+)?$",
-            @"^(?<name>.+?)\s*-\s*(?<episode>\d{1,3})(?:v\d+)?$",
-            @"^(?<name>.+?)\s+(?<episode>\d{1,3})(?:v\d+)?$",
-            @"^(?<name>.+?)\.(?<episode>\d{1,3})(?:v\d+)?$"
+            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d+)(?:v\d+)?$",
+            @"^(?<name>.+?)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
+            @"^(?<name>.+?)\s+(?<episode>\d+)(?:v\d+)?$",
+            @"^(?<name>.+?)\.(?<episode>\d+)(?:v\d+)?$"
         ];
  
         foreach (string pattern in patterns)
@@ -133,13 +132,14 @@ public class AnimeNameParser : IAnimeNameParser
                 if (!int.TryParse(match.Groups["episode"].Value, out int episodeNumber))
                     continue;
  
-                int season = 1;
-                if (match.Groups["season"].Success && !int.TryParse(match.Groups["season"].Value, out season))
+                int  season         = 1;
+                bool seasonExplicit = match.Groups["season"].Success;
+                if (seasonExplicit && !int.TryParse(match.Groups["season"].Value, out season))
                     continue;
 
-                int part = 1;
-                if (match.Groups["part"].Success && !int.TryParse(match.Groups["part"].Value, out part))
-                    continue;
+                int? seasonHint = seasonExplicit ? season : null;
+
+                int part = AnimeTitleSeasonPartParser.ExtractPart(originalFilename);
 
                 string animeName = match.Groups["name"].Value.Trim('-', ' ');
                 animeName = Regex.Replace(animeName, @"\s+", " ");
@@ -152,16 +152,19 @@ public class AnimeNameParser : IAnimeNameParser
                 (animeName, int? nameYear) = AnimeTitleYearParser.Split(animeName);
                 int? year = nameYear ?? fileYear;
  
-                if (episodeNumber < 1 || episodeNumber > 999)
-                    continue;
+                //watchout when u uncomment this. One Piece has more than 999 eps and this will fail
+                /*if (episodeNumber < 1 || episodeNumber > 999)
+                    continue;*/
  
                 if (season > 1 || part > 1)
                 {
-                    await _absoluteEpisodeParser.GetOrCreateSeasonMap(animeName, year);
+                    AbsoluteEpisodeParser.SeasonMapMatch? seasonMatch = await _absoluteEpisodeParser.ResolveSeasonEntry(animeName, part, year, seasonHint);
+                    int             resolvedSeason = seasonMatch?.Season ?? season;
+                    
                     return new ParseResult
                     {
                         AnimeName             = animeName,
-                        Season                = season,
+                        Season                = resolvedSeason,
                         Part                  = part,
                         EpisodeNumber         = episodeNumber.ToString(),
                         AbsoluteEpisodeNumber = episodeNumber,
@@ -170,7 +173,7 @@ public class AnimeNameParser : IAnimeNameParser
                 }
 
                 (int finalSeason, int finalPart, int relativeEpisode) =
-                    await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber, year);
+                    await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber, part, year);
                 return new ParseResult
                 {
                     AnimeName             = animeName,
@@ -220,6 +223,7 @@ public class AnimeNameParser : IAnimeNameParser
         cleaned = Regex.Replace(cleaned, @"\([^\)]*\)", "");
         cleaned = Regex.Replace(cleaned, @"[._]", " ");
         cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
+        cleaned = StripReleaseMetadata(cleaned);
         return cleaned;
     }
 }

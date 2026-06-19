@@ -5,8 +5,9 @@ namespace Aniki.Services.Interfaces;
 public interface IAbsoluteEpisodeParser
 {
     public Task<(int season, int part, int relativeEpisode)> GetSeasonAndEpisodeFromAbsolute(string animeTitle,
-        int absoluteEpisode, int? preferredYear = null);
+        int absoluteEpisode, int preferredPart, int? preferredYear = null);
 
-    public Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int? preferredYear = null, int part = 1);
-    public Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle, int? preferredYear = null);
+    public Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int part, int? preferredYear = null, int? seasonHint = null);
+    public Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle, int preferredPart, int? preferredYear = null);
+    public Task<AbsoluteEpisodeParser.SeasonMapMatch?> ResolveSeasonEntry(string animeTitle, int part, int? preferredYear = null, int? seasonHint = null);
 }
