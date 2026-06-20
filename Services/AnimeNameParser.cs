@@ -106,16 +106,17 @@ public class AnimeNameParser : IAnimeNameParser
  
         List<string> patterns =
         [
-            @"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+S(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+S(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*-\s*(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s*-\s*S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*E(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d+)(?:v\d+)?$",
+            @"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+S(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+S(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s*-\s*S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)-E?(?<episodeEnd>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
+            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
             @"^(?<name>.+?)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
             @"^(?<name>.+?)\s+(?<episode>\d+)(?:v\d+)?$",
             @"^(?<name>.+?)\.(?<episode>\d+)(?:v\d+)?$"

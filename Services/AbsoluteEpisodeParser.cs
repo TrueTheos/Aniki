@@ -120,6 +120,14 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
             if (map == null) return null;
 
+            if (seasonHint.HasValue &&
+                map.Seasons.TryGetValue(seasonHint.Value, out Dictionary<int, SeasonData>? partsForSeason) &&
+                partsForSeason.TryGetValue(part, out SeasonData directMatch))
+            {
+                return new SeasonMapMatch
+                    { Map = map, Season = seasonHint.Value, Part = directMatch.Part, Id = directMatch.Id };
+            }
+
             var matched = map.Seasons
                              .SelectMany(kvp => kvp.Value.Select(p => new { Season = kvp.Key, Data = p.Value }))
                              .FirstOrDefault(x => x.Data.Id == foundAnimeId);
