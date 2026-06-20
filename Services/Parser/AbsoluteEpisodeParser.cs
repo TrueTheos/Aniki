@@ -75,9 +75,9 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         try
         {
-            (string cleanTitle, int? titleYear) = AnimeTitleYearParser.Split(animeTitle);
+            (string cleanTitle, int? titleYear) = AnimeNameParser.SplitTitleYear(animeTitle);
             int?   year     = preferredYear ?? titleYear;
-            string cacheKey = AnimeTitleYearParser.BuildCacheKey(cleanTitle, year);
+            string cacheKey = AnimeNameParser.BuildCacheKey(cleanTitle, year);
 
             List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
             if (searchResult.Count == 0) return null;
@@ -161,9 +161,9 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         try
         {
-            (string cleanTitle, int? titleYear) = AnimeTitleYearParser.Split(animeTitle);
+            (string cleanTitle, int? titleYear) = AnimeNameParser.SplitTitleYear(animeTitle);
             int? year = preferredYear ?? titleYear;
-            string cacheKey = AnimeTitleYearParser.BuildCacheKey(cleanTitle, year);
+            string cacheKey = AnimeNameParser.BuildCacheKey(cleanTitle, year);
 
             AnimeSeasonsMap? cachedMap = AnimeSeasonCache.GetWithoutFetching(cacheKey);
             if (cachedMap != null)
@@ -243,7 +243,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         if (desiredSeason == null) return 0;
 
-        int? extractedSeason = AnimeTitleSeasonPartParser.ExtractSeason(title ?? string.Empty);
+        int? extractedSeason = AnimeNameParser.ExtractSeason(title ?? string.Empty);
         if (extractedSeason == null) return 0;  
 
         return extractedSeason.Value == desiredSeason.Value ? 1000 : -1000;
@@ -253,7 +253,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         if (desiredPart == null) return 0;
 
-        int extractedPart = AnimeTitleSeasonPartParser.ExtractPart(title ?? string.Empty);
+        int extractedPart = AnimeNameParser.ExtractPart(title ?? string.Empty);
         return extractedPart == desiredPart.Value ? 1000 : 0;
     }
 
@@ -345,9 +345,9 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             for (int i = 0; i < seasonChain.Count; i++)
             {
                 (int id, AnimeDetails details) = seasonChain[i];
-                string title = details.Title ?? string.Empty;
-                int part = AnimeTitleSeasonPartParser.ExtractPart(title);
-                int? titleSeason = AnimeTitleSeasonPartParser.ExtractSeason(title);
+                string title       = details.Title ?? string.Empty;
+                int    part        = AnimeNameParser.ExtractPart(title);
+                int?   titleSeason = AnimeNameParser.ExtractSeason(title);
 
                 if (titleSeason.HasValue)
                     currentSeason = titleSeason.Value;

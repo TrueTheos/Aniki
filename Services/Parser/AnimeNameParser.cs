@@ -6,6 +6,35 @@ namespace Aniki.Services.Parser;
 public class AnimeNameParser : IAnimeNameParser
 {
     private readonly IAbsoluteEpisodeParser _absoluteEpisodeParser;
+    
+    private static readonly List<Regex> FilenamePatternRegexes =
+    [
+        new(@"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+S(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+S(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s*-\s*S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)-E?(?<episodeEnd>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s*-\s*(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\s+(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        new(@"^(?<name>.+?)\.(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase)
+    ];
+    
+    private static readonly Regex YearInParensRegex = new(@"\((19|20)\d{2}\)", RegexOptions.Compiled);
+    
+    private static readonly Regex PartRegex = new(@"\bPart\s*(\d+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex[] SeasonPatternRegexes =
+    [
+        new(@"\bSeason\s*(\d{1,2})\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"\b(\d{1,2})(?:st|nd|rd|th)\s*Season\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"\bS(\d{1,2})\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+    ];
 
     public AnimeNameParser(IAbsoluteEpisodeParser absoluteEpisodeParser)
     {
@@ -17,17 +46,17 @@ public class AnimeNameParser : IAnimeNameParser
         string cleaned = folderName.Replace('.', ' ').Replace('_', ' ');
         cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
  
-        (int season, int seasonIndex) = AnimeTitleSeasonPartParser.ExtractSeasonWithIndex(cleaned);
-        int part = AnimeTitleSeasonPartParser.ExtractPart(cleaned);
+        (int season, int seasonIndex) = ExtractSeasonWithIndex(cleaned);
+        int part = ExtractPart(cleaned);
 
         string animeName = seasonIndex >= 0
             ? cleaned[..seasonIndex].Trim().TrimEnd('-', ' ')
             : StripReleaseMetadata(cleaned);
 
-        animeName = AnimeTitleSeasonPartParser.StripPart(animeName);
+        animeName = StripPart(animeName);
         animeName = Regex.Replace(animeName, @"\s+", " ").Trim();
 
-        (string cleanName, int? year) = AnimeTitleYearParser.Split(animeName);
+        (string cleanName, int? year) = SplitTitleYear(animeName);
         return new FolderParseResult(cleanName, season, part, year);
     }
  
@@ -101,32 +130,14 @@ public class AnimeNameParser : IAnimeNameParser
     public async Task<ParseResult> ParseAnimeFilename(string filename)
     {
         string originalFilename = StripExtension(filename);
-        (_, int? fileYear) = AnimeTitleYearParser.Split(originalFilename.Replace('.', ' ').Replace('_', ' '));
+        (_, int? fileYear) = SplitTitleYear(originalFilename.Replace('.', ' ').Replace('_', ' '));
         string cleanedFilename = CleanFilename(filename);
- 
-        List<string> patterns =
-        [
-            @"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+S(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+S(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s*-\s*S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)-E?(?<episodeEnd>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$",
-            @"^(?<name>.+?)\s*-\s*(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\s+(?<episode>\d+)(?:v\d+)?$",
-            @"^(?<name>.+?)\.(?<episode>\d+)(?:v\d+)?$"
-        ];
- 
-        foreach (string pattern in patterns)
+        
+        foreach (Regex pattern in FilenamePatternRegexes)
         {
             try
             {
-                Match match = Regex.Match(cleanedFilename, pattern, RegexOptions.IgnoreCase);
+                Match match = pattern.Match(cleanedFilename);
                 if (!match.Success)
                     continue;
  
@@ -140,7 +151,7 @@ public class AnimeNameParser : IAnimeNameParser
 
                 int? seasonHint = seasonExplicit ? season : null;
 
-                int part = AnimeTitleSeasonPartParser.ExtractPart(originalFilename);
+                int part = ExtractPart(originalFilename);
 
                 string animeName = match.Groups["name"].Value.Trim('-', ' ');
                 animeName = Regex.Replace(animeName, @"\s+", " ");
@@ -149,8 +160,8 @@ public class AnimeNameParser : IAnimeNameParser
                     @"\s+(?:(?:S|Season)\s*\d+|\d{1,2}(?:st|nd|rd|th)\s*Season)\s*$",
                     "",
                     RegexOptions.IgnoreCase).Trim();
-                animeName = AnimeTitleSeasonPartParser.StripPart(animeName);
-                (animeName, int? nameYear) = AnimeTitleYearParser.Split(animeName);
+                animeName                  = StripPart(animeName);
+                (animeName, int? nameYear) = SplitTitleYear(animeName);
                 int? year = nameYear ?? fileYear;
  
                 //watchout when u uncomment this. One Piece has more than 999 eps and this will fail
@@ -191,7 +202,7 @@ public class AnimeNameParser : IAnimeNameParser
             }
         }
  
-        (string fallbackTitle, int? fallbackYear) = AnimeTitleYearParser.Split(cleanedFilename);
+        (string fallbackTitle, int? fallbackYear) = SplitTitleYear(cleanedFilename);
         return new ParseResult
         {
             AnimeName     = fallbackTitle,
@@ -227,6 +238,75 @@ public class AnimeNameParser : IAnimeNameParser
         cleaned = StripReleaseMetadata(cleaned);
         return cleaned;
     }
+
+    #region Season
+    
+    public static int? ExtractSeason(string text)
+    {
+        Match? match = FindSeasonMatch(text);
+        if (match != null && int.TryParse(match.Groups[1].Value, out int season))
+            return season;
+
+        return null;
+    }
+    
+    private static (int Season, int Index) ExtractSeasonWithIndex(string text)
+    {
+        Match? match = FindSeasonMatch(text);
+        if (match != null && int.TryParse(match.Groups[1].Value, out int season))
+            return (season, match.Index);
+
+        return (1, -1);
+    }
+    
+    private static Match? FindSeasonMatch(string text)
+    {
+        return SeasonPatternRegexes.Select(regex => regex.Match(text)).FirstOrDefault(match => match.Success);
+    }
+
+    #endregion
+    
+    #region Episode
+    
+    #endregion
+    
+    #region Part
+    
+    public static int ExtractPart(string text)
+    {
+        Match match = PartRegex.Match(text);
+        return match.Success && int.TryParse(match.Groups[1].Value, out int part) ? part : 1;
+    }
+    
+    private static string StripPart(string text)
+    {
+        Match match = PartRegex.Match(text);
+        if (!match.Success)
+            return text;
+
+        string clean = text.Remove(match.Index, match.Length);
+        return Regex.Replace(clean, @"\s+", " ").Trim().TrimEnd('-', ' ');
+    }
+    
+    #endregion
+    
+    #region Year
+    
+    public static (string Title, int? Year) SplitTitleYear(string title)
+    {
+        Match match = YearInParensRegex.Match(title);
+        if (!match.Success || !int.TryParse(match.Value.Trim('(', ')'), out int year))
+            return (title.Trim(), null);
+
+        string clean = title.Remove(match.Index, match.Length);
+        clean = Regex.Replace(clean, @"\s+", " ").Trim().TrimEnd('-', ' ');
+        return (clean, year);
+    }
+    
+    #endregion
+    
+    public static string BuildCacheKey(string title, int? year) =>
+        year.HasValue ? $"{title}|{year.Value}" : title;
 }
 
 public class ParseResult
