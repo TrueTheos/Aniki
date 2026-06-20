@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Parser;
 
 public static class AnimeTitleYearParser
 {

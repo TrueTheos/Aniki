@@ -1,4 +1,6 @@
-﻿namespace Aniki.Services.Interfaces;
+﻿using Aniki.Services.Parser;
+
+namespace Aniki.Services.Interfaces;
 
 public interface IAnimeNameParser
 {

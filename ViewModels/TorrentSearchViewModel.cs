@@ -15,9 +15,9 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] private bool _isTorrentsLoading;
     [ObservableProperty] private string _torrentSearchTerms = string.Empty;
     [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = new();
-    [ObservableProperty] private KnownSubber _selectedSubber = Services.KnownSubbers.All[0];
+    [ObservableProperty] private KnownSubber _selectedSubber = KnownSubbers.All[0];
 
-    public IReadOnlyList<KnownSubber> AvailableSubbers { get; } = Services.KnownSubbers.All;
+    public IReadOnlyList<KnownSubber> AvailableSubbers { get; } = KnownSubbers.All;
 
     private enum TorrentSortField
     {
@@ -46,7 +46,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     {
         _details = details;
         TorrentSearchTerms = "";
-        SelectedSubber = Services.KnownSubbers.All[0];
+        SelectedSubber = KnownSubbers.All[0];
         _allTorrents = [];
         TorrentsList.Clear();
 

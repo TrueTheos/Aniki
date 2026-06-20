@@ -4,7 +4,7 @@ using Aniki.Services.Cache;
 using Aniki.Services.Interfaces;
 using Aniki.Services.Save;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Parser;
 
 public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 {

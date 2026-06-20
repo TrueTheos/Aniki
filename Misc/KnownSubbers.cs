@@ -1,4 +1,4 @@
-namespace Aniki.Services;
+namespace Aniki.Misc;
 
 public static class KnownSubbers
 {

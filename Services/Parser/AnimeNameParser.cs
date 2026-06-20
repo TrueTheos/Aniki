@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Aniki.Services.Interfaces;
 
-namespace Aniki.Services;
+namespace Aniki.Services.Parser;
 
 public class AnimeNameParser : IAnimeNameParser
 {
