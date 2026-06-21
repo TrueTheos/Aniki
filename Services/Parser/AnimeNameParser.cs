@@ -140,11 +140,12 @@ public class AnimeNameParser : IAnimeNameParser
                         Part                  = part,
                         EpisodeNumber         = episodeNumber.ToString(),
                         AbsoluteEpisodeNumber = episodeNumber,
-                        Year                  = year
+                        Year                  = year,
+                        AnimeId               = seasonMatch?.Id
                     };
                 }
 
-                (int finalSeason, int finalPart, int relativeEpisode) =
+                (int finalSeason, int finalPart, int relativeEpisode, int? animeId) =
                     await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber, part, year);
                 return new ParseResult
                 {
@@ -153,7 +154,8 @@ public class AnimeNameParser : IAnimeNameParser
                     Part                  = finalPart,
                     EpisodeNumber         = relativeEpisode.ToString(),
                     AbsoluteEpisodeNumber = episodeNumber,
-                    Year                  = year
+                    Year                  = year,
+                    AnimeId               = animeId
                 };
             }
             catch (Exception ex)
@@ -278,6 +280,7 @@ public class ParseResult
     public string? EpisodeNumber { get; set; }
     public int? AbsoluteEpisodeNumber { get; set; }
     public int? Year { get; set; }
+    public int? AnimeId { get; set; }
 
     public override string ToString()
     {

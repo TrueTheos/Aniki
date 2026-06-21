@@ -478,6 +478,11 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         if (_cache.ContainsKey(id)) return _cache[id].Data;
         return null;
     }
+
+    public IReadOnlyCollection<TEntity> GetAllCachedData()
+    {
+        return _cache.Values.Select(entry => entry.Data).ToArray();
+    }
     
     public void ClearMemory()
     {
