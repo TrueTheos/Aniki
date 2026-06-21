@@ -1,4 +1,6 @@
-﻿namespace Aniki.Models.Anilist;
+﻿using Aniki.Models.Anilist.Components;
+
+namespace Aniki.Models.Anilist;
 
 public class Anilist_Anime
 {

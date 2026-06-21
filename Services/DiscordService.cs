@@ -1,5 +1,4 @@
 ﻿using Aniki.Services.Interfaces;
-using Aniki.ViewModels;
 using DiscordRPC;
 using DiscordRPC.Logging;
 

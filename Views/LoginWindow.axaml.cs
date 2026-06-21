@@ -1,5 +1,4 @@
 using Aniki.Services.Interfaces;
-using Aniki.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;

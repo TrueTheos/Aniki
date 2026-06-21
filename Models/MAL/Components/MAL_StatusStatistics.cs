@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Aniki.Converters;
 
-namespace Aniki.Models.MAL;
+namespace Aniki.Models.MAL.Components;
 
 public class MAL_StatusStatistics
 {

@@ -4,9 +4,9 @@ namespace Aniki.Services;
 
 public static partial class TorrentFileNameFormatter
 {
-    private const string ReleaseGroupPattern = @"^\[([^\]]+)\]";
+    private const string RELEASE_GROUP_PATTERN = @"^\[([^\]]+)\]";
 
-    public static (string? ReleaseGroup, IReadOnlyList<TorrentFileNameSegment> Segments) Parse(string fileName)
+    private static (string? ReleaseGroup, IReadOnlyList<TorrentFileNameSegment> Segments) Parse(string fileName)
     {
         if (string.IsNullOrEmpty(fileName))
             return (null, []);
@@ -16,7 +16,7 @@ public static partial class TorrentFileNameFormatter
         {
             return (null,
             [
-                new TorrentFileNameSegment { Text = fileName, Color = KnownSubbers.RestOfFileNameColor }
+                new TorrentFileNameSegment { Text = fileName, Color = KnownSubbers.REST_OF_FILE_NAME_COLOR }
             ]);
         }
 
@@ -25,17 +25,14 @@ public static partial class TorrentFileNameFormatter
         string remainder = fileName[match.Length..];
         string subberColor = KnownSubbers.GetColor(releaseGroup);
 
-        var segments = new List<TorrentFileNameSegment>
-        {
-            new() { Text = bracketText, Color = subberColor }
-        };
+        List<TorrentFileNameSegment> segments = [new() { Text = bracketText, Color = subberColor }];
 
         if (remainder.Length > 0)
         {
             segments.Add(new TorrentFileNameSegment
             {
                 Text = remainder,
-                Color = KnownSubbers.RestOfFileNameColor
+                Color = KnownSubbers.REST_OF_FILE_NAME_COLOR
             });
         }
 
@@ -49,6 +46,6 @@ public static partial class TorrentFileNameFormatter
         torrent.FileNameSegments = segments;
     }
 
-    [GeneratedRegex(ReleaseGroupPattern)]
+    [GeneratedRegex(RELEASE_GROUP_PATTERN)]
     private static partial Regex ReleaseGroupRegex();
 }

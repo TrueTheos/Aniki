@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Headers;
 using Aniki.Models.Anilist;
+using Aniki.Models.Anilist.Components;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Avalonia.Media.Imaging;
@@ -113,7 +114,7 @@ public class AnilistService : IAnimeProvider
         int released = 0;
         if (response?.Data?.Media is { } media)
         {
-            released = media.NextAiringEpisode?.Episode is int next
+            released = media.NextAiringEpisode?.Episode is { } next
                 ? next - 1
                 : media.Episodes ?? 0;
         }

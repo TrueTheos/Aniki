@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using Aniki.Services.Anime;
-using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 

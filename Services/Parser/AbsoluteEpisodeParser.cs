@@ -18,10 +18,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         get
         {
-            if (field == null)
-            {
-                field = _saveService.GetSeasonCache();
-            }
+            field ??= _saveService.GetSeasonCache();
 
             return field;
         }

@@ -62,15 +62,15 @@ public static class KnownSubbers
 
     private static readonly (string Name, string Color)[] Subbers = BuildSubbers();
 
-    public const string DefaultColor = "#888888";
-    public const string RestOfFileNameColor = "#E0E0E0";
+    private const string DEFAULT_COLOR = "#888888";
+    public const string REST_OF_FILE_NAME_COLOR = "#E0E0E0";
 
     public static IReadOnlyList<KnownSubber> All { get; } = BuildList();
 
     public static string GetColor(string? releaseGroup)
     {
         if (string.IsNullOrWhiteSpace(releaseGroup))
-            return DefaultColor;
+            return DEFAULT_COLOR;
 
         foreach ((string name, string color) in Subbers)
         {
@@ -78,7 +78,7 @@ public static class KnownSubbers
                 return color;
         }
 
-        return DefaultColor;
+        return DEFAULT_COLOR;
     }
 
     private static (string Name, string Color)[] BuildSubbers()
@@ -96,7 +96,7 @@ public static class KnownSubbers
     {
         var list = new List<KnownSubber>
         {
-            new() { Name = "All", Color = RestOfFileNameColor }
+            new() { Name = "All", Color = REST_OF_FILE_NAME_COLOR }
         };
 
         foreach ((string name, string color) in Subbers)

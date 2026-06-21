@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 

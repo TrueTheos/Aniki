@@ -89,7 +89,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         
         SetupFileWatcher();
         
-        WeakReferenceMessenger.Default.Register<SettingsChangedMessage>(this, (r, m) =>
+        WeakReferenceMessenger.Default.Register<SettingsChangedMessage>(this, (_, _) =>
         {
             SetupFileWatcher();
             _loadTask = RefreshAsync();
@@ -112,7 +112,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private void ApplyFiltersAndSort()
     {
-        string                  search = SearchText?.Trim() ?? "";
+        string search = SearchText?.Trim() ?? "";
         IEnumerable<AnimeGroup> groups = AnimeGroups;
         if (!string.IsNullOrEmpty(search))
             groups = groups.Where(g => g.Title.Contains(search, StringComparison.OrdinalIgnoreCase));

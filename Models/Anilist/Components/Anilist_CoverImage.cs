@@ -1,4 +1,4 @@
-﻿namespace Aniki.Models.Anilist;
+﻿namespace Aniki.Models.Anilist.Components;
 
 public class Anilist_CoverImage
 {

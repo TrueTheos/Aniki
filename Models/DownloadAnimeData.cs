@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Linq;
 using Aniki.Services.Anime;
 
 namespace Aniki.Models;

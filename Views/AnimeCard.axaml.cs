@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;

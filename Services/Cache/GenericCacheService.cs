@@ -28,6 +28,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     private readonly object _subscriptionLock = new();
     private readonly ConcurrentDictionary<Type, Dictionary<TFieldEnum, PropertyInfo>> _sourceTypeMaps = new();
 
+    //todo remove?
     private readonly Timer? _diskSyncTimer;
     private readonly SemaphoreSlim _diskWriteLock = new(1, 1);
     private readonly HashSet<TKey> _dirtyKeys = new();

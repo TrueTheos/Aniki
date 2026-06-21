@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Aniki.Services.Interfaces;
-using Aniki.ViewModels;
 using Avalonia.Threading;
 using Microsoft.Win32;
 
@@ -233,14 +232,12 @@ public class VideoPlayerService : IVideoPlayerService
         
         if (command.StartsWith("\""))
         {
-            int endQuote = command.IndexOf("\"", 1);
-            if (endQuote > 0) return command.Substring(1, endQuote - 1);
+            int endQuote = command.IndexOf("\"", 1, StringComparison.Ordinal);
+            if (endQuote > 0) return command[1..endQuote];
         }
         
-        int spaceIndex = command.IndexOf(" ");
-        if (spaceIndex > 0) return command.Substring(0, spaceIndex);
-        
-        return command;
+        int spaceIndex = command.IndexOf(' ');
+        return spaceIndex > 0 ? command[..spaceIndex] : command;
     }
 
     private string? FindExecutableInSystem(string exeName)
@@ -340,8 +337,7 @@ public class VideoPlayerService : IVideoPlayerService
         }
     }
 
-    /// <summary>CDNs that hotlink-check Referer, without it VLC/mpv get 403 or empty.</summary>
-    private static bool ShouldSendAllanimeReferrer(string url)
+    private static bool ShouldSendAllAnimeReferrer(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
             return false;
@@ -405,7 +401,7 @@ public class VideoPlayerService : IVideoPlayerService
         try
         {
             string playerName = Path.GetFileNameWithoutExtension(playerPath).ToLower();
-            bool useAllanimeReferer = ShouldSendAllanimeReferrer(url);
+            bool useAllanimeReferer = ShouldSendAllAnimeReferrer(url);
             string arguments = playerName switch
             {
                 "mpv" or "mpvnet" => useAllanimeReferer

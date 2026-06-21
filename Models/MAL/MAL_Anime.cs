@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Aniki.Models.MAL.Components;
 using Aniki.Services.Cache;
 using Avalonia.Media.Imaging;
 

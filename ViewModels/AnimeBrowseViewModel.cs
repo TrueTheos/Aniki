@@ -143,12 +143,9 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     private void LoadAnimeCards(List<RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
     {
         collection.Clear();
-        foreach (var anime in animeList)
+        foreach (RankingEntry anime in animeList)
         {
-            if (anime.Details != null)
-            {
-                collection.Add(anime.Details.ToCardData());
-            }
+            collection.Add(anime.Details.ToCardData());
         }
     }
     

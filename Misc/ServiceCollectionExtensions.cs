@@ -5,7 +5,6 @@ using Aniki.Services.Auth.Providers;
 using Aniki.Services.Interfaces;
 using Aniki.Services.Save;
 using Microsoft.Extensions.DependencyInjection;
-using Aniki.Services;
 using Aniki.Services.Parser;
 
 namespace Aniki.Misc;

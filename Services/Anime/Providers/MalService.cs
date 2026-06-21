@@ -1,8 +1,8 @@
-﻿using System.Collections.Specialized;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Aniki.Models.MAL.Components;
 using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Avalonia.Media.Imaging;

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Aniki.Models.MAL;
+namespace Aniki.Models.MAL.Components;
 
 public class MAL_SearchEntry
 {

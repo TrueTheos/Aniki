@@ -97,11 +97,7 @@ public class TokenService : ITokenService
 
     public string GetAccessToken(ILoginProvider.ProviderType providerId)
     {
-        if (_cachedTokens.TryGetValue(providerId, out StoredTokenData? token))
-        {
-            return token.AccessToken ?? string.Empty;
-        }
-        return string.Empty;
+        return _cachedTokens.TryGetValue(providerId, out StoredTokenData? token) ? token.AccessToken : string.Empty;
     }
 
     private byte[] EncryptData(string data)

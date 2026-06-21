@@ -59,8 +59,8 @@ public class App : Application
         
         DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
 
-        AppDomain.CurrentDomain.UnhandledException += (_, e) => 
-            OnUnhandledException(_, (DispatcherUnhandledExceptionEventArgs)e.ExceptionObject );
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) => 
+            OnUnhandledException(sender, (DispatcherUnhandledExceptionEventArgs)e.ExceptionObject );
         
         base.OnFrameworkInitializationCompleted();
     }

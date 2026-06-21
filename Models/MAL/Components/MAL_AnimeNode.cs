@@ -1,4 +1,4 @@
-﻿namespace Aniki.Models.MAL;
+﻿namespace Aniki.Models.MAL.Components;
 
 public class MAL_AnimeNode
 {

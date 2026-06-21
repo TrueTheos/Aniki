@@ -32,7 +32,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public bool CanDecreaseEpisodeCount => WatchedEpisodes > 0;
 
     [ObservableProperty]
-    private int _selectedTabIndex = 0;
+    private int _selectedTabIndex;
 
     [ObservableProperty]
     private WatchAnimeViewModel _watchAnimeViewModel;

@@ -8,9 +8,6 @@ internal class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        string path = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Aniki", "logs", "app-.txt");
         VelopackApp.Build().Run();
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }

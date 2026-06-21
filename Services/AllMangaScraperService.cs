@@ -471,7 +471,6 @@ public class AllMangaScraperService : IAllMangaScraperService
             return string.Empty;
 
         if (Uri.TryCreate(sourceUrl, UriKind.Absolute, out Uri? absolute) &&
-            absolute is not null &&
             (absolute.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
              absolute.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
         {
