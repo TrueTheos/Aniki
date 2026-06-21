@@ -388,12 +388,11 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             }
 
             int currentSeason = 0;
-            for (int i = 0; i < seasonChain.Count; i++)
+            foreach ((int id, AnimeDetails details) in seasonChain)
             {
-                (int id, AnimeDetails details) = seasonChain[i];
-                string title = details.Title ?? string.Empty;
-                int part = AnimeNameParser.ExtractPart(title);
-                int? titleSeason = AnimeNameParser.ExtractSeason(title);
+                string title       = details.Title ?? string.Empty;
+                int    part        = AnimeNameParser.ExtractPart(title);
+                int?   titleSeason = AnimeNameParser.ExtractSeason(title);
 
                 if (titleSeason.HasValue)
                     currentSeason = titleSeason.Value;
@@ -403,16 +402,17 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 if (!seasonMap.Seasons.TryGetValue(currentSeason, out Dictionary<int, SeasonData>? parts))
                 {
                     parts = new Dictionary<int, SeasonData>();
+              
                     seasonMap.Seasons[currentSeason] = parts;
                 }
 
                 parts[part] = new SeasonData
                 {
-                    Episodes = details.NumEpisodes ?? 0,
-                    Id = id,
+                    Episodes  = details.NumEpisodes ?? 0,
+                    Id        = id,
                     MediaType = details.MediaType,
-                    Title = details.Title,
-                    Part = part
+                    Title     = details.Title,
+                    Part      = part
                 };
             }
 
