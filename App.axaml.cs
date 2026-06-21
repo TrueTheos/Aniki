@@ -95,7 +95,7 @@ public class App : Application
         
         try
         {
-            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<ISaveService>().FlushAllCaches();
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<ISaveService>().SaveAllCaches();
 
             if (sender is not IClassicDesktopStyleApplicationLifetime lifetime) return;
             lifetime.ShutdownRequested -= OnShutdownRequested;

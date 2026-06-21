@@ -11,7 +11,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     private readonly ISaveService _saveService;
     private readonly IAnimeService _animeService;
 
-    public GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> AnimeSeasonCache
+    private GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> AnimeSeasonCache
     {
         get
         {
@@ -283,12 +283,9 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
     private void IndexMap(AnimeSeasonsMap map)
     {
-        foreach (Dictionary<int, SeasonData> parts in map.Seasons.Values)
+        foreach (SeasonData season in map.Seasons.Values.SelectMany(parts => parts.Values))
         {
-            foreach (SeasonData season in parts.Values)
-            {
-                _animeIdToMapIndex.TryAdd(season.Id, map);
-            }
+            _animeIdToMapIndex.TryAdd(season.Id, map);
         }
     }
 
@@ -297,7 +294,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         try
         {
             AnimeSeasonsMap seasonMap = new();
-            HashSet<int> visitedIds = new();
+            HashSet<int> visitedIds = [];
             
             List<(int id, AnimeDetails details)> seasonChain = new();
             int currentId = animeId;
@@ -317,10 +314,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 else break;
             }
 
-            AnimeDetails? currentDetails = seasonChain.FirstOrDefault(x => x.id == animeId).details;
-            
-            if (currentDetails == null) currentDetails = seasonChain.Last().details; 
-            
+            AnimeDetails? currentDetails = seasonChain.FirstOrDefault(x => x.id == animeId).details ?? seasonChain.Last().details;
+
             while (currentDetails != null)
             {
                 RelatedAnime? sequel = currentDetails.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.Sequel);

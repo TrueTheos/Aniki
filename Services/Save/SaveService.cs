@@ -123,11 +123,19 @@ public class SaveService : ISaveService
         _imageSaver.Save(fileName, image);
     }
 
-    public async Task FlushAllCaches()
+    public async Task ClearAllCaches()
     {
         foreach (KeyValuePair<Guid, ICacheService> cache in _caches)
         {
             await cache.Value.ClearAllAsync();
+        }
+    }
+
+    public async Task SaveAllCaches()
+    {
+        foreach (KeyValuePair<Guid, ICacheService> cache in _caches)
+        {
+            await cache.Value.SyncToDiskAsync();
         }
     }
 

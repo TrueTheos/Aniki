@@ -135,7 +135,7 @@ public partial class SettingsViewModel : ViewModelBase
         IsClearingCache = true;
         try
         {
-            await _saveService.FlushAllCaches();
+            await _saveService.ClearAllCaches();
         }
         finally
         {

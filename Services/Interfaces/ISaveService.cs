@@ -12,6 +12,7 @@ public interface ISaveService
     public SettingsConfig? GetSettingsConfig();
     public bool TryGetAnimeImage(int id, out Bitmap? picture);
     public void SaveImage(int id, Bitmap image);
-    public Task FlushAllCaches();
+    public Task ClearAllCaches();
+    public Task SaveAllCaches();
     public void Wipe();
 }

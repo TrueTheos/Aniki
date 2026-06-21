@@ -11,7 +11,7 @@ public interface ICacheService
 {
     public void ClearMemory();
     public Task ClearAllAsync();
-    public void Dispose();
+    public Task SyncToDiskAsync();
 }
 
 public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
@@ -167,7 +167,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         }
     }
 
-    private async Task SyncToDiskAsync()
+    public async Task SyncToDiskAsync()
     {
         if (!_options.EnableDiskCache)
             return;
@@ -517,19 +517,5 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         }
         
         await SyncToDiskAsync();
-    }
-
-    public void Dispose()
-    {
-        _diskSyncTimer?.Dispose();
-        try
-        {
-            SyncToDiskAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Failed to sync cache to disk during dispose: {e}");
-        }
-        _diskWriteLock.Dispose();
     }
 }
