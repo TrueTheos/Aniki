@@ -6,6 +6,8 @@ namespace Aniki.Services.Parser;
 public class AnimeNameParser : IAnimeNameParser
 {
     private readonly IAbsoluteEpisodeParser _absoluteEpisodeParser;
+
+    #region Regexes
     
     private static readonly List<Regex> FilenamePatternRegexes =
     [
@@ -43,12 +45,15 @@ public class AnimeNameParser : IAnimeNameParser
         new(@"\b(\d{1,2})(?:st|nd|rd|th)\s*Season\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
         new(@"\bS(\d{1,2})\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
+    
+    #endregion
 
     public AnimeNameParser(IAbsoluteEpisodeParser absoluteEpisodeParser)
     {
         _absoluteEpisodeParser = absoluteEpisodeParser;
     }
 
+    //todo rework/cleanup
     public FolderParseResult ParseReleaseFolder(string folderName)
     {
         string cleaned = folderName.Replace('.', ' ').Replace('_', ' ');
@@ -70,8 +75,7 @@ public class AnimeNameParser : IAnimeNameParser
  
     public EpisodeInfo? ParseEpisodeFromFilename(string filename, int defaultSeason = 1, int defaultPart = 1)
     {
-        string name = StripExtension(filename);
-        name = CleanFilename(name);
+        string name = CleanFilename(filename);
         
         int? episode = ExtractEpisode(name);
         int? season  = ExtractSeason(name);
@@ -79,11 +83,12 @@ public class AnimeNameParser : IAnimeNameParser
         return (!episode.HasValue && episode!.Value > 0) ? null : new EpisodeInfo(season ?? defaultSeason, defaultPart, episode.Value);
     }
     
+    //todo rework/cleanup
     public async Task<ParseResult> ParseAnimeFilename(string filename)
     {
         string originalFilename = StripExtension(filename);
-        (_, int? fileYear) = SplitTitleYear(originalFilename.Replace('.', ' ').Replace('_', ' '));
         string cleanedFilename = CleanFilename(filename);
+        (_, int? fileYear) = SplitTitleYear(cleanedFilename);
         
         foreach (Regex pattern in FilenamePatternRegexes)
         {
@@ -96,7 +101,8 @@ public class AnimeNameParser : IAnimeNameParser
                 if (!int.TryParse(match.Groups["episode"].Value, out int episodeNumber))
                     continue;
  
-                int  season         = 1;
+                int season = 1;
+                
                 bool seasonExplicit = match.Groups["season"].Success;
                 if (seasonExplicit && !int.TryParse(match.Groups["season"].Value, out season))
                     continue;
@@ -112,7 +118,9 @@ public class AnimeNameParser : IAnimeNameParser
                     @"\s+(?:(?:S|Season)\s*\d+|\d{1,2}(?:st|nd|rd|th)\s*Season)\s*$",
                     "",
                     RegexOptions.IgnoreCase).Trim();
-                animeName                  = StripPart(animeName);
+                
+                animeName = StripPart(animeName);
+                
                 (animeName, int? nameYear) = SplitTitleYear(animeName);
                 int? year = nameYear ?? fileYear;
  
@@ -123,7 +131,7 @@ public class AnimeNameParser : IAnimeNameParser
                 if (season > 1 || part > 1)
                 {
                     AbsoluteEpisodeParser.SeasonMapMatch? seasonMatch = await _absoluteEpisodeParser.ResolveSeasonEntry(animeName, part, year, seasonHint);
-                    int             resolvedSeason = seasonMatch?.Season ?? season;
+                    int resolvedSeason = seasonMatch?.Season ?? season;
                     
                     return new ParseResult
                     {
@@ -194,7 +202,7 @@ public class AnimeNameParser : IAnimeNameParser
         return null;
     }
     
-    private static (int Season, int Index) ExtractSeasonWithIndex(string text)
+    private (int Season, int Index) ExtractSeasonWithIndex(string text)
     {
         Match? match = FindSeasonMatch(text);
         if (match != null && int.TryParse(match.Groups[1].Value, out int season))
@@ -211,8 +219,8 @@ public class AnimeNameParser : IAnimeNameParser
     #endregion
     
     #region Episode
-    
-    public static int? ExtractEpisode(string text)
+
+    private int? ExtractEpisode(string text)
     {
         Match? match = EpisodeRegexes.Select(regex => regex.Match(text)).FirstOrDefault(match => match.Success);
         if (match != null && int.TryParse(match.Groups[1].Value, out int episodeNumber))
