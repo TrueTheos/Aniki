@@ -520,7 +520,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="models:AnimeGroup">
 
-                            <Border Classes="anime-card" Margin="0,0,0,12" ClipToBounds="True">
+                            <Border Classes="anime-card" Margin="0,0,0,12" ClipToBounds="True" DoubleTapped="OnDoubleTapAnime" Cursor="Hand">
                                 <StackPanel>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto">
@@ -616,7 +616,7 @@
                                     
                                     <Border IsVisible="{Binding HasOnDisk}"
                                             BorderThickness="0,1,0,0"
-                                            BorderBrush="{StaticResource Border}">
+                                            BorderBrush="{StaticResource Border}" DoubleTapped="OnDoubleTapIgnore">
                                         <StackPanel>
                                             <Grid ColumnDefinitions="36,*" Margin="0,10,10,0">
                                                 <Button Grid.Column="0"

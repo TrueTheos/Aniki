@@ -10,7 +10,7 @@ namespace Aniki.Views;
 
 public partial class MainWindow : Window
 {
-    private MainViewModel _viewModel;
+    private readonly MainViewModel _viewModel;
 
     public MainWindow(MainViewModel viewModel)
     {
@@ -59,6 +59,13 @@ public partial class MainWindow : Window
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
+            if (e.ClickCount == 2)
+            {
+                WindowState = WindowState == WindowState.Maximized 
+                    ? WindowState.Normal 
+                    : WindowState.Maximized;
+                return;
+            }
             BeginMoveDrag(e);
         }
     }

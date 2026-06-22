@@ -19,6 +19,19 @@ public partial class DownloadedView : UserControl
             DependencyInjection.Instance.ServiceProvider!.GetRequiredService<DownloadedViewModel>().LaunchEpisode(ep);
         }
     }
+    
+    private void OnDoubleTapAnime(object? sender, TappedEventArgs e)
+    {
+        if (sender is Control { DataContext: AnimeGroup anime })
+        {
+            DependencyInjection.Instance.ServiceProvider!.GetRequiredService<DownloadedViewModel>().OpenAnimeDetailsCommand.Execute(anime.MalId);
+        }
+    }
+    
+    private void OnDoubleTapIgnore(object? sender, TappedEventArgs e)
+    {
+        e.Handled = true;
+    }
 
     private void OnSearchIconClick(object? sender, RoutedEventArgs e)
     {
