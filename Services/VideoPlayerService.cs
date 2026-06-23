@@ -11,6 +11,7 @@ namespace Aniki.Services;
 public class VideoPlayerService : IVideoPlayerService
 {
     private const string ALLANIME_STREAM_REFERER = "https://allmanga.to/";
+    private const string MP4UPLOAD_STREAM_REFERER = "https://www.mp4upload.com/";
 
     private const string ALLANIME_BROWSER_USER_AGENT =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
@@ -322,13 +323,9 @@ public class VideoPlayerService : IVideoPlayerService
         try
         {
             if (SelectedPlayer == null || SelectedPlayer.IsSystemDefault)
-            {
                 return OpenWithSystemDefault(url);
-            }
-            else
-            {
-                return OpenWithSpecificPlayer(url, SelectedPlayer.ExecutablePath);
-            }
+
+            return OpenWithSpecificPlayer(url, SelectedPlayer.ExecutablePath);
         }
         catch (Exception ex)
         {
@@ -337,46 +334,54 @@ public class VideoPlayerService : IVideoPlayerService
         }
     }
 
-    private static bool ShouldSendAllAnimeReferrer(string url)
+    private static bool IsRemoteStreamUrl(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
             return false;
 
-        bool isWeb = uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+        return uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
             || uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
-        if (!isWeb)
-            return false;
+    }
 
-        return url.Contains("fast4speed", StringComparison.OrdinalIgnoreCase)
-            || url.Contains("bysekoze.com", StringComparison.OrdinalIgnoreCase);
+    private static bool IsLocalMediaPath(string url) =>
+        File.Exists(url) || Directory.Exists(url);
+
+    private VideoPlayerOption? FindStreamCapablePlayer()
+    {
+        string[] preferredNames = ["mpv", "mpvnet", "vlc", "mpc-hc64", "mpc-hc", "mpc-be64", "mpc-be"];
+
+        foreach (string name in preferredNames)
+        {
+            VideoPlayerOption? player = AvailablePlayers.FirstOrDefault(p =>
+                !p.IsSystemDefault &&
+                Path.GetFileNameWithoutExtension(p.ExecutablePath)
+                    .Equals(name, StringComparison.OrdinalIgnoreCase));
+
+            if (player != null)
+                return player;
+        }
+
+        return AvailablePlayers.FirstOrDefault(p => !p.IsSystemDefault);
     }
 
     private Process? OpenWithSystemDefault(string url)
     {
         try
         {
+            if (IsRemoteStreamUrl(url))
+            {
+                VideoPlayerOption? player = FindStreamCapablePlayer();
+                if (player != null)
+                    return OpenWithSpecificPlayer(url, player.ExecutablePath);
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                string tempFile = Path.Combine(Path.GetTempPath(), $"aniki_temp_{Guid.NewGuid()}.m3u8");
-                File.WriteAllText(tempFile, url);
-
-                Process? process = Process.Start(new ProcessStartInfo
+                return Process.Start(new ProcessStartInfo
                 {
-                    FileName        = tempFile,
+                    FileName        = url,
                     UseShellExecute = true
                 });
-
-                Task.Run(async () =>
-                {
-                    await Task.Delay(5000);
-                    try { if (File.Exists(tempFile)) File.Delete(tempFile); }
-                    catch(Exception ex)
-                    {
-                        Console.WriteLine($"Couldn't delete file {tempFile} {ex}");
-                    }
-                });
-
-                return process;
             }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -393,7 +398,16 @@ public class VideoPlayerService : IVideoPlayerService
         {
             Debug.WriteLine($"Failed to open with system default: {ex}");
         }
+
         return null;
+    }
+
+    private static string GetStreamReferer(string url)
+    {
+        if (url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase))
+            return MP4UPLOAD_STREAM_REFERER;
+
+        return ALLANIME_STREAM_REFERER;
     }
 
     private Process? OpenWithSpecificPlayer(string url, string playerPath)
@@ -401,16 +415,17 @@ public class VideoPlayerService : IVideoPlayerService
         try
         {
             string playerName = Path.GetFileNameWithoutExtension(playerPath).ToLower();
-            bool useAllanimeReferer = ShouldSendAllAnimeReferrer(url);
+            bool useStreamHeaders = IsRemoteStreamUrl(url) && !IsLocalMediaPath(url);
+            string streamReferer = GetStreamReferer(url);
             string arguments = playerName switch
             {
-                "mpv" or "mpvnet" => useAllanimeReferer
+                "mpv" or "mpvnet" => useStreamHeaders
                     ? $"\"{url}\" --user-agent=\"{ALLANIME_BROWSER_USER_AGENT}\" " +
-                      $"--http-header-fields=\"Referer: {ALLANIME_STREAM_REFERER}; Origin: https://allmanga.to\" " +
+                      $"--http-header-fields=\"Referer: {streamReferer}; Origin: https://allmanga.to\" " +
                       $"--force-window=yes --title=\"Aniki Player\""
                     : $"\"{url}\" --force-window=yes --title=\"Aniki Player\"",
-                "vlc" => useAllanimeReferer
-                    ? $"--http-referrer=\"{ALLANIME_STREAM_REFERER}\" --http-user-agent=\"{ALLANIME_BROWSER_USER_AGENT}\" " +
+                "vlc" => useStreamHeaders
+                    ? $"--http-referrer=\"{streamReferer}\" --http-user-agent=\"{ALLANIME_BROWSER_USER_AGENT}\" " +
                       $"\"{url}\" --meta-title=\"Aniki Player\""
                     : $"\"{url}\" --meta-title=\"Aniki Player\"",
                 _ => $"\"{url}\""

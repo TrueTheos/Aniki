@@ -19,10 +19,17 @@ public class AllMangaScraperService : IAllMangaScraperService
     private const string SEARCH_GQL  = "query($search: SearchInput $limit: Int $page: Int $translationType: VaildTranslationTypeEnumType $countryOrigin: VaildCountryOriginEnumType) { shows(search: $search limit: $limit page: $page translationType: $translationType countryOrigin: $countryOrigin) { edges { _id name availableEpisodes malId banner __typename } } }";
     private const string DETAILS_GQL = "query($showId: String!) { show(_id: $showId) { _id name malId aniListId description availableEpisodesDetail thumbnail __typename } }";
     private const string EPISODES_GQL = "query($showId: String!) { show(_id: $showId) { _id availableEpisodesDetail } }";
-    private const string EPISODE_GQL  = "query($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) { episode(showId: $showId translationType: $translationType episodeString: $episodeString) { episodeString sourceUrls } }";
+    private const string EPISODE_SOURCES_POST_GQL = "query ($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) { episode( showId: $showId translationType: $translationType episodeString: $episodeString ) { episodeString sourceUrls }}";
+
+    // Registered on AllAnime's server for episode source requests (ani-cli / anilix)
+    private const string EPISODE_SOURCES_PERSISTED_HASH = "d405d0edd690624b66baba3068e0edc3ac90f1597d898a1ec8db4e5c43c00fec";
 
     //Hardcoded in the site bundle
     private const string TOBEPARSED_KEY_MATERIAL = "Xot36i3lK3:v1";
+
+    private static readonly Regex Mp4UploadSrcRegex = new(@"src:\s*""([^""]+)""", RegexOptions.Compiled);
+    private static readonly Regex ClockRefererRegex = new(@"""Referer""\s*:\s*""([^""]+)""", RegexOptions.Compiled);
+    private static readonly Regex WixmpUrlsetRegex = new(@"/urlset/[^/]+/(\d+),", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public AllMangaScraperService()
     {
@@ -73,6 +80,84 @@ public class AllMangaScraperService : IAllMangaScraperService
         }
 
         return response;
+    }
+
+    private async Task<string> ApqGetEpisodeSourcesAsync(object variables)
+    {
+        string variablesJson = JsonSerializer.Serialize(variables);
+        string extensionsJson = JsonSerializer.Serialize(new
+        {
+            persistedQuery = new { version = 1, sha256Hash = EPISODE_SOURCES_PERSISTED_HASH }
+        });
+
+        string url = $"{ALLANIME_API}/api" +
+                     $"?variables={HttpUtility.UrlEncode(variablesJson)}" +
+                     $"&extensions={HttpUtility.UrlEncode(extensionsJson)}";
+
+        string response = await _httpClient.GetStringAsync(url);
+        if (HasEpisodeSourcePayload(response))
+            return response;
+
+        return await PostEpisodeSourcesAsync(variables);
+    }
+
+    private async Task<string> PostEpisodeSourcesAsync(object variables)
+    {
+        string body = JsonSerializer.Serialize(new
+        {
+            variables,
+            query = EPISODE_SOURCES_POST_GQL
+        });
+
+        using StringContent content = new(body, Encoding.UTF8, "application/json");
+        using HttpResponseMessage httpResponse = await _httpClient.PostAsync($"{ALLANIME_API}/api", content);
+        httpResponse.EnsureSuccessStatusCode();
+        return await httpResponse.Content.ReadAsStringAsync();
+    }
+
+    private static bool HasEpisodeSourcePayload(string response)
+    {
+        if (string.IsNullOrWhiteSpace(response))
+            return false;
+
+        try
+        {
+            using JsonDocument jsonDoc = JsonDocument.Parse(response);
+            JsonElement root = jsonDoc.RootElement;
+
+            if (TryGetTobeparsed(root, out _))
+                return true;
+
+            if (root.TryGetProperty("data", out JsonElement data))
+            {
+                if (TryGetTobeparsed(data, out _))
+                    return true;
+
+                if (data.TryGetProperty("episode", out JsonElement episode) &&
+                    episode.TryGetProperty("sourceUrls", out JsonElement sourceUrls) &&
+                    sourceUrls.ValueKind == JsonValueKind.Array &&
+                    sourceUrls.GetArrayLength() > 0)
+                    return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private static bool TryGetTobeparsed(JsonElement element, out string tobeparsed)
+    {
+        if (element.TryGetProperty("tobeparsed", out JsonElement tobeParsedProp))
+        {
+            tobeparsed = tobeParsedProp.GetString() ?? string.Empty;
+            return !string.IsNullOrEmpty(tobeparsed);
+        }
+
+        tobeparsed = string.Empty;
+        return false;
     }
 
     public async Task<List<AllMangaSearchResult>> SearchAnimeAsync(string query)
@@ -245,32 +330,28 @@ public class AllMangaScraperService : IAllMangaScraperService
 
             var variables = new { showId, translationType = "sub", episodeString };
 
-            string response = await ApqGetAsync(EPISODE_GQL, variables);
+            string response = await ApqGetEpisodeSourcesAsync(variables);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
+            JsonElement root = jsonDoc.RootElement;
 
-            if (!jsonDoc.RootElement.TryGetProperty("data", out JsonElement data))
-                throw new Exception("No data field in response");
-
-            if (data.TryGetProperty("tobeparsed", out JsonElement tobeParsed))
+            if (TryGetTobeparsed(root, out string rootTobeparsed))
             {
-                string rawBase64 = tobeParsed.GetString() ?? throw new Exception("Empty tobeparsed field");
-                string decrypted = DecryptTobeparsedAes256Ctr(rawBase64);
-
+                string decrypted = DecryptTobeparsedAes256Ctr(rootTobeparsed);
                 return await ExtractVideoUrlFromSourcesJson(decrypted);
             }
 
-            if (data.TryGetProperty("episode",    out JsonElement episode) &&
-                episode.TryGetProperty("sourceUrls", out JsonElement sourceUrls))
+            if (root.TryGetProperty("data", out JsonElement data))
             {
-                foreach (JsonElement source in sourceUrls.EnumerateArray())
+                if (TryGetTobeparsed(data, out string dataTobeparsed))
                 {
-                    if (!source.TryGetProperty("sourceUrl", out JsonElement sourceUrl)) continue;
+                    string decrypted = DecryptTobeparsedAes256Ctr(dataTobeparsed);
+                    return await ExtractVideoUrlFromSourcesJson(decrypted);
+                }
 
-                    string? encodedUrl = sourceUrl.GetString();
-                    if (string.IsNullOrEmpty(encodedUrl)) continue;
-
-                    string decodedUrl = DecodeSourceUrl(encodedUrl);
-                    string videoLink  = await GetLinksFromSource(decodedUrl);
+                if (data.TryGetProperty("episode", out JsonElement episode) &&
+                    episode.TryGetProperty("sourceUrls", out JsonElement sourceUrls))
+                {
+                    string? videoLink = await ResolveFirstVideoLinkAsync(sourceUrls);
                     if (!string.IsNullOrEmpty(videoLink))
                         return videoLink;
                 }
@@ -339,6 +420,26 @@ public class AllMangaScraperService : IAllMangaScraperService
         }
     }
 
+    private async Task<string?> ResolveFirstVideoLinkAsync(JsonElement sourceUrls)
+    {
+        foreach (JsonElement source in sourceUrls.EnumerateArray())
+        {
+            if (!source.TryGetProperty("sourceUrl", out JsonElement sourceUrl))
+                continue;
+
+            string? encodedUrl = sourceUrl.GetString();
+            if (string.IsNullOrEmpty(encodedUrl))
+                continue;
+
+            string decodedUrl = DecodeSourceUrl(encodedUrl);
+            string videoLink  = await GetLinksFromSource(decodedUrl);
+            if (!string.IsNullOrEmpty(videoLink))
+                return videoLink;
+        }
+
+        return null;
+    }
+
     private async Task<string> ExtractVideoUrlFromSourcesJson(string decryptedJson)
     {
         if (!decryptedJson.TrimStart().StartsWith('[') &&
@@ -378,8 +479,26 @@ public class AllMangaScraperService : IAllMangaScraperService
                     _        => 1
                 };
             }
+            static int SourceNameRank(JsonElement s)
+            {
+                if (!s.TryGetProperty("sourceName", out JsonElement nameProp))
+                    return 0;
 
-            int c = Priority(sourceArr[b]).CompareTo(Priority(sourceArr[a]));
+                return nameProp.GetString() switch
+                {
+                    "Default" => 6,
+                    "Yt-mp4"  => 5,
+                    "S-mp4"   => 4,
+                    "Vid-mp4" => 3,
+                    "Fm-Hls"  => 2,
+                    "Mp4"     => 0,
+                    _         => 1
+                };
+            }
+
+            int c = SourceNameRank(sourceArr[b]).CompareTo(SourceNameRank(sourceArr[a]));
+            if (c != 0) return c;
+            c = Priority(sourceArr[b]).CompareTo(Priority(sourceArr[a]));
             return c != 0 ? c : TypeRank(sourceArr[b]).CompareTo(TypeRank(sourceArr[a]));
         });
 
@@ -479,7 +598,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                 || host.EndsWith("." + ALLANIME_BASE, StringComparison.OrdinalIgnoreCase);
 
             if (!onAllanime)
-                return NormalizeHttpUrl(sourceUrl);
+                return await ResolvePlayableUrlAsync(NormalizeHttpUrl(sourceUrl));
 
             sourceUrl = string.Concat(absolute.PathAndQuery, absolute.Fragment);
         }
@@ -494,15 +613,35 @@ public class AllMangaScraperService : IAllMangaScraperService
 
             if (jsonDoc.RootElement.TryGetProperty("links", out JsonElement links))
             {
+                string? bestUrl = null;
+                int bestResolution = -1;
+
                 foreach (JsonElement link in links.EnumerateArray())
                 {
                     if (!link.TryGetProperty("link", out JsonElement linkProp))
                         continue;
 
                     string? url = linkProp.GetString();
-                    if (!string.IsNullOrEmpty(url))
-                        return NormalizeHttpUrl(url);
+                    if (string.IsNullOrEmpty(url))
+                        continue;
+
+                    int resolution = 0;
+                    if (link.TryGetProperty("resolutionStr", out JsonElement resolutionProp))
+                    {
+                        string? resolutionText = resolutionProp.GetString();
+                        if (!string.IsNullOrEmpty(resolutionText))
+                            _ = int.TryParse(new string(resolutionText.TakeWhile(char.IsDigit).ToArray()), out resolution);
+                    }
+
+                    if (resolution >= bestResolution)
+                    {
+                        bestResolution = resolution;
+                        bestUrl = NormalizeHttpUrl(url);
+                    }
                 }
+
+                if (!string.IsNullOrEmpty(bestUrl))
+                    return await ResolvePlayableUrlAsync(bestUrl, response);
             }
 
             return string.Empty;
@@ -511,6 +650,157 @@ public class AllMangaScraperService : IAllMangaScraperService
         {
             return string.Empty;
         }
+    }
+
+    private async Task<string> ResolvePlayableUrlAsync(string url, string? clockJson = null)
+    {
+        url = NormalizeHttpUrl(url);
+        if (string.IsNullOrWhiteSpace(url))
+            return string.Empty;
+
+        if (url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) &&
+            url.Contains("/embed", StringComparison.OrdinalIgnoreCase))
+        {
+            string resolved = await ResolveMp4UploadEmbedAsync(url);
+            return IsDirectMediaUrl(resolved) ? resolved : string.Empty;
+        }
+
+        if (url.Contains("repackager.wixmp.com", StringComparison.OrdinalIgnoreCase))
+        {
+            string resolved = ResolveWixmpUrl(url);
+            if (IsDirectMediaUrl(resolved))
+                return resolved;
+        }
+
+        if (url.Contains("master.m3u8", StringComparison.OrdinalIgnoreCase))
+        {
+            string referer = ALLANIME_REFR + "/";
+            if (!string.IsNullOrEmpty(clockJson))
+            {
+                Match refererMatch = ClockRefererRegex.Match(clockJson);
+                if (refererMatch.Success)
+                    referer = refererMatch.Groups[1].Value;
+            }
+
+            string resolved = await ResolveMasterPlaylistAsync(url, referer);
+            if (IsDirectMediaUrl(resolved))
+                return resolved;
+        }
+
+        return IsDirectMediaUrl(url) ? url : string.Empty;
+    }
+
+    private async Task<string> ResolveMp4UploadEmbedAsync(string embedUrl)
+    {
+        try
+        {
+            string html = await _httpClient.GetStringAsync(embedUrl);
+            Match match = Mp4UploadSrcRegex.Match(html);
+            if (!match.Success)
+                return string.Empty;
+
+            return NormalizeHttpUrl(match.Groups[1].Value.Replace("\\/", "/", StringComparison.Ordinal));
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static string ResolveWixmpUrl(string url)
+    {
+        if (url.Contains(".mp4", StringComparison.OrdinalIgnoreCase) &&
+            !url.Contains("urlset", StringComparison.OrdinalIgnoreCase))
+            return url;
+
+        if (url.Contains("master.m3u8", StringComparison.OrdinalIgnoreCase))
+            return url;
+
+        Match match = WixmpUrlsetRegex.Match(url);
+        if (!match.Success)
+            return string.Empty;
+
+        string quality = match.Groups[1].Value;
+        int urlsetIndex = url.IndexOf("/urlset/", StringComparison.OrdinalIgnoreCase);
+        if (urlsetIndex < 0)
+            return string.Empty;
+
+        string prefix = url[..urlsetIndex];
+        return $"{prefix}/{quality}/{quality}.mp4";
+    }
+
+    private async Task<string> ResolveMasterPlaylistAsync(string masterUrl, string referer)
+    {
+        try
+        {
+            using HttpRequestMessage request = new(HttpMethod.Get, masterUrl);
+            request.Headers.TryAddWithoutValidation("Referer", referer);
+            request.Headers.TryAddWithoutValidation("Origin", ALLANIME_REFR);
+
+            using HttpResponseMessage response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            string playlist = await response.Content.ReadAsStringAsync();
+
+            if (!playlist.Contains("#EXTM3U", StringComparison.Ordinal))
+                return string.Empty;
+
+            Uri baseUri = new(masterUrl);
+            string? bestUrl = null;
+            int bestBandwidth = -1;
+            string? lastInf = null;
+
+            foreach (string rawLine in playlist.Split('\n'))
+            {
+                string line = rawLine.Trim();
+                if (line.StartsWith("#EXT-X-STREAM-INF", StringComparison.OrdinalIgnoreCase))
+                {
+                    lastInf = line;
+                    continue;
+                }
+
+                if (lastInf == null || line.StartsWith('#') || string.IsNullOrEmpty(line))
+                    continue;
+
+                string streamUrl = Uri.TryCreate(baseUri, line, out Uri? resolved)
+                    ? resolved.ToString()
+                    : line;
+
+                int bandwidth = 0;
+                Match bwMatch = Regex.Match(lastInf, @"BANDWIDTH=(\d+)", RegexOptions.IgnoreCase);
+                if (bwMatch.Success)
+                    _ = int.TryParse(bwMatch.Groups[1].Value, out bandwidth);
+
+                if (bandwidth >= bestBandwidth)
+                {
+                    bestBandwidth = bandwidth;
+                    bestUrl = NormalizeHttpUrl(streamUrl);
+                }
+
+                lastInf = null;
+            }
+
+            return bestUrl ?? string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static bool IsDirectMediaUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return false;
+
+        if (url.Contains("/embed", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (url.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return url.Contains(".m3u8", StringComparison.OrdinalIgnoreCase)
+            || url.Contains(".mp4", StringComparison.OrdinalIgnoreCase)
+            || url.Contains("tools.fast4speed", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeHttpUrl(string url)
