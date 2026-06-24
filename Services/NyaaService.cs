@@ -11,9 +11,7 @@ public class NyaaService : INyaaService
 
    public async Task<List<NyaaTorrent>> SearchAsync(string animeName, string torrentSearchTerms)
     {
-        string url;
-
-        url = string.IsNullOrWhiteSpace(torrentSearchTerms) ? $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{animeName}")}" : $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{torrentSearchTerms}")}";
+        string url = string.IsNullOrWhiteSpace(torrentSearchTerms) ? $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{animeName}")}" : $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{torrentSearchTerms}")}";
 
         string rssContent = await _http.GetStringAsync(url);
         List<NyaaTorrent> results = new();
@@ -59,7 +57,7 @@ public class NyaaService : INyaaService
 
             if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(torrentLink))
             {
-                results.Add(new()
+                results.Add(new NyaaTorrent
                 {
                     FileName = HttpUtility.HtmlDecode(title),
                     TorrentLink = torrentLink,

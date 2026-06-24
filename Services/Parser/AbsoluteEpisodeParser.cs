@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Aniki.Services.Anime;
 using Aniki.Services.Cache;
 using Aniki.Services.Interfaces;
-using Aniki.Services.Save;
 
 namespace Aniki.Services.Parser;
 
@@ -411,7 +410,6 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     Episodes  = details.NumEpisodes ?? 0,
                     Id        = id,
                     MediaType = details.MediaType,
-                    Title     = details.Title,
                     Part      = part
                 };
             }
@@ -424,4 +422,23 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             return null;
         }
     }
+}
+
+public struct SeasonData
+{
+    public int Id { get; init; }
+    public int Episodes { get; init; }
+    public MediaType MediaType { get; init; }
+    public int Part { get; init; }
+}
+
+public class AnimeSeasonsMap
+{
+    public enum AnimeSeasonMapField
+    {
+        SeasonData
+    }
+
+    [CacheField(AnimeSeasonMapField.SeasonData)]
+    public Dictionary<int, Dictionary<int, SeasonData>> Seasons { get; set; } = new();
 }

@@ -20,7 +20,7 @@ public class VideoPlayerService : IVideoPlayerService
     
     public VideoPlayerOption? SelectedPlayer { get; set; }
 
-    private readonly List<string> _videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".m3u8"];
+    private readonly IReadOnlyList<string> _videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".m3u8"];
     
     private readonly ConcurrentDictionary<string, VideoPlayerOption> _scannedPlayers = new(StringComparer.OrdinalIgnoreCase);
 
@@ -32,7 +32,7 @@ public class VideoPlayerService : IVideoPlayerService
         _preferredPlayerPath = config?.PreferredVideoPlayerPath;
     }
 
-    public async Task RefreshPlayersAsync()
+    public async Task ScanPlayersAsync()
     {
         await Task.Run(async () =>
         {
@@ -79,13 +79,9 @@ public class VideoPlayerService : IVideoPlayerService
     private async Task DetectWindowsPlayersAsync()
     {
         List<Task> tasks = [];
+        tasks.AddRange(_videoExtensions.Select(ext => Task.Run(() => DetectWindowsHandlersForExtension(ext))));
 
-        foreach (string ext in _videoExtensions)
-        {
-            tasks.Add(Task.Run(() => DetectWindowsHandlersForExtension(ext)));
-        }
-
-        tasks.Add(Task.Run(() => DetectCommonWindowsPlayers()));
+        tasks.Add(Task.Run(DetectCommonWindowsPlayers));
 
         await Task.WhenAll(tasks);
     }
@@ -167,7 +163,7 @@ public class VideoPlayerService : IVideoPlayerService
                 string? progId = extensionKey.GetValue("")?.ToString();
                 if (!string.IsNullOrEmpty(progId))
                 {
-                    using RegistryKey? progIdKey = Registry.ClassesRoot.OpenSubKey($"{progId}\\shell\\open\\command");
+                    using RegistryKey? progIdKey = Registry.ClassesRoot.OpenSubKey($@"{progId}\shell\open\command");
                     if (progIdKey != null)
                     {
                         string? command = progIdKey.GetValue("")?.ToString();
@@ -293,23 +289,21 @@ public class VideoPlayerService : IVideoPlayerService
             {
                 return FindExecutableInSystem(playerExe + ".exe") != null;
             }
-            else
-            {
-                ProcessStartInfo startInfo = new()
-                {
-                    FileName = "which",
-                    Arguments = playerExe,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
 
-                using Process? process = Process.Start(startInfo);
-                if (process != null)
-                {
-                    process.WaitForExit(1000);
-                    return process.ExitCode == 0;
-                }
+            ProcessStartInfo startInfo = new()
+            {
+                FileName               = "which",
+                Arguments              = playerExe,
+                RedirectStandardOutput = true,
+                UseShellExecute        = false,
+                CreateNoWindow         = true
+            };
+
+            using Process? process = Process.Start(startInfo);
+            if (process != null)
+            {
+                process.WaitForExit(1000);
+                return process.ExitCode == 0;
             }
         }
         catch { /* Detection failed */ }
@@ -404,10 +398,7 @@ public class VideoPlayerService : IVideoPlayerService
 
     private static string GetStreamReferer(string url)
     {
-        if (url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase))
-            return MP4UPLOAD_STREAM_REFERER;
-
-        return ALLANIME_STREAM_REFERER;
+        return url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) ? MP4UPLOAD_STREAM_REFERER : ALLANIME_STREAM_REFERER;
     }
 
     private Process? OpenWithSpecificPlayer(string url, string playerPath)

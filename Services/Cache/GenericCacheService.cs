@@ -25,28 +25,27 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     
     private readonly Dictionary<TFieldEnum, PropertyInfo> _propertyMap = new();
     private readonly ConcurrentDictionary<TKey, Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>> _fieldSubscriptions = new();
-    private readonly object _subscriptionLock = new();
+    private readonly Lock _subscriptionLock = new();
     private readonly ConcurrentDictionary<Type, Dictionary<TFieldEnum, PropertyInfo>> _sourceTypeMaps = new();
 
-    //todo remove?
     private readonly Timer? _diskSyncTimer;
     private readonly SemaphoreSlim _diskWriteLock = new(1, 1);
-    private readonly HashSet<TKey> _dirtyKeys = new();
-    private readonly object _dirtyKeysLock = new();
+    private readonly HashSet<TKey> _dirtyKeys = [];
+    private readonly Lock _dirtyKeysLock = new();
     
-    private readonly HashSet<TFieldEnum> _memoryOnlyFields = new();
+    private readonly HashSet<TFieldEnum> _memoryOnlyFields = [];
     
     private class StoredCacheEntry
     {
-        public string? Key { get; set; }
-        public StoredEntityData? Entry { get; set; }
+        public string? Key { get; init; }
+        public StoredEntityData? Entry { get; init; }
     }
 
     private class StoredEntityData
     {
-        public JsonElement Data { get; set; }
-        public Dictionary<string, DateTime> FieldExpirations { get; set; } = new();
-        public HashSet<string> FetchedFields { get; set; } = new();
+        public JsonElement Data { get; init; }
+        public Dictionary<string, DateTime> FieldExpirations { get; init; } = new();
+        public HashSet<string> FetchedFields { get; init; } = [];
     }
     
     public GenericCacheService(Func<TKey, TFieldEnum[], Task<TEntity?>>? fetchHandler, CacheOptions? options = null)
@@ -54,24 +53,23 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         _fetchHandler = fetchHandler;
         _options = options ?? new CacheOptions();
         MapProperties();
+
+        if (!_options.EnableDiskCache) return;
         
-        if (_options.EnableDiskCache)
-        {
-            EnsureCacheDirectory();
-            _ = LoadFromDiskAsync();
+        EnsureCacheDirectory();
+        _ = LoadFromDiskAsync();
             
-            _diskSyncTimer = new Timer(async void (_) =>
+        _diskSyncTimer = new Timer(async void (_) =>
+        {
+            try
             {
-                try
-                {
-                    await SyncToDiskAsync();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Failed to save to disk {e}");
-                }
-            }, null, _options.DiskSyncInterval, _options.DiskSyncInterval);
-        }
+                await SyncToDiskAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to save to disk {e}");
+            }
+        }, null, _options.DiskSyncInterval, _options.DiskSyncInterval);
     }
 
     #region Disk Functionality
@@ -102,7 +100,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         foreach (string file in files)
         {
             //skipping custom type handlers
-            if (file.Contains("_") && file.EndsWith(".bin")) continue;
+            if (file.Contains('_') && file.EndsWith(".bin")) continue;
             
             try
             {
@@ -130,11 +128,9 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                         string sidecarPath = Path.Combine(_options.DiskCachePath!, actualFileName);
 
                         if (!File.Exists(sidecarPath)) continue;
-                        using (FileStream fs = new(sidecarPath, FileMode.Open, FileAccess.Read))
-                        {
-                            object loadedObj = handler.Deserialize(fs);
-                            prop.Value.SetValue(entry.Data, loadedObj);
-                        }
+                        await using FileStream fs = new(sidecarPath, FileMode.Open, FileAccess.Read);
+                        object loadedObj = handler.Deserialize(fs);
+                        prop.Value.SetValue(entry.Data, loadedObj);
                     }
                     else
                     {
@@ -143,22 +139,21 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                     }
                 }
 
-                List<TFieldEnum> fieldsToRestore = new();
+                List<TFieldEnum> fieldsToRestore = [];
                 foreach (string fieldName in stored.Entry.FetchedFields)
                 {
-                    if (Enum.TryParse(typeof(TFieldEnum), fieldName, out object? fieldObj) && fieldObj is TFieldEnum field)
+                    if (!Enum.TryParse(typeof(TFieldEnum), fieldName, out object? fieldObj) ||
+                        fieldObj is not TFieldEnum field) continue;
+                    
+                    if (!stored.Entry.FieldExpirations.TryGetValue(fieldName, out DateTime expiry)) continue;
+                    
+                    if (DateTime.UtcNow <= expiry)
                     {
-                        if (stored.Entry.FieldExpirations.TryGetValue(fieldName, out DateTime expiry))
-                        {
-                            if (DateTime.UtcNow <= expiry)
-                            {
-                                fieldsToRestore.Add(field);
-                            }
-                        }
+                        fieldsToRestore.Add(field);
                     }
                 }
 
-                if (fieldsToRestore.Any())
+                if (fieldsToRestore.Count != 0)
                 {
                     entry.MarkFetched(fieldsToRestore, TimeSpan.Zero);
                     _cache.TryAdd(key, entry);
@@ -219,7 +214,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                 string sidecarFileName = $"{safeKey}_{prop.Key}.bin";
                 string sidecarPath = Path.Combine(_options.DiskCachePath!, sidecarFileName);
 
-                using (FileStream fs = new(sidecarPath, FileMode.Create))
+                await using (FileStream fs = new(sidecarPath, FileMode.Create))
                 {
                     handler.Serialize(val, fs);
                 }
@@ -233,7 +228,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         }
 
         Dictionary<string, DateTime> fieldExpirations = new();
-        HashSet<string> fetchedFields = new();
+        HashSet<string> fetchedFields = [];
         
         foreach (TFieldEnum field in Enum.GetValues(typeof(TFieldEnum)))
         {
@@ -476,8 +471,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
 
     public TEntity? GetWithoutFetching(TKey id)
     {
-        if (_cache.ContainsKey(id)) return _cache[id].Data;
-        return null;
+        return _cache.ContainsKey(id) ? _cache[id].Data : null;
     }
 
     public IReadOnlyCollection<TEntity> GetAllCachedData()

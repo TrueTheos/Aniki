@@ -14,10 +14,12 @@ public partial class TorrentSearchViewModel : ViewModelBase
 {
     [ObservableProperty] private bool _isTorrentsLoading;
     [ObservableProperty] private string _torrentSearchTerms = string.Empty;
-    [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = new();
+    [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = [];
     [ObservableProperty] private KnownSubber _selectedSubber = KnownSubbers.All[0];
+    [ObservableProperty] private SortDirection _seedersSortDirection = SortDirection.Descending;
+    [ObservableProperty] private SortDirection _dateSortDirection = SortDirection.Descending;
 
-    public IReadOnlyList<KnownSubber> AvailableSubbers { get; } = KnownSubbers.All;
+    public IReadOnlyList<KnownSubber> AvailableSubbers => KnownSubbers.All;
 
     private enum TorrentSortField
     {
@@ -28,12 +30,6 @@ public partial class TorrentSearchViewModel : ViewModelBase
     private AnimeDetails? _details;
     private List<NyaaTorrent> _allTorrents = [];
     private TorrentSortField _activeSortField = TorrentSortField.Seeders;
-
-    [ObservableProperty]
-    private SortDirection _seedersSortDirection = SortDirection.Descending;
-
-    [ObservableProperty]
-    private SortDirection _dateSortDirection = SortDirection.Descending;
     
     private readonly INyaaService _nyaaService;
 
@@ -66,11 +62,11 @@ public partial class TorrentSearchViewModel : ViewModelBase
 
         if (_details.Title != null)
         {
-            List<NyaaTorrent> list = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
-            foreach (NyaaTorrent torrent in list)
+            List<NyaaTorrent> foundTorrents = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
+            foreach (NyaaTorrent torrent in foundTorrents)
                 TorrentFileNameFormatter.ApplyDisplayMetadata(torrent);
 
-            _allTorrents = list;
+            _allTorrents = foundTorrents;
             ApplyFilterAndSort();
         }
 
@@ -82,10 +78,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     {
         _activeSortField = TorrentSortField.Seeders;
 
-        if (SeedersSortDirection == SortDirection.Descending)
-            SeedersSortDirection = SortDirection.Ascending;
-        else
-            SeedersSortDirection = SortDirection.Descending;
+        SeedersSortDirection = SeedersSortDirection == SortDirection.Descending ? SortDirection.Ascending : SortDirection.Descending;
 
         ApplyFilterAndSort();
     }
@@ -95,10 +88,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     {
         _activeSortField = TorrentSortField.ReleaseDate;
 
-        if (DateSortDirection == SortDirection.Descending)
-            DateSortDirection = SortDirection.Ascending;
-        else
-            DateSortDirection = SortDirection.Descending;
+        DateSortDirection = DateSortDirection == SortDirection.Descending ? SortDirection.Ascending : SortDirection.Descending;
 
         ApplyFilterAndSort();
     }
@@ -111,26 +101,26 @@ public partial class TorrentSearchViewModel : ViewModelBase
             return;
         }
 
-        IEnumerable<NyaaTorrent> query = _allTorrents;
+        IEnumerable<NyaaTorrent> sortedTorrents = _allTorrents;
 
         if (!SelectedSubber.IsAll)
         {
-            query = query.Where(t =>
+            sortedTorrents = sortedTorrents.Where(t =>
                 !string.IsNullOrEmpty(t.ReleaseGroup) &&
                 string.Equals(t.ReleaseGroup, SelectedSubber.Name, StringComparison.OrdinalIgnoreCase));
         }
 
-        query = _activeSortField switch
+        sortedTorrents = _activeSortField switch
         {
             TorrentSortField.Seeders when SeedersSortDirection == SortDirection.Descending =>
-                query.OrderByDescending(x => x.Seeders),
-            TorrentSortField.Seeders => query.OrderBy(x => x.Seeders),
+                sortedTorrents.OrderByDescending(x => x.Seeders),
+            TorrentSortField.Seeders => sortedTorrents.OrderBy(x => x.Seeders),
             TorrentSortField.ReleaseDate when DateSortDirection == SortDirection.Descending =>
-                query.OrderByDescending(x => x.PublishDate),
-            _ => query.OrderBy(x => x.PublishDate)
+                sortedTorrents.OrderByDescending(x => x.PublishDate),
+            _ => sortedTorrents.OrderBy(x => x.PublishDate)
         };
 
-        TorrentsList = new ObservableCollection<NyaaTorrent>(query);
+        TorrentsList = new ObservableCollection<NyaaTorrent>(sortedTorrents);
     }
 
     [RelayCommand]

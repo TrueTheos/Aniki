@@ -7,10 +7,8 @@ public class ImageSaver(string path) : SaveEntity<Bitmap>(path)
     public override void Save(string fileName, Bitmap data)
     {
         string filePath = System.IO.Path.Combine(Path, fileName);
-        using (FileStream stream = new(filePath, FileMode.Create))
-        {
-            data.Save(stream);
-        }
+        using FileStream stream = new(filePath, FileMode.Create);
+        data.Save(stream);
     }
 
     public override Bitmap? Read(string fileName, Bitmap? defaultValue = null)

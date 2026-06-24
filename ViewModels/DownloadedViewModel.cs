@@ -12,15 +12,11 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace Aniki.ViewModels;
 
+
+//todo awaiting refactor. mess.
 public partial class DownloadedViewModel : ViewModelBase, IDisposable
 {
     private DownloadedEpisode? _lastPlayedEpisode;
-    private FileSystemWatcher? _fileWatcher;
-    private System.Timers.Timer? _debounceTimer;
-    private readonly Lock _debounceLock = new();
-    private readonly SemaphoreSlim _loadLock = new(1, 1);
-    private Task _loadTask = Task.CompletedTask;
-    private bool _suppressFileWatcher;
     
     private readonly HashSet<string> _pendingProcessPaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _pendingRemovePaths = new(StringComparer.OrdinalIgnoreCase);
@@ -56,6 +52,18 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private readonly IAnimeNameParser _animeNameParser;
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly AnilistService _anilistService;
+    private readonly AnimeDetailsViewModel _animeDetailsViewModel;
+
+    #region File watcher vars
+    
+    private FileSystemWatcher? _fileWatcher;
+    private System.Timers.Timer? _debounceTimer;
+    private readonly Lock _debounceLock = new();
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
+    private Task _loadTask;
+    private bool _suppressFileWatcher;
+    
+    #endregion
 
     public VideoPlayerOption? SelectedPlayer
     {
@@ -74,15 +82,17 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     public DownloadedViewModel(IDiscordService discordService, IAnimeService animeService, ISaveService saveService,
         IAbsoluteEpisodeParser absoluteEpisodeParser, IAnimeNameParser animeNameParser,
-        IVideoPlayerService videoPlayerService, AnilistService anilistService)
+        IVideoPlayerService videoPlayerService, AnilistService anilistService, AnimeDetailsViewModel animeDetailsViewModel)
     {
-        _discordService         = discordService;
-        _animeService           = animeService;
-        _saveService            = saveService;
-        _absoluteEpisodeParser  = absoluteEpisodeParser;
-        _animeNameParser        = animeNameParser;
-        _videoPlayerService     = videoPlayerService;
-        _anilistService         = anilistService;
+        _discordService        = discordService;
+        _animeService          = animeService;
+        _saveService           = saveService;
+        _absoluteEpisodeParser = absoluteEpisodeParser;
+        _animeNameParser       = animeNameParser;
+        _videoPlayerService    = videoPlayerService;
+        _anilistService        = anilistService;
+        _animeDetailsViewModel = animeDetailsViewModel;
+        
         IsEpisodesViewVisible   = false;
         IsNoEpisodesViewVisible = true;
         _loadTask               = RefreshAsync();
@@ -95,20 +105,21 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             _loadTask = RefreshAsync();
         });
     }
+    
+    public override async Task Enter()
+    {
+        SearchText = "";
+        await _loadTask;
+        ApplyFiltersAndSort();
+    }
 
-    partial void OnSearchTextChanged(string value) => ApplyFiltersAndSort();
+    partial void OnSearchTextChanged(string _) => ApplyFiltersAndSort();
 
-    partial void OnSortByChanged(string value)
+    partial void OnSortByChanged(string _)
     {
         OnPropertyChanged(nameof(SortText));
         ApplyFiltersAndSort();
     }
-
-    [RelayCommand]
-    private void SetSort(string sortBy) => SortBy = sortBy;
-
-    [RelayCommand]
-    private void ClearSearch() => SearchText = "";
 
     private void ApplyFiltersAndSort()
     {
@@ -131,13 +142,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         UpdateView();
     }
 
-    public override async Task Enter()
-    {
-        SearchText = "";
-        await _loadTask;
-        ApplyFiltersAndSort();
-    }
-
     private async Task RefreshAsync()
     {
         await _loadLock.WaitAsync();
@@ -150,7 +154,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 _pendingRemovePaths.Clear();
             }
 
-            await LoadDiskCoreAsync();
+            await LoadEpisodesFromDiskAsync();
             await LoadWatchingListAsync();
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -175,7 +179,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task LoadDiskCoreAsync()
+    private async Task LoadEpisodesFromDiskAsync()
     {
         try
         {
@@ -188,28 +192,27 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 FilteredAnimeGroups = [];
                 ProcessingProgress  = "";
             });
+            
             string episodesFolder = GetEpisodesFolder();
-            await Dispatcher.UIThread.InvokeAsync(() =>
-                EpisodesFolderMessage = $"Episodes folder is empty - {episodesFolder}");
+            await Dispatcher.UIThread.InvokeAsync(() => EpisodesFolderMessage = $"Episodes folder is empty - {episodesFolder}");
             if (!Directory.Exists(episodesFolder))
                 return;
-            List<string> looseFiles = Directory.GetFiles(episodesFolder, "*.*", SearchOption.TopDirectoryOnly)
-                                               .Where(IsVideoFile)
-                                               .ToList();
+            
+            List<string> looseFiles = Directory.GetFiles(episodesFolder, "*.*", SearchOption.TopDirectoryOnly).Where(IsVideoFile).ToList();
+            
             List<(string FolderName, List<string> Files)> animeFolders = [];
+            
             foreach (string dir in Directory.GetDirectories(episodesFolder))
             {
                 string folderName = Path.GetFileName(dir);
                 if (string.IsNullOrWhiteSpace(folderName))
                     continue;
-                List<string> files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories)
-                                              .Where(IsVideoFile)
-                                              .ToList();
+                List<string> files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories).Where(IsVideoFile).ToList();
                 if (files.Count > 0)
                     animeFolders.Add((folderName, files));
             }
 
-            int total     = looseFiles.Count + animeFolders.Sum(f => f.Files.Count);
+            int total = looseFiles.Count + animeFolders.Sum(f => f.Files.Count);
             int processed = 0;
             await Dispatcher.UIThread.InvokeAsync(() =>
                 ProcessingProgress = $"Scanning episodes: 0/{total}");
@@ -233,23 +236,25 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                         });
                     }
                 });
+            
             await Parallel.ForEachAsync(animeFolders, new ParallelOptions { MaxDegreeOfParallelism = 8 },
                 async (folder, ct) =>
                 {
                     try
                     {
-                        await ProcessAnimeFolderAsync(folder.FolderName, folder.Files, () =>
-                        {
-                            int current = Interlocked.Increment(ref processed);
-                            _ = Dispatcher.UIThread.InvokeAsync(() =>
-                            {
-                                ProcessingProgress = $"Scanning episodes: {current}/{total}";
-                            });
-                        });
+                        await ProcessAnimeFolderAsync(folder.FolderName, folder.Files);
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine(ex + " " + folder.FolderName);
+                    }
+                    finally
+                    {
+                        int current = Interlocked.Increment(ref processed);
+                        _ = Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            ProcessingProgress = $"Scanning episodes: {current}/{total}";
+                        });
                     }
                 });
         }
@@ -261,8 +266,9 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private async Task ProcessLooseFileAsync(string filePath)
     {
-        string      fileName   = Path.GetFileName(filePath);
+        string fileName = Path.GetFileName(filePath);
         ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
+        
         int? animeId = parsedFile.AnimeId ?? await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season,
             parsedFile.Part, parsedFile.Year, parsedFile.Season);
         if (animeId is null) return;
@@ -362,7 +368,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task ProcessAnimeFolderAsync(string folderName, List<string> filePaths, Action onFileProcessed)
+    private async Task ProcessAnimeFolderAsync(string folderName, List<string> filePaths)
     {
         FolderParseResult folderInfo = _animeNameParser.ParseReleaseFolder(folderName);
         int? animeId = await _absoluteEpisodeParser.GetIdForSeason(folderInfo.AnimeName, folderInfo.Season,
@@ -591,6 +597,8 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         IsNoEpisodesViewVisible = !hasContent;
     }
 
+    #region File watcher
+    
     private void SetupFileWatcher()
     {
         _fileWatcher?.Dispose();
@@ -669,18 +677,68 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         Console.WriteLine(e.GetException());
         Task.Delay(2000).ContinueWith(_ => SetupFileWatcher());
     }
+    
+    #endregion
 
+    private void OnVideoPlayerClosed()
+    {
+        if (!AnimeService.IsLoggedIn) return;
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            if (_lastPlayedEpisode == null) return;
+            if (Avalonia.Application.Current!.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
+                desktop) return;
+            AnimeDetails? animeData =
+                await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.Episodes);
+            if (animeData == null) return;
+            ConfirmEpisodeWindow dialog = new()
+            {
+                DataContext =
+                    new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
+            };
+            bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+            if (result)
+                _ = _animeService.SetEpisodesWatchedAsync(_lastPlayedEpisode.Id, _lastPlayedEpisode.EpisodeNumber);
+        });
+        _discordService.Reset();
+    }
+    
+    [RelayCommand]
+    private void DeleteEpisode(DownloadedEpisode ep)
+    {
+        File.Delete(ep.FilePath);
+        AnimeGroup? group = AnimeGroups.FirstOrDefault(g => g.Episodes.Contains(ep));
+        group?.Episodes.Remove(ep);
+        ApplyFiltersAndSort();
+    }
+
+    [RelayCommand]
+    private void OpenEpisodesFolder()
+    {
+        string episodesFolder = GetEpisodesFolder();
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            Process.Start("explorer.exe", episodesFolder.Replace("/", "\\"));
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            Process.Start("open", episodesFolder);
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            Process.Start("xdg-open", episodesFolder);
+    }
+    
+    [RelayCommand]
+    private void SetSort(string sortBy) => SortBy = sortBy;
+
+    [RelayCommand]
+    private void ClearSearch() => SearchText = "";
+    
     [RelayCommand]
     private async Task DownloadNextEpisode(AnimeGroup group)
     {
         if (group.NextEpisodeToDownload is not { } epNum) return;
         MainViewModel mainVm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
-        AnimeDetailsViewModel detailsVm =
-            DependencyInjection.Instance.ServiceProvider!.GetRequiredService<AnimeDetailsViewModel>();
         await mainVm.GoToAnime(group.MalId);
-        detailsVm.SelectedTabIndex                          = 1;
-        detailsVm.TorrentSearchViewModel.TorrentSearchTerms = $"{group.Title} {epNum:D2}";
-        _                                                   = detailsVm.TorrentSearchViewModel.SearchTorrents();
+        _animeDetailsViewModel.SelectedTabIndex = 1;
+        _animeDetailsViewModel.TorrentSearchViewModel.TorrentSearchTerms = $"{group.Title} {epNum:D2}";
+        _ = _animeDetailsViewModel.TorrentSearchViewModel.SearchTorrents();
     }
 
     [RelayCommand]
@@ -708,50 +766,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         {
             Console.WriteLine(ex);
         }
-    }
-
-    [RelayCommand]
-    private void DeleteEpisode(DownloadedEpisode ep)
-    {
-        File.Delete(ep.FilePath);
-        AnimeGroup? group = AnimeGroups.FirstOrDefault(g => g.Episodes.Contains(ep));
-        group?.Episodes.Remove(ep);
-        ApplyFiltersAndSort();
-    }
-
-    [RelayCommand]
-    private void OpenEpisodesFolder()
-    {
-        string episodesFolder = GetEpisodesFolder();
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            Process.Start("explorer.exe", episodesFolder.Replace("/", "\\"));
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            Process.Start("open", episodesFolder);
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            Process.Start("xdg-open", episodesFolder);
-    }
-
-    private void OnVideoPlayerClosed()
-    {
-        if (!AnimeService.IsLoggedIn) return;
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            if (_lastPlayedEpisode == null) return;
-            if (Avalonia.Application.Current!.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
-                desktop) return;
-            AnimeDetails? animeData =
-                await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.Episodes);
-            if (animeData == null) return;
-            ConfirmEpisodeWindow dialog = new()
-            {
-                DataContext =
-                    new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
-            };
-            bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
-            if (result)
-                _ = _animeService.SetEpisodesWatchedAsync(_lastPlayedEpisode.Id, _lastPlayedEpisode.EpisodeNumber);
-        });
-        _discordService.Reset();
     }
 
     public void Dispose()

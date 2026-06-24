@@ -2,16 +2,16 @@ using System.Text.RegularExpressions;
 
 namespace Aniki.Services;
 
-public static partial class TorrentFileNameFormatter
+public static class TorrentFileNameFormatter
 {
-    private const string RELEASE_GROUP_PATTERN = @"^\[([^\]]+)\]";
+    private static readonly Regex ReleaseGroupPattern = new(@"^\[([^\]]+)\]");
 
     private static (string? ReleaseGroup, IReadOnlyList<TorrentFileNameSegment> Segments) Parse(string fileName)
     {
         if (string.IsNullOrEmpty(fileName))
             return (null, []);
 
-        Match match = ReleaseGroupRegex().Match(fileName);
+        Match match = ReleaseGroupPattern.Match(fileName);
         if (!match.Success)
         {
             return (null,
@@ -45,7 +45,4 @@ public static partial class TorrentFileNameFormatter
         torrent.ReleaseGroup = releaseGroup;
         torrent.FileNameSegments = segments;
     }
-
-    [GeneratedRegex(RELEASE_GROUP_PATTERN)]
-    private static partial Regex ReleaseGroupRegex();
 }

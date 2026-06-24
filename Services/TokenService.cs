@@ -10,7 +10,7 @@ namespace Aniki.Services;
 public class TokenService : ITokenService
 {
     private readonly Dictionary<ILoginProvider.ProviderType, StoredTokenData> _cachedTokens = new();
-    private readonly byte[] _entropy = Encoding.UTF8.GetBytes("Aniki-Token-Salt-2024");
+    private readonly byte[] _entropy = "Aniki-Token-Salt-2024"u8.ToArray();
 
     public void Init()
     {

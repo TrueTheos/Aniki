@@ -77,7 +77,7 @@ public class App : Application
                 await mgr.DownloadUpdatesAsync(newVersion);
                 
                 if (DependencyInjection.Instance.ServiceProvider != null)
-                    DependencyInjection.Instance.ServiceProvider?.GetService<ISaveService>()?.Wipe();
+                    DependencyInjection.Instance.ServiceProvider?.GetService<ISaveService>()?.DeleteFolders();
 
                 mgr.ApplyUpdatesAndRestart(newVersion);
             }

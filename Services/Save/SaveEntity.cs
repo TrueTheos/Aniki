@@ -4,7 +4,7 @@ namespace Aniki.Services.Save;
 
 public class SaveEntity<T>
 {
-    protected string Path { get; private set; }
+    protected string Path { get; }
 
     private readonly JsonSerializerOptions _options = new()
     {
@@ -39,13 +39,5 @@ public class SaveEntity<T>
             File.Delete(newPath);
             return defaultValue;
         }
-    }
-
-    public long GetCacheSize()
-    {
-        if (!Directory.Exists(Path)) return 0;
-
-        return Directory.GetFiles(Path, "*", SearchOption.AllDirectories)
-            .Sum(file => new FileInfo(file).Length);
     }
 }

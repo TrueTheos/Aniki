@@ -8,7 +8,7 @@ public interface IVideoPlayerService
     public VideoPlayerOption? SelectedPlayer { get; set; }
     public ObservableCollection<VideoPlayerOption> AvailablePlayers { get; }
     public Process? OpenVideo(string url);
-    public Task RefreshPlayersAsync();
+    public Task ScanPlayersAsync();
 }
 
 public class VideoPlayerOption

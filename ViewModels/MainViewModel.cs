@@ -179,7 +179,7 @@ public partial class MainViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         await LoadUserDataAsync();
-        await _videoPlayerService.RefreshPlayersAsync();
+        await _videoPlayerService.ScanPlayersAsync();
     }
 
     private async Task LoadUserDataAsync()

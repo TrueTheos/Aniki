@@ -1,4 +1,5 @@
 ﻿using Aniki.Services.Cache;
+using Aniki.Services.Parser;
 using Aniki.Services.Save;
 using Avalonia.Media.Imaging;
 
@@ -14,5 +15,5 @@ public interface ISaveService
     public void SaveImage(int id, Bitmap image);
     public Task ClearAllCaches();
     public Task SaveAllCaches();
-    public void Wipe();
+    public void DeleteFolders();
 }

@@ -3,34 +3,14 @@ using Aniki.Services.Anime;
 using Aniki.Services.Auth;
 using Aniki.Services.Cache;
 using Aniki.Services.Interfaces;
+using Aniki.Services.Parser;
 using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Save;
 
-    
-public struct SeasonData
-{
-    public int Id { get; set; }
-    public int Episodes { get; set; }
-    public MediaType MediaType { get; set; }
-    public string? Title { get; set; }
-    public int Part { get; set; }
-}
-
-public class AnimeSeasonsMap
-{
-    public enum AnimeSeasonMapField
-    {
-        SeasonData
-    }
-
-    [CacheField(AnimeSeasonMapField.SeasonData)]
-    public Dictionary<int, Dictionary<int, SeasonData>> Seasons { get; set; } = new();
-}
-
 public class SaveService : ISaveService
 {
-    public static readonly string MainDirectory = Path.Combine(
+    private static readonly string MainDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Aniki");
     
@@ -43,7 +23,7 @@ public class SaveService : ISaveService
     private readonly ImageSaver _imageSaver;
     private readonly SaveEntity<SettingsConfig> _settingsSaver;
 
-    private Dictionary<ILoginProvider.ProviderType,
+    private readonly Dictionary<ILoginProvider.ProviderType,
         GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>> _seasonsCache;
 
     private readonly ConcurrentDictionary<Guid, ICacheService> _caches;
@@ -51,7 +31,7 @@ public class SaveService : ISaveService
     public SaveService()
     {
         _caches = new ConcurrentDictionary<Guid, ICacheService>();
-        _seasonsCache = new();
+        _seasonsCache = new Dictionary<ILoginProvider.ProviderType, GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField>>();
         
         foreach (ILoginProvider.ProviderType providerType in Enum.GetValues<ILoginProvider.ProviderType>())
         {
@@ -81,8 +61,8 @@ public class SaveService : ISaveService
             _ => new SaveEntity<T>(path)
         };
     }
-    
-    public GenericCacheService<TKey, TEntity, TFieldEnum> CreateCache<TKey, TEntity, TFieldEnum>
+
+    private GenericCacheService<TKey, TEntity, TFieldEnum> CreateCache<TKey, TEntity, TFieldEnum>
         (Func<TKey, TFieldEnum[], Task<TEntity?>>? fetchHandler, CacheOptions? options = null)
         where TKey : notnull
         where TEntity : class, new()
@@ -139,7 +119,7 @@ public class SaveService : ISaveService
         }
     }
 
-    public void Wipe()
+    public void DeleteFolders()
     {
         DeleteFolder(CachePath);
         DeleteFolder(ImageCacheFolder);

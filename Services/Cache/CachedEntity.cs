@@ -5,15 +5,15 @@ public class CachedEntity<TEntity, TFieldEnum> where TEntity : class, new() wher
     public TEntity Data { get; } = new();
     
     private readonly Dictionary<TFieldEnum, DateTime> _fieldExpirations = new();
-    private readonly HashSet<TFieldEnum> _fetchedFields = new();
-    private readonly object _lock = new();
+    private readonly HashSet<TFieldEnum> _fetchedFields = [];
+    private readonly Lock _lock = new();
     
     public bool IsFieldFetched(TFieldEnum field)
     {
         lock (_lock) return _fetchedFields.Contains(field);
     }
 
-    public bool IsFieldExpired(TFieldEnum field, TimeSpan ttl)
+    private bool IsFieldExpired(TFieldEnum field, TimeSpan ttl)
     {
         lock (_lock)
         {
