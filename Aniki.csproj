@@ -44,11 +44,64 @@
     <Compile Update="Views\LoginWindow.axaml.cs">
       <DependentUpon>LoginWindow.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\TorrentSearchView.axaml.cs">
-      <DependentUpon>TorrentSearchView.axaml</DependentUpon>
+    <Compile Update="Views\MainViews\AnimeBrowseView.axaml.cs">
+      <DependentUpon>AnimeBrowseView.axaml</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Views\ReadView.axaml.cs">
+    <Compile Update="Views\MainViews\AnimeDetailsView.axaml.cs">
+      <DependentUpon>AnimeDetailsView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Components\AnimeCard.axaml.cs">
+      <DependentUpon>AnimeCard.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Components\AnimeListStatusButton.axaml.cs">
+      <DependentUpon>AnimeListStatusButton.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\MainViews\CalendarView.axaml.cs">
+      <DependentUpon>CalendarView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Components\ConfirmEpisodeWindow.axaml.cs">
+      <DependentUpon>ConfirmEpisodeWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\SubViews\OnlineView.axaml.cs">
+      <DependentUpon>OnlineView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Components\ReadView.axaml.cs">
       <DependentUpon>ReadView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\SubViews\DownloadedView.axaml.cs">
+      <DependentUpon>DownloadedView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Components\SettingsWindow.axaml.cs">
+      <DependentUpon>SettingsWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\MainViews\StatsView.axaml.cs">
+      <DependentUpon>StatsView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Components\ToastView.axaml.cs">
+      <DependentUpon>ToastView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\SubViews\TorrentSearchView.axaml.cs">
+      <DependentUpon>TorrentSearchView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\MainViews\UserAnimeListView.axaml.cs">
+      <DependentUpon>UserAnimeListView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\MainViews\WatchAnimeView.axaml.cs">
+      <DependentUpon>WatchAnimeView.axaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

@@ -265,9 +265,9 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
         int? animeId = parsedFile.AnimeId ?? await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season,
             parsedFile.Part, parsedFile.Year, parsedFile.Season);
-        if (animeId is not int resolvedAnimeId) return;
-        AnimeDetails? details = await _animeService.GetFieldsAsync(resolvedAnimeId,
-            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture]);
+        if (animeId is null) return;
+        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
+            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]);
         if (details == null) return;
         string epNum = parsedFile.EpisodeNumber
                        ?? (details.NumEpisodes is > 1 ? "0" : "1");
@@ -276,7 +276,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             int.Parse(epNum),
             parsedFile.AbsoluteEpisodeNumber,
             details.Title!,
-            resolvedAnimeId,
+            animeId.Value,
             parsedFile.Season);
         await Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, details));
     }
@@ -288,7 +288,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             folderInfo.Part, folderInfo.Year, folderInfo.Season);
         if (animeId == null) return;
         AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
-            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture]);
+            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]);
         if (details == null) return;
         string fileName = Path.GetFileName(filePath);
         EpisodeInfo? episodeInfo =
@@ -375,7 +375,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
 
         AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
-            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture]);
+            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]);
         if (details == null)
         {
             for (int i = 0; i < filePaths.Count; i++)
