@@ -51,7 +51,7 @@ public class CalendarService : ICalendarService
 
     private readonly HttpClient _client = new();
 
-    private  async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
+    private async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
     {
         JArray schedules = new();
         int currentPage = 1;
@@ -97,11 +97,7 @@ public class CalendarService : ICalendarService
         return schedules;
     }
 
-    public async Task<List<DaySchedule>> GetScheduleAsync(
-        IEnumerable<int> watchingList,
-        DateTime startDate,
-        DateTime endDate,
-        int perPage = 150)
+    public async Task<List<DaySchedule>> GetScheduleAsync(IEnumerable<int> watchingList, DateTime startDate, DateTime endDate, int perPage = 150)
     {
         long startUnix = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)endDate).ToUnixTimeSeconds();
@@ -115,9 +111,7 @@ public class CalendarService : ICalendarService
         {
             daySchedules.Add(new()
             {
-#pragma warning disable CS0618 // Type or member is obsolete
-                Name = date.DayOfWeek.ToString(CultureInfo.InvariantCulture),
-#pragma warning restore CS0618 // Type or member is obsolete
+                Name = date.DayOfWeek.ToString(),
                 DayName = date.ToString("dddd", CultureInfo.InvariantCulture),
                 Date = date,
                 IsToday = date.Date == DateTime.Today,

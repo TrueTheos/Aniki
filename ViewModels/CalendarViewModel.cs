@@ -8,7 +8,7 @@ namespace Aniki.ViewModels;
 public partial class CalendarViewModel : ViewModelBase
 {
     private Dictionary<DateTime, DaySchedule> _cachedDays = new();
-    private DateTime _windowStartDate;
+    private DateTime _viewStartDate;
 
     [ObservableProperty]
     private ObservableCollection<DaySchedule> _days;
@@ -18,7 +18,7 @@ public partial class CalendarViewModel : ViewModelBase
 
     partial void OnShowOnlyMyAnimeChanged(bool value)
     {
-        ShowWindow();
+        RebuildDaySchedules();
     }
 
     private readonly List<int> _watchingList = [];
@@ -45,20 +45,23 @@ public partial class CalendarViewModel : ViewModelBase
 
     public CalendarViewModel(IAnimeService animeService, ICalendarService calendarService)
     {
-        _animeService = animeService;
+        _animeService    = animeService;
         _calendarService = calendarService;
-        Days = new();
+        Days             = [];
         UpdateCurrentWeekRange();
     }
 
     public override async Task Enter()
     {
-        _windowStartDate = DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
-        await LoadUserAnimeList();
-        await LoadScheduleAsync();
+        _viewStartDate = GetCurrentWeekStart();
+        await LoadWatchingListAsync();
+        await FetchAndDisplayScheduleAsync();
     }
+    
+    private DateTime GetCurrentWeekStart()
+        => DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
         
-    private async Task LoadUserAnimeList()
+    private async Task LoadWatchingListAsync()
     {
         _watchingList.Clear();
         
@@ -67,139 +70,122 @@ public partial class CalendarViewModel : ViewModelBase
         List<AnimeDetails> watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
         List<AnimeDetails> planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
 
-        foreach (AnimeDetails anime in watching)
-        {
-            _watchingList.Add(anime.Id);
-        }
-        foreach (AnimeDetails anime in planToWatch)
-        {
-            _watchingList.Add(anime.Id);
-        }
+        foreach (AnimeDetails anime in watching) _watchingList.Add(anime.Id);
+        foreach (AnimeDetails anime in planToWatch) _watchingList.Add(anime.Id);
     }
 
-    private async Task LoadScheduleAsync(bool forceRefresh = false)
+    private async Task FetchAndDisplayScheduleAsync(bool forceRefresh = false)
     {
         IsLoading = true;
 
-        DateTime startDate = _windowStartDate;
-        DateTime endDate = _windowStartDate.AddDays(7);
+        DateTime endDate = _viewStartDate.AddDays(7);
+        
+        List<DateTime> uncachedDates = Enumerable
+                                       .Range(0, 7)
+                                       .Select(i => _viewStartDate.AddDays(i).Date)
+                                       .Where(d => forceRefresh || !_cachedDays.ContainsKey(d))
+                                       .ToList();
 
-        List<DateTime> daysToFetch = new();
-        for (DateTime date = startDate; date < endDate; date = date.AddDays(1))
+        if (uncachedDates.Count > 0)
         {
-            if (forceRefresh || !_cachedDays.ContainsKey(date.Date))
-            {
-                daysToFetch.Add(date.Date);
-            }
-        }
-
-        if (daysToFetch.Any())
-        {
-            List<DaySchedule> schedule = await _calendarService.GetScheduleAsync(_watchingList, daysToFetch.First(), daysToFetch.Last().AddDays(1));
+            List<DaySchedule> schedule = await _calendarService.GetScheduleAsync(
+                _watchingList,
+                uncachedDates.First(),
+                uncachedDates.Last().AddDays(1));
+ 
             foreach (DaySchedule day in schedule)
-            {
                 _cachedDays[day.Date] = day;
-            }
         }
-
-        await ShowWindowAsync();
-                
+ 
+        RefreshView();
         IsLoading = false;
     }
 
     public async Task GoToClickedAnime(AnimeScheduleItem anime)
     {
-        MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
-        if (anime.GetId() != null && anime.GetId()!.Value > 0)
-        {
-            await vm.GoToAnime(anime.GetId()!.Value);
-        }
+        if (anime.GetId() is { } id and > 0)
+            await DependencyInjection.Instance.ServiceProvider!.GetService<MainViewModel>()!.GoToAnime(id);
         else
-        {
-            await vm.GoToAnime(anime.Title);
-        }
+            await DependencyInjection.Instance.ServiceProvider!.GetService<MainViewModel>()!.GoToAnime(anime.Title);
     }
 
     [RelayCommand]
     private async Task GoBackDay()
     {
-        _windowStartDate = _windowStartDate.AddDays(-1);
-        await LoadScheduleAsync();
+        _viewStartDate = _viewStartDate.AddDays(-1);
+        await FetchAndDisplayScheduleAsync();
     }
         
     [RelayCommand]
-    public async Task GoBackWeek()
+    private async Task GoBackWeek()
     {
-        _windowStartDate = _windowStartDate.AddDays(-7);
-        await LoadScheduleAsync();
+        _viewStartDate = _viewStartDate.AddDays(-7);
+        await FetchAndDisplayScheduleAsync();
     }
 
     [RelayCommand]
     private async Task GoToStart()
     {
-        _windowStartDate = DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
-        await LoadScheduleAsync(true);
+        _viewStartDate = DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
+        await FetchAndDisplayScheduleAsync();
     }
 
     [RelayCommand]
     private async Task GoForwardDay()
     {
-        _windowStartDate = _windowStartDate.AddDays(1);
-        await LoadScheduleAsync();
+        _viewStartDate = _viewStartDate.AddDays(1);
+        await FetchAndDisplayScheduleAsync();
     }
 
     [RelayCommand]
     private async Task GoForwardWeek()
     {
-        _windowStartDate = _windowStartDate.AddDays(7);
-        await LoadScheduleAsync();
+        _viewStartDate = _viewStartDate.AddDays(7);
+        await FetchAndDisplayScheduleAsync();
     }
 
-    private Task ShowWindowAsync()
+    private void RefreshView()
     {
-        ShowWindow();
+        RebuildDaySchedules();
         UpdateCurrentWeekRange();
 
         OnPropertyChanged(nameof(CurrentTimeOffset));
-        return Task.CompletedTask;
     }
 
-    private void ShowWindow()
+    private void RebuildDaySchedules()
     {
-        List<DaySchedule> newDays = new();
+        List<DaySchedule> newDays = [];
 
         for (int i = 0; i < 7; i++)
         {
-            DateTime currentDate = _windowStartDate.AddDays(i);
-            if (_cachedDays.TryGetValue(currentDate.Date, out DaySchedule? cachedDaySchedule))
+            DateTime date = _viewStartDate.AddDays(i);
+            
+            if (_cachedDays.TryGetValue(date.Date, out DaySchedule? cached))
             {
-                IEnumerable<AnimeScheduleItem> filteredItems = cachedDaySchedule.Items
-                    .Where(item => !ShowOnlyMyAnime || (item.GetId() is {} id && _watchingList.Contains(id)))
-                    .Select(item => EnhanceAnimeItem(item, currentDate));
+                IEnumerable<AnimeScheduleItem> filteredItems = cached.Items
+                    .Where(item => !ShowOnlyMyAnime || (item.GetId() is {} id && _watchingList.Contains(id)));
 
-                DaySchedule displayDaySchedule = new()
+                foreach (AnimeScheduleItem item in filteredItems)
+                    item.IsAiringNow = IsCurrentlyAiring(item.AiringAt, date);
+
+                newDays.Add(new DaySchedule
                 {
-                    Name = cachedDaySchedule.Name,
-                    DayName = cachedDaySchedule.DayName,
-                    Date = cachedDaySchedule.Date,
-                    IsToday = cachedDaySchedule.IsToday,
+                    DayName     = cached.DayName,
+                    Date        = cached.Date,
+                    IsToday     = cached.IsToday,
                     ColumnIndex = i,
-                    Items = new ObservableCollection<AnimeScheduleItem>(filteredItems)
-                };
-                newDays.Add(displayDaySchedule);
+                    Items       = new ObservableCollection<AnimeScheduleItem>(filteredItems)
+                });
             }
             else
             {
-                newDays.Add(new()
+                newDays.Add(new DaySchedule
                 {
-#pragma warning disable CS0618 // Type or member is obsolete
-                    Name = currentDate.DayOfWeek.ToString(CultureInfo.InvariantCulture),
-#pragma warning restore CS0618 // Type or member is obsolete
-                    DayName = currentDate.ToString("dddd", CultureInfo.InvariantCulture),
-                    Date = currentDate,
-                    IsToday = currentDate.Date == DateTime.Today,
+                    DayName     = date.ToString("dddd", CultureInfo.InvariantCulture),
+                    Date        = date,
+                    IsToday     = date.Date == DateTime.Today,
                     ColumnIndex = i,
-                    Items = new()
+                    Items       = new()
                 });
             }
         }
@@ -211,25 +197,17 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    private AnimeScheduleItem EnhanceAnimeItem(AnimeScheduleItem original, DateTime dayDate)
-    {
-        original.IsAiringNow = IsCurrentlyAiring(original.AiringAt, dayDate);
-        return original;
-    }
-
     private bool IsCurrentlyAiring(DateTime airingTime, DateTime dayDate)
     {
         if (dayDate.Date != DateTime.Today) return false;
 
-        DateTime now = DateTime.Now;
         DateTime airingDateTime = dayDate.Date.Add(airingTime.TimeOfDay);
-
-        return Math.Abs((now - airingDateTime).TotalMinutes) <= 30;
+        return Math.Abs((DateTime.Now - airingDateTime).TotalMinutes) <= 30;
     }
 
     private void UpdateCurrentWeekRange()
     {
-        DateTime endDate = _windowStartDate.AddDays(6);
-        CurrentWeekRange = $"{_windowStartDate:MMM d} - {endDate:MMM d, yyyy}";
+        DateTime endDate = _viewStartDate.AddDays(6);
+        CurrentWeekRange = $"{_viewStartDate:MMM d} - {endDate:MMM d, yyyy}";
     }
 }

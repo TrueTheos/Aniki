@@ -7,6 +7,11 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
+/// <summary>
+/// This is hell.
+/// AllManga changes their api a lot so we need to do a lot of hacky stuff and update this class often
+/// This is a mess, and will stay a mess
+/// </summary>
 public class AllMangaScraperService : IAllMangaScraperService
 {
     private readonly HttpClient _httpClient;
@@ -17,14 +22,11 @@ public class AllMangaScraperService : IAllMangaScraperService
     private const string ALLANIME_REFR = "https://allmanga.to";
 
     private const string SEARCH_GQL  = "query($search: SearchInput $limit: Int $page: Int $translationType: VaildTranslationTypeEnumType $countryOrigin: VaildCountryOriginEnumType) { shows(search: $search limit: $limit page: $page translationType: $translationType countryOrigin: $countryOrigin) { edges { _id name availableEpisodes malId banner __typename } } }";
-    private const string DETAILS_GQL = "query($showId: String!) { show(_id: $showId) { _id name malId aniListId description availableEpisodesDetail thumbnail __typename } }";
     private const string EPISODES_GQL = "query($showId: String!) { show(_id: $showId) { _id availableEpisodesDetail } }";
     private const string EPISODE_SOURCES_POST_GQL = "query ($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) { episode( showId: $showId translationType: $translationType episodeString: $episodeString ) { episodeString sourceUrls }}";
-
-    // Registered on AllAnime's server for episode source requests (ani-cli / anilix)
+    
     private const string EPISODE_SOURCES_PERSISTED_HASH = "d405d0edd690624b66baba3068e0edc3ac90f1597d898a1ec8db4e5c43c00fec";
-
-    //Hardcoded in the site bundle
+    
     private const string TOBEPARSED_KEY_MATERIAL = "Xot36i3lK3:v1";
 
     private static readonly Regex Mp4UploadSrcRegex = new(@"src:\s*""([^""]+)""", RegexOptions.Compiled);
@@ -232,48 +234,6 @@ public class AllMangaScraperService : IAllMangaScraperService
         {
             Console.WriteLine(ex);
             return new();
-        }
-    }
-
-    public async Task<AllMangaAnimeDetails?> GetAnimeDetailsAsync(string animeIdOrUrl)
-    {
-        try
-        {
-            string showId    = ExtractShowId(animeIdOrUrl);
-            var    variables = new { showId };
-
-            string response = await ApqGetAsync(DETAILS_GQL, variables);
-            using JsonDocument jsonDoc = JsonDocument.Parse(response);
-
-            if (!jsonDoc.RootElement.TryGetProperty("data", out JsonElement data) ||
-                !data.TryGetProperty("show", out JsonElement show))
-                return null;
-
-            AllMangaAnimeDetails details = new()
-            {
-                Id   = show.GetProperty("_id").GetString()  ?? string.Empty,
-                Name = show.GetProperty("name").GetString() ?? string.Empty
-            };
-
-            if (show.TryGetProperty("malId", out JsonElement malIdProp) &&
-                malIdProp.ValueKind == JsonValueKind.Number)
-                details.MalId = malIdProp.GetInt32();
-
-            if (show.TryGetProperty("aniListId", out JsonElement aniListIdProp) &&
-                aniListIdProp.ValueKind == JsonValueKind.Number)
-                details.AniListId = aniListIdProp.GetInt32();
-
-            if (show.TryGetProperty("description", out JsonElement descProp))
-                details.Description = descProp.GetString();
-
-            if (show.TryGetProperty("thumbnail", out JsonElement thumbProp))
-                details.Thumbnail = thumbProp.GetString();
-
-            return details;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to get anime details: {ex.Message}", ex);
         }
     }
 
