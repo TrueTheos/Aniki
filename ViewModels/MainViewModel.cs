@@ -68,17 +68,7 @@ public partial class MainViewModel : ViewModelBase
         
         _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
-
-    partial void OnCurrentViewModelChanged(ViewModelBase? value)
-    {
-        IsMainPageNavSelected = ReferenceEquals(value, AnimeBrowseViewModel);
-        IsAnimeDetailsNavSelected = ReferenceEquals(value, AnimeDetailsViewModel);
-        IsWatchNavSelected = ReferenceEquals(value, WatchViewModel);
-        IsCalendarNavSelected = ReferenceEquals(value, CalendarViewModel);
-        IsStatsNavSelected = ReferenceEquals(value, StatsViewModel);
-        IsLibraryNavSelected = ReferenceEquals(value, UserAnimeListViewModel);
-    }
-
+    
     private void RefreshNavigationAvailability()
     {
         CanNavigateBack = _navigationBackStack.Count > 0;

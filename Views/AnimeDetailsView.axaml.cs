@@ -42,9 +42,6 @@ public partial class AnimeDetailsView : UserControl
 
     private void OnTitleTap(object? sender, RoutedEventArgs e)
     {
-        if (_viewModel.IsEditingEpisodes)
-        {
-            _viewModel.CopyAnimeTitleCommand.Execute(null);
-        }
+        _viewModel.CopyAnimeTitleCommand.Execute(null);
     }
 }

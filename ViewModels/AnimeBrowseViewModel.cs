@@ -11,22 +11,22 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     private readonly ICalendarService _calendarService;
     
     [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _popularThisSeason = new();
+    private ObservableCollection<AnimeCardData> _popularThisSeason = [];
     
     [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _popularUpcoming = new();
+    private ObservableCollection<AnimeCardData> _popularUpcoming = [];
     
     [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _trendingAllTime = new();
+    private ObservableCollection<AnimeCardData> _trendingAllTime = [];
     
     [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _searchResults = new();
+    private ObservableCollection<AnimeCardData> _searchResults = [];
 
     [ObservableProperty] 
-    private ObservableCollection<AnimeCardData> _airingToday = new();
+    private ObservableCollection<AnimeCardData> _airingToday = [];
     
     [ObservableProperty]
-    private ObservableCollection<HeroAnimeData> _heroAnimeList = new();
+    private ObservableCollection<HeroAnimeData> _heroAnimeList = [];
     
     [ObservableProperty]
     private HeroAnimeData? _heroAnime;
@@ -56,7 +56,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canGoPrevious;
 
-    private List<AnimeDetails> _allSearchResults = new();
+    private List<AnimeDetails> _allSearchResults = [];
     private const int PAGE_SIZE = 20;
 
     public AnimeBrowseViewModel(IAnimeService animeService, ICalendarService calendarService)

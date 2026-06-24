@@ -266,7 +266,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if(Details?.UserStatus == null) return;
         
         await _animeService.SetAnimeStatusAsync(Details.Id, status.TranslatedToAnimeStatus());
-        if (Details.UserStatus != null) Details.UserStatus.Status = status.TranslatedToAnimeStatus();
+        Details.UserStatus?.Status = status.TranslatedToAnimeStatus();
     }
 
     private void SaveToClipboard(string? data)
@@ -336,8 +336,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     [RelayCommand]
     private void GoToWatchPage()
     {
-        if(Details == null) return;
-        if(Details.Title == null) return;
+        if(Details?.Title == null) return;
         
         MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         WatchAnimeViewModel.GoToAnimeInOnlineView(Details.Id, Details.Title);
