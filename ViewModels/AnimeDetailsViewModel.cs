@@ -278,6 +278,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if(data == null) return;
 
         _ = provider.SetTextAsync(data);
+        _ = ToastService.Show("✓ Copied!");
     }
     
     [RelayCommand]

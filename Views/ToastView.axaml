@@ -1,0 +1,20 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Aniki.Views.ToastView">
+    <UserControl.Styles>
+        <Style Selector="Border.toast">
+            <Setter Property="Background" Value="#1D9E75"/>
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+    </UserControl.Styles>
+    
+    <Panel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,32">
+        <Border Classes="toast">
+            <TextBlock x:Name="ToastText" FontSize="13" FontWeight="Medium" Foreground="White"/>
+        </Border>
+    </Panel>
+</UserControl>
