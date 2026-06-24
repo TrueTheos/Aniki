@@ -53,26 +53,6 @@ public class AnimeNameParser : IAnimeNameParser
         _absoluteEpisodeParser = absoluteEpisodeParser;
     }
 
-    //todo rework/cleanup
-    public FolderParseResult ParseReleaseFolder(string folderName)
-    {
-        string cleaned = folderName.Replace('.', ' ').Replace('_', ' ');
-        cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
- 
-        (int season, int seasonIndex) = ExtractSeasonWithIndex(cleaned);
-        int part = ExtractPart(cleaned);
-
-        string animeName = seasonIndex >= 0
-            ? cleaned[..seasonIndex].Trim().TrimEnd('-', ' ')
-            : StripReleaseMetadata(cleaned);
-
-        animeName = StripPart(animeName);
-        animeName = Regex.Replace(animeName, @"\s+", " ").Trim();
-
-        (string cleanName, int? year) = SplitTitleYear(animeName);
-        return new FolderParseResult(cleanName, season, part, year);
-    }
- 
     public EpisodeInfo? ParseEpisodeFromFilename(string filename, int defaultSeason = 1, int defaultPart = 1)
     {
         string name = CleanFilename(filename);
