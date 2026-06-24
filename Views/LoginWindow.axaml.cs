@@ -4,13 +4,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;
 
 public partial class LoginWindow : Window
 {
-    private LoginViewModel _viewModel;
+    private readonly LoginViewModel _viewModel;
     private readonly bool _startMinimized;
 
     public LoginWindow()
@@ -57,8 +56,7 @@ public partial class LoginWindow : Window
 
     private void OnNavigateToMainRequested(object? sender, EventArgs e)
     {
-        MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
-        MainWindow mainWindow = new(mainViewModel);
+        MainWindow mainWindow = new();
 
         if (_startMinimized)
         {

@@ -2,7 +2,6 @@ using Aniki.Services.Anime;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Svg.Skia;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;
 
@@ -117,30 +116,27 @@ public partial class AnimeListStatusButton : UserControl
     
     private void OnStatusButtonClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.Tag is string statusStr)
+        if (sender is not Button { Tag: string statusStr }) return;
+        if (!Enum.TryParse(statusStr, out AnimeStatusApi status)) return;
+        
+        if (status == AnimeStatusApi.none)
         {
-            if (Enum.TryParse<AnimeStatusApi>(statusStr, out AnimeStatusApi status))
-            {
-                if (status == AnimeStatusApi.none)
-                {
-                    _animeService.RemoveFromUserListAsync(_data!.AnimeId);
-                }
-                else
-                {
-                    _animeService.SetAnimeStatusAsync(_data!.AnimeId, StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus());
-                }
-
-                _data!.UserStatus = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
-                HideStatusButtons();
-                ShowStatusButtons();
-                UpdateMainButtonIcon();
-            }
+            _animeService.RemoveFromUserListAsync(_data!.AnimeId);
         }
+        else
+        {
+            _animeService.SetAnimeStatusAsync(_data!.AnimeId, StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus());
+        }
+
+        _data!.UserStatus = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
+        HideStatusButtons();
+        ShowStatusButtons();
+        UpdateMainButtonIcon();
     }
     
     private void UpdateMainButtonIcon()
     {
-        var (iconPath, statusLabel) = _data?.UserStatus switch
+        (string iconPath, string statusLabel) = _data?.UserStatus switch
         {
             null                    => ("add_icon", "Not in list"),
             AnimeStatus.None        => ("add_icon", "Not in list"),
@@ -151,8 +147,8 @@ public partial class AnimeListStatusButton : UserControl
             AnimeStatus.OnHold      => ("add_icon", "On Hold"),
             _                       => ("add_icon", "Not in list")
         };
-        var uri = new Uri($"avares://Aniki/Resources/Icons/{iconPath}.svg");
-        var source = SvgSource.Load(uri.AbsoluteUri, new Uri("avares://Aniki/"));
+        Uri        uri    = new Uri($"avares://Aniki/Resources/Icons/{iconPath}.svg");
+        SvgSource? source = SvgSource.Load(uri.AbsoluteUri, new Uri("avares://Aniki/"));
         MainButtonIcon.Source = new SvgImage { Source = source };
         
         ToolTip.SetTip(MainButton, $"Current status: {statusLabel}");

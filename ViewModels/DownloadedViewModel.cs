@@ -9,7 +9,7 @@ using Aniki.Views;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
+
 namespace Aniki.ViewModels;
 
 public partial class DownloadedViewModel : ViewModelBase, IDisposable

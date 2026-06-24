@@ -1,24 +1,31 @@
-﻿using Avalonia;
+﻿using System.Diagnostics;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;
 
 public partial class AnimeBrowseView : UserControl
 {
+    private readonly AnimeBrowseViewModel _viewModel;
+    
     public AnimeBrowseView()
     {
+        _viewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<AnimeBrowseViewModel>();
         InitializeComponent();
     }
 
     protected override async void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        base.OnAttachedToVisualTree(e);
-        
-        if (DataContext is AnimeBrowseViewModel vm)
+        try
         {
-            await vm.InitializeAsync();
+            base.OnAttachedToVisualTree(e);
+        
+            await _viewModel.InitializeAsync();
+        }
+        catch (Exception error)
+        {
+            Debug.WriteLine(error);
         }
     }
     

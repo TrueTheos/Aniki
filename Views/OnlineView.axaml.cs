@@ -6,9 +6,13 @@ namespace Aniki.Views;
 
 public partial class OnlineView : UserControl
 {
+    private readonly OnlineViewModel _viewModel;
+    
     public OnlineView()
     {
         InitializeComponent();
+        
+        _viewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<OnlineViewModel>();
     }
 
     private void InitializeComponent()
@@ -21,9 +25,9 @@ public partial class OnlineView : UserControl
         if (e.Key != Key.Enter)
             return;
 
-        if (DataContext is OnlineViewModel vm && vm.SearchAnimeCommand.CanExecute(null))
+        if (_viewModel.SearchAnimeCommand.CanExecute(null))
         {
-            vm.SearchAnimeCommand.Execute(null);
+            _viewModel.SearchAnimeCommand.Execute(null);
             e.Handled = true;
         }
     }

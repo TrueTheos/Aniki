@@ -4,7 +4,6 @@ using Aniki.Services.Auth;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
 

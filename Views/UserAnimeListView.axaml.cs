@@ -1,6 +1,6 @@
-﻿using Avalonia.Controls;
+﻿using System.Diagnostics;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;
 
@@ -11,11 +11,18 @@ public partial class UserAnimeListView : UserControl
         InitializeComponent();
     }
     
-    private async void GoToAnime(object? sender, RoutedEventArgs e)
+    private async void GoToAnime(object? sender, RoutedEventArgs _)
     {
-        if (sender is Button { DataContext: AnimeDetails anime })
+        try
         {
-            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id);
+            if (sender is Button { DataContext: AnimeDetails anime })
+            {
+                await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
         }
     }
 }

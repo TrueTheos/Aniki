@@ -1,10 +1,10 @@
+using System.Diagnostics;
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.Views;
 
@@ -12,14 +12,15 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
 
-    public MainWindow(MainViewModel viewModel)
+    public MainWindow()
     {
+        _viewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+        
         InitializeComponent();
 #if DEBUG
         this.AttachDevTools();
 #endif
-
-        _viewModel = viewModel;
+        
         _viewModel.LogoutRequested += OnLogoutRequested;
         _viewModel.SettingsRequested += OnSettingsRequested;
 
@@ -47,7 +48,14 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object? sender, RoutedEventArgs routedEventArgs)
     {
-        await _viewModel.InitializeAsync();
+        try
+        {
+            await _viewModel.InitializeAsync();
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
+        }
     }
 
     private void OnLogoutRequested(object? sender, EventArgs e)
@@ -57,28 +65,34 @@ public partial class MainWindow : Window
     
     private void OnBeginDrag(object? sender, PointerPressedEventArgs e)
     {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        
+        if (e.ClickCount == 2)
         {
-            if (e.ClickCount == 2)
-            {
-                WindowState = WindowState == WindowState.Maximized 
-                    ? WindowState.Normal 
-                    : WindowState.Maximized;
-                return;
-            }
-            BeginMoveDrag(e);
+            WindowState = WindowState == WindowState.Maximized 
+                ? WindowState.Normal 
+                : WindowState.Maximized;
+            return;
         }
+        BeginMoveDrag(e);
     }
 
-    private async void OnSettingsRequested(object? sender, EventArgs e)
+    private async void OnSettingsRequested(object? sender, EventArgs _)
     {
-        SettingsViewModel settingsViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<SettingsViewModel>();
-        settingsViewModel.LoadSettings();
-        SettingsWindow settingsWindow = new()
+        try
         {
-            DataContext = settingsViewModel
-        };
-        await settingsWindow.ShowDialog(this);
+            SettingsViewModel settingsViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<SettingsViewModel>();
+            settingsViewModel.LoadSettings();
+            SettingsWindow settingsWindow = new()
+            {
+                DataContext = settingsViewModel
+            };
+            await settingsWindow.ShowDialog(this);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
+        }
     }
     
     public void LogOut(object? sender, RoutedEventArgs routedEventArgs)

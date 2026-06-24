@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Aniki.Misc;
 
 public class DependencyInjection

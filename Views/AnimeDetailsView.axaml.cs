@@ -8,21 +8,23 @@ namespace Aniki.Views;
 
 public partial class AnimeDetailsView : UserControl
 {
-    private TextBox? _episodesInputBox;
-
+    private readonly AnimeDetailsViewModel _viewModel;
+    
     public AnimeDetailsView()
     {
         InitializeComponent();
+        
+        _viewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<AnimeDetailsViewModel>();
 
-        _episodesInputBox = this.FindControl<TextBox>("EpisodesInputBox");
-        _episodesInputBox?.GetObservable(IsVisibleProperty).Subscribe(visible =>
+        TextBox? episodesInputBox = this.FindControl<TextBox>("EpisodesInputBox");
+        episodesInputBox?.GetObservable(IsVisibleProperty).Subscribe(visible =>
         {
-            if (!visible || _episodesInputBox == null) return;
+            if (!visible) return;
 
             Dispatcher.UIThread.Post(() =>
             {
-                _episodesInputBox.Focus();
-                _episodesInputBox.SelectAll();
+                episodesInputBox.Focus();
+                episodesInputBox.SelectAll();
             });
         });
     }
@@ -32,17 +34,17 @@ public partial class AnimeDetailsView : UserControl
 
     private void OnEpisodesInputLostFocus(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is AnimeDetailsViewModel vm && vm.IsEditingEpisodes)
+        if (_viewModel.IsEditingEpisodes)
         {
-            vm.CommitEpisodesInputCommand.Execute(null);
+            _viewModel.CommitEpisodesInputCommand.Execute(null);
         }
     }
 
     private void OnTitleTap(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is AnimeDetailsViewModel vm && vm.IsEditingEpisodes)
+        if (_viewModel.IsEditingEpisodes)
         {
-            vm.CopyAnimeTitleCommand.Execute(null);
+            _viewModel.CopyAnimeTitleCommand.Execute(null);
         }
     }
 }

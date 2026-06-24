@@ -4,7 +4,6 @@ using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Aniki.Views;
 using Avalonia.Controls.ApplicationLifetimes;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aniki.ViewModels;
 
