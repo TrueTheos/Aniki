@@ -33,7 +33,7 @@ public class AnimeService : IAnimeService
         );
     }
 
-    public void SetActiveProvider(ILoginProvider.ProviderType providerName, string? accessToken)
+    public async Task SetActiveProviderAsync(ILoginProvider.ProviderType providerName, string? accessToken)
     {
         if (!_providers.TryGetValue(providerName, out IAnimeProvider? provider))
         {
@@ -42,7 +42,7 @@ public class AnimeService : IAnimeService
 
         _currentProvider = provider;
         CurrentProviderType = providerName;
-        _currentProvider.Init(accessToken);
+        await _currentProvider.InitAsync(accessToken);
 
         IsLoggedIn = _currentProvider.IsLoggedIn;
         if (!IsLoggedIn) CurrentProviderType = ILoginProvider.ProviderType.Mal; //we just use MAL as default

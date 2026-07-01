@@ -43,13 +43,14 @@ public class AnilistService : IAnimeProvider
         _saveService = saveService;
     }
     
-    public void Init(string? accessToken)
+    public async Task InitAsync(string? accessToken)
     {
         if (!string.IsNullOrEmpty(accessToken))
         {
             _client.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             IsLoggedIn = true;
-            Task.Run(async () => { _currentUserId = (await GetUserDataAsync()).Id; });
+            UserData userData = await GetUserDataAsync();
+            _currentUserId = userData.Id;
         }
         else
         {

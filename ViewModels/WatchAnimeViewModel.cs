@@ -7,16 +7,11 @@ public class WatchAnimeViewModel : ViewModelBase
         get;
         set
         {
-            if (field != value)
-            {
-                field = value;
-                OnPropertyChanged();
+            if (field == value) return;
 
-                if (value == 0)
-                    _ = DownloadedViewModel.Enter();
-                else if (value == 1)
-                    _ = OnlineViewModel.Enter();
-            }
+            field = value;
+            OnPropertyChanged();
+            _ = EnterActiveTabAsync();
         }
     }
 
@@ -29,7 +24,9 @@ public class WatchAnimeViewModel : ViewModelBase
         OnlineViewModel = onlineViewModel;
     }
 
-    public override Task Enter() => SelectedTabIndex switch
+    public override Task Enter() => EnterActiveTabAsync();
+
+    private Task EnterActiveTabAsync() => SelectedTabIndex switch
     {
         0 => DownloadedViewModel.Enter(),
         1 => OnlineViewModel.Enter(),

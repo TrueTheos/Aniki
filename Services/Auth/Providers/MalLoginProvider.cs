@@ -113,7 +113,7 @@ public class MalLoginProvider : ILoginProvider
         
         try
         {
-            _animeService.SetActiveProvider(Provider, tokenData.AccessToken);
+            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken);
             UserData? userData = await _animeService.GetUserDataAsync();
             return userData?.Name;
         }

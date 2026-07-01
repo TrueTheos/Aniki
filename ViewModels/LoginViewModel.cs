@@ -174,9 +174,9 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ContinueWithoutLoggingIn()
+    private async Task ContinueWithoutLoggingIn()
     {
-        _animeService.SetActiveProvider(ILoginProvider.ProviderType.Mal, null);
+        await _animeService.SetActiveProviderAsync(ILoginProvider.ProviderType.Mal, null);
         NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
     }
 

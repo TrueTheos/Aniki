@@ -45,7 +45,7 @@ public class MalService : IAnimeProvider
         _saveService = saveService;
     }
 
-    public void Init(string? accessToken)
+    public Task InitAsync(string? accessToken)
     {
         _client.Dispose();
         _client = new();
@@ -62,6 +62,8 @@ public class MalService : IAnimeProvider
             _isLoggedIn = false;
             _client.DefaultRequestHeaders.Add("X-MAL-Client-ID", "dc4a7501af14aec92b98f719b666c37c");
         }
+
+        return Task.CompletedTask;
     }
     
     private async Task<HttpResponseMessage> GetAsync(string url, string message)
@@ -194,7 +196,7 @@ public class MalService : IAnimeProvider
             
             if (status != AnimeStatus.None)
             {
-                baseUrl += $"&status={status}";
+                baseUrl += $"&status={ConvertToMalStatus(status)}";
             }
 
             string? nextPageUrl = baseUrl;

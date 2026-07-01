@@ -59,6 +59,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private System.Timers.Timer? _debounceTimer;
     private readonly Lock _debounceLock = new();
     private readonly SemaphoreSlim _loadLock = new(1, 1);
+    private readonly SemaphoreSlim _metadataLock = new(1, 1);
     private Task _loadTask;
     private bool _suppressFileWatcher;
     
@@ -108,6 +109,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     {
         SearchText = "";
         await _loadTask;
+        await SyncListMetadataAsync();
         ApplyFiltersAndSort();
     }
 
@@ -153,13 +155,12 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             }
 
             await LoadEpisodesFromDiskAsync();
-            await LoadWatchingListAsync();
+            await SyncListMetadataAsync();
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsLoading = false;
                 ApplyFiltersAndSort();
             });
-            _ = LoadAiringInfoAsync();
         }
         catch (Exception ex)
         {
@@ -378,9 +379,32 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task LoadWatchingListAsync()
+    private async Task SyncListMetadataAsync()
     {
         if (!AnimeService.IsLoggedIn) return;
+
+        await _metadataLock.WaitAsync();
+        try
+        {
+            try
+            {
+                await LoadWatchingListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"LoadWatchingListAsync failed: {ex}");
+            }
+
+            await LoadAiringInfoAsync();
+        }
+        finally
+        {
+            _metadataLock.Release();
+        }
+    }
+
+    private async Task LoadWatchingListAsync()
+    {
         List<AnimeDetails> watchingList = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -725,5 +749,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         _fileWatcher?.Dispose();
         _debounceTimer?.Dispose();
         _loadLock.Dispose();
+        _metadataLock.Dispose();
     }
 }
