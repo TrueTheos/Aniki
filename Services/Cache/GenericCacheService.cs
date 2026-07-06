@@ -113,7 +113,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                 TKey key = (TKey)Convert.ChangeType(stored.Key, typeof(TKey));
                 CachedEntity<TEntity, TFieldEnum> entry = new();
                 
-                foreach (KeyValuePair<TFieldEnum, PropertyInfo> prop in _propertyMap)
+                foreach (var prop in _propertyMap)
                 {
                     if (!stored.Entry.Data.TryGetProperty(prop.Key.ToString(), out JsonElement value)) continue;
                     
@@ -180,7 +180,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         {
             foreach (TKey key in keysToSync)
             {
-                if (_cache.TryGetValue(key, out CachedEntity<TEntity, TFieldEnum>? entry))
+                if (_cache.TryGetValue(key, out var entry))
                 {
                     await SaveEntryToDiskAsync(key, entry);
                 }
@@ -199,7 +199,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         
         Dictionary<string, object?> dataDict = new();
         
-        foreach (KeyValuePair<TFieldEnum, PropertyInfo> prop in _propertyMap)
+        foreach (var prop in _propertyMap)
         {
             if (_memoryOnlyFields.Contains(prop.Key))
                 continue;
@@ -238,7 +238,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             if (entry.IsFieldFetched(field))
             {
                 fetchedFields.Add(field.ToString());
-                DateTime? expiry = entry.GetFieldExpiration(field);
+                var expiry = entry.GetFieldExpiration(field);
                 if (expiry.HasValue)
                 {
                     fieldExpirations[field.ToString()] = expiry.Value;
@@ -297,7 +297,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
 
     private void MapProperties()
     {
-        PropertyInfo[] properties = typeof(TEntity).GetProperties();
+        var properties = typeof(TEntity).GetProperties();
         foreach (PropertyInfo prop in properties)
         {
             CacheFieldAttribute? attribute = prop.GetCustomAttribute<CacheFieldAttribute>();
@@ -317,11 +317,11 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     {
         lock (_subscriptionLock)
         {
-            Dictionary<TFieldEnum, FieldChangeHandler<TEntity>> entityHandlers = _fieldSubscriptions.GetOrAdd(entityId, new Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>());
+            var entityHandlers = _fieldSubscriptions.GetOrAdd(entityId, new Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>());
 
             foreach (TFieldEnum field in fields)
             {
-                if (entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
+                if (entityHandlers.TryGetValue(field, out var currentHandler))
                 {
                     entityHandlers[field] = currentHandler + handler;
                 }
@@ -337,15 +337,15 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     {
         lock (_subscriptionLock)
         {
-            if (!_fieldSubscriptions.TryGetValue(entityId, out Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>? entityHandlers))
+            if (!_fieldSubscriptions.TryGetValue(entityId, out var entityHandlers))
                 return;
 
             foreach (TFieldEnum field in fields)
             {
-                if (!entityHandlers.TryGetValue(field, out FieldChangeHandler<TEntity>? currentHandler))
+                if (!entityHandlers.TryGetValue(field, out var currentHandler))
                     return;
 
-                FieldChangeHandler<TEntity>? updatedHandler = currentHandler - handler;
+                var updatedHandler = currentHandler - handler;
             
                 if (updatedHandler == null)
                 {
@@ -370,7 +370,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         
         lock (_subscriptionLock)
         {
-            if (_fieldSubscriptions.TryGetValue(entityId, out Dictionary<TFieldEnum, FieldChangeHandler<TEntity>>? entityHandlers))
+            if (_fieldSubscriptions.TryGetValue(entityId, out var entityHandlers))
             {
                 if (entityHandlers.TryGetValue(field, out handler))
                 { 
@@ -394,7 +394,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     
     public void Update(TKey id, TEntity newData, params TFieldEnum[] fieldsFetched)
     {
-        CachedEntity<TEntity, TFieldEnum> entry = GetOrCreateEntry(id);
+        var entry = GetOrCreateEntry(id);
         
         foreach (TFieldEnum field in fieldsFetched)
         {
@@ -421,8 +421,8 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     public void UpdatePartial<TSource>(TKey id, TSource source, params TFieldEnum[] fieldsFetched)
         where TSource : class
     {
-        CachedEntity<TEntity, TFieldEnum> entry = GetOrCreateEntry(id);
-        Dictionary<TFieldEnum, PropertyInfo> sourcePropertyMap = GetPropertyMapForType(typeof(TSource));
+        var entry = GetOrCreateEntry(id);
+        var sourcePropertyMap = GetPropertyMapForType(typeof(TSource));
 
         foreach (TFieldEnum field in fieldsFetched)
         {
@@ -448,9 +448,9 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
 
     public async Task<TEntity> GetOrFetchFieldsAsync(TKey id, bool forceFetch = false, params TFieldEnum[] fields)
     {
-        CachedEntity<TEntity, TFieldEnum> entry = GetOrCreateEntry(id);
+        var entry = GetOrCreateEntry(id);
 
-        TFieldEnum[] missing = forceFetch ? fields : entry.GetMissingFields(fields, _options.DefaultTimeToLive);
+        var missing = forceFetch ? fields : entry.GetMissingFields(fields, _options.DefaultTimeToLive);
 
         if (missing.Length > 0 && _fetchHandler != null)
         {
@@ -481,7 +481,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     
     public void ClearMemory()
     {
-        foreach (CachedEntity<TEntity, TFieldEnum> item in _cache.Values)
+        foreach (var item in _cache.Values)
         {
             foreach (PropertyInfo prop in _propertyMap.Values)
             {

@@ -5,66 +5,51 @@ namespace Aniki.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private string? _username;
+    [ObservableProperty] public partial string? Username { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; }
 
-    [ObservableProperty]
-    private bool _isLoading;
+    [ObservableProperty] public partial ViewModelBase? CurrentViewModel { get; set; }
+
+    [ObservableProperty] public partial bool IsMainPageNavSelected { get; set; }
+    [ObservableProperty] public partial bool IsAnimeDetailsNavSelected { get; set; }
+    [ObservableProperty] public partial bool IsWatchNavSelected { get; set; }
+    [ObservableProperty] public partial bool IsCalendarNavSelected { get; set; }
+    [ObservableProperty] public partial bool IsStatsNavSelected { get; set; }
+    [ObservableProperty] public partial bool IsLibraryNavSelected { get; set; }
+
+    [ObservableProperty] public partial AnimeDetailsViewModel AnimeDetailsViewModel { get; set; }
+    [ObservableProperty] public partial WatchAnimeViewModel WatchViewModel { get; set; }
+    [ObservableProperty] public partial CalendarViewModel CalendarViewModel { get; set; }
+    [ObservableProperty] public partial StatsViewModel StatsViewModel { get; set; }
+    [ObservableProperty] public partial AnimeBrowseViewModel AnimeBrowseViewModel { get; set; }
+    [ObservableProperty] public partial UserAnimeListViewModel UserAnimeListViewModel { get; set; }
+    [ObservableProperty] public partial ReadViewModel ReadViewMode { get; set; }
+    
+    [ObservableProperty] public partial bool CanNavigateBack { get; set; }
+    [ObservableProperty] public partial bool CanNavigateForward { get; set; }
 
     public event EventHandler? LogoutRequested;
     public event EventHandler? SettingsRequested;
-
-    #region Views
-    [ObservableProperty]
-    private ViewModelBase? _currentViewModel;
-
-    [ObservableProperty] private bool _isMainPageNavSelected;
-    [ObservableProperty] private bool _isAnimeDetailsNavSelected;
-    [ObservableProperty] private bool _isWatchNavSelected;
-    [ObservableProperty] private bool _isCalendarNavSelected;
-    [ObservableProperty] private bool _isStatsNavSelected;
-    [ObservableProperty] private bool _isLibraryNavSelected;
-
-    [ObservableProperty] private AnimeDetailsViewModel _animeDetailsViewModel;
-    [ObservableProperty]
-    private WatchAnimeViewModel _watchViewModel;
-    [ObservableProperty]
-    private CalendarViewModel _calendarViewModel;
-    [ObservableProperty]
-    private StatsViewModel _statsViewModel;
-    [ObservableProperty]
-    private AnimeBrowseViewModel _animeBrowseViewModel;
-    [ObservableProperty]
-    private UserAnimeListViewModel _userAnimeListViewModel;
-    [ObservableProperty]
-    private ReadViewModel _readViewMode;
-    #endregion
-
+    
     private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
 
     private readonly Stack<ViewModelBase> _navigationBackStack = new();
     private readonly Stack<ViewModelBase> _navigationForwardStack = new();
 
-    [ObservableProperty]
-    private bool _canNavigateBack;
-
-    [ObservableProperty]
-    private bool _canNavigateForward;
-    
     public MainViewModel(IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
         UserAnimeListViewModel userAnimeListViewModel, ReadViewModel readViewModel, IVideoPlayerService videoPlayerService) 
     {
         _animeService           = animeService;
-        _animeDetailsViewModel  = animeDetailsViewModel;
-        _watchViewModel         = watchViewModel;
-        _calendarViewModel      = calendarViewModel;
-        _statsViewModel         = statsViewModel;
-        _animeBrowseViewModel   = animeBrowseViewModel;
-        _userAnimeListViewModel = userAnimeListViewModel;
+        AnimeDetailsViewModel = animeDetailsViewModel;
+        WatchViewModel = watchViewModel;
+        CalendarViewModel = calendarViewModel;
+        StatsViewModel = statsViewModel;
+        AnimeBrowseViewModel = animeBrowseViewModel;
+        UserAnimeListViewModel = userAnimeListViewModel;
         _videoPlayerService     = videoPlayerService;
-        _readViewMode           = readViewModel;
+        ReadViewMode = readViewModel;
         
         _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
@@ -95,7 +80,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task NavigateBackAsync()
+    private async Task NavigateBackAsync()
     {
         if (_navigationBackStack.Count == 0 || CurrentViewModel is null)
         {
@@ -110,7 +95,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task NavigateForwardAsync()
+    private async Task NavigateForwardAsync()
     {
         if (_navigationForwardStack.Count == 0 || CurrentViewModel is null)
         {
@@ -125,13 +110,13 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task ShowAnimeBrowsePage()
+    private async Task ShowAnimeBrowsePage()
     {
         await NavigateToViewAsync(AnimeBrowseViewModel);
     }
 
     [RelayCommand]
-    public async Task ShowAnimeDetailsPage()
+    private async Task ShowAnimeDetailsPage()
     {
         await NavigateToViewAsync(AnimeDetailsViewModel);
     }
@@ -143,25 +128,25 @@ public partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task ShowCalendarPage()
+    private async Task ShowCalendarPage()
     {
         await NavigateToViewAsync(CalendarViewModel);
     }
 
     [RelayCommand]
-    public async Task ShowStatsPage()
+    private async Task ShowStatsPage()
     {
         await NavigateToViewAsync(StatsViewModel);
     }
     
     [RelayCommand]
-    public async Task ShowUserAnimeListPage()
+    private async Task ShowUserAnimeListPage()
     {
         await NavigateToViewAsync(UserAnimeListViewModel);
     }
     
     [RelayCommand]
-    public async Task ShowReadPage()
+    private async Task ShowReadPage()
     {
         await NavigateToViewAsync(ReadViewMode);
     }

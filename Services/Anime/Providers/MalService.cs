@@ -423,11 +423,11 @@ public class MalService : IAnimeProvider
 
         MAL_AnimeSearchListResponse? responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}");
 
-        List<MAL_SearchEntry> results = responseData?.Data?.OrderBy(x => Math.Abs(x.Node.Title?.Length - query.Length ?? 0))
-            .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
-            .OrderByDescending(x => x.Score)
-            .Select(x => x.Entry)
-            .ToList() ?? [];
+        var results = responseData?.Data?.OrderBy(x => Math.Abs(x.Node.Title?.Length - query.Length ?? 0))
+                                  .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
+                                  .OrderByDescending(x => x.Score)
+                                  .Select(x => x.Entry)
+                                  .ToList() ?? [];
 
         return results.Select(mal => ConvertMalToUnified(mal.Node)).ToList();
     }

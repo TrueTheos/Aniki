@@ -119,7 +119,7 @@ public class CalendarService : ICalendarService
             });
         }
 
-        Dictionary<string, DaySchedule> byDay = daySchedules.ToDictionary(ds => ds.Name, StringComparer.OrdinalIgnoreCase);
+        var byDay = daySchedules.ToDictionary(ds => ds.Name, StringComparer.OrdinalIgnoreCase);
 
         foreach (JToken schedule in schedules)
         {
@@ -142,7 +142,7 @@ public class CalendarService : ICalendarService
 
         foreach (DaySchedule day in daySchedules)
         {
-            List<AnimeScheduleItem> sortedItems = day.Items.OrderBy(item => item.AiringAt).ToList();
+            var sortedItems = day.Items.OrderBy(item => item.AiringAt).ToList();
             day.Items.Clear();
             foreach (AnimeScheduleItem item in sortedItems)
             {

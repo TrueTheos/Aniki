@@ -114,7 +114,7 @@ public class AnimeService : IAnimeService
     {
         if (_currentProvider != null)
         {
-            List<AnimeDetails> animeList = await GetCurrentProvider().GetUserAnimeListAsync(status);
+            var animeList = await GetCurrentProvider().GetUserAnimeListAsync(status);
             
             foreach (AnimeDetails anime in animeList)
             {
@@ -169,7 +169,7 @@ public class AnimeService : IAnimeService
 
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
-        List<AnimeDetails> results = await GetCurrentProvider().SearchAnimeAsync(query);
+        var results = await GetCurrentProvider().SearchAnimeAsync(query);
         
         if (_currentProvider != null)
         {
@@ -188,7 +188,7 @@ public class AnimeService : IAnimeService
 
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        List<RankingEntry> rankings = await GetCurrentProvider().GetTopAnimeAsync(category);
+        var rankings = await GetCurrentProvider().GetTopAnimeAsync(category);
         
         // Update cache with ranking data
         if (_currentProvider != null)

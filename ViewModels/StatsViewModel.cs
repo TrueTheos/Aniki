@@ -1,4 +1,5 @@
-﻿using Aniki.Services.Anime;
+﻿using System.Diagnostics;
+using Aniki.Services.Anime;
 
 namespace Aniki.ViewModels;
 
@@ -12,12 +13,9 @@ public class GenreStats
     
 public partial class StatsViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private AnimeStats? _animeStats;
+    [ObservableProperty] public partial AnimeStats? AnimeStats { get; set; }
+    [ObservableProperty] public partial List<GenreStats>? GenreStats { get; set; }
 
-    [ObservableProperty]
-    private List<GenreStats>? _genreStats;
-    
     private readonly IAnimeService _malService;
         
     public StatsViewModel(IAnimeService malService)
@@ -28,31 +26,38 @@ public partial class StatsViewModel : ViewModelBase
 
     private async void LoadStats()
     {
-        if(!AnimeService.IsLoggedIn) return;
+        try
+        {
+            if(!AnimeService.IsLoggedIn) return;
         
-        List<AnimeDetails>? animeList = await _malService.GetUserAnimeListAsync();
-        if (animeList == null || !animeList.Any())
-            return;
+            var animeList = await _malService.GetUserAnimeListAsync();
+            if (animeList.Count == 0)
+                return;
 
-        CalculateAnimeStats(animeList);
-        CalculateGenreStats(animeList);
+            CalculateAnimeStats(animeList);
+            CalculateGenreStats(animeList);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
+        }
     }
 
     private void CalculateAnimeStats(List<AnimeDetails> animeList)
     {
         AnimeStats stats = new();
     
-        List<AnimeDetails> validAnime = animeList.Where(a => a.UserStatus != null).ToList();
-        List<AnimeDetails> scoredAnime = validAnime.Where(a => a.UserStatus!.Score > 0).ToList();
+        var validAnime = animeList.Where(a => a.UserStatus != null).ToList();
+        var scoredAnime = validAnime.Where(a => a.UserStatus!.Score > 0).ToList();
     
-        if (!scoredAnime.Any())
+        if (scoredAnime.Count == 0)
         {
             AnimeStats = stats;
             return;
         }
             
         stats.DaysWatched =  validAnime.Sum(a => a.UserStatus!.EpisodesWatched * 24.0) / (24.0 * 60.0);
-        stats.MeanScore = scoredAnime.Any() ? scoredAnime.Average(a => a.UserStatus!.Score) : 0;
+        stats.MeanScore = scoredAnime.Count != 0 ? scoredAnime.Average(a => a.UserStatus!.Score) : 0;
         stats.Watching = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.Watching);
         stats.Completed = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.Completed);
         stats.OnHold = validAnime.Count(a => a.UserStatus!.Status == AnimeStatus.OnHold);
@@ -66,20 +71,20 @@ public partial class StatsViewModel : ViewModelBase
 
     private void CalculateGenreStats(List<AnimeDetails> animeList)
     {
-        List<string> allGenres = animeList.SelectMany(a => a.Genres ?? []).ToList();
+        var allGenres = animeList.SelectMany(a => a.Genres ?? []).ToList();
         int totalGenres = allGenres.Count;
 
         GenreStats = allGenres
             .GroupBy(g => g)
             .Select(g =>
             {
-                List<AnimeDetails> animeInGenre = animeList.Where(a => a.Genres?.Any(ag => ag == g.Key) == true && a.UserStatus?.Score > 0).ToList();
+                var animeInGenre = animeList.Where(a => a.Genres?.Any(ag => ag == g.Key) == true && a.UserStatus?.Score > 0).ToList();
                 return new GenreStats
                 {
                     Name = g.Key,
                     Count = g.Count(),
                     Percentage = totalGenres > 0 ? (double)g.Count() / totalGenres * 100 : 0,
-                    MeanScore = animeInGenre.Where(a => a.UserStatus != null).Any() ?
+                    MeanScore = animeInGenre.Any(a => a.UserStatus != null) ?
                         animeInGenre.Where(a => a.UserStatus != null).Average(a => a.UserStatus!.Score) : 0
                 };
             })

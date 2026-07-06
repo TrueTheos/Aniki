@@ -61,9 +61,9 @@ public class VideoPlayerService : IVideoPlayerService
 
                 AvailablePlayers.Clear();
 
-                IOrderedEnumerable<VideoPlayerOption> sortedPlayers = _scannedPlayers.Values
-                    .OrderByDescending(x => x.IsSystemDefault)
-                    .ThenBy(x => x.DisplayName);
+                var sortedPlayers = _scannedPlayers.Values
+                                                   .OrderByDescending(x => x.IsSystemDefault)
+                                                   .ThenBy(x => x.DisplayName);
 
                 foreach (VideoPlayerOption player in sortedPlayers)
                 {
@@ -90,7 +90,7 @@ public class VideoPlayerService : IVideoPlayerService
     {
         string[] commonPlayers = ["mpv", "vlc", "mplayer"];
         
-        IEnumerable<Task> tasks = commonPlayers.Select(player => Task.Run(() =>
+        var tasks = commonPlayers.Select(player => Task.Run(() =>
         {
             if (IsPlayerInstalled(player))
             {
@@ -180,7 +180,7 @@ public class VideoPlayerService : IVideoPlayerService
             
             if (openWithKey != null)
             {
-                IEnumerable<string> valueNames = openWithKey.GetValueNames().Where(n => n != "MRUList");
+                var valueNames = openWithKey.GetValueNames().Where(n => n != "MRUList");
                 foreach (string valueName in valueNames)
                 {
                     string? appName = openWithKey.GetValue(valueName)?.ToString();

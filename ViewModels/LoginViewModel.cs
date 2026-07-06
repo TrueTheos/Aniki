@@ -11,41 +11,17 @@ public partial class LoginViewModel : ViewModelBase
 
     private ILoginProvider? _currentProvider;
 
-    public bool IsLoading
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
+    [ObservableProperty] public partial bool IsLoading { get; set; }
 
-    public string StatusMessage
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "";
+    [ObservableProperty] public partial string StatusMessage { get; set; } = "";
 
-    public bool IsLoggedIn
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
+    [ObservableProperty] public partial bool IsLoggedIn { get; set; }
 
-    public string Username
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "";
+    [ObservableProperty] public partial string Username { get; set; } = "";
 
-    public bool IsTokenInputVisible
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
+    [ObservableProperty] public partial bool IsTokenInputVisible { get; set; }
 
-    public string Token
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = "";
+    [ObservableProperty] public partial string Token { get; set; } = "";
 
     public event EventHandler? NavigateToMainRequested;
 
@@ -181,7 +157,7 @@ public partial class LoginViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void Logout()
+    private void Logout()
     {
         if (_currentProvider == null) return;
         

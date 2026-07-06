@@ -2,9 +2,7 @@ namespace Aniki.ViewModels;
 
 public partial class GenreViewModel : ObservableObject
 {
-    [ObservableProperty]
-    private bool _isSelected;
-
+    [ObservableProperty] public partial bool IsSelected { get; set; }
     public string Name { get; }
 
     public GenreViewModel(string name)

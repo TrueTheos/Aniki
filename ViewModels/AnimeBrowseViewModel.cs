@@ -9,54 +9,42 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 {
     private readonly IAnimeService _animeService;
     private readonly ICalendarService _calendarService;
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _popularThisSeason = [];
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _popularUpcoming = [];
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _trendingAllTime = [];
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeCardData> _searchResults = [];
 
-    [ObservableProperty] 
-    private ObservableCollection<AnimeCardData> _airingToday = [];
-    
     [ObservableProperty]
-    private ObservableCollection<HeroAnimeData> _heroAnimeList = [];
-    
-    [ObservableProperty]
-    private HeroAnimeData? _heroAnime;
-    
-    private int _currentHeroIndex;
-    
-    [ObservableProperty]
-    private string _searchQuery = string.Empty;
-    
+    public partial ObservableCollection<AnimeCardData> PopularThisSeason { get; set; } = [];
+
+    [ObservableProperty] public partial ObservableCollection<AnimeCardData> PopularUpcoming { get; set; } = [];
+
+    [ObservableProperty] public partial ObservableCollection<AnimeCardData> TrendingAllTime { get; set; } = [];
+
+    [ObservableProperty] public partial ObservableCollection<AnimeCardData> SearchResults { get; set; } = [];
+
+    [ObservableProperty] public partial ObservableCollection<AnimeCardData> AiringToday { get; set; } = [];
+
+    [ObservableProperty] public partial ObservableCollection<HeroAnimeData> HeroAnimeList { get; set; } = [];
+
+    [ObservableProperty] public partial HeroAnimeData? HeroAnime { get; set; }
+
+
+    [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
+
     public enum AnimeBrowseViewMode {Main, Search}
-    
-    [ObservableProperty]
-    private AnimeBrowseViewMode _viewMode;
-    
-    [ObservableProperty]
-    private bool _isLoading;
-    
-    [ObservableProperty]
-    private int _currentPage = 1;
-    
-    [ObservableProperty]
-    private int _totalPages = 1;
-    
-    [ObservableProperty]
-    private bool _canGoNext;
-    
-    [ObservableProperty]
-    private bool _canGoPrevious;
+
+    [ObservableProperty] public partial AnimeBrowseViewMode ViewMode { get; set; }
+
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+
+    [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
+
+    [ObservableProperty] public partial int TotalPages { get; set; } = 1;
+
+    [ObservableProperty] public partial bool CanGoNext { get; set; }
+
+    [ObservableProperty] public partial bool CanGoPrevious { get; set; }
 
     private List<AnimeDetails> _allSearchResults = [];
+    private int _currentHeroIndex;
+    
     private const int PAGE_SIZE = 20;
 
     public AnimeBrowseViewModel(IAnimeService animeService, ICalendarService calendarService)
@@ -74,18 +62,18 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     {
         IsLoading = true;
         
-        List<RankingEntry> airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing);
+        var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing);
         LoadAnimeCards(airing, PopularThisSeason);
             
         await LoadHeroAnimeAsync(airing);
 
-        List<RankingEntry> upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming);
+        var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming);
         LoadAnimeCards(upcoming, PopularUpcoming);
             
-        List<RankingEntry> allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity);
+        var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity);
         LoadAnimeCards(allTime, TrendingAllTime);
 
-        List<AnimeScheduleItem> airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
+        var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
         AiringToday.Clear();
         foreach (AnimeScheduleItem anime in airingToday)
         {
@@ -111,27 +99,27 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         foreach (RankingEntry anime in animeList)
         {
             AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.Title, AnimeField.Synopsis, AnimeField.Mean, AnimeField.MyListStatus, AnimeField.Videos]);
-            if (details?.Videos != null && details.Videos.Length > 0)
+            
+            if (details?.Videos == null || details.Videos.Length <= 0) continue;
+            
+            AnimeVideo? videoWithThumbnail = details.Videos.FirstOrDefault(x => x.Thumbnail != null);
+            if (videoWithThumbnail != null)
             {
-                AnimeVideo? videoWithThumbnail = details.Videos.FirstOrDefault(x => x.Thumbnail != null);
-                if (videoWithThumbnail != null)
+                HeroAnimeData heroData = new()
                 {
-                    HeroAnimeData heroData = new()
-                    {
-                        AnimeId        = details.Id,
-                        Title          = details.Title!,
-                        Synopsis       = details.Synopsis!,
-                        Score          = details.Mean,
-                        Status         = details.UserStatus?.Status ?? AnimeStatus.None,
-                        VideoUrl       = videoWithThumbnail.Url,
-                        VideoThumbnail = videoWithThumbnail.Thumbnail!,
-                        IsCurrentHero  = HeroAnimeList.Count == 0
-                    };
+                    AnimeId        = details.Id,
+                    Title          = details.Title!,
+                    Synopsis       = details.Synopsis!,
+                    Score          = details.Mean,
+                    Status         = details.UserStatus?.Status ?? AnimeStatus.None,
+                    VideoUrl       = videoWithThumbnail.Url,
+                    VideoThumbnail = videoWithThumbnail.Thumbnail!,
+                    IsCurrentHero  = HeroAnimeList.Count == 0
+                };
                 
-                    HeroAnimeList.Add(heroData);
-                }
-                if (HeroAnimeList.Count >= 5) break;
+                HeroAnimeList.Add(heroData);
             }
+            if (HeroAnimeList.Count >= 5) break;
         }
         
         if (HeroAnimeList.Count > 0)
@@ -152,20 +140,19 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [RelayCommand]
     private void PlayHeroVideo()
     {
-        if (HeroAnime?.VideoUrl != null)
+        if (HeroAnime?.VideoUrl == null) return;
+        
+        try
         {
-            try
+            Process.Start(new ProcessStartInfo
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = HeroAnime.VideoUrl,
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error opening video: {ex.Message}");
-            }
+                FileName = HeroAnime.VideoUrl,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error opening video: {ex.Message}");
         }
     }
     
@@ -214,9 +201,9 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     {
         SearchResults.Clear();
         
-        IEnumerable<AnimeDetails> pageResults = _allSearchResults
-            .Skip((CurrentPage - 1) * PAGE_SIZE)
-            .Take(PAGE_SIZE);
+        var pageResults = _allSearchResults
+                          .Skip((CurrentPage - 1) * PAGE_SIZE)
+                          .Take(PAGE_SIZE);
 
         foreach (AnimeDetails result in pageResults)
         {
@@ -235,21 +222,19 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [RelayCommand]
     private void NextPage()
     {
-        if (CanGoNext)
-        {
-            CurrentPage++;
-            LoadSearchResultsPage();
-        }
+        if (!CanGoNext) return;
+        
+        CurrentPage++;
+        LoadSearchResultsPage();
     }
 
     [RelayCommand]
     private void PreviousPage()
     {
-        if (CanGoPrevious)
-        {
-            CurrentPage--;
-            LoadSearchResultsPage();
-        }
+        if (!CanGoPrevious) return;
+        
+        CurrentPage--;
+        LoadSearchResultsPage();
     }
 
     [RelayCommand]

@@ -13,6 +13,10 @@ namespace Aniki.Services.Anime.Providers;
 
 public class AnilistService : IAnimeProvider
 {
+    private record AiringInfoResponse(AiringMedia? Media);
+    private record AiringMedia(int? Episodes, NextAiringEpisode? NextAiringEpisode);
+    private record NextAiringEpisode(int Episode);
+    
     private readonly GraphQLHttpClient _client;
     private readonly HttpClient _httpClient;
     private readonly ISaveService _saveService;
@@ -72,7 +76,7 @@ public class AnilistService : IAnimeProvider
        
             if (response.Errors != null && response.Errors.Length > 0)
             {
-                foreach (var error in response.Errors)
+                foreach (GraphQLError error in response.Errors)
                 {
                     Debug.WriteLine($"GraphQL Error: {error.Message}");
                 }
@@ -109,8 +113,7 @@ public class AnilistService : IAnimeProvider
             Variables = new { idMal = malId }
         };
 
-        GraphQLResponse<AiringInfoResponse>? response =
-            await TrySendQueryAsync<AiringInfoResponse>(request, $"GetReleasedEpisodeCountAsync {malId}");
+        var response = await TrySendQueryAsync<AiringInfoResponse>(request, $"GetReleasedEpisodeCountAsync {malId}");
 
         int released = 0;
         if (response?.Data?.Media is { } media)
@@ -123,10 +126,6 @@ public class AnilistService : IAnimeProvider
         _releasedEpisodeCache[malId] = released;
         return released;
     }
-
-    private record AiringInfoResponse(AiringMedia? Media);
-    private record AiringMedia(int? Episodes, NextAiringEpisode? NextAiringEpisode);
-    private record NextAiringEpisode(int Episode);
 
     #region  IAnimeProvider
 
@@ -148,7 +147,7 @@ public class AnilistService : IAnimeProvider
                 }"
         };
 
-        GraphQLResponse<ViewerResponse>? response = await TrySendQueryAsync<ViewerResponse>(request, "GetUserDataAsync");
+        var response = await TrySendQueryAsync<ViewerResponse>(request, "GetUserDataAsync");
         if(response?.Data?.Viewer == null) return new UserData();
 
         return new UserData
@@ -175,7 +174,7 @@ public class AnilistService : IAnimeProvider
         {
             myListStatusFormated = "\n";
         }
-        IEnumerable<string> fragments = GetGraphQlFragments(allFields);
+        var fragments = GetGraphQlFragments(allFields);
         string innerQuery = string.Join("\n", fragments);
 
         string statusText = statusFilter != AnimeStatus.None ? $", status: {ConvertToAnilistStatus(statusFilter)}" : "";
@@ -201,7 +200,7 @@ public class AnilistService : IAnimeProvider
             }
         };
 
-        GraphQLResponse<Anilist_MediaListCollectionResponse>? response = await TrySendQueryAsync<Anilist_MediaListCollectionResponse>(request, "GetUserAnimeListAsync");
+        var response = await TrySendQueryAsync<Anilist_MediaListCollectionResponse>(request, "GetUserAnimeListAsync");
         if (response?.Data?.MediaListCollection?.Lists == null) return [];
 
         List<AnimeDetails> animeList = [];
@@ -238,7 +237,7 @@ public class AnilistService : IAnimeProvider
             Variables = new { mediaId = animeId, userId = _currentUserId }
         };
 
-        GraphQLResponse<Anilist_MediaListResponse>? queryResponse = await TrySendQueryAsync<Anilist_MediaListResponse>(queryRequest, "RemoveFromUserListAsync");
+        var queryResponse = await TrySendQueryAsync<Anilist_MediaListResponse>(queryRequest, "RemoveFromUserListAsync");
         if (queryResponse?.Data?.AnilistMediaList == null) return;
 
         int entryId = queryResponse.Data.AnilistMediaList.Id;
@@ -290,7 +289,7 @@ public class AnilistService : IAnimeProvider
             Variables = new Dictionary<string, object> { { "id", animeId } }
         };
 
-        GraphQLResponse<Anilist_MediaResponse>? response = await TrySendQueryAsync<Anilist_MediaResponse>(request, $"FetchAnimeDetailsAsync {animeId} {string.Join(", ", fields)}");
+        var response = await TrySendQueryAsync<Anilist_MediaResponse>(request, $"FetchAnimeDetailsAsync {animeId} {string.Join(", ", fields)}");
         if (response?.Data?.Media == null) return null;
             
         return await ConvertAnilistToUnified(response.Data.Media, response.Data.Media.MediaListEntry);
@@ -299,7 +298,7 @@ public class AnilistService : IAnimeProvider
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
         HashSet<AnimeField> allFields = new(Enum.GetValues<AnimeField>());
-        IEnumerable<string> fragments = GetGraphQlFragments(allFields);
+        var fragments = GetGraphQlFragments(allFields);
         string innerQuery = string.Join("\n", fragments);
 
         GraphQLRequest request = new()
@@ -315,7 +314,7 @@ public class AnilistService : IAnimeProvider
             Variables =  new Dictionary<string, object> { ["search"] = query }
         };
 
-        GraphQLResponse<Anilist_PageResponse>? response = await TrySendQueryAsync<Anilist_PageResponse>(request, "SearchAnimeAsync");
+        var response = await TrySendQueryAsync<Anilist_PageResponse>(request, "SearchAnimeAsync");
         if (response?.Data?.Page?.Media == null) return [];
         List<AnimeDetails> results = [];
 
@@ -338,7 +337,7 @@ public class AnilistService : IAnimeProvider
         };
 
         HashSet<AnimeField> allFields = new(AnimeService.MalNodeFieldTypes);
-        IEnumerable<string> fragments = GetGraphQlFragments(allFields);
+        var fragments = GetGraphQlFragments(allFields);
 
         Dictionary<string, object> variables = new()
         {
@@ -377,7 +376,7 @@ public class AnilistService : IAnimeProvider
             Variables = variables
         };
 
-        GraphQLResponse<Anilist_PageResponse>? response = await TrySendQueryAsync<Anilist_PageResponse>(request, "GetTopAnimeAsync");
+        var response = await TrySendQueryAsync<Anilist_PageResponse>(request, "GetTopAnimeAsync");
         if (response?.Data?.Page?.Media == null) return [];
             
         List<RankingEntry> results = [];

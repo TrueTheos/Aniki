@@ -6,27 +6,14 @@ namespace Aniki.ViewModels;
 
 public partial class UserAnimeListViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private ObservableCollection<AnimeDetails> _animeList = [];
-    
-    [ObservableProperty]
-    private ObservableCollection<AnimeDetails> _filteredAnimeList = [];
-    
-    [ObservableProperty]
-    private string _statusFilter = "All";
-    
-    [ObservableProperty]
-    private string _sortBy = "TitleAsc";
-    
-    [ObservableProperty]
-    private bool _isGridView = true;
-    
-    [ObservableProperty]
-    private int _totalCount;
-    
-    [ObservableProperty]
-    private int _filteredCount;
-    
+    [ObservableProperty] public partial ObservableCollection<AnimeDetails> AnimeList { get; set; } = [];
+    [ObservableProperty] public partial ObservableCollection<AnimeDetails> FilteredAnimeList { get; set; } = [];
+    [ObservableProperty] public partial string StatusFilter { get; set; } = "All";
+    [ObservableProperty] public partial string SortBy { get; set; } = "TitleAsc";
+    [ObservableProperty] public partial bool IsGridView { get; set; } = true;
+    [ObservableProperty] public partial int TotalCount { get; set; }
+    [ObservableProperty] public partial int FilteredCount { get; set; }
+
     [ObservableProperty]
     private ObservableCollection<GenreViewModel> _availableGenres;
 
@@ -42,17 +29,15 @@ public partial class UserAnimeListViewModel : ViewModelBase
             "Slice of Life", "Sports", "Supernatural", "Thriller"
         ];
         AvailableGenres = [];
-        foreach (string genreName in genres)
+        foreach (GenreViewModel genreVm in genres.Select(genreName => new GenreViewModel(genreName)))
         {
-            GenreViewModel genreVm = new(genreName);
             genreVm.PropertyChanged += (_, args) =>
             {
-                if (args.PropertyName == nameof(GenreViewModel.IsSelected))
-                {
-                    ApplyFiltersAndSort();
-                    OnPropertyChanged(nameof(GenreFilterText));
-                    OnPropertyChanged(nameof(HasActiveFilters));
-                }
+                if (args.PropertyName != nameof(GenreViewModel.IsSelected)) return;
+                
+                ApplyFiltersAndSort();
+                OnPropertyChanged(nameof(GenreFilterText));
+                OnPropertyChanged(nameof(HasActiveFilters));
             };
             AvailableGenres.Add(genreVm);
         }
@@ -70,10 +55,13 @@ public partial class UserAnimeListViewModel : ViewModelBase
     {
         get
         {
-            List<GenreViewModel> selectedGenres = AvailableGenres.Where(g => g.IsSelected).ToList();
-            if (!selectedGenres.Any()) return "All Genres";
-            if (selectedGenres.Count > 2) return $"{selectedGenres.Count} genres selected";
-            return string.Join(", ", selectedGenres.Select(g => g.Name));
+            var selectedGenres = AvailableGenres.Where(g => g.IsSelected).ToList();
+            return selectedGenres.Count switch
+            {
+                0   => "All Genres",
+                > 2 => $"{selectedGenres.Count} genres selected",
+                _   => string.Join(", ", selectedGenres.Select(g => g.Name))
+            };
         }
     }
     
@@ -150,7 +138,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     private async Task LoadAnimeListAsync()
     {
-        List<AnimeDetails> list = await _animeService.GetUserAnimeListAsync();
+        var list = await _animeService.GetUserAnimeListAsync();
         AnimeList.Clear();
         foreach (AnimeDetails element in list)
         {
@@ -174,15 +162,15 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     private void ApplyFiltersAndSort()
     {
-        IEnumerable<AnimeDetails> filtered = AnimeList.AsEnumerable();
+        var filtered = AnimeList.AsEnumerable();
         
         if (StatusFilter != "All")
         {
             filtered = filtered.Where(a => CompareStatus(a.UserStatus?.Status, StatusFilter));
         }
 
-        List<string> selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
-        if (selectedGenres.Any())
+        var selectedGenres = AvailableGenres.Where(g => g.IsSelected).Select(g => g.Name).ToList();
+        if (selectedGenres.Count != 0)
         {
             filtered = filtered.Where(a => 
                 a.Genres != null && selectedGenres.All(sg => 
@@ -205,7 +193,7 @@ public partial class UserAnimeListViewModel : ViewModelBase
             _ => filtered.OrderBy(a => a.Title)
         };
         
-        List<AnimeDetails> result = filtered.ToList();
+        var result = filtered.ToList();
         FilteredAnimeList = new ObservableCollection<AnimeDetails>(result);
         FilteredCount = result.Count;
     }

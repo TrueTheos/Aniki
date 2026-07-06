@@ -4,11 +4,9 @@ namespace Aniki.ViewModels;
 
 public partial class ConfirmEpisodeViewModel : ViewModelBase
 {
-    [ObservableProperty] 
-    private int _episodeNumber;
+    [ObservableProperty] public partial int EpisodeNumber { get; set; }
 
-    [ObservableProperty]
-    private ObservableCollection<int> _episodeNumbers;
+    [ObservableProperty] public partial ObservableCollection<int> EpisodeNumbers { get; set; }
 
     public ConfirmEpisodeViewModel(int episodeNumber, int maxEpisodes)
     {

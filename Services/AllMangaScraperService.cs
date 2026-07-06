@@ -7,11 +7,9 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-/// <summary>
-/// This is hell.
-/// AllManga changes their api a lot so we need to do a lot of hacky stuff and update this class often
-/// This is a mess, and will stay a mess
-/// </summary>
+// This is hell.
+// AllManga changes their api a lot so we need to do a lot of hacky stuff and update this class often
+// This is a mess, and will stay a mess
 public class AllMangaScraperService : IAllMangaScraperService
 {
     private readonly HttpClient _httpClient;
@@ -413,7 +411,7 @@ public class AllMangaScraperService : IAllMangaScraperService
         using JsonDocument doc = JsonDocument.Parse(decryptedJson);
         JsonElement root = doc.RootElement;
 
-        IEnumerable<JsonElement> sources = Enumerable.Empty<JsonElement>();
+        var sources = Enumerable.Empty<JsonElement>();
         if (root.ValueKind == JsonValueKind.Array)
             sources = root.EnumerateArray();
         else if (root.TryGetProperty("sourceUrls", out JsonElement su))
@@ -422,7 +420,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                  ep.TryGetProperty("sourceUrls", out JsonElement epSu))
             sources = epSu.EnumerateArray();
 
-        JsonElement[] sourceArr = sources.ToArray();
+        var sourceArr = sources.ToArray();
         int[] order = Enumerable.Range(0, sourceArr.Length).ToArray();
         Array.Sort(order, (a, b) =>
         {

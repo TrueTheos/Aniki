@@ -41,7 +41,7 @@ public static class TorrentFileNameFormatter
 
     public static void ApplyDisplayMetadata(NyaaTorrent torrent)
     {
-        (string? releaseGroup, IReadOnlyList<TorrentFileNameSegment> segments) = Parse(torrent.FileName);
+        (string? releaseGroup, var segments) = Parse(torrent.FileName);
         torrent.ReleaseGroup = releaseGroup;
         torrent.FileNameSegments = segments;
     }

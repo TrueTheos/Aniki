@@ -7,14 +7,13 @@ namespace Aniki.ViewModels;
 
 public partial class CalendarViewModel : ViewModelBase
 {
-    private Dictionary<DateTime, DaySchedule> _cachedDays = new();
+    private readonly Dictionary<DateTime, DaySchedule> _cachedDays = new();
     private DateTime _viewStartDate;
 
-    [ObservableProperty]
-    private ObservableCollection<DaySchedule> _days;
-
-    [ObservableProperty]
-    private bool _showOnlyMyAnime;
+    [ObservableProperty] public partial ObservableCollection<DaySchedule> Days { get; set; }
+    [ObservableProperty] public partial bool ShowOnlyMyAnime { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial string CurrentWeekRange { get; set; } = "";
 
     partial void OnShowOnlyMyAnimeChanged(bool value)
     {
@@ -22,17 +21,10 @@ public partial class CalendarViewModel : ViewModelBase
     }
 
     private readonly List<int> _watchingList = [];
-
-    [ObservableProperty]
-    private bool _isLoading;
-
-    [ObservableProperty]
-    private string _currentWeekRange = "";
-
     private readonly IAnimeService _animeService;
     private readonly ICalendarService _calendarService;
 
-    public double CurrentTimeOffset
+    private double CurrentTimeOffset
     {
         get
         {
@@ -67,8 +59,8 @@ public partial class CalendarViewModel : ViewModelBase
         
         if(!AnimeService.IsLoggedIn) return;
         
-        List<AnimeDetails> watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
-        List<AnimeDetails> planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
+        var watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
+        var planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
 
         foreach (AnimeDetails anime in watching) _watchingList.Add(anime.Id);
         foreach (AnimeDetails anime in planToWatch) _watchingList.Add(anime.Id);
@@ -78,17 +70,15 @@ public partial class CalendarViewModel : ViewModelBase
     {
         IsLoading = true;
 
-        DateTime endDate = _viewStartDate.AddDays(7);
-        
-        List<DateTime> uncachedDates = Enumerable
-                                       .Range(0, 7)
-                                       .Select(i => _viewStartDate.AddDays(i).Date)
-                                       .Where(d => forceRefresh || !_cachedDays.ContainsKey(d))
-                                       .ToList();
+        var uncachedDates = Enumerable
+            .Range(0, 7)
+            .Select(i => _viewStartDate.AddDays(i).Date)
+            .Where(d => forceRefresh || !_cachedDays.ContainsKey(d))
+            .ToList();
 
         if (uncachedDates.Count > 0)
         {
-            List<DaySchedule> schedule = await _calendarService.GetScheduleAsync(
+            var schedule = await _calendarService.GetScheduleAsync(
                 _watchingList,
                 uncachedDates.First(),
                 uncachedDates.Last().AddDays(1));
@@ -162,7 +152,7 @@ public partial class CalendarViewModel : ViewModelBase
             
             if (_cachedDays.TryGetValue(date.Date, out DaySchedule? cached))
             {
-                IEnumerable<AnimeScheduleItem> filteredItems = cached.Items
+                var filteredItems = cached.Items
                     .Where(item => !ShowOnlyMyAnime || (item.GetId() is {} id && _watchingList.Contains(id)));
 
                 foreach (AnimeScheduleItem item in filteredItems)

@@ -9,7 +9,7 @@ public partial class AnimeGroup : ObservableObject
     public string? ThumbnailUrl { get; }
     public ObservableCollection<DownloadedEpisode> Episodes { get; }
     public int MaxEpisodes { get; }
-    [ObservableProperty] private int _watchedEpisodes;
+    [ObservableProperty] public partial int WatchedEpisodes { get; set; }
     public int MalId { get; }
 
     public string EpisodesProgressText => $"{WatchedEpisodes} / {(MaxEpisodes == 0 ? "?" : $"{MaxEpisodes}")} watched";
@@ -23,7 +23,7 @@ public partial class AnimeGroup : ObservableObject
     [NotifyPropertyChangedFor(nameof(CanDownloadNext))]
     [NotifyPropertyChangedFor(nameof(UnseenReleasedCount))]
     [NotifyPropertyChangedFor(nameof(HasUnseenReleased))]
-    private int _releasedEpisodes;
+    public partial int ReleasedEpisodes { get; set; }
 
     public int UnseenReleasedCount => Math.Max(0, ReleasedEpisodes - WatchedEpisodes);
     public bool HasUnseenReleased => UnseenReleasedCount > 0;

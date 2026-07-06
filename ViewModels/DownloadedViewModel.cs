@@ -12,8 +12,9 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace Aniki.ViewModels;
 
-
-//todo awaiting refactor. mess.
+// I really don't want to touch this. This is such a mess
+// Some day I will need to answer for my actions, 
+// but not today.
 public partial class DownloadedViewModel : ViewModelBase, IDisposable
 {
     private DownloadedEpisode? _lastPlayedEpisode;
@@ -22,16 +23,16 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private readonly HashSet<string> _pendingRemovePaths = new(StringComparer.OrdinalIgnoreCase);
     
     private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv"];
-    
-    [ObservableProperty] private ObservableCollection<AnimeGroup> _animeGroups = [];
-    [ObservableProperty] private ObservableCollection<AnimeGroup> _filteredAnimeGroups = [];
-    [ObservableProperty] private bool _isEpisodesViewVisible;
-    [ObservableProperty] private bool _isNoEpisodesViewVisible;
-    [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private string _processingProgress = "";
-    [ObservableProperty] private string _episodesFolderMessage = "";
-    [ObservableProperty] private string _searchText = "";
-    [ObservableProperty] private string _sortBy = "NameAsc";
+
+    [ObservableProperty] public partial ObservableCollection<AnimeGroup> AnimeGroups { get; set; } = [];
+    [ObservableProperty] public partial ObservableCollection<AnimeGroup> FilteredAnimeGroups { get; set; } = [];
+    [ObservableProperty] public partial bool IsEpisodesViewVisible { get; set; }
+    [ObservableProperty] public partial bool IsNoEpisodesViewVisible { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial string ProcessingProgress { get; set; } = "";
+    [ObservableProperty] public partial string EpisodesFolderMessage { get; set; } = "";
+    [ObservableProperty] public partial string SearchText { get; set; } = "";
+    [ObservableProperty] public partial string SortBy { get; set; } = "NameAsc";
 
     public string SortText => SortBy switch
     {
@@ -44,7 +45,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         "TotalAsc"     => "Fewest Episodes",
         _              => "Name (A-Z)"
     };
-
+    
     private readonly IDiscordService _discordService;
     private readonly IAnimeService _animeService;
     private readonly ISaveService _saveService;
@@ -53,8 +54,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly AnilistService _anilistService;
 
-    #region File watcher vars
-    
     private FileSystemWatcher? _fileWatcher;
     private System.Timers.Timer? _debounceTimer;
     private readonly Lock _debounceLock = new();
@@ -62,8 +61,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private readonly SemaphoreSlim _metadataLock = new(1, 1);
     private Task _loadTask;
     private bool _suppressFileWatcher;
-    
-    #endregion
 
     public VideoPlayerOption? SelectedPlayer
     {
@@ -197,7 +194,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (!Directory.Exists(episodesFolder))
                 return;
             
-            List<string> looseFiles = Directory.GetFiles(episodesFolder, "*.*", SearchOption.TopDirectoryOnly).Where(IsVideoFile).ToList();
+            var looseFiles = Directory.GetFiles(episodesFolder, "*.*", SearchOption.TopDirectoryOnly).Where(IsVideoFile).ToList();
             
             List<(string FolderName, List<string> Files)> animeFolders = [];
             
@@ -206,7 +203,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 string folderName = Path.GetFileName(dir);
                 if (string.IsNullOrWhiteSpace(folderName))
                     continue;
-                List<string> files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories).Where(IsVideoFile).ToList();
+                var files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories).Where(IsVideoFile).ToList();
                 if (files.Count > 0)
                     animeFolders.Add((folderName, files));
             }
@@ -298,7 +295,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         if (IsLooseFile(episodesFolder, fullPath))
         {
             await ProcessLooseFileAsync(fullPath);
-            return;
         }
     }
 
@@ -406,7 +402,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private async Task LoadWatchingListAsync()
     {
-        List<AnimeDetails> watchingList = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
+        var watchingList = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             foreach (AnimeDetails anime in watchingList)

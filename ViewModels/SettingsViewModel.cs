@@ -10,6 +10,12 @@ namespace Aniki.ViewModels;
 
 public partial class SettingsViewModel : ViewModelBase
 {
+    [ObservableProperty] public partial bool StartMinimized { get; set; }
+    [ObservableProperty] public partial bool EnableDiscordPresence { get; set; } = true;
+    [ObservableProperty] public partial string? EpisodesFolder { get; set; }
+    [ObservableProperty] public partial long CacheSize { get; set; }
+    [ObservableProperty] public partial bool IsClearingCache { get; set; }
+    
     public bool AutoStart
     {
         get;
@@ -22,21 +28,6 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    [ObservableProperty]
-    private bool _startMinimized;
-
-    [ObservableProperty]
-    private bool _enableDiscordPresence = true;
-
-    [ObservableProperty]
-    private string? _episodesFolder;
-
-    [ObservableProperty]
-    private long _cacheSize;
-
-    [ObservableProperty]
-    private bool _isClearingCache;
-
     private readonly ISaveService _saveService;
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly IDiscordService _discordService;
@@ -48,11 +39,10 @@ public partial class SettingsViewModel : ViewModelBase
         get => _videoPlayerService.SelectedPlayer;
         set
         {
-            if (_videoPlayerService.SelectedPlayer != value)
-            {
-                _videoPlayerService.SelectedPlayer = value;
-                OnPropertyChanged();
-            }
+            if (_videoPlayerService.SelectedPlayer == value) return;
+            
+            _videoPlayerService.SelectedPlayer = value;
+            OnPropertyChanged();
         }
     }
 
@@ -83,13 +73,12 @@ public partial class SettingsViewModel : ViewModelBase
             EnableDiscordPresence = config.EnableDiscordPresence;
             EpisodesFolder = config.EpisodesFolder;
 
-            if (!string.IsNullOrEmpty(config.PreferredVideoPlayerPath))
-            {
-                VideoPlayerOption? match = AvailablePlayers
-                    .FirstOrDefault(p => p.ExecutablePath == config.PreferredVideoPlayerPath);
-                if (match != null)
-                    SelectedPlayer = match;
-            }
+            if (string.IsNullOrEmpty(config.PreferredVideoPlayerPath)) return;
+            
+            VideoPlayerOption? match = AvailablePlayers
+                .FirstOrDefault(p => p.ExecutablePath == config.PreferredVideoPlayerPath);
+            if (match != null)
+                SelectedPlayer = match;
         }
     }
 
@@ -112,20 +101,17 @@ public partial class SettingsViewModel : ViewModelBase
 
     private void ChangeAutoStart(bool newValue)
     {
-        if (OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows()) return;
+
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+        if (newValue)
         {
-            using (RegistryKey? key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
-            {
-                if (newValue)
-                {
-                    string exePath = Environment.ProcessPath ?? "";
-                    key?.SetValue("Aniki", $"{exePath} --background");
-                }
-                else
-                {
-                    key?.DeleteValue("Aniki", false);
-                }
-            }
+            string exePath = Environment.ProcessPath ?? "";
+            key?.SetValue("Aniki", $"{exePath} --background");
+        }
+        else
+        {
+            key?.DeleteValue("Aniki", false);
         }
     }
 

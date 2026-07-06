@@ -11,39 +11,38 @@ public partial class AnimeDetailsViewModel : ViewModelBase
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
-    private AnimeDetails? _details;
+    public partial AnimeDetails? Details { get; set; }
 
     public string? ImageUrl => Details?.MainPicture?.Large;
 
     [ObservableProperty]
-    private int _watchedEpisodes;
+    public partial int WatchedEpisodes { get; set; }
 
     [ObservableProperty]
-    private bool _isLoading;
+    public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
-    private bool _isEditingEpisodes;
+    public partial bool IsEditingEpisodes { get; set; }
 
     [ObservableProperty]
-    private string _episodesInput = string.Empty;
-    
+    public partial string EpisodesInput { get; set; } = string.Empty;
+
     public bool CanIncreaseEpisodeCount => WatchedEpisodes < (Details?.NumEpisodes ?? 0);
     public bool CanDecreaseEpisodeCount => WatchedEpisodes > 0;
 
     [ObservableProperty]
-    private int _selectedTabIndex;
+    public partial int SelectedTabIndex { get; set; }
 
     [ObservableProperty]
-    private WatchAnimeViewModel _watchAnimeViewModel;
+    public partial WatchAnimeViewModel WatchAnimeViewModel { get; set; }
 
     [ObservableProperty]
-    private TorrentSearchViewModel _torrentSearchViewModel;
-    
+    public partial TorrentSearchViewModel TorrentSearchViewModel { get; set; }
+
     private readonly IAnimeService _animeService;
-    
-    public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString();
 
-    public int SelectedScore
+
+    private int SelectedScore
     {
         get;
         set
@@ -55,11 +54,13 @@ public partial class AnimeDetailsViewModel : ViewModelBase
             }
         }
     }
+    
+    public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString();
 
     public AnimeStatusTranslated SelectedStatus
     {
         get;
-        set { SetProperty(ref field, value); }
+        set => SetProperty(ref field, value);
     }
 
     private int? _currentSubscribedId;
@@ -69,8 +70,8 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     public AnimeDetailsViewModel(IAnimeService animeService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
         _animeService = animeService;
-        _watchAnimeViewModel = watchAnimeViewModel;
-        _torrentSearchViewModel = torrentSearchViewModel;
+        WatchAnimeViewModel = watchAnimeViewModel;
+        TorrentSearchViewModel = torrentSearchViewModel;
     }
     
     public async Task LoadAnimeDetailsAsync(int id)
@@ -126,13 +127,13 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void IncrementWatchedEpisodes()
+    private void IncrementWatchedEpisodes()
     {
         _ = UpdateEpisodeCount(1);
     }
 
     [RelayCommand]
-    public void DecrementWatchedEpisodes()
+    private void DecrementWatchedEpisodes()
     {
         _ = UpdateEpisodeCount(-1);
     }

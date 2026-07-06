@@ -62,7 +62,7 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
 
         if (response.StatusCode == (System.Net.HttpStatusCode)429)
         {
-            TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
+            var retryAfter = response.Headers.RetryAfter?.Delta;
             if (retryAfter.HasValue)
             {
                 Console.WriteLine($"429 received. Retrying after {retryAfter.Value.TotalSeconds:F1} seconds.");
@@ -78,7 +78,7 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
 
     private void UpdateRateLimits(HttpResponseHeaders headers)
     {
-        if (headers.TryGetValues("X-RateLimit-Remaining", out IEnumerable<string>? remainingValues))
+        if (headers.TryGetValues("X-RateLimit-Remaining", out var remainingValues))
         {
             if (int.TryParse(remainingValues.FirstOrDefault(), out int remaining))
             {
@@ -87,7 +87,7 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
             }
         }
 
-        if (headers.TryGetValues("X-RateLimit-Reset", out IEnumerable<string>? resetValues))
+        if (headers.TryGetValues("X-RateLimit-Reset", out var resetValues))
         {
             if (long.TryParse(resetValues.FirstOrDefault(), out long resetUnix))
             {

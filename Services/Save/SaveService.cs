@@ -105,7 +105,7 @@ public class SaveService : ISaveService
 
     public async Task ClearAllCaches()
     {
-        foreach (KeyValuePair<Guid, ICacheService> cache in _caches)
+        foreach (var cache in _caches)
         {
             await cache.Value.ClearAllAsync();
         }
@@ -113,7 +113,7 @@ public class SaveService : ISaveService
 
     public async Task SaveAllCaches()
     {
-        foreach (KeyValuePair<Guid, ICacheService> cache in _caches)
+        foreach (var cache in _caches)
         {
             await cache.Value.SyncToDiskAsync();
         }

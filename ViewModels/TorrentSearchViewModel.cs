@@ -12,12 +12,12 @@ public enum SortDirection
 
 public partial class TorrentSearchViewModel : ViewModelBase
 {
-    [ObservableProperty] private bool _isTorrentsLoading;
-    [ObservableProperty] private string _torrentSearchTerms = string.Empty;
+    [ObservableProperty] public partial bool IsTorrentsLoading { get; set; }
+    [ObservableProperty] public partial string TorrentSearchTerms { get; set; } = string.Empty;
     [ObservableProperty] private ObservableCollection<NyaaTorrent> _torrentsList = [];
-    [ObservableProperty] private KnownSubber _selectedSubber = KnownSubbers.All[0];
-    [ObservableProperty] private SortDirection _seedersSortDirection = SortDirection.Descending;
-    [ObservableProperty] private SortDirection _dateSortDirection = SortDirection.Descending;
+    [ObservableProperty] public partial KnownSubber SelectedSubber { get; set; } = KnownSubbers.All[0];
+    [ObservableProperty] public partial SortDirection SeedersSortDirection { get; set; } = SortDirection.Descending;
+    [ObservableProperty] public partial SortDirection DateSortDirection { get; set; } = SortDirection.Descending;
 
     public IReadOnlyList<KnownSubber> AvailableSubbers => KnownSubbers.All;
 
@@ -62,7 +62,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
 
         if (_details.Title != null)
         {
-            List<NyaaTorrent> foundTorrents = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
+            var foundTorrents = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
             foreach (NyaaTorrent torrent in foundTorrents)
                 TorrentFileNameFormatter.ApplyDisplayMetadata(torrent);
 

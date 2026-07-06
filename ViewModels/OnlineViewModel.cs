@@ -9,70 +9,44 @@ namespace Aniki.ViewModels;
 
 public partial class OnlineViewModel : ViewModelBase, IDisposable
 {
-    private readonly IAllMangaScraperService _scraperService;
-    private readonly IAnimeService _animeService;
-    private readonly IVideoPlayerService _videoPlayerService;
-    private readonly IDiscordService _discordService;
-    private string? _currentVideoUrl;
-    private Process? _videoProcess;
+    [ObservableProperty] public partial string SearchQuery { get; set; } = "";
+    [ObservableProperty] public partial string StatusText { get; set; } = "Search for anime to get started";
+    [ObservableProperty] public partial ObservableCollection<AllMangaSearchResult> AnimeResults { get; set; } = new();
+    [ObservableProperty] public partial string? AnimeDescription { get; set; }
+    [ObservableProperty] public partial string? AnimeImageUrl { get; set; }
+    [ObservableProperty] public partial ObservableCollection<AllMangaEpisode> Episodes { get; set; } = new();
+    [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool CanPlayVideo { get; set; }
+    [ObservableProperty] public partial string WatchedEpisodesText { get; set; } = "No episodes watched yet";
     
-    [ObservableProperty]
-    private string _searchQuery = "";
-
-    [ObservableProperty]
-    private string _statusText = "Search for anime to get started";
-
-    [ObservableProperty]
-    private ObservableCollection<AllMangaSearchResult> _animeResults = new();
-
     private AllMangaSearchResult? _selectedAnime;
     public AllMangaSearchResult? SelectedAnime
     {
         get => _selectedAnime;
         set
         {
-            if (SetProperty(ref _selectedAnime, value))
-            {
-                OnPropertyChanged(nameof(SelectionStatusMessage));
-                OnPropertyChanged(nameof(ShowSelectionStatus));
-                OnPropertyChanged(nameof(ShowStreamProviderNote));
-                _ = OnSelectedAnimeChanged(value);
-            }
+            if (!SetProperty(ref _selectedAnime, value)) return;
+            
+            OnPropertyChanged(nameof(SelectionStatusMessage));
+            OnPropertyChanged(nameof(ShowSelectionStatus));
+            OnPropertyChanged(nameof(ShowStreamProviderNote));
+            _ = OnSelectedAnimeChanged(value);
         }
     }
-
-    [ObservableProperty] 
-    private string? _animeDescription;
-
-    [ObservableProperty] 
-    private string? _animeImageUrl;
-
-    [ObservableProperty]
-    private ObservableCollection<AllMangaEpisode> _episodes = new();
-
+    
     public AllMangaEpisode? SelectedEpisode
     {
         get;
         set
         {
-            if (SetProperty(ref field, value))
-            {
-                OnPropertyChanged(nameof(SelectionStatusMessage));
-                OnPropertyChanged(nameof(ShowSelectionStatus));
-                OnPropertyChanged(nameof(ShowStreamProviderNote));
-                OnSelectedEpisodeChanged(value);
-            }
+            if (!SetProperty(ref field, value)) return;
+            
+            OnPropertyChanged(nameof(SelectionStatusMessage));
+            OnPropertyChanged(nameof(ShowSelectionStatus));
+            OnPropertyChanged(nameof(ShowStreamProviderNote));
+            OnSelectedEpisodeChanged(value);
         }
     }
-
-    [ObservableProperty]
-    private bool _isLoading;
-
-    [ObservableProperty]
-    private bool _canPlayVideo;
-
-    [ObservableProperty]
-    private string _watchedEpisodesText = "No episodes watched yet";
 
     public VideoPlayerOption? SelectedPlayer
     {
@@ -111,6 +85,13 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
             return "";
         }
     }
+    
+    private readonly IAllMangaScraperService _scraperService;
+    private readonly IAnimeService _animeService;
+    private readonly IVideoPlayerService _videoPlayerService;
+    private readonly IDiscordService _discordService;
+    private string? _currentVideoUrl;
+    private Process? _videoProcess;
 
     public bool ShowSelectionStatus => !string.IsNullOrEmpty(SelectionStatusMessage);
 
@@ -126,7 +107,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         _animeService = animeService;
         _videoPlayerService = videoPlayerService;
         _discordService = discordService;
-        Episodes.CollectionChanged += OnEpisodesCollectionChanged;
+        Episodes!.CollectionChanged += OnEpisodesCollectionChanged;
     }
 
     private void OnEpisodesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -186,7 +167,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            List<AllMangaSearchResult> results = await _scraperService.SearchAnimeAsync(query);
+            var results = await _scraperService.SearchAnimeAsync(query);
             
             foreach (AllMangaSearchResult result in results)
             {
@@ -216,21 +197,10 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
             if (animeField != null)
             {
-                if (animeField.UserStatus != null)
-                {
-                    UpdateWatchedEpisodesText(animeField.UserStatus!.EpisodesWatched);
-                }
-                else
-                {
-                    UpdateWatchedEpisodesText(0);
-                }
+                UpdateWatchedEpisodesText(animeField.UserStatus != null ? animeField.UserStatus!.EpisodesWatched : 0);
 
                 AnimeDescription = animeField.Synopsis;
                 AnimeImageUrl = value.Banner;
-            }
-            else
-            {
-                //todo this shouldn't happen :)
             }
         }
         else
@@ -249,7 +219,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            List<AllMangaEpisode> episodes = await _scraperService.GetEpisodesAsync(anime.Url);
+            var episodes = await _scraperService.GetEpisodesAsync(anime.Url);
             
             foreach (AllMangaEpisode episode in episodes)
             {
@@ -272,12 +242,19 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
     private async void OnSelectedEpisodeChanged(AllMangaEpisode? value)
     {
-        CanPlayVideo = false;
-        _currentVideoUrl = null;
-
-        if (value != null)
+        try
         {
-            await PrepareVideoAsync(value);
+            CanPlayVideo = false;
+            _currentVideoUrl = null;
+
+            if (value != null)
+            {
+                await PrepareVideoAsync(value);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
         }
     }
 
@@ -314,7 +291,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            if (_videoProcess != null && !_videoProcess.HasExited)
+            if (_videoProcess is { HasExited: false })
             {
                 _videoProcess.Exited -= OnVideoProcessExited;
             }
@@ -345,43 +322,41 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
     private void OnVideoProcessExited(object? sender, EventArgs e)
     {
-        if (SelectedEpisode != null)
+        if (SelectedEpisode is { } episode)
         {
             if (AnimeService.IsLoggedIn)
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    if (Avalonia.Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                    {
-                        ConfirmEpisodeWindow dialog = new() 
-                        {
-                            DataContext = new ConfirmEpisodeViewModel(SelectedEpisode.Number, SelectedEpisode.TotalEpisodes)
-                        };
-
-
-                        bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
-
-                        if (result)
-                        {
-                            if (SelectedEpisode != null)
-                            {
-                                _ = _animeService.SetEpisodesWatchedAsync(_watchingMalId!.Value, SelectedEpisode.Number);
-                                UpdateWatchedEpisodesText(SelectedEpisode.Number);
-                            }
-                        }
-                    }
-                });
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => ConfirmEpisodeWatchedAsync(episode));
             }
-            
+
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                StatusText = $"Finished watching Episode {SelectedEpisode.Number}";
+                StatusText = $"Finished watching Episode {episode.Number}";
             });
         }
 
         _discordService.Reset();
         _videoProcess?.Dispose();
         _videoProcess = null;
+    }
+
+    private async Task ConfirmEpisodeWatchedAsync(AllMangaEpisode episode)
+    {
+        if (Avalonia.Application.Current!.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            return;
+
+        ConfirmEpisodeWindow dialog = new()
+        {
+            DataContext = new ConfirmEpisodeViewModel(episode.Number, episode.TotalEpisodes)
+        };
+
+        bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+
+        if (result)
+        {
+            _ = _animeService.SetEpisodesWatchedAsync(_watchingMalId!.Value, episode.Number);
+            UpdateWatchedEpisodesText(episode.Number);
+        }
     }
 
     private void UpdateWatchedEpisodesText(int episodes)
