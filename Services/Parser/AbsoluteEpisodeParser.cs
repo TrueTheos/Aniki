@@ -7,7 +7,7 @@ namespace Aniki.Services.Parser;
 
 public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 {
-    private const int SpecialSeasonKey = 0;
+    private const int SPECIAL_SEASON_KEY = 0;
 
     private readonly ISaveService _saveService;
     private readonly IAnimeService _animeService;
@@ -41,25 +41,26 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             return (1, 1, absoluteEpisode, null);
         }
 
+        var orderedEpisodes = seasonMap.Seasons
+           .OrderBy(s => s.Key)
+           .SelectMany(s => s.Value.OrderBy(kvp => kvp.Key)
+           .Select(kvp => (SeasonNumber: s.Key, SeasonData: kvp.Value)));
+
         int accumulatedEpisodes = 0;
-        foreach (int seasonNumber in seasonMap.Seasons.Keys.Order())
+
+        foreach (var (seasonNumber, seasonData) in orderedEpisodes)
         {
-            foreach (SeasonData seasonData in seasonMap.Seasons[seasonNumber].OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value))
+            if (IsSpecialMediaType(seasonData.MediaType)) continue;
+
+            int episodesInPart = seasonData.Episodes;
+
+            if (absoluteEpisode <= accumulatedEpisodes + episodesInPart || episodesInPart == 0)
             {
-                // Specials/movies never carry absolute episode numbers, so they must be
-                // skipped before any matching/accumulation happens.
-                if (IsSpecialMediaType(seasonData.MediaType)) continue;
-
-                int episodesInPart = seasonData.Episodes;
-
-                if (absoluteEpisode <= accumulatedEpisodes + episodesInPart || episodesInPart == 0)
-                {
-                    return (seasonNumber, seasonData.Part, absoluteEpisode - accumulatedEpisodes,
-                        GetIdFromMap(seasonMap, seasonNumber, seasonData.Part));
-                }
-
-                accumulatedEpisodes += episodesInPart;
+                return (seasonNumber, seasonData.Part, absoluteEpisode - accumulatedEpisodes,
+                    GetIdFromMap(seasonMap, seasonNumber, seasonData.Part));
             }
+
+            accumulatedEpisodes += episodesInPart;
         }
 
         int lastKnownSeason = seasonMap.Seasons.Keys.Max();
@@ -86,7 +87,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 return match;
             }
 
-            List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
+            var searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
             if (searchResult.Count == 0) return null;
 
             AnimeDetails bestMatch = PickBestSearchResult(searchResult, part, year, seasonHint);
@@ -150,7 +151,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     return (cachedMap, null);
                 }
 
-                List<AnimeDetails> searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
+                var searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
                 if (searchResult.Count == 0) return (null, null);
 
                 AnimeDetails bestMatch = PickBestSearchResult(searchResult, preferredPart, year, seasonHint);
@@ -185,8 +186,6 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
     private static SeasonMapMatch? CreateSeasonMapMatch(AnimeSeasonsMap map, int part, int? seasonHint, int? searchAnchorId)
     {
-        // A movie/special is its own entity. If the search resolved directly to one, return it
-        // as-is instead of folding it into a TV season (which would group it under the series).
         if (searchAnchorId.HasValue)
         {
             var specialAnchor = map.Seasons
@@ -206,7 +205,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         }
 
         if (seasonHint.HasValue &&
-            map.Seasons.TryGetValue(seasonHint.Value, out Dictionary<int, SeasonData>? partsForSeason) &&
+            map.Seasons.TryGetValue(seasonHint.Value, out var partsForSeason) &&
             partsForSeason.TryGetValue(part, out SeasonData directMatch))
         {
             return new SeasonMapMatch
@@ -238,10 +237,10 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
         if (!seasonHint.HasValue)
         {
-            List<(int Season, SeasonData Data)> partMatches = map.Seasons
-                .SelectMany(kvp => kvp.Value.Select(p => (Season: kvp.Key, Data: p.Value)))
-                .Where(x => x.Data.Part == part)
-                .ToList();
+            var partMatches = map.Seasons
+                                 .SelectMany(kvp => kvp.Value.Select(p => (Season: kvp.Key, Data: p.Value)))
+                                 .Where(x => x.Data.Part == part)
+                                 .ToList();
 
             if (partMatches.Count == 1)
             {
@@ -273,7 +272,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         if (map == null) return null;
 
-        return map.Seasons.TryGetValue(season, out Dictionary<int, SeasonData>? parts) &&
+        return map.Seasons.TryGetValue(season, out var parts) &&
                parts.TryGetValue(part, out SeasonData data)
             ? data.Id
             : null;
@@ -429,7 +428,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
                 if (IsSpecialMediaType(details.MediaType))
                 {
-                    seasonKey = SpecialSeasonKey;
+                    seasonKey = SPECIAL_SEASON_KEY;
                     partKey   = ++specialPart;
                 }
                 else
@@ -443,7 +442,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     partKey   = part;
                 }
 
-                if (!seasonMap.Seasons.TryGetValue(seasonKey, out Dictionary<int, SeasonData>? parts))
+                if (!seasonMap.Seasons.TryGetValue(seasonKey, out var parts))
                 {
                     parts = new Dictionary<int, SeasonData>();
 
