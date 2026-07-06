@@ -268,8 +268,9 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         string fileName = Path.GetFileName(filePath);
         ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
         
+        int? seasonHint = parsedFile.Season > 1 ? parsedFile.Season : null;
         int? animeId = parsedFile.AnimeId ?? await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season,
-            parsedFile.Part, parsedFile.Year, parsedFile.Season);
+            parsedFile.Part, parsedFile.Year, seasonHint);
         if (animeId is null) return;
         
         AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
