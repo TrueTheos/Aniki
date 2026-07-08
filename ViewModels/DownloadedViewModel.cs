@@ -193,25 +193,16 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             await Dispatcher.UIThread.InvokeAsync(() => EpisodesFolderMessage = $"Episodes folder is empty - {episodesFolder}");
             if (!Directory.Exists(episodesFolder))
                 return;
-            
-            var looseFiles = Directory.GetFiles(episodesFolder, "*.*", SearchOption.TopDirectoryOnly).Where(IsVideoFile).ToList();
-            
-            List<(string FolderName, List<string> Files)> animeFolders = [];
-            
-            foreach (string dir in Directory.GetDirectories(episodesFolder))
-            {
-                string folderName = Path.GetFileName(dir);
-                if (string.IsNullOrWhiteSpace(folderName))
-                    continue;
-                var files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories).Where(IsVideoFile).ToList();
-                if (files.Count > 0)
-                    animeFolders.Add((folderName, files));
-            }
 
+            var looseFiles = Directory.GetFiles(episodesFolder, "*.*", SearchOption.TopDirectoryOnly).Where(IsVideoFile).ToList();
+            var animeFolders = CollectAnimeFolders(episodesFolder);
+            
             int total = looseFiles.Count + animeFolders.Sum(f => f.Files.Count);
             int processed = 0;
+            
             await Dispatcher.UIThread.InvokeAsync(() =>
                 ProcessingProgress = $"Scanning episodes: 0/{total}");
+            
             await Parallel.ForEachAsync(looseFiles, new ParallelOptions { MaxDegreeOfParallelism = 8 },
                 async (filePath, ct) =>
                 {
@@ -258,6 +249,22 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         {
             Console.WriteLine($"LoadDiskCoreAsync failed: {ex}");
         }
+    }
+
+    private List<(string FolderName, List<string> Files)> CollectAnimeFolders(string path)
+    {
+        List<(string FolderName, List<string> Files)> result = [];
+        foreach (string dir in Directory.GetDirectories(path))
+        {
+            string folderName = Path.GetFileName(dir);
+            if (string.IsNullOrWhiteSpace(folderName))
+                continue;
+            var files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories).Where(IsVideoFile).ToList();
+            if (files.Count > 0)
+                result.Add((folderName, files));
+        }
+
+        return result;
     }
 
     private async Task ProcessLooseFileAsync(string filePath)
