@@ -74,7 +74,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         try
         {
-            (string cleanTitle, int? titleYear) = AnimeNameParser.SplitTitleYear(animeTitle);
+            (string cleanTitle, int? titleYear) = FilenameParser.SplitTitleYear(animeTitle);
             int? year = preferredYear ?? titleYear;
 
             (AnimeSeasonsMap? map, int? searchAnchorId) =
@@ -116,7 +116,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
     public async Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle, int preferredPart, int? preferredYear = null)
     {
-        (string cleanTitle, int? titleYear) = AnimeNameParser.SplitTitleYear(animeTitle);
+        (string cleanTitle, int? titleYear) = FilenameParser.SplitTitleYear(animeTitle);
         int? year = preferredYear ?? titleYear;
 
         (AnimeSeasonsMap? map, _) = await GetOrCreateSeasonMapInternal(cleanTitle, year, preferredPart, null);
@@ -130,7 +130,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         {
             EnsureIndexHydrated();
 
-            string cacheKey = AnimeNameParser.BuildCacheKey(cleanTitle, year);
+            string cacheKey = FilenameParser.BuildCacheKey(cleanTitle, year);
 
             AnimeSeasonsMap? cachedMap = AnimeSeasonCache.GetWithoutFetching(cacheKey);
             if (cachedMap != null)
@@ -186,77 +186,39 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 
     private static SeasonMapMatch? CreateSeasonMapMatch(AnimeSeasonsMap map, int part, int? seasonHint, int? searchAnchorId)
     {
-        if (searchAnchorId.HasValue)
-        {
-            var specialAnchor = map.Seasons
-                .SelectMany(kvp => kvp.Value.Select(p => new { Season = kvp.Key, Data = p.Value }))
-                .FirstOrDefault(x => x.Data.Id == searchAnchorId.Value && IsSpecialMediaType(x.Data.MediaType));
+        if (searchAnchorId is { } anchorId && FindById(anchorId, specialOnly: true) is { } special)
+            return special;
 
-            if (specialAnchor != null)
-            {
-                return new SeasonMapMatch
-                {
-                    Map = map,
-                    Season = specialAnchor.Season,
-                    Part = specialAnchor.Data.Part,
-                    Id = specialAnchor.Data.Id
-                };
-            }
-        }
-
-        if (seasonHint.HasValue &&
-            map.Seasons.TryGetValue(seasonHint.Value, out var partsForSeason) &&
+        if (seasonHint is { } hint &&
+            map.Seasons.TryGetValue(hint, out var partsForSeason) &&
             partsForSeason.TryGetValue(part, out SeasonData directMatch))
-        {
-            return new SeasonMapMatch
-            {
-                Map = map,
-                Season = seasonHint.Value,
-                Part = directMatch.Part,
-                Id = directMatch.Id
-            };
-        }
+            return Build(hint, directMatch);
 
-        if (searchAnchorId.HasValue)
-        {
-            var matched = map.Seasons
-                .SelectMany(kvp => kvp.Value.Select(p => new { Season = kvp.Key, Data = p.Value }))
-                .FirstOrDefault(x => x.Data.Id == searchAnchorId.Value);
+        if (searchAnchorId is { } id && FindById(id, specialOnly: false) is { } matched)
+            return matched;
 
-            if (matched != null)
-            {
-                return new SeasonMapMatch
-                {
-                    Map = map,
-                    Season = matched.Season,
-                    Part = matched.Data.Part,
-                    Id = matched.Data.Id
-                };
-            }
-        }
-
-        if (!seasonHint.HasValue)
+        if (seasonHint is null)
         {
-            var partMatches = map.Seasons
-                                 .SelectMany(kvp => kvp.Value.Select(p => (Season: kvp.Key, Data: p.Value)))
-                                 .Where(x => x.Data.Part == part)
-                                 .ToList();
+            var partMatches = Flatten(map).Where(x => x.Data.Part == part).ToList();
 
             if (partMatches.Count == 1)
-            {
-                (int season, SeasonData data) = partMatches[0];
-                return new SeasonMapMatch
-                {
-                    Map = map,
-                    Season = season,
-                    Part = data.Part,
-                    Id = data.Id
-                };
-            }
+                return Build(partMatches[0].Season, partMatches[0].Data);
         }
 
         return null;
+
+        SeasonMapMatch? FindById(int id, bool specialOnly) =>
+            Flatten(map)
+                .Where(x => x.Data.Id == id && (!specialOnly || IsSpecialMediaType(x.Data.MediaType)))
+                .Select(x => Build(x.Season, x.Data))
+                .FirstOrDefault();
+
+        SeasonMapMatch Build(int season, SeasonData data) =>
+            new() { Map = map, Season = season, Part = data.Part, Id = data.Id };
     }
+
+    private static IEnumerable<(int Season, SeasonData Data)> Flatten(AnimeSeasonsMap map) =>
+        map.Seasons.SelectMany(kvp => kvp.Value.Values.Select(data => (kvp.Key, data)));
 
     private static bool IsSpecialMediaType(MediaType mediaType) =>
         mediaType is MediaType.Movie
@@ -313,7 +275,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         if (desiredSeason == null) return 0;
 
-        int? extractedSeason = AnimeNameParser.ExtractSeason(title ?? string.Empty);
+        int? extractedSeason = FilenameParser.ExtractSeason(title ?? string.Empty);
         if (extractedSeason == null) return 0;
 
         return extractedSeason.Value == desiredSeason.Value ? 1000 : -1000;
@@ -323,7 +285,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     {
         if (desiredPart == null) return 0;
 
-        int extractedPart = AnimeNameParser.ExtractPart(title ?? string.Empty);
+        int extractedPart = FilenameParser.ExtractPart(title ?? string.Empty);
         return extractedPart == desiredPart.Value ? 1000 : 0;
     }
 
@@ -420,8 +382,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             foreach ((int id, AnimeDetails details) in seasonChain)
             {
                 string title       = details.Title ?? string.Empty;
-                int    part        = AnimeNameParser.ExtractPart(title);
-                int?   titleSeason = AnimeNameParser.ExtractSeason(title);
+                int    part        = FilenameParser.ExtractPart(title);
+                int?   titleSeason = FilenameParser.ExtractSeason(title);
 
                 int seasonKey;
                 int partKey;

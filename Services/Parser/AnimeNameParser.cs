@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Parser;
@@ -7,279 +6,93 @@ public class AnimeNameParser : IAnimeNameParser
 {
     private readonly IAbsoluteEpisodeParser _absoluteEpisodeParser;
 
-    #region Regexes
-    
-    private static readonly List<Regex> FilenamePatternRegexes =
-    [
-        //Naruto 3 Part 2 - 07
-        new(@"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto 3d Season Part 2 - 07
-        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto S3 Part 2 - 07
-        new(@"^(?<name>.+?)\s+S(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto S3 - 07
-        new(@"^(?<name>.+?)\s+S(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto 3rd Season - 07
-        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto 3 - 07
-        new(@"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto - S3E07
-        new(@"^(?<name>.+?)\s*-\s*S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto S3E07-E09
-        new(@"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)-E?(?<episodeEnd>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto S3E07
-        new(@"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto 3rd Season E07
-        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto 3rd Season 07
-        new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto - 07
-        new(@"^(?<name>.+?)\s*-\s*(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        //Naruto 07
-        new(@"^(?<name>.+?)\s+(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-    ];
-
-    private static readonly List<Regex> EpisodeRegexes =
-    [
-        new(@"^(\d{1,3})(?:v\d+)?$"),
-        new(@"^Episode\s*(\d+)(?:v\d+)?$"),
-        new(@"^Ep\.?\s*(\d+)(?:v\d+)?$"),
-        new(@"^E(\d+)(?:v\d+)?$"),
-    ];
-    
-    private static readonly Regex YearInParensRegex = new(@"\((19|20)\d{2}\)", RegexOptions.Compiled);
-    
-    private static readonly Regex PartRegex = new(@"\bPart\s*(\d+)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex[] SeasonPatternRegexes =
-    [
-        new(@"\bSeason\s*(\d{1,2})\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"\b(\d{1,2})(?:st|nd|rd|th)\s*Season\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"\bS(\d{1,2})\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-    ];
-    
-    #endregion
-
     public AnimeNameParser(IAbsoluteEpisodeParser absoluteEpisodeParser)
     {
         _absoluteEpisodeParser = absoluteEpisodeParser;
     }
 
-    public EpisodeInfo? ParseEpisodeFromFilename(string filename, int defaultSeason = 1, int defaultPart = 1)
+    public async Task<ParseResult> ParseFile(string filename)
     {
-        string name = CleanFilename(filename);
-        
-        int? episode = ExtractEpisode(name);
-        int? season  = ExtractSeason(name);
-
-        return (!episode.HasValue && episode!.Value > 0) ? null : new EpisodeInfo(season ?? defaultSeason, defaultPart, episode.Value);
+        ParsedName parsed = FilenameParser.Parse(filename, extractEpisode: true);
+        return await Resolve(parsed);
     }
-    
-    //todo rework/cleanup
-    public async Task<ParseResult> ParseAnimeFilename(string filename)
+    public async Task<FolderParseResult> ParseFolder(string folderName)
     {
-        string originalFilename = StripExtension(filename);
-        string cleanedFilename = CleanFilename(filename);
-        (_, int? fileYear) = SplitTitleYear(cleanedFilename);
-        
-        foreach (Regex pattern in FilenamePatternRegexes)
+        ParsedName parsed = FilenameParser.Parse(folderName, extractEpisode: false);
+        int season = parsed.Season ?? 1;
+
+        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(
+            parsed.Name, season, parsed.Part, parsed.Year, parsed.Season);
+
+        return new FolderParseResult(parsed.Name, season, parsed.Part, parsed.Year, animeId);
+    }
+
+    public int? ParseEpisode(string filename) => FilenameParser.ParseEpisode(filename);
+
+    private async Task<ParseResult> Resolve(ParsedName parsed)
+    {
+        if (parsed.Episode is not { } episode)
         {
-            try
+            return new ParseResult
             {
-                Match match = pattern.Match(cleanedFilename);
-                if (!match.Success)
-                    continue;
- 
-                if (!int.TryParse(match.Groups["episode"].Value, out int episodeNumber))
-                    continue;
- 
-                int season = 1;
-                
-                bool seasonExplicit = match.Groups["season"].Success;
-                if (seasonExplicit && !int.TryParse(match.Groups["season"].Value, out season))
-                    continue;
-
-                int? seasonHint = seasonExplicit ? season : null;
-
-                int part = ExtractPart(originalFilename);
-
-                string animeName = match.Groups["name"].Value.Trim('-', ' ');
-                animeName = Regex.Replace(animeName, @"\s+", " ");
-                animeName = Regex.Replace(
-                    animeName,
-                    @"\s+(?:(?:S|Season)\s*\d+|\d{1,2}(?:st|nd|rd|th)\s*Season)\s*$",
-                    "",
-                    RegexOptions.IgnoreCase).Trim();
-                
-                animeName = StripPart(animeName);
-                
-                (animeName, int? nameYear) = SplitTitleYear(animeName);
-                int? year = nameYear ?? fileYear;
- 
-                //watchout when u uncomment this. One Piece has more than 999 eps and this will fail
-                /*if (episodeNumber < 1 || episodeNumber > 999)
-                    continue;*/
- 
-                if (season > 1 || part > 1)
-                {
-                    AbsoluteEpisodeParser.SeasonMapMatch? seasonMatch = await _absoluteEpisodeParser.ResolveSeasonEntry(animeName, part, year, seasonHint);
-                    int resolvedSeason = seasonMatch?.Season ?? season;
-                    
-                    return new ParseResult
-                    {
-                        AnimeName             = animeName,
-                        Season                = resolvedSeason,
-                        Part                  = part,
-                        EpisodeNumber         = episodeNumber.ToString(),
-                        AbsoluteEpisodeNumber = episodeNumber,
-                        Year                  = year,
-                        AnimeId               = seasonMatch?.Id
-                    };
-                }
-
-                (int finalSeason, int finalPart, int relativeEpisode, int? animeId) =
-                    await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(animeName, episodeNumber, part, year);
-                return new ParseResult
-                {
-                    AnimeName             = animeName,
-                    Season                = finalSeason,
-                    Part                  = finalPart,
-                    EpisodeNumber         = relativeEpisode.ToString(),
-                    AbsoluteEpisodeNumber = episodeNumber,
-                    Year                  = year,
-                    AnimeId               = animeId
-                };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"{originalFilename}: {ex.Message}");
-            }
+                AnimeName = parsed.Name,
+                Season = parsed.Season ?? 1,
+                Part = parsed.Part,
+                Year = parsed.Year
+            };
         }
- 
-        (string fallbackTitle, int? fallbackYear) = SplitTitleYear(cleanedFilename);
+
+        // When the name contains an explicit season or part, the episode number is
+        // already relative to that season - just resolve which MAL entry it is
+        if (parsed.Season is > 1 || parsed.Part > 1)
+        {
+            AbsoluteEpisodeParser.SeasonMapMatch? match =
+                await _absoluteEpisodeParser.ResolveSeasonEntry(parsed.Name, parsed.Part, parsed.Year, parsed.Season);
+
+            return new ParseResult
+            {
+                AnimeName = parsed.Name,
+                Season = match?.Season ?? parsed.Season ?? 1,
+                Part = parsed.Part,
+                EpisodeNumber = episode,
+                AbsoluteEpisodeNumber = episode,
+                Year = parsed.Year,
+                AnimeId = match?.Id
+            };
+        }
+
+        // Otherwise treat the number as an absolute episode and map it onto the
+        // correct season / part across the whole series
+        (int season, int part, int relativeEpisode, int? animeId) =
+            await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(parsed.Name, episode, parsed.Part, parsed.Year);
+
+        animeId ??= await _absoluteEpisodeParser.GetIdForSeason(parsed.Name, season, part, parsed.Year);
+
         return new ParseResult
         {
-            AnimeName     = fallbackTitle,
-            EpisodeNumber = null,
-            Year          = fallbackYear ?? fileYear
+            AnimeName = parsed.Name,
+            Season = season,
+            Part = part,
+            EpisodeNumber = relativeEpisode,
+            AbsoluteEpisodeNumber = episode,
+            Year = parsed.Year,
+            AnimeId = animeId
         };
     }
- 
-    private string StripReleaseMetadata(string text) =>
-        Regex.Replace(text,
-            @"\s+(?:1080p|720p|2160p|4K|WEBRip|BluRay|BDRip|HDTV|HEVC|x265|x264|Dual Audio|AAC|WEB-DL|HDR).*$",
-            "",
-            RegexOptions.IgnoreCase).Trim();
- 
-    private string StripExtension(string filename) =>
-        Regex.Replace(filename, @"\.(mkv|mp4|avi|mov|wmv|flv)$", "", RegexOptions.IgnoreCase);
- 
-    private string CleanFilename(string filename)
-    {
-        string cleaned = StripExtension(filename);
-        cleaned = Regex.Replace(cleaned, @"\[[^\]]*\]", "");
-        cleaned = Regex.Replace(cleaned, @"\([^\)]*\)", "");
-        cleaned = Regex.Replace(cleaned, @"[._]", " ");
-        cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
-        cleaned = StripReleaseMetadata(cleaned);
-        return cleaned;
-    }
-
-    #region Season
-    
-    public static int? ExtractSeason(string text)
-    {
-        Match? match = FindSeasonMatch(text);
-        if (match != null && int.TryParse(match.Groups[1].Value, out int season))
-            return season;
-
-        return null;
-    }
-    
-    private (int Season, int Index) ExtractSeasonWithIndex(string text)
-    {
-        Match? match = FindSeasonMatch(text);
-        if (match != null && int.TryParse(match.Groups[1].Value, out int season))
-            return (season, match.Index);
-
-        return (1, -1);
-    }
-    
-    private static Match? FindSeasonMatch(string text)
-    {
-        return SeasonPatternRegexes.Select(regex => regex.Match(text)).FirstOrDefault(match => match.Success);
-    }
-
-    #endregion
-    
-    #region Episode
-
-    private int? ExtractEpisode(string text)
-    {
-        Match? match = EpisodeRegexes.Select(regex => regex.Match(text)).FirstOrDefault(match => match.Success);
-        if (match != null && int.TryParse(match.Groups[1].Value, out int episodeNumber))
-            return episodeNumber;
-
-        return null;
-    }
-    
-    #endregion
-    
-    #region Part
-    
-    public static int ExtractPart(string text)
-    {
-        Match match = PartRegex.Match(text);
-        return match.Success && int.TryParse(match.Groups[1].Value, out int part) ? part : 1;
-    }
-    
-    private static string StripPart(string text)
-    {
-        Match match = PartRegex.Match(text);
-        if (!match.Success)
-            return text;
-
-        string clean = text.Remove(match.Index, match.Length);
-        return Regex.Replace(clean, @"\s+", " ").Trim().TrimEnd('-', ' ');
-    }
-    
-    #endregion
-    
-    #region Year
-    
-    public static (string Title, int? Year) SplitTitleYear(string title)
-    {
-        Match match = YearInParensRegex.Match(title);
-        if (!match.Success || !int.TryParse(match.Value.Trim('(', ')'), out int year))
-            return (title.Trim(), null);
-
-        string clean = title.Remove(match.Index, match.Length);
-        clean = Regex.Replace(clean, @"\s+", " ").Trim().TrimEnd('-', ' ');
-        return (clean, year);
-    }
-    
-    #endregion
-    
-    public static string BuildCacheKey(string title, int? year) =>
-        year.HasValue ? $"{title}|{year.Value}" : title;
 }
 
 public class ParseResult
 {
-    public required string AnimeName { get; set; }
-    public int Season { get; set; } = 1;
-    public int Part { get; set; } = 1;
-    public string? EpisodeNumber { get; set; }
-    public int? AbsoluteEpisodeNumber { get; set; }
-    public int? Year { get; set; }
-    public int? AnimeId { get; set; }
+    public required string AnimeName { get; init; }
+    public int Season { get; init; } = 1;
+    public int Part { get; init; } = 1;
+    public int? EpisodeNumber { get; init; }
+    public int? AbsoluteEpisodeNumber { get; init; }
+    public int? Year { get; init; }
+    public int? AnimeId { get; init; }
 
-    public override string ToString()
-    {
-        if (AbsoluteEpisodeNumber.HasValue)
-        {
-            return $"Anime: {AnimeName}, Season: {Season}, Episode: {EpisodeNumber} (Absolute: {AbsoluteEpisodeNumber})";
-        }
-        return $"Anime: {AnimeName}, Episode: {EpisodeNumber}";
-    }
+    public override string ToString() =>
+        AbsoluteEpisodeNumber.HasValue
+            ? $"Anime: {AnimeName}, Season: {Season}, Episode: {EpisodeNumber} (Absolute: {AbsoluteEpisodeNumber})"
+            : $"Anime: {AnimeName}, Episode: {EpisodeNumber}";
 }

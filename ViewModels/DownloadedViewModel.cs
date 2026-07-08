@@ -49,7 +49,6 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private readonly IDiscordService _discordService;
     private readonly IAnimeService _animeService;
     private readonly ISaveService _saveService;
-    private readonly IAbsoluteEpisodeParser _absoluteEpisodeParser;
     private readonly IAnimeNameParser _animeNameParser;
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly AnilistService _anilistService;
@@ -78,13 +77,11 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     public ObservableCollection<VideoPlayerOption> AvailablePlayers => _videoPlayerService.AvailablePlayers;
 
     public DownloadedViewModel(IDiscordService discordService, IAnimeService animeService, ISaveService saveService,
-        IAbsoluteEpisodeParser absoluteEpisodeParser, IAnimeNameParser animeNameParser,
-        IVideoPlayerService videoPlayerService, AnilistService anilistService)
+        IAnimeNameParser animeNameParser, IVideoPlayerService videoPlayerService, AnilistService anilistService)
     {
         _discordService        = discordService;
         _animeService          = animeService;
         _saveService           = saveService;
-        _absoluteEpisodeParser = absoluteEpisodeParser;
         _animeNameParser       = animeNameParser;
         _videoPlayerService    = videoPlayerService;
         _anilistService        = anilistService;
@@ -270,26 +267,21 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private async Task ProcessLooseFileAsync(string filePath)
     {
         string fileName = Path.GetFileName(filePath);
-        ParseResult parsedFile = await _animeNameParser.ParseAnimeFilename(fileName);
-        
-        int? seasonHint = parsedFile.Season > 1 ? parsedFile.Season : null;
-        int? animeId = parsedFile.AnimeId ?? await _absoluteEpisodeParser.GetIdForSeason(parsedFile.AnimeName, parsedFile.Season,
-            parsedFile.Part, parsedFile.Year, seasonHint);
-        if (animeId is null) return;
-        
-        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
+        ParseResult parsed = await _animeNameParser.ParseFile(fileName);
+        if (parsed.AnimeId is not { } animeId) return;
+
+        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId,
             fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]);
         if (details == null) return;
-        
-        string epNum = parsedFile.EpisodeNumber
-                       ?? (details.NumEpisodes is > 1 ? "0" : "1");
+
+        int episodeNumber = parsed.EpisodeNumber ?? (details.NumEpisodes is > 1 ? 0 : 1);
         DownloadedEpisode episode = new(
             filePath,
-            int.Parse(epNum),
-            parsedFile.AbsoluteEpisodeNumber,
+            episodeNumber,
+            parsed.AbsoluteEpisodeNumber,
             details.Title!,
-            animeId.Value,
-            parsedFile.Season);
+            animeId,
+            parsed.Season);
         await Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, details));
     }
 
@@ -349,12 +341,10 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private async Task ProcessAnimeFolderAsync(string folderName, List<string> filePaths)
     {
-        ParseResult parseResult = await _animeNameParser.ParseAnimeFilename(folderName);
-        int? animeId = await _absoluteEpisodeParser.GetIdForSeason(parseResult.AnimeName, parseResult.Season,
-            parseResult.Part, parseResult.Year, parseResult.Season);
-        if (animeId == null) return;
+        FolderParseResult folder = await _animeNameParser.ParseFolder(folderName);
+        if (folder.AnimeId is not { } animeId) return;
 
-        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId.Value,
+        AnimeDetails? details = await _animeService.GetFieldsAsync(animeId,
             fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]);
         if (details == null) return;
 
@@ -362,18 +352,16 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         {
             try
             {
-                string fileName = Path.GetFileName(filePath);
-                EpisodeInfo? episodeInfo =
-                    _animeNameParser.ParseEpisodeFromFilename(fileName, parseResult.Season, parseResult.Part);
-                if (episodeInfo == null)
+                int? episodeNumber = _animeNameParser.ParseEpisode(Path.GetFileName(filePath));
+                if (episodeNumber is null)
                     continue;
                 DownloadedEpisode episode = new(
                     filePath,
-                    episodeInfo.EpisodeNumber,
-                    episodeInfo.EpisodeNumber,
+                    episodeNumber.Value,
+                    episodeNumber,
                     details.Title!,
-                    animeId.Value,
-                    episodeInfo.Season);
+                    animeId,
+                    folder.Season);
                 await Dispatcher.UIThread.InvokeAsync(() => AddEpisodeToGroup(episode, details));
             }
             catch (Exception ex)

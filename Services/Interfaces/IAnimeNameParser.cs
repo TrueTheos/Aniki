@@ -4,10 +4,9 @@ namespace Aniki.Services.Interfaces;
 
 public interface IAnimeNameParser
 {
-    Task<ParseResult> ParseAnimeFilename(string filename);
-    EpisodeInfo? ParseEpisodeFromFilename(string filename, int defaultSeason = 1, int defaultPart = 1);
+    Task<ParseResult> ParseFile(string filename);
+    Task<FolderParseResult> ParseFolder(string folderName);
+    int? ParseEpisode(string filename);
 }
 
-public record FolderParseResult(string AnimeName, int Season, int Part = 1, int? Year = null);
-
-public record EpisodeInfo(int Season, int Part, int EpisodeNumber);
+public record FolderParseResult(string AnimeName, int Season, int Part, int? Year, int? AnimeId);
