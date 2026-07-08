@@ -11,20 +11,32 @@ public class AnimeNameParser : IAnimeNameParser
     
     private static readonly List<Regex> FilenamePatternRegexes =
     [
+        //Naruto 3 Part 2 - 07
         new(@"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto 3d Season Part 2 - 07
         new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto S3 Part 2 - 07
         new(@"^(?<name>.+?)\s+S(?<season>\d+)\s+Part\s*(?<part>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto S3 - 07
         new(@"^(?<name>.+?)\s+S(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto 3rd Season - 07
         new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto 3 - 07
         new(@"^(?<name>.+?)\s+Season\s*(?<season>\d+)\s*-\s*(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto - S3E07
         new(@"^(?<name>.+?)\s*-\s*S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto S3E07-E09
         new(@"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)-E?(?<episodeEnd>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto S3E07
         new(@"^(?<name>.+?)\s+S(?<season>\d+)E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto 3rd Season E07
         new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s*E(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto 3rd Season 07
         new(@"^(?<name>.+?)\s+(?<season>\d{1,2})(?:st|nd|rd|th)\s*Season\s+(?<episode>\d+)(?:v\d+)?(?:\s+.+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto - 07
         new(@"^(?<name>.+?)\s*-\s*(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+        //Naruto 07
         new(@"^(?<name>.+?)\s+(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase),
-        new(@"^(?<name>.+?)\.(?<episode>\d+)(?:v\d+)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase)
     ];
 
     private static readonly List<Regex> EpisodeRegexes =
