@@ -12,6 +12,7 @@
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
+    
 
   <ItemGroup>
     <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
@@ -167,4 +168,19 @@
     <Folder Include="publish\" />
     <Folder Include="Releases\" />
   </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="System"/>
+        <Using Include="System.Collections.Generic"/>
+        <Using Include="System.Linq"/>
+        <Using Include="System.Threading.Tasks"/>
+        <Using Include="Aniki.Misc"/>
+        <Using Include="Aniki.Models"/>
+        <Using Include="Aniki.Models.MAL"/>
+        <Using Include="Aniki.Services"/>
+        <Using Include="Aniki.ViewModels"/>
+        <Using Include="CommunityToolkit.Mvvm.ComponentModel"/>
+        <Using Include="CommunityToolkit.Mvvm.Input"/>
+        <Using Include="Microsoft.Extensions.DependencyInjection"/>
+    </ItemGroup>
 </Project>
