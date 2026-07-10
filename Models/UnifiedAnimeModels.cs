@@ -143,6 +143,8 @@ public class RelatedAnime
     {
         Prequel,
         Sequel,
+        Summary,
+        FullStory,
         Other
     };
     public AnimeDetails? Details { get; set; }

@@ -259,7 +259,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
 
         string json = JsonSerializer.Serialize(stored, new JsonSerializerOptions 
         { 
-            WriteIndented = false 
+            WriteIndented = true 
         });
         
         await File.WriteAllTextAsync(baseFilePath, json);

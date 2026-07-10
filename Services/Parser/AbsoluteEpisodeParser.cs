@@ -251,9 +251,6 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     private static AnimeDetails PickBestSearchResult(List<AnimeDetails> results, int part, int? preferredYear,
         int? seasonHint)
     {
-        if (preferredYear == null && seasonHint == null && part <= 1)
-            return results[0];
-
         return results
             .Select((anime, index) => new
             {
@@ -345,7 +342,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 seasonChain.Insert(0, (currentId, details));
 
                 RelatedAnime? prequel =
-                    details.RelatedAnime?.FirstOrDefault(r => r.Relation == RelatedAnime.RelationType.Prequel);
+                    details.RelatedAnime?.FirstOrDefault(r => r.Relation is RelatedAnime.RelationType.Prequel or RelatedAnime.RelationType.Summary or RelatedAnime.RelationType.FullStory );
                 if (prequel?.Details != null) currentId = prequel.Details.Id;
                 else break;
             }
@@ -416,7 +413,8 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     Episodes  = details.NumEpisodes ?? 0,
                     Id        = id,
                     MediaType = details.MediaType,
-                    Part      = part
+                    Part      = part,
+                    Title = details.Title ?? ""
                 };
             }
 
@@ -436,6 +434,7 @@ public struct SeasonData
     public int Episodes { get; init; }
     public MediaType MediaType { get; init; }
     public int Part { get; init; }
+    public string Title { get; init; }
 }
 
 public class AnimeSeasonsMap

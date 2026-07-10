@@ -578,8 +578,10 @@ public class AnilistService : IAnimeProvider
         return type switch
         {
             "PREQUEL" => RelatedAnime.RelationType.Prequel,
-            "SEQUEL" => RelatedAnime.RelationType.Sequel,
-            _ => RelatedAnime.RelationType.Other
+            "SEQUEL"  => RelatedAnime.RelationType.Sequel,
+            "SUMMARY" =>  RelatedAnime.RelationType.Summary,
+            "PARENT"  => RelatedAnime.RelationType.FullStory,
+            _         => RelatedAnime.RelationType.Other
         };
     }
     

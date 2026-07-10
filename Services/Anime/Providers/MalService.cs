@@ -438,10 +438,32 @@ public class MalService : IAnimeProvider
         {
             return s;
         }
+
+        int bestScore = 0;
+        bestScore = Math.Max(bestScore, ScoreTitle(anime.Title, query));
+
+        if (anime.AlternativeTitles == null) 
+            return bestScore;
         
-        int score = FuzzySharp.Fuzz.TokenSortRatio(anime.Title, query);
+        bestScore = Math.Max(bestScore, ScoreTitle(anime.AlternativeTitles.En, query));
+        bestScore = Math.Max(bestScore, ScoreTitle(anime.AlternativeTitles.Ja, query));
+
+        if (anime.AlternativeTitles.Synonyms != null)
+        {
+            bestScore = anime.AlternativeTitles.Synonyms.Select(synonym => ScoreTitle(synonym, query)).Prepend(bestScore).Max();
+        }
         
-        if (anime.Title != null && anime.Title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+        return bestScore;
+    }
+    
+    private int ScoreTitle(string? title, string query)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return 0;
+
+        int score = FuzzySharp.Fuzz.TokenSortRatio(title, query);
+
+        if (title.StartsWith(query, StringComparison.OrdinalIgnoreCase))
         {
             score += 50;
         }
@@ -588,9 +610,11 @@ public class MalService : IAnimeProvider
         if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.Other;
         return type switch
         {
-            "prequel" => RelatedAnime.RelationType.Prequel,
-            "sequel" => RelatedAnime.RelationType.Sequel,
-            _ => RelatedAnime.RelationType.Other
+            "prequel"    => RelatedAnime.RelationType.Prequel,
+            "sequel"     => RelatedAnime.RelationType.Sequel,
+            "summary"    =>  RelatedAnime.RelationType.Summary,
+            "full_story" => RelatedAnime.RelationType.FullStory,
+            _            => RelatedAnime.RelationType.Other
         };
     }
     

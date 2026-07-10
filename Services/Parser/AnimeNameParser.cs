@@ -33,12 +33,16 @@ public class AnimeNameParser : IAnimeNameParser
     {
         if (parsed.Episode is not { } episode)
         {
+            AbsoluteEpisodeParser.SeasonMapMatch? match =
+                await _absoluteEpisodeParser.ResolveSeasonEntry(parsed.Name, parsed.Part, parsed.Year, parsed.Season);
+
             return new ParseResult
             {
                 AnimeName = parsed.Name,
-                Season = parsed.Season ?? 1,
+                Season = match?.Season ?? parsed.Season ?? 1,
                 Part = parsed.Part,
-                Year = parsed.Year
+                Year = parsed.Year,
+                AnimeId = match?.Id
             };
         }
 
