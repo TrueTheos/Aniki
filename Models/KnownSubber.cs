@@ -1,6 +1,6 @@
 namespace Aniki.Models;
 
-public class KnownSubber
+internal sealed class KnownSubber
 {
     public required string Name { get; init; }
     public required string Color { get; init; }

@@ -1,6 +1,6 @@
 namespace Aniki.Services.Interfaces;
 
-public interface IJikanService
+internal interface IJikanService
 {
     Task<string?> GetAnimeTrailerUrlAsync(int malId);
 }

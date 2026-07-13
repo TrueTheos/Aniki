@@ -5,7 +5,7 @@ using Avalonia.Media;
 
 namespace Aniki.Converters;
 
-public class StatusToColorConverter : IValueConverter
+internal sealed class StatusToColorConverter : IValueConverter
 {
     private static readonly SolidColorBrush DefaultBrush = new(Color.Parse("#3A3A3A"));
     

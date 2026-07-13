@@ -2,7 +2,7 @@
 
 namespace Aniki.Services.Save;
 
-public class SaveEntity<T>
+internal class SaveEntity<T>
 {
     protected string Path { get; }
 

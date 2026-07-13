@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models;
 
-public class NyaaTorrent
+internal sealed class NyaaTorrent
 {
     public required string FileName { get; set; }
     public required string TorrentLink { get; set; }

@@ -5,7 +5,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Parser;
 
-public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
+internal sealed class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
 {
     private const int SPECIAL_SEASON_KEY = 0;
 
@@ -34,7 +34,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     public async Task<(int season, int part, int relativeEpisode, int? animeId)> GetSeasonAndEpisodeFromAbsolute(
         string animeTitle, int absoluteEpisode, int preferredPart, int? preferredYear = null)
     {
-        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredPart, preferredYear);
+        AnimeSeasonsMap? seasonMap = await GetOrCreateSeasonMap(animeTitle, preferredPart, preferredYear).ConfigureAwait(true);
 
         if (seasonMap == null || seasonMap.Seasons.Count == 0)
         {
@@ -78,7 +78,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             int? year = preferredYear ?? titleYear;
 
             (AnimeSeasonsMap? map, int? searchAnchorId) =
-                await GetOrCreateSeasonMapInternal(cleanTitle, year, part, seasonHint);
+                await GetOrCreateSeasonMapInternal(cleanTitle, year, part, seasonHint).ConfigureAwait(true);
             if (map == null) return null;
 
             SeasonMapMatch? match = CreateSeasonMapMatch(map, part, seasonHint, searchAnchorId);
@@ -87,7 +87,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 return match;
             }
 
-            var searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
+            var searchResult = await _animeService.SearchAnimeAsync(cleanTitle).ConfigureAwait(true);
             if (searchResult.Count == 0) return null;
 
             AnimeDetails bestMatch = PickBestSearchResult(searchResult, part, year, seasonHint);
@@ -99,7 +99,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         }
     }
 
-    public class SeasonMapMatch
+    internal sealed class SeasonMapMatch
     {
         public required AnimeSeasonsMap Map { get; init; }
         public required int Season { get; init; }
@@ -110,7 +110,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int part, int? preferredYear = null,
         int? seasonHint = null)
     {
-        SeasonMapMatch? match = await ResolveSeasonEntry(animeTitle, part, preferredYear, seasonHint);
+        SeasonMapMatch? match = await ResolveSeasonEntry(animeTitle, part, preferredYear, seasonHint).ConfigureAwait(true);
         return match?.Id;
     }
 
@@ -119,7 +119,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         (string cleanTitle, int? titleYear) = FilenameParser.SplitTitleYear(animeTitle);
         int? year = preferredYear ?? titleYear;
 
-        (AnimeSeasonsMap? map, _) = await GetOrCreateSeasonMapInternal(cleanTitle, year, preferredPart, null);
+        (AnimeSeasonsMap? map, _) = await GetOrCreateSeasonMapInternal(cleanTitle, year, preferredPart, null).ConfigureAwait(true);
         return map;
     }
 
@@ -140,7 +140,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
             }
 
             SemaphoreSlim lockObj = BuildLocks.GetOrAdd(cacheKey, _ => new SemaphoreSlim(1, 1));
-            await lockObj.WaitAsync();
+            await lockObj.WaitAsync().ConfigureAwait(true);
 
             try
             {
@@ -151,7 +151,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     return (cachedMap, null);
                 }
 
-                var searchResult = await _animeService.SearchAnimeAsync(cleanTitle);
+                var searchResult = await _animeService.SearchAnimeAsync(cleanTitle).ConfigureAwait(true);
                 if (searchResult.Count == 0) return (null, null);
 
                 AnimeDetails bestMatch = PickBestSearchResult(searchResult, preferredPart, year, seasonHint);
@@ -163,7 +163,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     return (existingMap, foundAnimeId);
                 }
 
-                AnimeSeasonsMap? newMap = await BuildSeasonMap(foundAnimeId);
+                AnimeSeasonsMap? newMap = await BuildSeasonMap(foundAnimeId).ConfigureAwait(true);
 
                 if (newMap?.Seasons is { Count: > 0 })
                 {
@@ -336,7 +336,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                 [
                     AnimeField.AlterTitles, AnimeField.StartDate, AnimeField.MediaType,
                     AnimeField.Title, AnimeField.Episodes, AnimeField.RelatedAnime
-                ]);
+                ]).ConfigureAwait(true);
                 if (details == null) break;
 
                 seasonChain.Insert(0, (currentId, details));
@@ -362,7 +362,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
                     [
                         AnimeField.AlterTitles, AnimeField.StartDate, AnimeField.Title,
                         AnimeField.Episodes, AnimeField.RelatedAnime, AnimeField.MediaType
-                    ]);
+                    ]).ConfigureAwait(true);
                     if (currentDetails != null)
                     {
                         seasonChain.Add((currentId, currentDetails));
@@ -428,7 +428,7 @@ public class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
     }
 }
 
-public struct SeasonData
+internal struct SeasonData
 {
     public int Id { get; init; }
     public int Episodes { get; init; }
@@ -437,9 +437,9 @@ public struct SeasonData
     public string Title { get; init; }
 }
 
-public class AnimeSeasonsMap
+internal sealed class AnimeSeasonsMap
 {
-    public enum AnimeSeasonMapField
+    internal enum AnimeSeasonMapField
     {
         SeasonData
     }

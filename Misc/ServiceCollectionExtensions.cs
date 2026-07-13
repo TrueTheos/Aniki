@@ -8,7 +8,7 @@ using Aniki.Services.Parser;
 
 namespace Aniki.Misc;
 
-public static class ServiceCollectionExtensions
+internal static class ServiceCollectionExtensions
 {
     public static void AddCommonServices(this IServiceCollection collection)
     {

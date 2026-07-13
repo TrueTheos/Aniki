@@ -2,7 +2,7 @@
 
 namespace Aniki.Models.Anilist;
 
-public class Anilist_Anime
+internal sealed class Anilist_Anime
 {
     public int Id { get; set; }
     public Anilist_Title? Title { get; set; }

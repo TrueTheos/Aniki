@@ -2,7 +2,7 @@
 
 namespace Aniki.Misc;
 
-internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : DelegatingHandler(innerHandler)
+internal sealed class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : DelegatingHandler(innerHandler)
 {
     private static readonly SemaphoreSlim Semaphore = new(1, 1);
     
@@ -15,7 +15,7 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        await Semaphore.WaitAsync(cancellationToken);
+        await Semaphore.WaitAsync(cancellationToken).ConfigureAwait(true);
         try
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -28,7 +28,7 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
                 if (finalDelay.TotalMilliseconds > 0)
                 {
                     Console.WriteLine($"Rate limit reached. Waiting {finalDelay.TotalSeconds} seconds.");
-                    await Task.Delay(finalDelay, cancellationToken);
+                    await Task.Delay(finalDelay, cancellationToken).ConfigureAwait(true);
                 }
             }
             
@@ -45,7 +45,7 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
                 if (burstDelay.TotalMilliseconds > 0)
                 {
                     Console.WriteLine($"Burst limit reached. Waiting {burstDelay.TotalMilliseconds:F0}ms.");
-                    await Task.Delay(burstDelay, cancellationToken);
+                    await Task.Delay(burstDelay, cancellationToken).ConfigureAwait(true);
                     
                     _requestTimestamps.Dequeue();
                 }
@@ -58,7 +58,7 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
             Semaphore.Release();
         }
 
-        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+        HttpResponseMessage response = await base.SendAsync(request, cancellationToken).ConfigureAwait(true);
 
         if (response.StatusCode == (System.Net.HttpStatusCode)429)
         {
@@ -66,8 +66,8 @@ internal class AnilistRateLimitHandler(HttpMessageHandler innerHandler) : Delega
             if (retryAfter.HasValue)
             {
                 Console.WriteLine($"429 received. Retrying after {retryAfter.Value.TotalSeconds:F1} seconds.");
-                await Task.Delay(retryAfter.Value, cancellationToken);
-                return await base.SendAsync(request, cancellationToken);
+                await Task.Delay(retryAfter.Value, cancellationToken).ConfigureAwait(true);
+                return await base.SendAsync(request, cancellationToken).ConfigureAwait(true);
             }
         }
 

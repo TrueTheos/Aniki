@@ -5,7 +5,7 @@ using Avalonia.Svg.Skia;
 
 namespace Aniki.Views;
 
-public partial class AnimeListStatusButton : UserControl
+internal sealed partial class AnimeListStatusButton : UserControl
 {
     private bool _mouseOverRoot;
     private AnimeCardData? _data;

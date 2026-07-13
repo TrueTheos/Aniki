@@ -7,7 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 
 namespace Aniki.ViewModels;
 
-public partial class OnlineViewModel : ViewModelBase, IDisposable
+internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
 {
     [ObservableProperty] public partial string SearchQuery { get; set; } = "";
     [ObservableProperty] public partial string StatusText { get; set; } = "Search for anime to get started";
@@ -150,7 +150,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task SearchAnimeAsync()
     {
-        await SearchAnimeAsync(SearchQuery);
+        await SearchAnimeAsync(SearchQuery).ConfigureAwait(true);
     }
 
     private async Task SearchAnimeAsync(string query)
@@ -167,7 +167,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var results = await _scraperService.SearchAnimeAsync(query);
+            var results = await _scraperService.SearchAnimeAsync(query).ConfigureAwait(true);
             
             foreach (AllMangaSearchResult result in results)
             {
@@ -193,7 +193,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
             SelectedEpisode = null;
             _ = LoadEpisodesAsync(value);
 
-            AnimeDetails? animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields: [AnimeField.MyListStatus, AnimeField.Synopsis]);
+            AnimeDetails? animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields: [AnimeField.MyListStatus, AnimeField.Synopsis]).ConfigureAwait(true);
 
             if (animeField != null)
             {
@@ -219,7 +219,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var episodes = await _scraperService.GetEpisodesAsync(anime.Url);
+            var episodes = await _scraperService.GetEpisodesAsync(anime.Url).ConfigureAwait(true);
             
             foreach (AllMangaEpisode episode in episodes)
             {
@@ -249,7 +249,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
             if (value != null)
             {
-                await PrepareVideoAsync(value);
+                await PrepareVideoAsync(value).ConfigureAwait(true);
             }
         }
         catch (Exception e)
@@ -265,7 +265,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
 
         try
         {
-            _currentVideoUrl = await _scraperService.GetVideoUrlAsync(episode.Url);
+            _currentVideoUrl = await _scraperService.GetVideoUrlAsync(episode.Url).ConfigureAwait(true);
             CanPlayVideo = !string.IsNullOrEmpty(_currentVideoUrl);
             StatusText = $"Episode {episode.Number} ready - Click 'Play' to watch";
         }
@@ -350,7 +350,7 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
             DataContext = new ConfirmEpisodeViewModel(episode.Number, episode.TotalEpisodes)
         };
 
-        bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+        bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!).ConfigureAwait(true);
 
         if (result)
         {
@@ -375,13 +375,13 @@ public partial class OnlineViewModel : ViewModelBase, IDisposable
         MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         if (_selectedAnime != null && _selectedAnime.MalId != null)
         {
-            await vm.GoToAnime(_selectedAnime.MalId.Value);
+            await vm.GoToAnime(_selectedAnime.MalId.Value).ConfigureAwait(true);
         }
     }
 
     public async Task GoToAnime(int malId, string title)
     {
-        await SearchAnimeAsync(title);
+        await SearchAnimeAsync(title).ConfigureAwait(true);
 
         AllMangaSearchResult? matchingAnime = AnimeResults.ToList().FirstOrDefault(x => x.MalId != null && x.MalId.Value == malId);
         if (matchingAnime != null)

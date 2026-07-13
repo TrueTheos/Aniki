@@ -8,7 +8,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class MainWindow : Window
+internal sealed partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
 
@@ -50,7 +50,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            await _viewModel.InitializeAsync();
+            await _viewModel.InitializeAsync().ConfigureAwait(true);
         }
         catch (Exception e)
         {
@@ -87,7 +87,7 @@ public partial class MainWindow : Window
             {
                 DataContext = settingsViewModel
             };
-            await settingsWindow.ShowDialog(this);
+            await settingsWindow.ShowDialog(this).ConfigureAwait(true);
         }
         catch (Exception e)
         {

@@ -1,8 +1,9 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Aniki.Services.Parser;
 
-public sealed record ParsedName
+internal sealed record ParsedName
 {
     public required string Name { get; init; }
     public int? Season { get; init; }
@@ -12,7 +13,7 @@ public sealed record ParsedName
     public int? Year { get; init; }
 }
 
-public static class FilenameParser
+internal static class FilenameParser
 {
     private static readonly Regex[] SeasonEpisodeRegexes =
     [
@@ -163,7 +164,7 @@ public static class FilenameParser
             return null;
 
         text = text.Remove(match.Index, match.Length);
-        return int.Parse(match.Groups["year"].Value);
+        return int.Parse(match.Groups["year"].Value, CultureInfo.InvariantCulture);
     }
 
     private static string CleanNoise(string text)

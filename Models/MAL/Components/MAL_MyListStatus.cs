@@ -2,7 +2,7 @@
 
 namespace Aniki.Models.MAL.Components;
 
-public class MAL_MyListStatus
+internal sealed class MAL_MyListStatus
 {
     [JsonPropertyName("status")]
     [JsonConverter(typeof(JsonStringEnumConverter))]

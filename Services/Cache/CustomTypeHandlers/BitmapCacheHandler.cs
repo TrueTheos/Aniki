@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Services.Cache.CustomTypeHandlers;
 
-public class BitmapCacheHandler : ICacheTypeHandler
+internal sealed class BitmapCacheHandler : ICacheTypeHandler
 {
     public void Serialize(object value, Stream destination)
     {

@@ -5,7 +5,7 @@ using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Interfaces;
 
-public interface ISaveService
+internal interface ISaveService
 {
     public string DefaultEpisodesFolder { get; }
     public GenericCacheService<string, AnimeSeasonsMap, AnimeSeasonsMap.AnimeSeasonMapField> GetSeasonCache();

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
 using Avalonia;
@@ -7,7 +8,7 @@ using Avalonia.Threading;
 
 namespace Aniki.ViewModels;
 
-public partial class AnimeDetailsViewModel : ViewModelBase
+internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageUrl))]
@@ -55,7 +56,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         }
     }
     
-    public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString();
+    public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString(CultureInfo.InvariantCulture);
 
     public AnimeStatusTranslated SelectedStatus
     {
@@ -80,7 +81,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         
         ManageSubscriptions(id);
 
-        AnimeDetails? details = await _animeService.GetAllFieldsAsync(id);
+        AnimeDetails? details = await _animeService.GetAllFieldsAsync(id).ConfigureAwait(true);
         LoadDetails(details);
 
         IsLoading = false;
@@ -143,7 +144,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details?.UserStatus == null) return;
 
-        EpisodesInput = WatchedEpisodes.ToString();
+        EpisodesInput = WatchedEpisodes.ToString(CultureInfo.InvariantCulture);
         IsEditingEpisodes = true;
     }
 
@@ -187,7 +188,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details == null) return;
 
-        await _animeService.RemoveFromUserListAsync(Details.Id);
+        await _animeService.RemoveFromUserListAsync(Details.Id).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -196,7 +197,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         if (Details == null) return;
         if (Details.UserStatus == null || Details.UserStatus.Status == AnimeStatus.None)
         {
-            await _animeService.SetAnimeStatusAsync(Details.Id, AnimeStatus.PlanToWatch);
+            await _animeService.SetAnimeStatusAsync(Details.Id, AnimeStatus.PlanToWatch).ConfigureAwait(true);
         }
     }
 
@@ -218,14 +219,14 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
         TorrentSearchViewModel.Update(Details, WatchedEpisodes);
 
-        _episodeUpdateCts?.Cancel();
+        _episodeUpdateCts?.CancelAsync();
         _episodeUpdateCts?.Dispose();
         _episodeUpdateCts = new CancellationTokenSource();
 
         try
         {
-            await Task.Delay(2000, _episodeUpdateCts.Token);
-            await _animeService.SetEpisodesWatchedAsync(Details.Id, newCount);
+            await Task.Delay(2000, _episodeUpdateCts.Token).ConfigureAwait(true);
+            await _animeService.SetEpisodesWatchedAsync(Details.Id, newCount).ConfigureAwait(true);
         }
         catch (TaskCanceledException)
         {
@@ -258,7 +259,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if (Details?.UserStatus == null) return;
 
-        await _animeService.SetAnimeScoreAsync(Details.Id, score);
+        await _animeService.SetAnimeScoreAsync(Details.Id, score).ConfigureAwait(true);
         Details.UserStatus.Score = score;
     }
 
@@ -266,11 +267,11 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     {
         if(Details?.UserStatus == null) return;
         
-        await _animeService.SetAnimeStatusAsync(Details.Id, status.TranslatedToAnimeStatus());
+        await _animeService.SetAnimeStatusAsync(Details.Id, status.TranslatedToAnimeStatus()).ConfigureAwait(true);
         Details.UserStatus?.Status = status.TranslatedToAnimeStatus();
     }
 
-    private void SaveToClipboard(string? data)
+    private static void SaveToClipboard(string? data)
     {
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
             desktop.MainWindow?.Clipboard is not { } provider)
@@ -328,7 +329,7 @@ public partial class AnimeDetailsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void OpenUrl(string url)
+    private static void OpenUrl(string url)
     {
         if (string.IsNullOrEmpty(url)) return;
         
@@ -343,5 +344,10 @@ public partial class AnimeDetailsViewModel : ViewModelBase
         MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
         WatchAnimeViewModel.GoToAnimeInOnlineView(Details.Id, Details.Title);
         _ = mainViewModel.ShowWatchPage();
+    }
+
+    public void Dispose()
+    {
+        _episodeUpdateCts?.Dispose();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -9,7 +10,7 @@ using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Anime.Providers;
 
-public class MalService : IAnimeProvider
+internal sealed class MalService : IAnimeProvider, IDisposable
 {
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.Mal;
     private bool _isLoggedIn;
@@ -68,7 +69,7 @@ public class MalService : IAnimeProvider
     
     private async Task<HttpResponseMessage> GetAsync(string url, string message)
     {
-        await _rateLimitLock.WaitAsync();
+        await _rateLimitLock.WaitAsync().ConfigureAwait(true);
 
         try
         {
@@ -88,7 +89,7 @@ public class MalService : IAnimeProvider
 
                 if (timeToWait > 0)
                 {
-                    await Task.Delay(timeToWait + 20);
+                    await Task.Delay(timeToWait + 20).ConfigureAwait(true);
                 }
 
                 while (_requestTimestamps.Count > 0 &&
@@ -113,7 +114,7 @@ public class MalService : IAnimeProvider
         _sw.Restart();
     #endif
         
-        HttpResponseMessage result = await _client.GetAsync(url);
+        HttpResponseMessage result = await _client.GetAsync(url).ConfigureAwait(true);
 
     #if DEBUG
         _sw.Stop();
@@ -125,15 +126,15 @@ public class MalService : IAnimeProvider
 
     private async Task<T?> GetAndDeserializeAsync<T>(string url, string message) where T : class
     {
-        url = url.Replace("%20", "+").Replace(" ", "+");
-        HttpResponseMessage response = await GetAsync(url, message);
+        url = url.Replace("%20", "+", StringComparison.InvariantCulture).Replace(" ", "+", StringComparison.InvariantCulture);
+        HttpResponseMessage response = await GetAsync(url, message).ConfigureAwait(true);
         
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException($"API returned status code: {response.StatusCode} {url} {message}");
         }
 
-        string responseBody = await response.Content.ReadAsStringAsync();
+        string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
         return JsonSerializer.Deserialize<T>(responseBody, _jso);
     }
 
@@ -143,7 +144,7 @@ public class MalService : IAnimeProvider
     {
         if (!IsLoggedIn) return new();
         
-        MAL_UserData? userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync");
+        MAL_UserData? userData = await GetAndDeserializeAsync<MAL_UserData>("https://api.myanimelist.net/v2/users/@me", "GetUserDataAsync").ConfigureAwait(true);
         
         if(userData == null) throw new InvalidOperationException("Failed to deserialize user data");
         return new UserData
@@ -154,7 +155,7 @@ public class MalService : IAnimeProvider
         };
     }
     
-    private AnimeStatus ConvertFromMalStatus(AnimeStatusApi malStatus)
+    private static AnimeStatus ConvertFromMalStatus(AnimeStatusApi malStatus)
     {
         return malStatus switch
         {
@@ -167,7 +168,7 @@ public class MalService : IAnimeProvider
         };
     }
     
-    private UserAnimeStatus? ConvertMalListStatus(MAL_MyListStatus? malStatus)
+    private static UserAnimeStatus? ConvertMalListStatus(MAL_MyListStatus? malStatus)
     {
         if (malStatus == null) return null;
         
@@ -204,7 +205,7 @@ public class MalService : IAnimeProvider
             List<AnimeDetails> fetchedList = [];
             while (nextPageUrl != null)
             {
-                MAL_UserAnimeListResponse? response = await GetAndDeserializeAsync<MAL_UserAnimeListResponse>(nextPageUrl, "GetUserAnimeList");
+                MAL_UserAnimeListResponse? response = await GetAndDeserializeAsync<MAL_UserAnimeListResponse>(nextPageUrl, "GetUserAnimeList").ConfigureAwait(true);
                 if (response?.Data != null)
                 {
                     fetchedList.AddRange( response.Data.Select(x => ConvertMalToUnified(x.Node)).ToList());
@@ -224,25 +225,25 @@ public class MalService : IAnimeProvider
         }
         catch (Exception ex)
         {
-            throw new($"Error loading anime list: {ex.Message}", ex);
+            throw new NotSupportedException($"Error loading anime list: {ex.Message}", ex);
         }
     }
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
-        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString());
+        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString()).ConfigureAwait(true);
         if (success) _userAnimeDict?[animeId]?.UserStatus?.Status = status;
     }
 
     public async Task SetAnimeScoreAsync(int animeId, int score)
     {
-        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString());
+        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString(CultureInfo.InvariantCulture)).ConfigureAwait(true);
         if (success) _userAnimeDict?[animeId]?.UserStatus?.Score = score;
     }
 
     public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
     {
-        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString());
+        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString(CultureInfo.InvariantCulture)).ConfigureAwait(true);
         if (success) _userAnimeDict?[animeId]?.UserStatus?.EpisodesWatched = episodes;
     }
     
@@ -263,17 +264,19 @@ public class MalService : IAnimeProvider
         
         Dictionary<string, string> formData = new() { [fieldName] = value };
         
+#pragma warning disable CA2000
         FormUrlEncodedContent content = new(formData);
-        HttpResponseMessage response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content);
+#pragma warning restore CA2000
+        HttpResponseMessage response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content).ConfigureAwait(true);
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new($"Failed to update anime: {response.StatusCode}");
+            throw new NotSupportedException($"Failed to update anime: {response.StatusCode}");
         }
 
         if (_userAnimeDict != null && !_userAnimeDict.ContainsKey(animeId))
         {
-            AnimeDetails? details = await FetchAnimeDetailsAsync(animeId, Enum.GetValues<AnimeField>());
+            AnimeDetails? details = await FetchAnimeDetailsAsync(animeId, Enum.GetValues<AnimeField>()).ConfigureAwait(true);
             if (details != null) _userAnimeDict[animeId] = details;
         }
         
@@ -284,11 +287,11 @@ public class MalService : IAnimeProvider
     {
         if(!IsLoggedIn) return;
         
-        HttpResponseMessage response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status");
+        HttpResponseMessage response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status").ConfigureAwait(true);
 
         if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
         {
-            throw new($"Failed to remove anime from list: {response.StatusCode}");
+            throw new NotSupportedException($"Failed to remove anime from list: {response.StatusCode}");
         }
         else
         {
@@ -307,19 +310,19 @@ public class MalService : IAnimeProvider
             if (field is AnimeField.MainPicture && _saveService.TryGetAnimeImage(id, out picture)) {}
             else if (field is not (AnimeField.Picture or AnimeField.TrailerUrl or AnimeField.Id))
             {
-                urlFields.Append($"{FieldToString(field)},");
+                urlFields.Append(CultureInfo.InvariantCulture, $"{FieldToString(field)},");
             }
         }
         
         string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={urlFields}&nsfw=true";
         
-        MAL_Anime? animeResponse = await GetAndDeserializeAsync<MAL_Anime>(url, $"FetchFields {id} {urlFields}");
+        MAL_Anime? animeResponse = await GetAndDeserializeAsync<MAL_Anime>(url, $"FetchFields {id} {urlFields}").ConfigureAwait(true);
 
         if (animeResponse != null)
         {
             animeResponse.Id = id;
             
-            if(fields.Contains(AnimeField.TrailerUrl)) animeResponse.TrailerUrl = await _jikanService.GetAnimeTrailerUrlAsync(animeResponse.Id);
+            if(fields.Contains(AnimeField.TrailerUrl)) animeResponse.TrailerUrl = await _jikanService.GetAnimeTrailerUrlAsync(animeResponse.Id).ConfigureAwait(true);
             if (fields.Contains(AnimeField.Picture))
             {
                 if (picture != null )
@@ -329,7 +332,7 @@ public class MalService : IAnimeProvider
             }
             else
             {
-                animeResponse.Picture = await LoadAnimeImageAsync(id, animeResponse.MainPicture?.Large);
+                animeResponse.Picture = await LoadAnimeImageAsync(id, animeResponse.MainPicture?.Large).ConfigureAwait(true);
             }
 
             return ConvertMalToUnified(animeResponse);
@@ -377,7 +380,7 @@ public class MalService : IAnimeProvider
         {
             if (imageUrl != null)
             {
-                Bitmap? downloadedImage = await GetAnimeImage(imageUrl);
+                Bitmap? downloadedImage = await GetAnimeImage(imageUrl).ConfigureAwait(true);
                 if (downloadedImage != null)
                 {
                     _saveService.SaveImage(id, downloadedImage);
@@ -394,7 +397,7 @@ public class MalService : IAnimeProvider
     {
         try
         {
-            return await DownloadImageAsync(animePictureData);
+            return await DownloadImageAsync(animePictureData).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -407,7 +410,7 @@ public class MalService : IAnimeProvider
     {
         try
         {
-            byte[] imageData = await _client.GetByteArrayAsync(url);
+            byte[] imageData = await _client.GetByteArrayAsync(url).ConfigureAwait(true);
             using MemoryStream ms = new(imageData);
             return new Bitmap(ms);
         }
@@ -421,7 +424,7 @@ public class MalService : IAnimeProvider
     {
         string url = $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={_allFields}&nsfw=true";
 
-        MAL_AnimeSearchListResponse? responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}");
+        MAL_AnimeSearchListResponse? responseData = await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}").ConfigureAwait(true);
 
         var results = responseData?.Data?.OrderBy(x => Math.Abs(x.Node.Title?.Length - query.Length ?? 0))
                                   .Select(x => new { Entry = x, Score = CalculateSearchScore(x.Node, query) })
@@ -432,7 +435,7 @@ public class MalService : IAnimeProvider
         return results.Select(mal => ConvertMalToUnified(mal.Node)).ToList();
     }
 
-    private int CalculateSearchScore(MAL_Anime anime, string query)
+    private static int CalculateSearchScore(MAL_Anime anime, string query)
     {
         if (DoesTitleMatch(anime, query, out int s))
         {
@@ -456,7 +459,7 @@ public class MalService : IAnimeProvider
         return bestScore;
     }
     
-    private int ScoreTitle(string? title, string query)
+    private static int ScoreTitle(string? title, string query)
     {
         if (string.IsNullOrWhiteSpace(title))
             return 0;
@@ -478,7 +481,7 @@ public class MalService : IAnimeProvider
     /// and watchout cuz One Piece Film: Gold has japanese title ONE PIECE. So basically this returns as a perfect match.
     /// Thats why I need to give lower scores 
     
-    private bool DoesTitleMatch(MAL_Anime malAnime, string query, out int score)
+    private static bool DoesTitleMatch(MAL_Anime malAnime, string query, out int score)
     {
         string normalizedQuery = NormalizeTitleToLower(query);
         string normalizedTitle = NormalizeTitleToLower(malAnime.Title);
@@ -517,16 +520,16 @@ public class MalService : IAnimeProvider
         return false;
     }
 
-    private string NormalizeTitleToLower(string? title)
+    private static string NormalizeTitleToLower(string? title)
     {
         if (string.IsNullOrEmpty(title)) return string.Empty;
     
-        string normalized = title.Replace("-", "").Replace("_", "").Replace(":", "").Trim();
+        string normalized = title.Replace("-", "", StringComparison.InvariantCulture).Replace("_", "", StringComparison.InvariantCulture).Replace(":", "", StringComparison.InvariantCulture).Trim();
         normalized = Regex.Replace(normalized, @"\s+", " ");
-        return normalized.ToLower();
+        return normalized.ToLowerInvariant();
     }
     
-    private AnimeRankingCategory ConvertToMalRankingCategory(RankingCategory category)
+    private static AnimeRankingCategory ConvertToMalRankingCategory(RankingCategory category)
     {
         return category switch
         {
@@ -540,7 +543,7 @@ public class MalService : IAnimeProvider
 
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        if (category == RankingCategory.Airing) return await GetSeasonalAnimeAsync();
+        if (category == RankingCategory.Airing) return await GetSeasonalAnimeAsync().ConfigureAwait(true);
     
         string rankingType = ConvertToMalRankingCategory(category) switch
         {
@@ -552,7 +555,7 @@ public class MalService : IAnimeProvider
 
         string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit=100&fields={_allFields}&nsfw=true";
 
-        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory");
+        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory").ConfigureAwait(true);
     
         if (response?.Data != null)
         {
@@ -578,7 +581,7 @@ public class MalService : IAnimeProvider
     
         string url = $"https://api.myanimelist.net/v2/anime/season/{DateTime.Now.Year}/{season}?limit=100&fields={_allFields}&nsfw=true";
 
-        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory");
+        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory").ConfigureAwait(true);
     
         if (response?.Data != null)
         {
@@ -591,7 +594,7 @@ public class MalService : IAnimeProvider
         return [];
     }
     
-    private AnimeStatusApi ConvertToMalStatus(AnimeStatus status)
+    private static AnimeStatusApi ConvertToMalStatus(AnimeStatus status)
     {
         return status switch
         {
@@ -605,7 +608,7 @@ public class MalService : IAnimeProvider
     }
     
     
-    private RelatedAnime.RelationType ConvertRelationType(string? type)
+    private static RelatedAnime.RelationType ConvertRelationType(string? type)
     {
         if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.Other;
         return type switch
@@ -618,7 +621,7 @@ public class MalService : IAnimeProvider
         };
     }
     
-    private AnimeDetails ConvertMalToUnified(MAL_Anime mal)
+    private static AnimeDetails ConvertMalToUnified(MAL_Anime mal)
     {
         return new AnimeDetails(
             id: mal.Id,
@@ -658,5 +661,11 @@ public class MalService : IAnimeProvider
                     Relation = ConvertRelationType(r.RelationType)
                 })
                 .ToArray() ?? []);
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
+        _rateLimitLock.Dispose();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Aniki.Services.Interfaces;
 
-public interface ITokenService
+internal interface ITokenService
 {
     void Init();
     Task<StoredTokenData?> LoadTokensAsync(ILoginProvider.ProviderType providerId);

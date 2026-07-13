@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models.Anilist.Components;
 
-public class Anilist_Date
+internal sealed class Anilist_Date
 {
     public int? Year { get; set; }
     public int? Month { get; set; }

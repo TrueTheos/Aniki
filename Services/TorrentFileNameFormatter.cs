@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Aniki.Services;
 
-public static class TorrentFileNameFormatter
+internal static class TorrentFileNameFormatter
 {
     private static readonly Regex ReleaseGroupPattern = new(@"^\[([^\]]+)\]");
 

@@ -1,8 +1,8 @@
 ﻿namespace Aniki.Services.Auth;
 
-public interface ILoginProvider
+internal interface ILoginProvider
 {
-    public enum ProviderType {Mal, AniList}
+    internal enum ProviderType {Mal, AniList}
     
     ProviderType Provider { get; }
     string LoginUrl { get; }

@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Aniki.Services;
 
-public class CalendarService : ICalendarService
+internal sealed class CalendarService : ICalendarService, IDisposable
 {
     private const string GRAPH_QL_ENDPOINT = "https://graphql.anilist.co";
 
@@ -71,11 +71,13 @@ public class CalendarService : ICalendarService
                 }
             };
 
+#pragma warning disable CA2000
             StringContent content = new(payload.ToString(), Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await _client.PostAsync(GRAPH_QL_ENDPOINT, content);
+#pragma warning restore CA2000
+            HttpResponseMessage response = await _client.PostAsync(GRAPH_QL_ENDPOINT, content).ConfigureAwait(true);
             response.EnsureSuccessStatusCode();
 
-            string body = await response.Content.ReadAsStringAsync();
+            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
             JObject json = JObject.Parse(body);
 
             JToken? pageNode = json["data"]?["Page"];
@@ -102,7 +104,7 @@ public class CalendarService : ICalendarService
         long startUnix = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)endDate).ToUnixTimeSeconds();
 
-        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix, perPage);
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix, perPage).ConfigureAwait(true);
 
         HashSet<int> watchSet = new(watchingList);
 
@@ -158,7 +160,7 @@ public class CalendarService : ICalendarService
         long startUnix = ((DateTimeOffset)date.Date).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)date.Date.AddDays(1)).ToUnixTimeSeconds();
 
-        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix);
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix).ConfigureAwait(true);
 
         List<AnimeScheduleItem> animeItems = new();
 
@@ -174,7 +176,7 @@ public class CalendarService : ICalendarService
         return animeItems;
     }
 
-    private AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<int> watchSet)
+    private static AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<int> watchSet)
     {
         JToken? media = schedule["media"];
         if (media == null) return null;
@@ -199,9 +201,7 @@ public class CalendarService : ICalendarService
         
         int? meanScore = media["meanScore"]?.ToObject<int?>();
 
-        float? meanScoreScaled = meanScore.HasValue
-            ? meanScore.Value / 10f
-            : null;
+        float? meanScoreScaled = meanScore / 10f;
 
         string rawDescription = media["description"]?.ToString() ?? "No description";
         string description = Regex.Replace(rawDescription, "<.*?>", "").Trim();
@@ -222,7 +222,7 @@ public class CalendarService : ICalendarService
         return result;
     }
 
-    private string GetBestTitle(JToken? titleObject)
+    private static string GetBestTitle(JToken? titleObject)
     {
         if (titleObject == null) return "";
 
@@ -231,7 +231,12 @@ public class CalendarService : ICalendarService
                titleObject["native"]?.ToString() ??
                "";
     }
-    
+
+    public void Dispose()
+    {
+        _client.Dispose();
+    }
+
     /*private async Task<Bitmap?> DownloadImageAsync(string url)
     {
         try

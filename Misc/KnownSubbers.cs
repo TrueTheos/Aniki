@@ -1,6 +1,6 @@
 namespace Aniki.Misc;
 
-public static class KnownSubbers
+internal static class KnownSubbers
 {
     private static readonly string[] SubberNames =
     [
@@ -92,7 +92,7 @@ public static class KnownSubbers
         return result;
     }
 
-    private static IReadOnlyList<KnownSubber> BuildList()
+    private static List<KnownSubber> BuildList()
     {
         var list = new List<KnownSubber>
         {

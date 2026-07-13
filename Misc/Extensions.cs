@@ -1,5 +1,5 @@
 ﻿namespace Aniki.Misc;
 
-public static class Extensions
+internal static class Extensions
 {
 }

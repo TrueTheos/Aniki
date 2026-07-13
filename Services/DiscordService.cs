@@ -4,7 +4,7 @@ using DiscordRPC.Logging;
 
 namespace Aniki.Services;
 
-public class DiscordService : IDiscordService, IDisposable
+internal sealed class DiscordService : IDiscordService, IDisposable
 {
     private const string CLIENT_ID = "1371263147792535592"; 
     private DiscordRpcClient? _client;

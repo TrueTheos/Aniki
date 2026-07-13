@@ -8,7 +8,7 @@ using Microsoft.Win32;
 
 namespace Aniki.Services;
 
-public class VideoPlayerService : IVideoPlayerService
+internal sealed class VideoPlayerService : IVideoPlayerService
 {
     private const string ALLANIME_STREAM_REFERER = "https://allmanga.to/";
     private const string MP4UPLOAD_STREAM_REFERER = "https://www.mp4upload.com/";
@@ -48,11 +48,11 @@ public class VideoPlayerService : IVideoPlayerService
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                await DetectWindowsPlayersAsync();
+                await DetectWindowsPlayersAsync().ConfigureAwait(true);
             }
             else
             {
-                await DetectUnixPlayersAsync();
+                await DetectUnixPlayersAsync().ConfigureAwait(true);
             }
 
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -73,7 +73,7 @@ public class VideoPlayerService : IVideoPlayerService
                 SelectedPlayer = AvailablePlayers.FirstOrDefault(x => x.ExecutablePath == currentPath) 
                                  ?? AvailablePlayers.FirstOrDefault();
             });
-        });
+        }).ConfigureAwait(true);
     }
 
     private async Task DetectWindowsPlayersAsync()
@@ -83,7 +83,7 @@ public class VideoPlayerService : IVideoPlayerService
 
         tasks.Add(Task.Run(DetectCommonWindowsPlayers));
 
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(tasks).ConfigureAwait(true);
     }
 
     private async Task DetectUnixPlayersAsync()
@@ -96,14 +96,14 @@ public class VideoPlayerService : IVideoPlayerService
             {
                 VideoPlayerOption option = new()
                 {
-                    DisplayName = player.ToUpper(),
+                    DisplayName = player.ToUpperInvariant(),
                     ExecutablePath = player
                 };
                 _scannedPlayers.TryAdd(player, option);
             }
         }));
 
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(tasks).ConfigureAwait(true);
     }
 
     private void DetectCommonWindowsPlayers()
@@ -222,22 +222,22 @@ public class VideoPlayerService : IVideoPlayerService
         }
     }
 
-    private string ExtractExecutablePath(string command)
+    private static string ExtractExecutablePath(string command)
     {
         if (string.IsNullOrEmpty(command)) return "";
         command = command.Trim();
         
-        if (command.StartsWith("\""))
+        if (command.StartsWith('"'))
         {
-            int endQuote = command.IndexOf("\"", 1, StringComparison.Ordinal);
+            int endQuote = command.IndexOf('"', 1);
             if (endQuote > 0) return command[1..endQuote];
         }
         
-        int spaceIndex = command.IndexOf(' ');
+        int spaceIndex = command.IndexOf(' ', StringComparison.InvariantCulture);
         return spaceIndex > 0 ? command[..spaceIndex] : command;
     }
 
-    private string? FindExecutableInSystem(string exeName)
+    private static string? FindExecutableInSystem(string exeName)
     {
         string? pathVar = Environment.GetEnvironmentVariable("PATH");
         if (pathVar != null)
@@ -281,7 +281,7 @@ public class VideoPlayerService : IVideoPlayerService
         return null;
     }
 
-    private bool IsPlayerInstalled(string playerExe)
+    private static bool IsPlayerInstalled(string playerExe)
     {
         try
         {
@@ -401,11 +401,11 @@ public class VideoPlayerService : IVideoPlayerService
         return url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) ? MP4UPLOAD_STREAM_REFERER : ALLANIME_STREAM_REFERER;
     }
 
-    private Process? OpenWithSpecificPlayer(string url, string playerPath)
+    private static Process? OpenWithSpecificPlayer(string url, string playerPath)
     {
         try
         {
-            string playerName = Path.GetFileNameWithoutExtension(playerPath).ToLower();
+            string playerName = Path.GetFileNameWithoutExtension(playerPath).ToLowerInvariant();
             bool useStreamHeaders = IsRemoteStreamUrl(url) && !IsLocalMediaPath(url);
             string streamReferer = GetStreamReferer(url);
             string arguments = playerName switch

@@ -5,7 +5,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
-public partial class CalendarViewModel : ViewModelBase
+internal sealed partial class CalendarViewModel : ViewModelBase
 {
     private readonly Dictionary<DateTime, DaySchedule> _cachedDays = new();
     private DateTime _viewStartDate;
@@ -24,7 +24,7 @@ public partial class CalendarViewModel : ViewModelBase
     private readonly IAnimeService _animeService;
     private readonly ICalendarService _calendarService;
 
-    private double CurrentTimeOffset
+    private static double CurrentTimeOffset
     {
         get
         {
@@ -46,11 +46,11 @@ public partial class CalendarViewModel : ViewModelBase
     public override async Task Enter()
     {
         _viewStartDate = GetCurrentWeekStart();
-        await LoadWatchingListAsync();
-        await FetchAndDisplayScheduleAsync();
+        await LoadWatchingListAsync().ConfigureAwait(true);
+        await FetchAndDisplayScheduleAsync().ConfigureAwait(true);
     }
     
-    private DateTime GetCurrentWeekStart()
+    private static DateTime GetCurrentWeekStart()
         => DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
         
     private async Task LoadWatchingListAsync()
@@ -59,8 +59,8 @@ public partial class CalendarViewModel : ViewModelBase
         
         if(!AnimeService.IsLoggedIn) return;
         
-        var watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
-        var planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch);
+        var watching = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching).ConfigureAwait(true);
+        var planToWatch = await _animeService.GetUserAnimeListAsync(AnimeStatus.PlanToWatch).ConfigureAwait(true);
 
         foreach (AnimeDetails anime in watching) _watchingList.Add(anime.Id);
         foreach (AnimeDetails anime in planToWatch) _watchingList.Add(anime.Id);
@@ -81,7 +81,7 @@ public partial class CalendarViewModel : ViewModelBase
             var schedule = await _calendarService.GetScheduleAsync(
                 _watchingList,
                 uncachedDates.First(),
-                uncachedDates.Last().AddDays(1));
+                uncachedDates.Last().AddDays(1)).ConfigureAwait(true);
  
             foreach (DaySchedule day in schedule)
                 _cachedDays[day.Date] = day;
@@ -91,47 +91,47 @@ public partial class CalendarViewModel : ViewModelBase
         IsLoading = false;
     }
 
-    public async Task GoToClickedAnime(AnimeScheduleItem anime)
+    public static async Task GoToClickedAnime(AnimeScheduleItem anime)
     {
         if (anime.GetId() is { } id and > 0)
-            await DependencyInjection.Instance.ServiceProvider!.GetService<MainViewModel>()!.GoToAnime(id);
+            await DependencyInjection.Instance.ServiceProvider!.GetService<MainViewModel>()!.GoToAnime(id).ConfigureAwait(true);
         else
-            await DependencyInjection.Instance.ServiceProvider!.GetService<MainViewModel>()!.GoToAnime(anime.Title);
+            await DependencyInjection.Instance.ServiceProvider!.GetService<MainViewModel>()!.GoToAnime(anime.Title).ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task GoBackDay()
     {
         _viewStartDate = _viewStartDate.AddDays(-1);
-        await FetchAndDisplayScheduleAsync();
+        await FetchAndDisplayScheduleAsync().ConfigureAwait(true);
     }
         
     [RelayCommand]
     private async Task GoBackWeek()
     {
         _viewStartDate = _viewStartDate.AddDays(-7);
-        await FetchAndDisplayScheduleAsync();
+        await FetchAndDisplayScheduleAsync().ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task GoToStart()
     {
         _viewStartDate = DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
-        await FetchAndDisplayScheduleAsync();
+        await FetchAndDisplayScheduleAsync().ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task GoForwardDay()
     {
         _viewStartDate = _viewStartDate.AddDays(1);
-        await FetchAndDisplayScheduleAsync();
+        await FetchAndDisplayScheduleAsync().ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task GoForwardWeek()
     {
         _viewStartDate = _viewStartDate.AddDays(7);
-        await FetchAndDisplayScheduleAsync();
+        await FetchAndDisplayScheduleAsync().ConfigureAwait(true);
     }
 
     private void RefreshView()
@@ -187,7 +187,7 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    private bool IsCurrentlyAiring(DateTime airingTime, DateTime dayDate)
+    private static bool IsCurrentlyAiring(DateTime airingTime, DateTime dayDate)
     {
         if (dayDate.Date != DateTime.Today) return false;
 

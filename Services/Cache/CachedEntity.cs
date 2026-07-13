@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Services.Cache;
 
-public class CachedEntity<TEntity, TFieldEnum> where TEntity : class, new() where TFieldEnum : Enum
+internal sealed class CachedEntity<TEntity, TFieldEnum> where TEntity : class, new() where TFieldEnum : Enum
 {
     public TEntity Data { get; } = new();
     

@@ -11,9 +11,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <LangVersion>preview</LangVersion>
+    <AnalysisLevel>latest-all</AnalysisLevel>
   </PropertyGroup>
     
-
   <ItemGroup>
     <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.3.0" />
     <PackageReference Include="Avalonia" Version="11.3.0" />

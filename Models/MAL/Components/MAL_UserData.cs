@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models.MAL.Components;
 
-public class MAL_UserData
+internal sealed class MAL_UserData
 {
     public int Id { get; set; }
     public string? Name { get; set; }

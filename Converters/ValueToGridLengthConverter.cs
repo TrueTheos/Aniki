@@ -4,7 +4,7 @@ using Avalonia.Data.Converters;
 
 namespace Aniki.Converters;
 
-public class ValueToGridLengthConverter : IValueConverter
+internal sealed class ValueToGridLengthConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

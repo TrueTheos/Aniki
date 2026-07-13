@@ -3,14 +3,14 @@ using Avalonia.Media.Imaging;
 
 namespace Aniki.Models;
 
-public class UserData
+internal sealed class UserData
 {
     public int Id { get; set; }
     public string? Name { get; set; }
     public string? Picture { get; set; }
 }
 
-public enum AnimeField 
+internal enum AnimeField 
 {
     Id,
     Title, 
@@ -34,7 +34,7 @@ public enum AnimeField
     MediaType
 }
 
-public class AnimeDetails : ObservableObject
+internal sealed class AnimeDetails : ObservableObject
 {
     [CacheField(AnimeField.Id)] public int Id { get; set; }
     [CacheField(AnimeField.Title)] public string? Title { get; set; }
@@ -111,22 +111,22 @@ public class AnimeDetails : ObservableObject
     }
 }
 
-public class AnimePicture
+internal sealed class AnimePicture
 {
     public required string Medium { get; set; }
     public required string Large { get; set; }
 }
 
-public class AlternativeTitles
+internal sealed class AlternativeTitles
 {
     public string[]? Synonyms { get; set; }
     public string? English { get; set; }
     public string? Japanese { get; set; }
 }
 
-public class UserAnimeStatus
+internal sealed class UserAnimeStatus
 {
-    public enum UserAnimeStatusField
+    internal enum UserAnimeStatusField
     {
         Status,
         Score,
@@ -137,9 +137,9 @@ public class UserAnimeStatus
     public int EpisodesWatched { get; set; }
 }
 
-public class RelatedAnime
+internal sealed class RelatedAnime
 {
-    public enum RelationType
+    internal enum RelationType
     {
         Prequel,
         Sequel,
@@ -151,13 +151,13 @@ public class RelatedAnime
     public required RelationType Relation { get; set; }
 }
 
-public class AnimeStatistics
+internal sealed class AnimeStatistics
 {
     public int NumListUsers { get; set; }
     public StatusStatistics? StatusStats { get; set; }
 }
 
-public class StatusStatistics
+internal sealed class StatusStatistics
 {
     public int Watching { get; set; }
     public int Completed { get; set; }
@@ -166,12 +166,12 @@ public class StatusStatistics
     public int PlanToWatch { get; set; }
 }
 
-public class RankingEntry
+internal sealed class RankingEntry
 {
     public required AnimeDetails Details { get; set; }
 }
 
-public enum AnimeStatus
+internal enum AnimeStatus
 {
     None,
     Watching,
@@ -181,7 +181,7 @@ public enum AnimeStatus
     PlanToWatch
 }
 
-public enum RankingCategory
+internal enum RankingCategory
 {
     Airing,
     Upcoming,
@@ -189,7 +189,7 @@ public enum RankingCategory
     ByPopularity
 }
 
-public enum MediaType
+internal enum MediaType
 {
     Unknown,
     TV,
@@ -207,7 +207,7 @@ public enum MediaType
     CM
 }
 
-public class AnimeVideo
+internal sealed class AnimeVideo
 {
     public required string Title { get; set; }
     public required string Url { get; set; }

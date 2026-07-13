@@ -1,6 +1,6 @@
 namespace Aniki.Misc;
 
-public class DependencyInjection
+internal sealed class DependencyInjection
 {
     private static DependencyInjection? _instance;
     public static DependencyInjection Instance => _instance ??= new DependencyInjection();

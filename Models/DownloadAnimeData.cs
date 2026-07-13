@@ -3,7 +3,7 @@ using Aniki.Services.Anime;
 
 namespace Aniki.Models;
 
-public partial class AnimeGroup : ObservableObject
+internal sealed partial class AnimeGroup : ObservableObject
 {
     public string Title { get; }
     public string? ThumbnailUrl { get; }
@@ -168,7 +168,7 @@ public partial class AnimeGroup : ObservableObject
     }
 }
 
-public partial class DownloadedEpisode : ObservableObject
+internal sealed partial class DownloadedEpisode : ObservableObject
 {
     public string FilePath { get; }
     public int EpisodeNumber { get; }

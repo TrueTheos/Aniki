@@ -3,7 +3,7 @@ using Aniki.Services.Cache;
 
 namespace Aniki.Services.Anime;
 
-public interface IAnimeService
+internal interface IAnimeService
 {
     public Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None);
     public Task<AnimeDetails?> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields);

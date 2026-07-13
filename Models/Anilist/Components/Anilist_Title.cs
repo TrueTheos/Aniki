@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models.Anilist.Components;
 
-public class Anilist_Title
+internal sealed class Anilist_Title
 {
     public string? Romaji { get; set; }
     public string? English { get; set; }

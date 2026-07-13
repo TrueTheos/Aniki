@@ -8,8 +8,9 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Auth.Providers;
 
-public class MalLoginProvider : ILoginProvider
+internal sealed class MalLoginProvider : ILoginProvider, IDisposable
 {
+    private static readonly HttpClient Client = new();
     private const string CLIENT_ID = "dc4a7501af14aec92b98f719b666c37c";
     private const string REDIRECT_URI = "http://localhost:8000/callback";
     private string _codeVerifier = "";
@@ -43,7 +44,7 @@ public class MalLoginProvider : ILoginProvider
             _codeVerifier = "this_is_a_long_string_for_pkce_but_mal_uses_plain_so_it_doesnt_matter";
 
             _httpListener.Prefixes.Clear();
-            _httpListener.Prefixes.Add(REDIRECT_URI.EndsWith("/") ? REDIRECT_URI : REDIRECT_URI + "/");
+            _httpListener.Prefixes.Add(REDIRECT_URI.EndsWith('/') ? REDIRECT_URI : REDIRECT_URI + "/");
             _httpListener.Start();
 
             progressReporter.Report("Redirecting to MyAnimeList...");
@@ -51,14 +52,14 @@ public class MalLoginProvider : ILoginProvider
             OpenBrowser(LoginUrl);
             progressReporter.Report("Waiting for authentication in browser...");
 
-            HttpListenerContext context = await _httpListener.GetContextAsync();
+            HttpListenerContext context = await _httpListener.GetContextAsync().ConfigureAwait(true);
             string code = context.Request.QueryString["code"] ?? throw new InvalidOperationException("Failed to get code from query string.");
 
             string responseString = "<html><head><title>Auth Success</title></head><body><h1>Authentication successful!</h1><p>You can close this browser tab/window and return to Aniki.</p><script>window.close();</script></body></html>";
             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
             context.Response.ContentType = "text/html";
             context.Response.ContentLength64 = buffer.Length;
-            await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(true);
             context.Response.Close();
             _httpListener.Stop();
 
@@ -69,10 +70,10 @@ public class MalLoginProvider : ILoginProvider
             }
 
             progressReporter.Report("Exchanging code for token...");
-            bool success = await ExchangeCodeForTokenAsync(code);
+            bool success = await ExchangeCodeForTokenAsync(code).ConfigureAwait(true);
             if (success)
             {
-                return await CheckExistingLoginAsync(); 
+                return await CheckExistingLoginAsync().ConfigureAwait(true); 
             }
             
             progressReporter.Report("Authentication failed or cancelled.");
@@ -102,19 +103,19 @@ public class MalLoginProvider : ILoginProvider
             AccessToken = token,
             ExpiresIn = 2415600
         };
-        await _tokenService.SaveTokensAsync(Provider, tokenResponse);
+        await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(true);
     }
 
     public async Task<string?> CheckExistingLoginAsync()
     {
-        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider);
+        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider).ConfigureAwait(true);
 
         if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken)) return null;
         
         try
         {
-            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken);
-            UserData? userData = await _animeService.GetUserDataAsync();
+            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken).ConfigureAwait(true);
+            UserData? userData = await _animeService.GetUserDataAsync().ConfigureAwait(true);
             return userData?.Name;
         }
         catch (Exception)
@@ -133,8 +134,7 @@ public class MalLoginProvider : ILoginProvider
     {
         try
         {
-            using HttpClient client = new();
-            FormUrlEncodedContent content = new([
+            using FormUrlEncodedContent content = new([
                 new KeyValuePair<string, string>("client_id", CLIENT_ID),
                 new KeyValuePair<string, string>("code", code),
                 new KeyValuePair<string, string>("code_verifier", _codeVerifier),
@@ -142,8 +142,8 @@ public class MalLoginProvider : ILoginProvider
                 new KeyValuePair<string, string>("redirect_uri", REDIRECT_URI)
             ]);
 
-            HttpResponseMessage response = await client.PostAsync("https://myanimelist.net/v1/oauth2/token", content);
-            string responseBody = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await Client.PostAsync("https://myanimelist.net/v1/oauth2/token", content).ConfigureAwait(true);
+            string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
 
             if (!response.IsSuccessStatusCode) return false;
             
@@ -152,7 +152,7 @@ public class MalLoginProvider : ILoginProvider
 
             if (tokenResponse == null) return false;
             
-            await _tokenService.SaveTokensAsync(Provider, tokenResponse);
+            await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(true);
             return true;
         }
         catch (Exception)
@@ -161,8 +161,14 @@ public class MalLoginProvider : ILoginProvider
         }
     }
 
-    private void OpenBrowser(string url)
+    private static void OpenBrowser(string url)
     {
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+
+    public void Dispose()
+    {
+        _httpListener.Close();
+        GC.SuppressFinalize(this);
     }
 }

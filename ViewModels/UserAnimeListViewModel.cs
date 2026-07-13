@@ -4,7 +4,7 @@ using Aniki.Services.Anime;
 
 namespace Aniki.ViewModels;
 
-public partial class UserAnimeListViewModel : ViewModelBase
+internal sealed partial class UserAnimeListViewModel : ViewModelBase
 {
     [ObservableProperty] public partial ObservableCollection<AnimeDetails> AnimeList { get; set; } = [];
     [ObservableProperty] public partial ObservableCollection<AnimeDetails> FilteredAnimeList { get; set; } = [];
@@ -138,11 +138,11 @@ public partial class UserAnimeListViewModel : ViewModelBase
     
     private async Task LoadAnimeListAsync()
     {
-        var list = await _animeService.GetUserAnimeListAsync();
+        var list = await _animeService.GetUserAnimeListAsync().ConfigureAwait(true);
         AnimeList.Clear();
         foreach (AnimeDetails element in list)
         {
-            AnimeDetails? details = await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MalNodeFieldTypes);
+            AnimeDetails? details = await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MalNodeFieldTypes).ConfigureAwait(true);
             if (details != null) AnimeList.Add(details);
         }
         
@@ -150,12 +150,12 @@ public partial class UserAnimeListViewModel : ViewModelBase
         ApplyFiltersAndSort();
     }
 
-    private bool CompareStatus(AnimeStatus? api, string statusFilter)
+    private static bool CompareStatus(AnimeStatus? api, string statusFilter)
     {
         if (!api.HasValue) return false;
         
-        string apiStatus = Regex.Replace(api.Value.ToString().ToLower(), @"[^a-z0-9]", "");
-        string filterStatus = Regex.Replace(statusFilter.ToLower(), @"[^a-z0-9]", "");
+        string apiStatus = Regex.Replace(api.Value.ToString().ToLowerInvariant(), @"[^a-z0-9]", "");
+        string filterStatus = Regex.Replace(statusFilter.ToLowerInvariant(), @"[^a-z0-9]", "");
 
         return apiStatus == filterStatus;
     }

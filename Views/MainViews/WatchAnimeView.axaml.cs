@@ -3,7 +3,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class WatchAnimeView : UserControl
+internal sealed partial class WatchAnimeView : UserControl
 {
     public WatchAnimeView()
     {

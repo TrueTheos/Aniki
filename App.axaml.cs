@@ -12,7 +12,7 @@ using Velopack.Sources;
 
 namespace Aniki;
 
-public class App : Application
+internal sealed class App : Application
 {
     public override void Initialize()
     {
@@ -53,7 +53,7 @@ public class App : Application
             
             desktop.MainWindow = new LoginWindow();
 
-            await CheckForUpdates();
+            await CheckForUpdates().ConfigureAwait(true);
         }
         
         DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
@@ -64,20 +64,20 @@ public class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private async Task CheckForUpdates()
+    private static async Task CheckForUpdates()
     {
         try
         {
             UpdateManager mgr = new(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
 
-            UpdateInfo? newVersion = await mgr.CheckForUpdatesAsync();
+            UpdateInfo? newVersion = await mgr.CheckForUpdatesAsync().ConfigureAwait(true);
 
             if (newVersion != null)
             {
-                await mgr.DownloadUpdatesAsync(newVersion);
+                await mgr.DownloadUpdatesAsync(newVersion).ConfigureAwait(true);
                 
                 if (DependencyInjection.Instance.ServiceProvider != null)
-                    DependencyInjection.Instance.ServiceProvider?.GetService<ISaveService>()?.DeleteFolders();
+                    DependencyInjection.Instance.ServiceProvider.GetService<ISaveService>()?.DeleteFolders();
 
                 mgr.ApplyUpdatesAndRestart(newVersion);
             }
@@ -94,7 +94,7 @@ public class App : Application
         
         try
         {
-            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<ISaveService>().SaveAllCaches();
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<ISaveService>().SaveAllCaches().ConfigureAwait(true);
 
             if (sender is not IClassicDesktopStyleApplicationLifetime lifetime) return;
             lifetime.ShutdownRequested -= OnShutdownRequested;

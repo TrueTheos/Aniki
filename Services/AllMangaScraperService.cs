@@ -10,7 +10,7 @@ namespace Aniki.Services;
 // This is hell.
 // AllManga changes their api a lot so we need to do a lot of hacky stuff and update this class often
 // This is a mess, and will stay a mess
-public class AllMangaScraperService : IAllMangaScraperService
+internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposable
 {
     private readonly HttpClient _httpClient;
     private readonly Dictionary<string, string> _hashCache = new();
@@ -33,7 +33,9 @@ public class AllMangaScraperService : IAllMangaScraperService
 
     public AllMangaScraperService()
     {
-        HttpClientHandler handler = new() { AllowAutoRedirect = true, UseCookies = true };
+#pragma warning disable CA2000
+        HttpClientHandler handler = new() { AllowAutoRedirect = true, UseCookies = true, CheckCertificateRevocationList = true };
+#pragma warning restore CA2000
 
         _httpClient = new HttpClient(handler);
         _httpClient.DefaultRequestHeaders.Add("User-Agent",
@@ -51,7 +53,7 @@ public class AllMangaScraperService : IAllMangaScraperService
             return cached;
 
         byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(query));
-        string hash  = Convert.ToHexString(bytes).ToLower();
+        string hash  = Convert.ToHexString(bytes).ToLowerInvariant();
         _hashCache[query] = hash;
         return hash;
     }
@@ -71,12 +73,12 @@ public class AllMangaScraperService : IAllMangaScraperService
                      $"?variables={HttpUtility.UrlEncode(variablesJson)}" +
                      $"&extensions={HttpUtility.UrlEncode(extensionsJson)}";
 
-        string response = await _httpClient.GetStringAsync(url);
+        string response = await _httpClient.GetStringAsync(url).ConfigureAwait(true);
 
-        if (response.Contains("PersistedQueryNotFound"))
+        if (response.Contains("PersistedQueryNotFound", StringComparison.InvariantCulture))
         {
             url += $"&query={HttpUtility.UrlEncode(gql)}";
-            response = await _httpClient.GetStringAsync(url);
+            response = await _httpClient.GetStringAsync(url).ConfigureAwait(true);
         }
 
         return response;
@@ -94,11 +96,11 @@ public class AllMangaScraperService : IAllMangaScraperService
                      $"?variables={HttpUtility.UrlEncode(variablesJson)}" +
                      $"&extensions={HttpUtility.UrlEncode(extensionsJson)}";
 
-        string response = await _httpClient.GetStringAsync(url);
+        string response = await _httpClient.GetStringAsync(url).ConfigureAwait(true);
         if (HasEpisodeSourcePayload(response))
             return response;
 
-        return await PostEpisodeSourcesAsync(variables);
+        return await PostEpisodeSourcesAsync(variables).ConfigureAwait(true);
     }
 
     private async Task<string> PostEpisodeSourcesAsync(object variables)
@@ -110,9 +112,9 @@ public class AllMangaScraperService : IAllMangaScraperService
         });
 
         using StringContent content = new(body, Encoding.UTF8, "application/json");
-        using HttpResponseMessage httpResponse = await _httpClient.PostAsync($"{ALLANIME_API}/api", content);
+        using HttpResponseMessage httpResponse = await _httpClient.PostAsync($"{ALLANIME_API}/api", content).ConfigureAwait(true);
         httpResponse.EnsureSuccessStatusCode();
-        return await httpResponse.Content.ReadAsStringAsync();
+        return await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(true);
     }
 
     private static bool HasEpisodeSourcePayload(string response)
@@ -173,7 +175,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                 countryOrigin   = "ALL"
             };
 
-            string response = await ApqGetAsync(SEARCH_GQL, variables);
+            string response = await ApqGetAsync(SEARCH_GQL, variables).ConfigureAwait(true);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
 
             List<AllMangaSearchResult> results = new();
@@ -242,7 +244,7 @@ public class AllMangaScraperService : IAllMangaScraperService
             string showId    = ExtractShowId(animeIdOrUrl);
             var    variables = new { showId };
 
-            string response = await ApqGetAsync(EPISODES_GQL, variables);
+            string response = await ApqGetAsync(EPISODES_GQL, variables).ConfigureAwait(true);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
 
             List<AllMangaEpisode> episodes = new();
@@ -274,7 +276,7 @@ public class AllMangaScraperService : IAllMangaScraperService
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get episodes: {ex.Message}", ex);
+            throw new NotImplementedException($"Failed to get episodes: {ex.Message}", ex);
         }
     }
 
@@ -288,14 +290,14 @@ public class AllMangaScraperService : IAllMangaScraperService
 
             var variables = new { showId, translationType = "sub", episodeString };
 
-            string response = await ApqGetEpisodeSourcesAsync(variables);
+            string response = await ApqGetEpisodeSourcesAsync(variables).ConfigureAwait(true);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
             JsonElement root = jsonDoc.RootElement;
 
             if (TryGetTobeparsed(root, out string rootTobeparsed))
             {
                 string decrypted = DecryptTobeparsedAes256Ctr(rootTobeparsed);
-                return await ExtractVideoUrlFromSourcesJson(decrypted);
+                return await ExtractVideoUrlFromSourcesJson(decrypted).ConfigureAwait(true);
             }
 
             if (root.TryGetProperty("data", out JsonElement data))
@@ -303,23 +305,23 @@ public class AllMangaScraperService : IAllMangaScraperService
                 if (TryGetTobeparsed(data, out string dataTobeparsed))
                 {
                     string decrypted = DecryptTobeparsedAes256Ctr(dataTobeparsed);
-                    return await ExtractVideoUrlFromSourcesJson(decrypted);
+                    return await ExtractVideoUrlFromSourcesJson(decrypted).ConfigureAwait(true);
                 }
 
                 if (data.TryGetProperty("episode", out JsonElement episode) &&
                     episode.TryGetProperty("sourceUrls", out JsonElement sourceUrls))
                 {
-                    string? videoLink = await ResolveFirstVideoLinkAsync(sourceUrls);
+                    string? videoLink = await ResolveFirstVideoLinkAsync(sourceUrls).ConfigureAwait(true);
                     if (!string.IsNullOrEmpty(videoLink))
                         return videoLink;
                 }
             }
 
-            throw new Exception("No valid video sources found");
+            throw new NotImplementedException("No valid video sources found");
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get video URL: {ex.Message}", ex);
+            throw new NotImplementedException($"Failed to get video URL: {ex.Message}", ex);
         }
     }
 
@@ -327,7 +329,7 @@ public class AllMangaScraperService : IAllMangaScraperService
     {
         byte[] raw = Convert.FromBase64String(base64Data);
         if (raw.Length < 13 + 16)
-            throw new Exception("tobeparsed payload too short");
+            throw new NotImplementedException("tobeparsed payload too short");
 
         ReadOnlySpan<byte> iv12       = raw.AsSpan(1, 12);
         int                ctLen      = raw.Length - 13 - 16;
@@ -349,8 +351,12 @@ public class AllMangaScraperService : IAllMangaScraperService
 
         byte[] output = new byte[ciphertext.Length];
         using Aes aes = Aes.Create();
+#pragma warning disable CA5390
         aes.Key = key;
+#pragma warning restore CA5390
+#pragma warning disable CA5358
         aes.Mode = CipherMode.ECB;
+#pragma warning restore CA5358
         aes.Padding = PaddingMode.None;
 
         using ICryptoTransform encryptor = aes.CreateEncryptor();
@@ -390,7 +396,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                 continue;
 
             string decodedUrl = DecodeSourceUrl(encodedUrl);
-            string videoLink  = await GetLinksFromSource(decodedUrl);
+            string videoLink  = await GetLinksFromSource(decodedUrl).ConfigureAwait(true);
             if (!string.IsNullOrEmpty(videoLink))
                 return videoLink;
         }
@@ -403,9 +409,9 @@ public class AllMangaScraperService : IAllMangaScraperService
         if (!decryptedJson.TrimStart().StartsWith('[') &&
             !decryptedJson.TrimStart().StartsWith('{'))
         {
-            string direct = await GetLinksFromSource(decryptedJson.Trim());
+            string direct = await GetLinksFromSource(decryptedJson.Trim()).ConfigureAwait(true);
             if (!string.IsNullOrEmpty(direct)) return direct;
-            throw new Exception("Decrypted payload is not JSON and not a valid source URL");
+            throw new NotImplementedException("Decrypted payload is not JSON and not a valid source URL");
         }
 
         using JsonDocument doc = JsonDocument.Parse(decryptedJson);
@@ -473,18 +479,18 @@ public class AllMangaScraperService : IAllMangaScraperService
             if (string.IsNullOrEmpty(rawUrl)) continue;
 
             string decodedUrl = DecodeSourceUrl(rawUrl);
-            string videoLink  = await GetLinksFromSource(decodedUrl);
+            string videoLink  = await GetLinksFromSource(decodedUrl).ConfigureAwait(true);
             if (!string.IsNullOrEmpty(videoLink))
                 return videoLink;
         }
 
-        throw new Exception("No working video source found in decrypted payload");
+        throw new NotImplementedException("No working video source found in decrypted payload");
     }
 
     private static string ExtractShowId(string animeIdOrUrl) =>
-        animeIdOrUrl.Contains('/') ? animeIdOrUrl.Split('/').Last() : animeIdOrUrl;
+        animeIdOrUrl.Contains('/', StringComparison.InvariantCulture) ? animeIdOrUrl.Split('/').Last() : animeIdOrUrl;
 
-    private int CalculateAnimeScore(AllMangaSearchResult anime, string query)
+    private static int CalculateAnimeScore(AllMangaSearchResult anime, string query)
     {
         if (DoesTitleMatch(anime, query)) return 1000;
 
@@ -495,20 +501,20 @@ public class AllMangaScraperService : IAllMangaScraperService
         return score;
     }
 
-    private bool DoesTitleMatch(AllMangaSearchResult anime, string query) =>
+    private static bool DoesTitleMatch(AllMangaSearchResult anime, string query) =>
         NormalizeTitleToLower(anime.Title) == NormalizeTitleToLower(query);
 
     private static string NormalizeTitleToLower(string? title)
     {
         if (string.IsNullOrEmpty(title)) return string.Empty;
-        string normalized = title.Replace("-", "").Replace("_", "").Replace(":", "").Trim();
+        string normalized = title.Replace("-", "", StringComparison.InvariantCulture).Replace("_", "", StringComparison.InvariantCulture).Replace(":", "", StringComparison.InvariantCulture).Trim();
         normalized = Regex.Replace(normalized, @"\s+", " ");
-        return normalized.ToLower();
+        return normalized.ToLowerInvariant();
     }
 
-    private string DecodeSourceUrl(string encoded)
+    private static string DecodeSourceUrl(string encoded)
     {
-        if (string.IsNullOrEmpty(encoded) || !encoded.StartsWith("--"))
+        if (string.IsNullOrEmpty(encoded) || !encoded.StartsWith("--", StringComparison.InvariantCulture))
             return encoded;
 
         encoded = encoded[2..];
@@ -521,7 +527,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                 decoded.Append(chr);
         }
 
-        return decoded.ToString().Replace("/clock", "/clock.json");
+        return decoded.ToString().Replace("/clock", "/clock.json", StringComparison.InvariantCulture);
     }
 
     private static string DecodeHexChar(string hex) => hex switch
@@ -556,7 +562,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                 || host.EndsWith("." + ALLANIME_BASE, StringComparison.OrdinalIgnoreCase);
 
             if (!onAllanime)
-                return await ResolvePlayableUrlAsync(NormalizeHttpUrl(sourceUrl));
+                return await ResolvePlayableUrlAsync(NormalizeHttpUrl(sourceUrl)).ConfigureAwait(true);
 
             sourceUrl = string.Concat(absolute.PathAndQuery, absolute.Fragment);
         }
@@ -566,7 +572,7 @@ public class AllMangaScraperService : IAllMangaScraperService
 
         try
         {
-            string response = await _httpClient.GetStringAsync($"https://{ALLANIME_BASE}{sourceUrl}");
+            string response = await _httpClient.GetStringAsync($"https://{ALLANIME_BASE}{sourceUrl}").ConfigureAwait(true);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
 
             if (jsonDoc.RootElement.TryGetProperty("links", out JsonElement links))
@@ -599,7 +605,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                 }
 
                 if (!string.IsNullOrEmpty(bestUrl))
-                    return await ResolvePlayableUrlAsync(bestUrl, response);
+                    return await ResolvePlayableUrlAsync(bestUrl, response).ConfigureAwait(true);
             }
 
             return string.Empty;
@@ -619,7 +625,7 @@ public class AllMangaScraperService : IAllMangaScraperService
         if (url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) &&
             url.Contains("/embed", StringComparison.OrdinalIgnoreCase))
         {
-            string resolved = await ResolveMp4UploadEmbedAsync(url);
+            string resolved = await ResolveMp4UploadEmbedAsync(url).ConfigureAwait(true);
             return IsDirectMediaUrl(resolved) ? resolved : string.Empty;
         }
 
@@ -640,7 +646,7 @@ public class AllMangaScraperService : IAllMangaScraperService
                     referer = refererMatch.Groups[1].Value;
             }
 
-            string resolved = await ResolveMasterPlaylistAsync(url, referer);
+            string resolved = await ResolveMasterPlaylistAsync(url, referer).ConfigureAwait(true);
             if (IsDirectMediaUrl(resolved))
                 return resolved;
         }
@@ -652,7 +658,7 @@ public class AllMangaScraperService : IAllMangaScraperService
     {
         try
         {
-            string html = await _httpClient.GetStringAsync(embedUrl);
+            string html = await _httpClient.GetStringAsync(embedUrl).ConfigureAwait(true);
             Match match = Mp4UploadSrcRegex.Match(html);
             if (!match.Success)
                 return string.Empty;
@@ -695,9 +701,9 @@ public class AllMangaScraperService : IAllMangaScraperService
             request.Headers.TryAddWithoutValidation("Referer", referer);
             request.Headers.TryAddWithoutValidation("Origin", ALLANIME_REFR);
 
-            using HttpResponseMessage response = await _httpClient.SendAsync(request);
+            using HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(true);
             response.EnsureSuccessStatusCode();
-            string playlist = await response.Content.ReadAsStringAsync();
+            string playlist = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
 
             if (!playlist.Contains("#EXTM3U", StringComparison.Ordinal))
                 return string.Empty;
@@ -779,5 +785,10 @@ public class AllMangaScraperService : IAllMangaScraperService
             return url;
 
         return string.Concat(url.AsSpan(0, pathStart + 1), url.AsSpan(i + 1));
+    }
+
+    public void Dispose()
+    {
+        _httpClient.Dispose();
     }
 }

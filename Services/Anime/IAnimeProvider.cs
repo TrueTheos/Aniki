@@ -3,7 +3,7 @@ using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Anime;
 
-public interface IAnimeProvider
+internal interface IAnimeProvider
 {
     ILoginProvider.ProviderType Provider { get; }
     bool IsLoggedIn { get; }

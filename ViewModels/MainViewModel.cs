@@ -3,7 +3,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
-public partial class MainViewModel : ViewModelBase
+internal sealed partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty] public partial string? Username { get; set; }
     [ObservableProperty] public partial bool IsLoading { get; set; }
@@ -64,7 +64,7 @@ public partial class MainViewModel : ViewModelBase
     {
         if (ReferenceEquals(CurrentViewModel, target))
         {
-            await target.Enter();
+            await target.Enter().ConfigureAwait(true);
             return;
         }
 
@@ -76,7 +76,7 @@ public partial class MainViewModel : ViewModelBase
 
         CurrentViewModel = target;
         RefreshNavigationAvailability();
-        await CurrentViewModel!.Enter();
+        await CurrentViewModel!.Enter().ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -91,7 +91,7 @@ public partial class MainViewModel : ViewModelBase
         _navigationForwardStack.Push(CurrentViewModel);
         CurrentViewModel = previous;
         RefreshNavigationAvailability();
-        await CurrentViewModel.Enter();
+        await CurrentViewModel.Enter().ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -106,65 +106,65 @@ public partial class MainViewModel : ViewModelBase
         _navigationBackStack.Push(CurrentViewModel);
         CurrentViewModel = next;
         RefreshNavigationAvailability();
-        await CurrentViewModel.Enter();
+        await CurrentViewModel.Enter().ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task ShowAnimeBrowsePage()
     {
-        await NavigateToViewAsync(AnimeBrowseViewModel);
+        await NavigateToViewAsync(AnimeBrowseViewModel).ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task ShowAnimeDetailsPage()
     {
-        await NavigateToViewAsync(AnimeDetailsViewModel);
+        await NavigateToViewAsync(AnimeDetailsViewModel).ConfigureAwait(true);
     }
 
     [RelayCommand]
     public async Task ShowWatchPage()
     {
-        await NavigateToViewAsync(WatchViewModel);
+        await NavigateToViewAsync(WatchViewModel).ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task ShowCalendarPage()
     {
-        await NavigateToViewAsync(CalendarViewModel);
+        await NavigateToViewAsync(CalendarViewModel).ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task ShowStatsPage()
     {
-        await NavigateToViewAsync(StatsViewModel);
+        await NavigateToViewAsync(StatsViewModel).ConfigureAwait(true);
     }
     
     [RelayCommand]
     private async Task ShowUserAnimeListPage()
     {
-        await NavigateToViewAsync(UserAnimeListViewModel);
+        await NavigateToViewAsync(UserAnimeListViewModel).ConfigureAwait(true);
     }
     
     [RelayCommand]
     private async Task ShowReadPage()
     {
-        await NavigateToViewAsync(ReadViewMode);
+        await NavigateToViewAsync(ReadViewMode).ConfigureAwait(true);
     }
 
     public async Task GoToAnime(string title)
     {
-        await SearchForAnime(title.Replace('-', ' '));
+        await SearchForAnime(title.Replace('-', ' ')).ConfigureAwait(true);
     }
 
     public async Task GoToAnime(int malId)
     {
-       await SearchForAnime(malId);
+       await SearchForAnime(malId).ConfigureAwait(true);
     }
 
     public async Task InitializeAsync()
     {
-        await LoadUserDataAsync();
-        await _videoPlayerService.ScanPlayersAsync();
+        await LoadUserDataAsync().ConfigureAwait(true);
+        await _videoPlayerService.ScanPlayersAsync().ConfigureAwait(true);
     }
 
     private async Task LoadUserDataAsync()
@@ -172,7 +172,7 @@ public partial class MainViewModel : ViewModelBase
         if (AnimeService.IsLoggedIn)
         {
             IsLoading = true;
-            UserData malUserData = await _animeService.GetUserDataAsync();
+            UserData malUserData = await _animeService.GetUserDataAsync().ConfigureAwait(true);
             Username = malUserData.Name;
         }
         
@@ -190,9 +190,9 @@ public partial class MainViewModel : ViewModelBase
     {
         IsLoading = true;
 
-        await ShowAnimeBrowsePage();
+        await ShowAnimeBrowsePage().ConfigureAwait(true);
 
-        await AnimeBrowseViewModel.SearchAnimeByTitle(searchQuery);
+        await AnimeBrowseViewModel.SearchAnimeByTitle(searchQuery).ConfigureAwait(true);
         IsLoading = false;
     }
 
@@ -200,9 +200,9 @@ public partial class MainViewModel : ViewModelBase
     {
         IsLoading = true;
 
-        await ShowAnimeDetailsPage();
+        await ShowAnimeDetailsPage().ConfigureAwait(true);
         
-        await AnimeDetailsViewModel.LoadAnimeDetailsAsync(malId);
+        await AnimeDetailsViewModel.LoadAnimeDetailsAsync(malId).ConfigureAwait(true);
         IsLoading = false;
     }
 

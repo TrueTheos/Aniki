@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models.Anilist.Components;
 
-public class Anilist_MediaListEntry
+internal sealed class Anilist_MediaListEntry
 {
     public int Id { get; set; }
     public string? Status { get; set; }

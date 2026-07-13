@@ -1,18 +1,18 @@
 namespace Aniki.Models.Anilist.Components;
 
-public class ViewerResponse
+internal sealed class ViewerResponse
 {
     public AnilistViewer? Viewer { get; set; }
 }
 
-public class AnilistViewer
+internal sealed class AnilistViewer
 {
     public int Id { get; set; }
     public string? Name { get; set; }
     public AnilistAvatar? Avatar { get; set; }
 }
 
-public class AnilistAvatar
+internal sealed class AnilistAvatar
 {
     public string? Large { get; set; }
 }

@@ -2,7 +2,7 @@
 
 namespace Aniki.Models.MAL.Components;
 
-public class MAL_AlternativeTitles
+internal sealed class MAL_AlternativeTitles
 {
     [JsonPropertyName("synonyms")]
     public string[]? Synonyms { get; set; }

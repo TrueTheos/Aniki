@@ -2,7 +2,7 @@
 
 namespace Aniki.Models.MAL.Components;
 
-public class MAL_RelatedAnime
+internal sealed class MAL_RelatedAnime
 {
     [JsonPropertyName("node")]
     public MAL_Anime? Node { get; set; }

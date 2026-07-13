@@ -3,7 +3,7 @@ using Aniki.Services.Save;
 
 namespace Aniki.Services.Interfaces;
 
-public interface IAbsoluteEpisodeParser
+internal interface IAbsoluteEpisodeParser
 {
     public Task<(int season, int part, int relativeEpisode, int? animeId)> GetSeasonAndEpisodeFromAbsolute(string animeTitle,
         int absoluteEpisode, int preferredPart, int? preferredYear = null);

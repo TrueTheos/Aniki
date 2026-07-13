@@ -4,13 +4,13 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
-public enum SortDirection
+internal enum SortDirection
 {
     Ascending,
     Descending
 }
 
-public partial class TorrentSearchViewModel : ViewModelBase
+internal sealed partial class TorrentSearchViewModel : ViewModelBase
 {
     [ObservableProperty] public partial bool IsTorrentsLoading { get; set; }
     [ObservableProperty] public partial string TorrentSearchTerms { get; set; } = string.Empty;
@@ -19,7 +19,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     [ObservableProperty] public partial SortDirection SeedersSortDirection { get; set; } = SortDirection.Descending;
     [ObservableProperty] public partial SortDirection DateSortDirection { get; set; } = SortDirection.Descending;
 
-    public IReadOnlyList<KnownSubber> AvailableSubbers => KnownSubbers.All;
+    public static IReadOnlyList<KnownSubber> AvailableSubbers => KnownSubbers.All;
 
     private enum TorrentSortField
     {
@@ -62,7 +62,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
 
         if (_details.Title != null)
         {
-            var foundTorrents = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms);
+            var foundTorrents = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms).ConfigureAwait(true);
             foreach (NyaaTorrent torrent in foundTorrents)
                 TorrentFileNameFormatter.ApplyDisplayMetadata(torrent);
 
@@ -124,7 +124,7 @@ public partial class TorrentSearchViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void DownloadTorrent(string magnet)
+    public static void DownloadTorrent(string magnet)
     {
         Process.Start(new ProcessStartInfo(magnet) { UseShellExecute = true });
     }

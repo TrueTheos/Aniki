@@ -6,7 +6,7 @@ using Avalonia.Threading;
 
 namespace Aniki.Views;
 
-public partial class AnimeDetailsView : UserControl
+internal sealed partial class AnimeDetailsView : UserControl
 {
     private readonly AnimeDetailsViewModel _viewModel;
     

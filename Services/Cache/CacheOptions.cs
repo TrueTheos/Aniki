@@ -2,7 +2,7 @@
 
 namespace Aniki.Services.Cache;
 
-public class CacheOptions
+internal sealed class CacheOptions
 {
     public TimeSpan DefaultTimeToLive { get; init; } = TimeSpan.FromHours(8);
     public string? DiskCachePath { get; set; }

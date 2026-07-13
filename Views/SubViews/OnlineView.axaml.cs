@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class OnlineView : UserControl
+internal sealed partial class OnlineView : UserControl
 {
     private readonly OnlineViewModel _viewModel;
     

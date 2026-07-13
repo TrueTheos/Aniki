@@ -4,7 +4,7 @@ using Avalonia.Media;
 
 namespace Aniki.Converters;
 
-public class HexToBrushConverter : IValueConverter
+internal sealed class HexToBrushConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

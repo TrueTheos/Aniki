@@ -3,7 +3,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class StatsView : UserControl
+internal sealed partial class StatsView : UserControl
 {
     public StatsView()
     {

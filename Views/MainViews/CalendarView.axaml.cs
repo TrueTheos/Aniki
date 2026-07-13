@@ -5,7 +5,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class CalendarView : UserControl
+internal sealed partial class CalendarView : UserControl
 {
     private readonly CalendarViewModel _viewModel;
     
@@ -22,7 +22,7 @@ public partial class CalendarView : UserControl
         {
             if (sender is StackPanel { DataContext: AnimeScheduleItem asi })
             {
-                await _viewModel.GoToClickedAnime(asi);
+                await CalendarViewModel.GoToClickedAnime(asi).ConfigureAwait(true);
             }
         }
         catch (Exception e)

@@ -1,9 +1,9 @@
 ﻿namespace Aniki.Misc;
 
-public enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
-public enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All } 
+internal enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
+internal enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All }
 
-public static class StatusEnum
+internal static class StatusEnum
 {
     public static AnimeStatusTranslated ToAnimeStatus(this string status)
     {

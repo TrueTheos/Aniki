@@ -2,7 +2,7 @@
 
 namespace Aniki.Services.Save;
 
-public class ImageSaver(string path) : SaveEntity<Bitmap>(path)
+internal sealed class ImageSaver(string path) : SaveEntity<Bitmap>(path)
 {
     public override void Save(string fileName, Bitmap data)
     {

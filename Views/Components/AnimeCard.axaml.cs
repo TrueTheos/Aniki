@@ -4,7 +4,7 @@ using Avalonia.Input;
 
 namespace Aniki.Views;
 
-public partial class AnimeCard : UserControl
+internal sealed partial class AnimeCard : UserControl
 {
     private AnimeCardData? _data;
     
@@ -38,6 +38,6 @@ public partial class AnimeCard : UserControl
     private async void OnTapped(object? sender, TappedEventArgs e)
     {
         if (_data is null) return;
-        await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(_data.AnimeId);
+        await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(_data.AnimeId).ConfigureAwait(true);
     }
 }

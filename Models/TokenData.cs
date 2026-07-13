@@ -2,7 +2,7 @@
 
 namespace Aniki.Models;
 
-public class TokenResponse
+internal sealed class TokenResponse
 {
     [JsonPropertyName("access_token")]
     public string? AccessToken { get; set; }
@@ -14,7 +14,7 @@ public class TokenResponse
     public string? TokenType { get; set; }
 }
 
-public class StoredTokenData
+internal sealed class StoredTokenData
 {
     public required string AccessToken { get; set; }
     public string? RefreshToken { get; set; }

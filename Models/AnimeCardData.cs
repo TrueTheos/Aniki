@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models;
 
-public partial class AnimeCardData : ObservableObject
+internal sealed partial class AnimeCardData : ObservableObject
 {
     [ObservableProperty]
     private int _animeId;

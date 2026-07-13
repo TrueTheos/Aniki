@@ -1,6 +1,6 @@
 namespace Aniki.ViewModels;
 
-public class WatchAnimeViewModel : ViewModelBase
+internal sealed class WatchAnimeViewModel : ViewModelBase
 {
     public int SelectedTabIndex
     {

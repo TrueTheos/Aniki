@@ -4,7 +4,7 @@ using Avalonia.Media;
 
 namespace Aniki.Converters;
 
-public class BoolToColorConverter : IValueConverter
+internal sealed class BoolToColorConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

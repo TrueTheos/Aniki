@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class SettingsWindow : Window
+internal sealed partial class SettingsWindow : Window
 {
     public SettingsWindow()
     {

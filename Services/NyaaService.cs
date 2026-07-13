@@ -5,7 +5,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-public class NyaaService : INyaaService
+internal sealed class NyaaService : INyaaService, IDisposable
 {
     private readonly HttpClient _http = new();
 
@@ -13,7 +13,7 @@ public class NyaaService : INyaaService
     {
         string url = string.IsNullOrWhiteSpace(torrentSearchTerms) ? $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{animeName}")}" : $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{torrentSearchTerms}")}";
 
-        string rssContent = await _http.GetStringAsync(url);
+        string rssContent = await _http.GetStringAsync(url).ConfigureAwait(true);
         List<NyaaTorrent> results = new();
 
         XmlDocument doc = new();
@@ -42,18 +42,16 @@ public class NyaaService : INyaaService
 
             XmlNode? seedersNode = item.SelectSingleNode("nyaa:seeders", namespaceManager) ??
                                    item.SelectSingleNode("seeders", namespaceManager);
-            int seeders = 0;
-            if (seedersNode != null)
-            {
-                int.TryParse(seedersNode.InnerText, out seeders);
-            }
+            
+            int seeders = seedersNode != null && int.TryParse(seedersNode.InnerText, out int parsedSeeders)
+                ? parsedSeeders
+                : 0;
 
             XmlNode? pubDateNode = item.SelectSingleNode("pubDate");
-            DateTime publishDate = DateTime.MinValue;
-            if (pubDateNode != null)
-            {
-                DateTime.TryParse(pubDateNode.InnerText, out publishDate);
-            }
+            
+            DateTime publishDate = pubDateNode != null && DateTime.TryParse(pubDateNode.InnerText, out DateTime parsedDate)
+                ? parsedDate
+                : DateTime.MinValue;
 
             if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(torrentLink))
             {
@@ -69,5 +67,10 @@ public class NyaaService : INyaaService
         }
 
         return results;
+    }
+
+    public void Dispose()
+    {
+        _http.Dispose();
     }
 }

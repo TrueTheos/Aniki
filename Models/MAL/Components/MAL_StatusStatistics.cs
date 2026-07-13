@@ -3,7 +3,7 @@ using Aniki.Converters;
 
 namespace Aniki.Models.MAL.Components;
 
-public class MAL_StatusStatistics
+internal sealed class MAL_StatusStatistics
 {
     [JsonConverter(typeof(MalIntStringConverter))]
     public int? Watching { get; set; }

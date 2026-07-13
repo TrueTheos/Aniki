@@ -3,7 +3,7 @@ using Avalonia.Data.Converters;
 
 namespace Aniki.Converters;
 
-public class AllTrueMultiValueConverter : IMultiValueConverter
+internal sealed class AllTrueMultiValueConverter : IMultiValueConverter
 {
     public object Convert(IList<object?>? values, Type targetType, object? parameter, CultureInfo culture)
     {

@@ -1,6 +1,6 @@
 namespace Aniki.Models;
 
-public class AnimeStats
+internal sealed class AnimeStats
 {
     public double DaysWatched { get; set; }
     public double MeanScore { get; set; }

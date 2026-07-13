@@ -5,7 +5,7 @@ using Avalonia.Media.Imaging;
 
 namespace Aniki.Models.MAL;
 
-public class MAL_Anime : ObservableObject
+internal sealed class MAL_Anime : ObservableObject
 {
     [CacheField(AnimeField.Id)] public int Id { get; set; }
     [CacheField(AnimeField.Title)] public string? Title { get; set; }

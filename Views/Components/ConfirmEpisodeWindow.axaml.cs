@@ -3,7 +3,7 @@ using Avalonia.Interactivity;
 
 namespace Aniki.Views;
 
-public partial class ConfirmEpisodeWindow : Window
+internal sealed partial class ConfirmEpisodeWindow : Window
 {
     public ConfirmEpisodeWindow()
     {

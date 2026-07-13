@@ -5,7 +5,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
 
-public partial class AnimeBrowseViewModel : ViewModelBase
+internal sealed partial class AnimeBrowseViewModel : ViewModelBase
 {
     private readonly IAnimeService _animeService;
     private readonly ICalendarService _calendarService;
@@ -28,7 +28,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
     [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
 
-    public enum AnimeBrowseViewMode {Main, Search}
+    internal enum AnimeBrowseViewMode {Main, Search}
 
     [ObservableProperty] public partial AnimeBrowseViewMode ViewMode { get; set; }
 
@@ -55,25 +55,25 @@ public partial class AnimeBrowseViewModel : ViewModelBase
 
     public async Task InitializeAsync()
     {
-        await LoadCategoriesAsync();
+        await LoadCategoriesAsync().ConfigureAwait(true);
     }
 
     private async Task LoadCategoriesAsync()
     {
         IsLoading = true;
         
-        var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing);
+        var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing).ConfigureAwait(true);
         LoadAnimeCards(airing, PopularThisSeason);
             
-        await LoadHeroAnimeAsync(airing);
+        await LoadHeroAnimeAsync(airing).ConfigureAwait(true);
 
-        var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming);
+        var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming).ConfigureAwait(true);
         LoadAnimeCards(upcoming, PopularUpcoming);
             
-        var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity);
+        var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity).ConfigureAwait(true);
         LoadAnimeCards(allTime, TrendingAllTime);
 
-        var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today);
+        var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today).ConfigureAwait(true);
         AiringToday.Clear();
         foreach (AnimeScheduleItem anime in airingToday)
         {
@@ -98,7 +98,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         
         foreach (RankingEntry anime in animeList)
         {
-            AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.Title, AnimeField.Synopsis, AnimeField.Mean, AnimeField.MyListStatus, AnimeField.Videos]);
+            AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.Title, AnimeField.Synopsis, AnimeField.Mean, AnimeField.MyListStatus, AnimeField.Videos]).ConfigureAwait(true);
             
             if (details?.Videos == null || details.Videos.Length <= 0) continue;
             
@@ -128,7 +128,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 
-    private void LoadAnimeCards(List<RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
+    private static void LoadAnimeCards(List<RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)
     {
         collection.Clear();
         foreach (RankingEntry anime in animeList)
@@ -181,7 +181,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
     [RelayCommand]
     private async Task PerformSearchAsync()
     {
-        await SearchAnimeByTitle(SearchQuery);
+        await SearchAnimeByTitle(SearchQuery).ConfigureAwait(true);
     }
 
     public async Task SearchAnimeByTitle(string query)
@@ -189,7 +189,7 @@ public partial class AnimeBrowseViewModel : ViewModelBase
         IsLoading = true;
         ViewMode  = AnimeBrowseViewMode.Search;
 
-        _allSearchResults = await _animeService.SearchAnimeAsync(query);
+        _allSearchResults = await _animeService.SearchAnimeAsync(query).ConfigureAwait(true);
         CurrentPage       = 1;
         TotalPages        = (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE);
             

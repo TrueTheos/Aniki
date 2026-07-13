@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Services.Interfaces;
 
-public interface IDiscordService
+internal interface IDiscordService
 {
     public bool IsEnabled { get; }
     public void SetEnabled(bool enabled);

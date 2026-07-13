@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Aniki.Services.Interfaces;
 
-public interface IVideoPlayerService
+internal interface IVideoPlayerService
 {
     public VideoPlayerOption? SelectedPlayer { get; set; }
     public ObservableCollection<VideoPlayerOption> AvailablePlayers { get; }
@@ -11,7 +11,7 @@ public interface IVideoPlayerService
     public Task ScanPlayersAsync();
 }
 
-public class VideoPlayerOption
+internal sealed class VideoPlayerOption
 {
     public string DisplayName { get; set; } = "";
     public string ExecutablePath { get; set; } = "";

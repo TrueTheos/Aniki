@@ -5,7 +5,7 @@ using Avalonia.Media;
 
 namespace Aniki.Converters;
 
-public class BoolToViewButtonBackgroundConverter : IValueConverter
+internal sealed class BoolToViewButtonBackgroundConverter : IValueConverter
 {
     private static readonly SolidColorBrush InactiveBrush = new(Color.Parse("#2A2A2A"));
     private static readonly SolidColorBrush ActiveBrush = new(Color.Parse("#DC143C"));

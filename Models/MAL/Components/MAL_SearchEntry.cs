@@ -2,7 +2,7 @@
 
 namespace Aniki.Models.MAL.Components;
 
-public class MAL_SearchEntry
+internal sealed class MAL_SearchEntry
 {
     [JsonPropertyName("node")]
     public required MAL_Anime Node { get; set; }

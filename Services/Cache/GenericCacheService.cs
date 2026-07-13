@@ -1,21 +1,21 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using Aniki.Services.Cache.CustomTypeHandlers;
 
 namespace Aniki.Services.Cache;
 
-public delegate void FieldChangeHandler<TEntity>(TEntity updatedEntity);
+internal delegate void FieldChangeHandler<TEntity>(TEntity updatedEntity);
 
-public interface ICacheService
+internal interface ICacheService
 {
     public void ClearMemory();
     public Task ClearAllAsync();
     public Task SyncToDiskAsync();
 }
 
-public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
-    where TKey : notnull
+internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService, IDisposable where TKey : notnull
     where TEntity : class, new()
     where TFieldEnum : Enum
 {
@@ -35,13 +35,13 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
     
     private readonly HashSet<TFieldEnum> _memoryOnlyFields = [];
     
-    private class StoredCacheEntry
+    private sealed class StoredCacheEntry
     {
         public string? Key { get; init; }
         public StoredEntityData? Entry { get; init; }
     }
 
-    private class StoredEntityData
+    private sealed class StoredEntityData
     {
         public JsonElement Data { get; init; }
         public Dictionary<string, DateTime> FieldExpirations { get; init; } = new();
@@ -63,7 +63,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         {
             try
             {
-                await SyncToDiskAsync();
+                await SyncToDiskAsync().ConfigureAwait(true);
             }
             catch (Exception e)
             {
@@ -86,7 +86,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
 
     private string GetCacheFilePath(TKey key)
     {
-        string safeFileName = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(key.ToString() ?? "")).Replace("/", "_").Replace("+", "-");
+        string safeFileName = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(key.ToString() ?? "")).Replace("/", "_", StringComparison.InvariantCulture).Replace("+", "-", StringComparison.InvariantCulture);
         return Path.Combine(_options.DiskCachePath!, $"{safeFileName}.json");
     }
     
@@ -100,17 +100,17 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         foreach (string file in files)
         {
             //skipping custom type handlers
-            if (file.Contains('_') && file.EndsWith(".bin")) continue;
+            if (file.Contains('_', StringComparison.InvariantCulture) && file.EndsWith(".bin", StringComparison.InvariantCulture)) continue;
             
             try
             {
-                string json = await File.ReadAllTextAsync(file);
+                string json = await File.ReadAllTextAsync(file).ConfigureAwait(true);
                 StoredCacheEntry? stored = JsonSerializer.Deserialize<StoredCacheEntry>(json);
                 
                 if (stored?.Key == null || stored.Entry == null)
                     continue;
 
-                TKey key = (TKey)Convert.ChangeType(stored.Key, typeof(TKey));
+                TKey key = (TKey)Convert.ChangeType(stored.Key, typeof(TKey), CultureInfo.InvariantCulture);
                 CachedEntity<TEntity, TFieldEnum> entry = new();
                 
                 foreach (var prop in _propertyMap)
@@ -123,14 +123,17 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                     {
                         string? sidecarFileName = value.GetString();
 
-                        if (sidecarFileName == null || !sidecarFileName.StartsWith("file://")) continue;
-                        string actualFileName = sidecarFileName.Replace("file://", "");
+                        if (sidecarFileName == null || !sidecarFileName.StartsWith("file://", StringComparison.InvariantCulture)) continue;
+                        string actualFileName = sidecarFileName.Replace("file://", "", StringComparison.InvariantCulture);
                         string sidecarPath = Path.Combine(_options.DiskCachePath!, actualFileName);
 
                         if (!File.Exists(sidecarPath)) continue;
-                        await using FileStream fs = new(sidecarPath, FileMode.Open, FileAccess.Read);
-                        object loadedObj = handler.Deserialize(fs);
-                        prop.Value.SetValue(entry.Data, loadedObj);
+                        FileStream fs = new(sidecarPath, FileMode.Open, FileAccess.Read);
+                        await using (fs.ConfigureAwait(false))
+                        {
+                            object loadedObj = handler.Deserialize(fs);
+                            prop.Value.SetValue(entry.Data, loadedObj);
+                        }
                     }
                     else
                     {
@@ -175,14 +178,14 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             _dirtyKeys.Clear();
         }
 
-        await _diskWriteLock.WaitAsync();
+        await _diskWriteLock.WaitAsync().ConfigureAwait(true);
         try
         {
             foreach (TKey key in keysToSync)
             {
                 if (_cache.TryGetValue(key, out var entry))
                 {
-                    await SaveEntryToDiskAsync(key, entry);
+                    await SaveEntryToDiskAsync(key, entry).ConfigureAwait(true);
                 }
             }
         }
@@ -214,7 +217,8 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
                 string sidecarFileName = $"{safeKey}_{prop.Key}.bin";
                 string sidecarPath = Path.Combine(_options.DiskCachePath!, sidecarFileName);
 
-                await using (FileStream fs = new(sidecarPath, FileMode.Create))
+                FileStream fs = new(sidecarPath, FileMode.Create);
+                await using (fs.ConfigureAwait(false))
                 {
                     handler.Serialize(val, fs);
                 }
@@ -262,7 +266,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             WriteIndented = true 
         });
         
-        await File.WriteAllTextAsync(baseFilePath, json);
+        await File.WriteAllTextAsync(baseFilePath, json).ConfigureAwait(true);
     }
 
     private void MarkDirty(TKey key)
@@ -454,7 +458,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
 
         if (missing.Length > 0 && _fetchHandler != null)
         {
-            TEntity? fetchedData = await _fetchHandler(id, missing);
+            TEntity? fetchedData = await _fetchHandler(id, missing).ConfigureAwait(true);
             if (fetchedData != null)
             {
                 Update(id, fetchedData, missing);
@@ -471,7 +475,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
 
     public TEntity? GetWithoutFetching(TKey id)
     {
-        return _cache.ContainsKey(id) ? _cache[id].Data : null;
+        return _cache.TryGetValue(id, out var value) ? value.Data : null;
     }
 
     public IReadOnlyCollection<TEntity> GetAllCachedData()
@@ -501,7 +505,7 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
         
         if (_options.EnableDiskCache && !string.IsNullOrEmpty(_options.DiskCachePath))
         {
-            await _diskWriteLock.WaitAsync();
+            await _diskWriteLock.WaitAsync().ConfigureAwait(true);
             try
             {
                 if (Directory.Exists(_options.DiskCachePath))
@@ -516,6 +520,12 @@ public class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheService
             }
         }
         
-        await SyncToDiskAsync();
+        await SyncToDiskAsync().ConfigureAwait(true);
+    }
+
+    public void Dispose()
+    {
+        _diskSyncTimer?.Dispose();
+        _diskWriteLock.Dispose();
     }
 }

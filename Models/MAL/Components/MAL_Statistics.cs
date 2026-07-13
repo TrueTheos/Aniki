@@ -2,7 +2,7 @@
 
 namespace Aniki.Models.MAL.Components;
 
-public class MAL_Statistics
+internal sealed class MAL_Statistics
 {
     [JsonPropertyName("num_list_users")]
     public int NumListUsers { get; set; }

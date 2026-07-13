@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Services.Cache.CustomTypeHandlers;
 
-public interface ICacheTypeHandler
+internal interface ICacheTypeHandler
 {
     void Serialize(object value, Stream destination);
     object Deserialize(Stream source);

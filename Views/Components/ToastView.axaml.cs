@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class ToastView : UserControl
+internal sealed partial class ToastView : UserControl
 {
     public ToastView(string message)
     {

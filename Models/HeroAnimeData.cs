@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models;
 
-public partial class HeroAnimeData : ObservableObject
+internal sealed partial class HeroAnimeData : ObservableObject
 {
     public int AnimeId { get; set; }
     public required string Title { get; set; }

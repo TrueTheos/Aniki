@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Services.Auth;
 
-public class LoginService : ILoginService
+internal sealed class LoginService : ILoginService
 {
     public IReadOnlyList<ILoginProvider> Providers { get; }
 

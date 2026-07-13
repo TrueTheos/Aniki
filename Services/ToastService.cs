@@ -9,7 +9,7 @@ using Avalonia.Styling;
 
 namespace Aniki.Services;
 
-public static class ToastService
+internal static class ToastService
 {
     public static async Task Show(string message, int durationMs = 2200)
     {
@@ -26,7 +26,7 @@ public static class ToastService
         AdornerLayer.SetAdornedElement(toast, host);
         adornerLayer.Children.Add(toast);
 
-        await Task.Delay(durationMs);
+        await Task.Delay(durationMs).ConfigureAwait(true);
 
         // Fade out
         Animation fadeOut = new()
@@ -38,7 +38,7 @@ public static class ToastService
                 new KeyFrame { Cue = Cue.Parse("100%", CultureInfo.CurrentCulture), Setters = { new Setter(Visual.OpacityProperty, 0.0) } }
             }
         };
-        await fadeOut.RunAsync(toast);
+        await fadeOut.RunAsync(toast).ConfigureAwait(true);
         adornerLayer.Children.Remove(toast);
     }
 }

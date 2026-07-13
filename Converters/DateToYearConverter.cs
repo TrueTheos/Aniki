@@ -3,7 +3,7 @@ using Avalonia.Data.Converters;
 
 namespace Aniki.Converters;
 
-public class DateToYearConverter : IValueConverter
+internal sealed class DateToYearConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -12,15 +12,10 @@ public class DateToYearConverter : IValueConverter
         
         if (DateTime.TryParse(dateString, out DateTime date))
         {
-            return date.Year.ToString();
+            return date.Year.ToString(CultureInfo.InvariantCulture);
         }
         
-        if (dateString.Length >= 4)
-        {
-            return dateString.Substring(0, 4);
-        }
-        
-        return "N/A";
+        return dateString.Length >= 4 ? dateString[..4] : "N/A";
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

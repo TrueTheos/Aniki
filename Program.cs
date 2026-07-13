@@ -3,7 +3,7 @@ using Velopack;
 
 namespace Aniki;
 
-internal class Program
+internal sealed class Program
 {
     [STAThread]
     public static void Main(string[] args)

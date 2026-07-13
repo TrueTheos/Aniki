@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Services.Interfaces;
 
-public interface IAllMangaScraperService
+internal interface IAllMangaScraperService
 {
     public Task<List<AllMangaSearchResult>> SearchAnimeAsync(string query);
     public Task<List<AllMangaEpisode>> GetEpisodesAsync(string animeUrl);

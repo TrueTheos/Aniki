@@ -2,7 +2,7 @@
 
 namespace Aniki.ViewModels;
 
-public partial class ConfirmEpisodeViewModel : ViewModelBase
+internal sealed partial class ConfirmEpisodeViewModel : ViewModelBase
 {
     [ObservableProperty] public partial int EpisodeNumber { get; set; }
 

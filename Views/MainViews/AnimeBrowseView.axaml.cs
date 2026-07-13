@@ -5,7 +5,7 @@ using Avalonia.Interactivity;
 
 namespace Aniki.Views;
 
-public partial class AnimeBrowseView : UserControl
+internal sealed partial class AnimeBrowseView : UserControl
 {
     private readonly AnimeBrowseViewModel _viewModel;
     
@@ -21,7 +21,7 @@ public partial class AnimeBrowseView : UserControl
         {
             base.OnAttachedToVisualTree(e);
         
-            await _viewModel.InitializeAsync();
+            await _viewModel.InitializeAsync().ConfigureAwait(true);
         }
         catch (Exception error)
         {
@@ -33,7 +33,7 @@ public partial class AnimeBrowseView : UserControl
     {
         if (sender is Border { DataContext: AnimeCardData anime })
         {
-            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.AnimeId);
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.AnimeId).ConfigureAwait(true);
         }
     }
     

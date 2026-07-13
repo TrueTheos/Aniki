@@ -7,7 +7,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Aniki.Views;
 
-public partial class LoginWindow : Window
+internal sealed partial class LoginWindow : Window
 {
     private readonly LoginViewModel _viewModel;
     private readonly bool _startMinimized;
@@ -51,7 +51,7 @@ public partial class LoginWindow : Window
 
     private async void LoginWindow_Loaded(object? sender, RoutedEventArgs e)
     {
-        await _viewModel.CheckExistingLoginAsync();
+        await _viewModel.CheckExistingLoginAsync().ConfigureAwait(true);
     }
 
     private void OnNavigateToMainRequested(object? sender, EventArgs e)

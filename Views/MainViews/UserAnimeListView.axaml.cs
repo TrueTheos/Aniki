@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 
 namespace Aniki.Views;
 
-public partial class UserAnimeListView : UserControl
+internal sealed partial class UserAnimeListView : UserControl
 {
     public UserAnimeListView()
     {
@@ -17,7 +17,7 @@ public partial class UserAnimeListView : UserControl
         {
             if (sender is Button { DataContext: AnimeDetails anime })
             {
-                await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id);
+                await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id).ConfigureAwait(true);
             }
         }
         catch (Exception e)

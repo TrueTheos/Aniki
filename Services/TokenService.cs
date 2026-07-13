@@ -7,7 +7,7 @@ using Aniki.Services.Save;
 
 namespace Aniki.Services;
 
-public class TokenService : ITokenService
+internal sealed class TokenService : ITokenService
 {
     private readonly Dictionary<ILoginProvider.ProviderType, StoredTokenData> _cachedTokens = new();
     private readonly byte[] _entropy = "Aniki-Token-Salt-2024"u8.ToArray();
@@ -35,7 +35,7 @@ public class TokenService : ITokenService
 
         try
         {
-            byte[] encryptedData = await File.ReadAllBytesAsync(tokenFilePath);
+            byte[] encryptedData = await File.ReadAllBytesAsync(tokenFilePath).ConfigureAwait(true);
             string decryptedJson = DecryptData(encryptedData);
             StoredTokenData? storedTokenData = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
 
@@ -71,7 +71,7 @@ public class TokenService : ITokenService
         byte[] encryptedData = EncryptData(json);
         
         string tokenFilePath = Path.Combine(SaveService.TokenDirectoryPath, $"{providerId}.dat");
-        await File.WriteAllBytesAsync(tokenFilePath, encryptedData);
+        await File.WriteAllBytesAsync(tokenFilePath, encryptedData).ConfigureAwait(true);
         _cachedTokens[providerId] = tokens;
     }
 
@@ -126,56 +126,50 @@ public class TokenService : ITokenService
         }
     }
     
-    private byte[] EncryptDataAes(string data)
+    private static byte[] EncryptDataAes(string data)
     {
         using Aes aes = Aes.Create();
-        
+
         string machineKey = Environment.MachineName + Environment.UserName + "Aniki-Secret-Key";
         byte[] key = new byte[32];
-        using (SHA256 sha = SHA256.Create())
-        {
-            byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(machineKey));
-            Array.Copy(hash, key, 32);
-        }
-        
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(machineKey));
+        Array.Copy(hash, key, 32);
+
         aes.Key = key;
         aes.GenerateIV();
 
         using ICryptoTransform encryptor = aes.CreateEncryptor();
         byte[] dataBytes = Encoding.UTF8.GetBytes(data);
         byte[] encryptedBytes = encryptor.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
-        
+
         byte[] result = new byte[aes.IV.Length + encryptedBytes.Length];
         Array.Copy(aes.IV, 0, result, 0, aes.IV.Length);
         Array.Copy(encryptedBytes, 0, result, aes.IV.Length, encryptedBytes.Length);
-        
+
         return result;
     }
 
-    private string DecryptDataAes(byte[] encryptedData)
+    private static string DecryptDataAes(byte[] encryptedData)
     {
         using Aes aes = Aes.Create();
-        
+
         string machineKey = Environment.MachineName + Environment.UserName + "Aniki-Secret-Key";
         byte[] key = new byte[32];
-        using (SHA256 sha = SHA256.Create())
-        {
-            byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(machineKey));
-            Array.Copy(hash, key, 32);
-        }
-        
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(machineKey));
+        Array.Copy(hash, key, 32);
+
         aes.Key = key;
-        
+
         byte[] iv = new byte[16];
         byte[] cipherText = new byte[encryptedData.Length - 16];
         Array.Copy(encryptedData, 0, iv, 0, 16);
         Array.Copy(encryptedData, 16, cipherText, 0, cipherText.Length);
-        
+
         aes.IV = iv;
-        
+
         using ICryptoTransform decryptor = aes.CreateDecryptor();
         byte[] decryptedBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
-        
+
         return Encoding.UTF8.GetString(decryptedBytes);
     }
 }

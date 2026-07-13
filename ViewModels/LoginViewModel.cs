@@ -3,7 +3,7 @@ using Aniki.Services.Auth;
 
 namespace Aniki.ViewModels;
 
-public partial class LoginViewModel : ViewModelBase
+internal sealed partial class LoginViewModel : ViewModelBase
 {
     private readonly ILoginService _loginService;
     
@@ -43,7 +43,7 @@ public partial class LoginViewModel : ViewModelBase
             foreach (ILoginProvider provider in _loginService.Providers)
             {
                 StatusMessage = $"Checking login status for {provider.Provider}...";
-                string? username = await provider.CheckExistingLoginAsync();
+                string? username = await provider.CheckExistingLoginAsync().ConfigureAwait(true);
                 
                 if (username == null) continue;
                 
@@ -51,7 +51,7 @@ public partial class LoginViewModel : ViewModelBase
                 Username = username;
                 IsLoggedIn = true;
                 StatusMessage = $"Welcome back, {username} (via {provider.Provider})!";
-                await ContinueAsync();
+                await ContinueAsync().ConfigureAwait(true);
                 return;
             }
 
@@ -82,19 +82,19 @@ public partial class LoginViewModel : ViewModelBase
         {
             IsTokenInputVisible = true;
             StatusMessage = "Please paste your AniList token below.";
-            await provider.LoginAsync(progress);
+            await provider.LoginAsync(progress).ConfigureAwait(true);
             IsLoading = false;
         }
         else
         {
-            string? username = await provider.LoginAsync(progress);
+            string? username = await provider.LoginAsync(progress).ConfigureAwait(true);
 
             if (username != null)
             {
                 Username = username;
                 IsLoggedIn = true;
                 StatusMessage = $"Successfully logged in as {username} (via {provider.Provider})!";
-                await ContinueAsync();
+                await ContinueAsync().ConfigureAwait(true);
             }
             else
             {
@@ -115,16 +115,16 @@ public partial class LoginViewModel : ViewModelBase
         }
 
         IsLoading = true;
-        await _currentProvider.SaveTokenAsync(Token);
+        await _currentProvider.SaveTokenAsync(Token).ConfigureAwait(true);
         
-        string? username = await _currentProvider.CheckExistingLoginAsync();
+        string? username = await _currentProvider.CheckExistingLoginAsync().ConfigureAwait(true);
         if (username != null)
         {
             Username = username;
             IsLoggedIn = true;
             StatusMessage = $"Successfully logged in as {username} (via {_currentProvider.Provider})!";
             IsTokenInputVisible = false;
-            await ContinueAsync();
+            await ContinueAsync().ConfigureAwait(true);
         }
         else
         {
@@ -152,7 +152,7 @@ public partial class LoginViewModel : ViewModelBase
     [RelayCommand]
     private async Task ContinueWithoutLoggingIn()
     {
-        await _animeService.SetActiveProviderAsync(ILoginProvider.ProviderType.Mal, null);
+        await _animeService.SetActiveProviderAsync(ILoginProvider.ProviderType.Mal, null).ConfigureAwait(true);
         NavigateToMainRequested?.Invoke(this, EventArgs.Empty);
     }
 

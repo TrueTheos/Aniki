@@ -5,7 +5,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Auth.Providers;
 
-public class AnilistLoginProvider : ILoginProvider
+internal sealed class AnilistLoginProvider : ILoginProvider
 {
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.AniList;
     private const string CLIENT_ID = "32652";
@@ -38,19 +38,19 @@ public class AnilistLoginProvider : ILoginProvider
             AccessToken = token,
             ExpiresIn = 31536000
         };
-        await _tokenService.SaveTokensAsync(Provider, tokenResponse);
+        await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(true);
     }
 
     public async Task<string?> CheckExistingLoginAsync()
     {
-        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider);
+        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider).ConfigureAwait(true);
         
         if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken)) return null;
 
         try
         {
-            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken);
-            UserData? userData = await _animeService.GetUserDataAsync();
+            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken).ConfigureAwait(true);
+            UserData? userData = await _animeService.GetUserDataAsync().ConfigureAwait(true);
             return userData?.Name;
         }
         catch (Exception)
@@ -65,7 +65,7 @@ public class AnilistLoginProvider : ILoginProvider
         _tokenService.ClearTokens(Provider); 
     }
     
-    private void OpenBrowser(string url)
+    private static void OpenBrowser(string url)
     {
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }

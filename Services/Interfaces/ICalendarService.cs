@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Services.Interfaces;
 
-public interface ICalendarService
+internal interface ICalendarService
 {
     public Task<List<DaySchedule>> GetScheduleAsync(
         IEnumerable<int> watchingList,

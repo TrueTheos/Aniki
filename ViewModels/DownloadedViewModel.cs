@@ -15,7 +15,7 @@ namespace Aniki.ViewModels;
 // I really don't want to touch this. This is such a mess
 // Some day I will need to answer for my actions, 
 // but not today.
-public partial class DownloadedViewModel : ViewModelBase, IDisposable
+internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
 {
     private DownloadedEpisode? _lastPlayedEpisode;
     
@@ -102,8 +102,8 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     public override async Task Enter()
     {
         SearchText = "";
-        await _loadTask;
-        await SyncListMetadataAsync();
+        await _loadTask.ConfigureAwait(true);
+        await SyncListMetadataAsync().ConfigureAwait(true);
         ApplyFiltersAndSort();
     }
 
@@ -138,7 +138,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private async Task RefreshAsync()
     {
-        await _loadLock.WaitAsync();
+        await _loadLock.WaitAsync().ConfigureAwait(true);
         try
         {
             _suppressFileWatcher = true;
@@ -148,8 +148,8 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 _pendingRemovePaths.Clear();
             }
 
-            await LoadEpisodesFromDiskAsync();
-            await SyncListMetadataAsync();
+            await LoadEpisodesFromDiskAsync().ConfigureAwait(true);
+            await SyncListMetadataAsync().ConfigureAwait(true);
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsLoading = false;
@@ -205,7 +205,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                 {
                     try
                     {
-                        await ProcessLooseFileAsync(filePath);
+                        await ProcessLooseFileAsync(filePath).ConfigureAwait(true);
                     }
                     catch (Exception ex)
                     {
@@ -219,14 +219,14 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                             ProcessingProgress = $"Scanning episodes: {current}/{total}";
                         });
                     }
-                });
+                }).ConfigureAwait(true);
             
             await Parallel.ForEachAsync(animeFolders, new ParallelOptions { MaxDegreeOfParallelism = 8 },
                 async (folder, ct) =>
                 {
                     try
                     {
-                        await ProcessAnimeFolderAsync(folder.FolderName, folder.Files);
+                        await ProcessAnimeFolderAsync(folder.FolderName, folder.Files).ConfigureAwait(true);
                     }
                     catch (Exception ex)
                     {
@@ -240,7 +240,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
                             ProcessingProgress = $"Scanning episodes: {current}/{total}";
                         });
                     }
-                });
+                }).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -248,7 +248,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private List<(string FolderName, List<string> Files)> CollectAnimeFolders(string path)
+    private static List<(string FolderName, List<string> Files)> CollectAnimeFolders(string path)
     {
         List<(string FolderName, List<string> Files)> result = [];
         foreach (string dir in Directory.GetDirectories(path))
@@ -267,11 +267,11 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private async Task ProcessLooseFileAsync(string filePath)
     {
         string fileName = Path.GetFileName(filePath);
-        ParseResult parsed = await _animeNameParser.ParseFile(fileName);
+        ParseResult parsed = await _animeNameParser.ParseFile(fileName).ConfigureAwait(true);
         if (parsed.AnimeId is not { } animeId) return;
 
         AnimeDetails? details = await _animeService.GetFieldsAsync(animeId,
-            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]);
+            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]).ConfigureAwait(true);
         if (details == null) return;
 
         int episodeNumber = parsed.EpisodeNumber ?? (details.NumEpisodes is > 1 ? 0 : 1);
@@ -293,13 +293,13 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         await Dispatcher.UIThread.InvokeAsync(() => RemoveEpisodeByPath(fullPath));
         if (IsLooseFile(episodesFolder, fullPath))
         {
-            await ProcessLooseFileAsync(fullPath);
+            await ProcessLooseFileAsync(fullPath).ConfigureAwait(true);
         }
     }
 
     private async Task ApplyPendingFileChangesAsync()
     {
-        await _loadLock.WaitAsync();
+        await _loadLock.WaitAsync().ConfigureAwait(true);
         try
         {
             List<string> toRemove;
@@ -319,7 +319,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             {
                 try
                 {
-                    await ProcessFileAsync(path);
+                    await ProcessFileAsync(path).ConfigureAwait(true);
                 }
                 catch (Exception ex)
                 {
@@ -341,11 +341,11 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private async Task ProcessAnimeFolderAsync(string folderName, List<string> filePaths)
     {
-        FolderParseResult folder = await _animeNameParser.ParseFolder(folderName);
+        FolderParseResult folder = await _animeNameParser.ParseFolder(folderName).ConfigureAwait(true);
         if (folder.AnimeId is not { } animeId) return;
 
         AnimeDetails? details = await _animeService.GetFieldsAsync(animeId,
-            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]);
+            fields: [AnimeField.Title, AnimeField.Episodes, AnimeField.MyListStatus, AnimeField.MainPicture, AnimeField.Id]).ConfigureAwait(true);
         if (details == null) return;
 
         foreach (string filePath in filePaths)
@@ -375,19 +375,19 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     {
         if (!AnimeService.IsLoggedIn) return;
 
-        await _metadataLock.WaitAsync();
+        await _metadataLock.WaitAsync().ConfigureAwait(true);
         try
         {
             try
             {
-                await LoadWatchingListAsync();
+                await LoadWatchingListAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"LoadWatchingListAsync failed: {ex}");
             }
 
-            await LoadAiringInfoAsync();
+            await LoadAiringInfoAsync().ConfigureAwait(true);
         }
         finally
         {
@@ -397,7 +397,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     private async Task LoadWatchingListAsync()
     {
-        var watchingList = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching);
+        var watchingList = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching).ConfigureAwait(true);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             foreach (AnimeDetails anime in watchingList)
@@ -424,7 +424,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
         {
             try
             {
-                int released = await _anilistService.GetReleasedEpisodeCountAsync(malId);
+                int released = await _anilistService.GetReleasedEpisodeCountAsync(malId).ConfigureAwait(true);
                 await Dispatcher.UIThread.InvokeAsync(() => group.ReleasedEpisodes = released);
             }
             catch (Exception ex)
@@ -595,7 +595,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (_suppressFileWatcher) return;
             try
             {
-                await ApplyPendingFileChangesAsync();
+                await ApplyPendingFileChangesAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -639,7 +639,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private void OnWatcherError(object sender, ErrorEventArgs e)
     {
         Console.WriteLine(e.GetException());
-        Task.Delay(2000).ContinueWith(_ => SetupFileWatcher());
+        Task.Delay(2000).ContinueWith(_ => SetupFileWatcher(), TaskScheduler.Default);
     }
     
     #endregion
@@ -653,14 +653,14 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
             if (Avalonia.Application.Current!.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
                 desktop) return;
             AnimeDetails? animeData =
-                await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.Episodes);
+                await _animeService.GetFieldsAsync(_lastPlayedEpisode.Id, fields: AnimeField.Episodes).ConfigureAwait(true);
             if (animeData == null) return;
             ConfirmEpisodeWindow dialog = new()
             {
                 DataContext =
                     new ConfirmEpisodeViewModel(_lastPlayedEpisode.EpisodeNumber, animeData.NumEpisodes!.Value)
             };
-            bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!);
+            bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!).ConfigureAwait(true);
             if (result)
                 _ = _animeService.SetEpisodesWatchedAsync(_lastPlayedEpisode.Id, _lastPlayedEpisode.EpisodeNumber);
         });
@@ -681,7 +681,7 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     {
         string episodesFolder = GetEpisodesFolder();
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            Process.Start("explorer.exe", episodesFolder.Replace("/", "\\"));
+            Process.Start("explorer.exe", episodesFolder.Replace("/", "\\", StringComparison.InvariantCulture));
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             Process.Start("open", episodesFolder);
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -695,11 +695,11 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     private void ClearSearch() => SearchText = "";
     
     [RelayCommand]
-    private async Task DownloadNextEpisode(AnimeGroup group)
+    private static async Task DownloadNextEpisode(AnimeGroup group)
     {
         if (group.NextEpisodeToDownload is not { } epNum) return;
         MainViewModel mainVm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
-        await mainVm.GoToAnime(group.MalId);
+        await mainVm.GoToAnime(group.MalId).ConfigureAwait(true);
         
         AnimeDetailsViewModel animeDetailsViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<AnimeDetailsViewModel>()!;
         
@@ -709,10 +709,10 @@ public partial class DownloadedViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
-    private async Task OpenAnimeDetails(int malId)
+    private static async Task OpenAnimeDetails(int malId)
     {
         MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
-        await vm.GoToAnime(malId);
+        await vm.GoToAnime(malId).ConfigureAwait(true);
     }
 
     [RelayCommand]

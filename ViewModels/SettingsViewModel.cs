@@ -8,7 +8,7 @@ using Microsoft.Win32;
 
 namespace Aniki.ViewModels;
 
-public partial class SettingsViewModel : ViewModelBase
+internal sealed partial class SettingsViewModel : ViewModelBase
 {
     [ObservableProperty] public partial bool StartMinimized { get; set; }
     [ObservableProperty] public partial bool EnableDiscordPresence { get; set; } = true;
@@ -93,13 +93,13 @@ public partial class SettingsViewModel : ViewModelBase
 
         if (window != null)
         {
-            string? result = await dlg.ShowAsync(window);
+            string? result = await dlg.ShowAsync(window).ConfigureAwait(true);
             if (!string.IsNullOrEmpty(result))
                 EpisodesFolder = result;
         }
     }
 
-    private void ChangeAutoStart(bool newValue)
+    private static void ChangeAutoStart(bool newValue)
     {
         if (!OperatingSystem.IsWindows()) return;
 
@@ -121,7 +121,7 @@ public partial class SettingsViewModel : ViewModelBase
         IsClearingCache = true;
         try
         {
-            await _saveService.ClearAllCaches();
+            await _saveService.ClearAllCaches().ConfigureAwait(true);
         }
         finally
         {
@@ -149,7 +149,7 @@ public partial class SettingsViewModel : ViewModelBase
     }
 }
 
-public class SettingsConfig
+internal sealed class SettingsConfig
 {
     public bool AutoStart;
     public bool StartMinimized;
@@ -158,4 +158,4 @@ public class SettingsConfig
     public string? PreferredVideoPlayerPath;
 }
 
-public class SettingsChangedMessage { }
+internal sealed class SettingsChangedMessage { }

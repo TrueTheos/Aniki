@@ -4,7 +4,7 @@ using Aniki.Services.Auth;
 
 namespace Aniki.Models;
 
-public partial class DaySchedule : ObservableObject
+internal sealed partial class DaySchedule : ObservableObject
 {
     [ObservableProperty]
     private string _name = "";
@@ -25,7 +25,7 @@ public partial class DaySchedule : ObservableObject
     private ObservableCollection<AnimeScheduleItem> _items = new();
 }
 
-public partial class AnimeScheduleItem : ObservableObject
+internal sealed partial class AnimeScheduleItem : ObservableObject
 {
     public Dictionary<ILoginProvider.ProviderType, int> ProviderId { get; set; } = new();
 

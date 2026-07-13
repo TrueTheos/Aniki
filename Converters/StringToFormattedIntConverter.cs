@@ -3,7 +3,7 @@ using Avalonia.Data.Converters;
 
 namespace Aniki.Converters;
 
-public class StringToFormattedIntConverter : IValueConverter
+internal sealed class StringToFormattedIntConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

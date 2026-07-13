@@ -4,7 +4,7 @@ using Avalonia.Media;
 
 namespace Aniki.Converters;
 
-public class AnimeTypeToColorConverter : IValueConverter
+internal sealed class AnimeTypeToColorConverter : IValueConverter
 {
     private static readonly Dictionary<string, string> TypeColors = new()
     {
@@ -19,7 +19,7 @@ public class AnimeTypeToColorConverter : IValueConverter
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is string animeType && TypeColors.TryGetValue(animeType.ToUpper(), out string? color))
+        if (value is string animeType && TypeColors.TryGetValue(animeType.ToUpperInvariant(), out string? color))
         {
             return Brush.Parse(color);
         }

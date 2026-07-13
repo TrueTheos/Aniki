@@ -3,7 +3,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Anime.Providers;
 
-public class JikanService : IJikanService
+internal sealed class JikanService : IJikanService, IDisposable
 {
     private const int RATE_LIMIT_PER_SECOND = 3;
     private const int RATE_LIMIT_WINDOW_MS  = 1000;
@@ -16,7 +16,7 @@ public class JikanService : IJikanService
 
     private async Task<HttpResponseMessage> GetAsync(string url)
     {
-        await _rateLimitLock.WaitAsync();
+        await _rateLimitLock.WaitAsync().ConfigureAwait(true);
         try
         {
             DateTime now = DateTime.UtcNow;
@@ -29,7 +29,7 @@ public class JikanService : IJikanService
             {
                 double timePassed = (now - _requestTimestamps.Peek()).TotalMilliseconds;
                 int wait = (int)(RATE_LIMIT_WINDOW_MS - timePassed) + 20;
-                if (wait > 0) await Task.Delay(wait);
+                if (wait > 0) await Task.Delay(wait).ConfigureAwait(true);
 
                 while (_requestTimestamps.Count > 0 &&
                        (DateTime.UtcNow - _requestTimestamps.Peek()).TotalMilliseconds >= RATE_LIMIT_WINDOW_MS)
@@ -43,7 +43,7 @@ public class JikanService : IJikanService
             _rateLimitLock.Release();
         }
 
-        return await _client.GetAsync(url);
+        return await _client.GetAsync(url).ConfigureAwait(true);
     }
 
     public async Task<string?> GetAnimeTrailerUrlAsync(int malId)
@@ -53,12 +53,12 @@ public class JikanService : IJikanService
 
         try
         {
-            HttpResponseMessage response = await GetAsync($"https://api.jikan.moe/v4/anime/{malId}/videos");
+            HttpResponseMessage response = await GetAsync($"https://api.jikan.moe/v4/anime/{malId}/videos").ConfigureAwait(true);
 
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            string json = await response.Content.ReadAsStringAsync();
+            string json = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
             using JsonDocument doc = JsonDocument.Parse(json);
 
             string? url = null;
@@ -88,5 +88,11 @@ public class JikanService : IJikanService
         {
             return null;
         }
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
+        _rateLimitLock.Dispose();
     }
 }

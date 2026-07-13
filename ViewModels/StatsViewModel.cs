@@ -3,15 +3,15 @@ using Aniki.Services.Anime;
 
 namespace Aniki.ViewModels;
 
-public class GenreStats
+internal sealed class GenreStats
 {
     public required string Name { get; set; }
     public int Count { get; set; }
     public double Percentage { get; set; }
     public double MeanScore { get; set; }
 }
-    
-public partial class StatsViewModel : ViewModelBase
+
+internal sealed partial class StatsViewModel : ViewModelBase
 {
     [ObservableProperty] public partial AnimeStats? AnimeStats { get; set; }
     [ObservableProperty] public partial List<GenreStats>? GenreStats { get; set; }
@@ -30,7 +30,7 @@ public partial class StatsViewModel : ViewModelBase
         {
             if(!AnimeService.IsLoggedIn) return;
         
-            var animeList = await _malService.GetUserAnimeListAsync();
+            var animeList = await _malService.GetUserAnimeListAsync().ConfigureAwait(true);
             if (animeList.Count == 0)
                 return;
 

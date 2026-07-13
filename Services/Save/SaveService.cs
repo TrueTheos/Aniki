@@ -8,7 +8,7 @@ using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Save;
 
-public class SaveService : ISaveService
+internal sealed class SaveService : ISaveService
 {
     private static readonly string MainDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -18,7 +18,7 @@ public class SaveService : ISaveService
     public static readonly string TokenDirectoryPath = Path.Combine(MainDirectory, "tokens");
 
     public string DefaultEpisodesFolder => Path.Combine(MainDirectory, "Episodes");
-    private string ImageCacheFolder => Path.Combine(MainDirectory, "ImageCache");
+    private static string ImageCacheFolder => Path.Combine(MainDirectory, "ImageCache");
     
     private readonly ImageSaver _imageSaver;
     private readonly SaveEntity<SettingsConfig> _settingsSaver;
@@ -107,7 +107,7 @@ public class SaveService : ISaveService
     {
         foreach (var cache in _caches)
         {
-            await cache.Value.ClearAllAsync();
+            await cache.Value.ClearAllAsync().ConfigureAwait(true);
         }
     }
 
@@ -115,7 +115,7 @@ public class SaveService : ISaveService
     {
         foreach (var cache in _caches)
         {
-            await cache.Value.SyncToDiskAsync();
+            await cache.Value.SyncToDiskAsync().ConfigureAwait(true);
         }
     }
 
@@ -126,7 +126,7 @@ public class SaveService : ISaveService
         DeleteFolder(TokenDirectoryPath);
     }
 
-    private void DeleteFolder(string path)
+    private static void DeleteFolder(string path)
     {
         try
         {

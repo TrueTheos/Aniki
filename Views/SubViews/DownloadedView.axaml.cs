@@ -5,7 +5,7 @@ using Avalonia.Interactivity;
 
 namespace Aniki.Views;
 
-public partial class DownloadedView : UserControl
+internal sealed partial class DownloadedView : UserControl
 {
     private readonly DownloadedViewModel _viewModel;
     
@@ -30,7 +30,7 @@ public partial class DownloadedView : UserControl
         {
             if (sender is Control { DataContext: AnimeGroup anime })
             {
-                await _viewModel.OpenAnimeDetailsCommand.ExecuteAsync(anime.MalId);
+                await _viewModel.OpenAnimeDetailsCommand.ExecuteAsync(anime.MalId).ConfigureAwait(true);
             }
         }
         catch (Exception e)

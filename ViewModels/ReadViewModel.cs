@@ -1,6 +1,6 @@
 namespace Aniki.ViewModels;
 
-public class ReadViewModel : ViewModelBase
+internal sealed class ReadViewModel : ViewModelBase
 {
     public ReadViewModel()
     {
