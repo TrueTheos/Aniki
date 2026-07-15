@@ -3,7 +3,7 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Anime.Providers;
 
-internal sealed class JikanService : IJikanService, IDisposable
+internal sealed class TenraiService : IJikanService, IDisposable
 {
     private const int RATE_LIMIT_PER_SECOND = 3;
     private const int RATE_LIMIT_WINDOW_MS  = 1000;
@@ -53,7 +53,7 @@ internal sealed class JikanService : IJikanService, IDisposable
 
         try
         {
-            HttpResponseMessage response = await GetAsync($"https://api.jikan.moe/v4/anime/{malId}/videos").ConfigureAwait(true);
+            HttpResponseMessage response = await GetAsync($"https://api.tenrai.org/v1/anime/{malId}/videos").ConfigureAwait(true);
 
             if (!response.IsSuccessStatusCode)
                 return null;
