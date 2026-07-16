@@ -73,12 +73,12 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                      $"?variables={HttpUtility.UrlEncode(variablesJson)}" +
                      $"&extensions={HttpUtility.UrlEncode(extensionsJson)}";
 
-        string response = await _httpClient.GetStringAsync(url).ConfigureAwait(true);
+        string response = await _httpClient.GetStringAsync(url).ConfigureAwait(false);
 
         if (response.Contains("PersistedQueryNotFound", StringComparison.InvariantCulture))
         {
             url += $"&query={HttpUtility.UrlEncode(gql)}";
-            response = await _httpClient.GetStringAsync(url).ConfigureAwait(true);
+            response = await _httpClient.GetStringAsync(url).ConfigureAwait(false);
         }
 
         return response;
@@ -96,11 +96,11 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                      $"?variables={HttpUtility.UrlEncode(variablesJson)}" +
                      $"&extensions={HttpUtility.UrlEncode(extensionsJson)}";
 
-        string response = await _httpClient.GetStringAsync(url).ConfigureAwait(true);
+        string response = await _httpClient.GetStringAsync(url).ConfigureAwait(false);
         if (HasEpisodeSourcePayload(response))
             return response;
 
-        return await PostEpisodeSourcesAsync(variables).ConfigureAwait(true);
+        return await PostEpisodeSourcesAsync(variables).ConfigureAwait(false);
     }
 
     private async Task<string> PostEpisodeSourcesAsync(object variables)
@@ -112,9 +112,9 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
         });
 
         using StringContent content = new(body, Encoding.UTF8, "application/json");
-        using HttpResponseMessage httpResponse = await _httpClient.PostAsync($"{ALLANIME_API}/api", content).ConfigureAwait(true);
+        using HttpResponseMessage httpResponse = await _httpClient.PostAsync($"{ALLANIME_API}/api", content).ConfigureAwait(false);
         httpResponse.EnsureSuccessStatusCode();
-        return await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(true);
+        return await httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
     }
 
     private static bool HasEpisodeSourcePayload(string response)
@@ -175,7 +175,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                 countryOrigin   = "ALL"
             };
 
-            string response = await ApqGetAsync(SEARCH_GQL, variables).ConfigureAwait(true);
+            string response = await ApqGetAsync(SEARCH_GQL, variables).ConfigureAwait(false);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
 
             List<AllMangaSearchResult> results = new();
@@ -244,7 +244,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
             string showId    = ExtractShowId(animeIdOrUrl);
             var    variables = new { showId };
 
-            string response = await ApqGetAsync(EPISODES_GQL, variables).ConfigureAwait(true);
+            string response = await ApqGetAsync(EPISODES_GQL, variables).ConfigureAwait(false);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
 
             List<AllMangaEpisode> episodes = new();
@@ -290,14 +290,14 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
 
             var variables = new { showId, translationType = "sub", episodeString };
 
-            string response = await ApqGetEpisodeSourcesAsync(variables).ConfigureAwait(true);
+            string response = await ApqGetEpisodeSourcesAsync(variables).ConfigureAwait(false);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
             JsonElement root = jsonDoc.RootElement;
 
             if (TryGetTobeparsed(root, out string rootTobeparsed))
             {
                 string decrypted = DecryptTobeparsedAes256Ctr(rootTobeparsed);
-                return await ExtractVideoUrlFromSourcesJson(decrypted).ConfigureAwait(true);
+                return await ExtractVideoUrlFromSourcesJson(decrypted).ConfigureAwait(false);
             }
 
             if (root.TryGetProperty("data", out JsonElement data))
@@ -305,13 +305,13 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                 if (TryGetTobeparsed(data, out string dataTobeparsed))
                 {
                     string decrypted = DecryptTobeparsedAes256Ctr(dataTobeparsed);
-                    return await ExtractVideoUrlFromSourcesJson(decrypted).ConfigureAwait(true);
+                    return await ExtractVideoUrlFromSourcesJson(decrypted).ConfigureAwait(false);
                 }
 
                 if (data.TryGetProperty("episode", out JsonElement episode) &&
                     episode.TryGetProperty("sourceUrls", out JsonElement sourceUrls))
                 {
-                    string? videoLink = await ResolveFirstVideoLinkAsync(sourceUrls).ConfigureAwait(true);
+                    string? videoLink = await ResolveFirstVideoLinkAsync(sourceUrls).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(videoLink))
                         return videoLink;
                 }
@@ -396,7 +396,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                 continue;
 
             string decodedUrl = DecodeSourceUrl(encodedUrl);
-            string videoLink  = await GetLinksFromSource(decodedUrl).ConfigureAwait(true);
+            string videoLink  = await GetLinksFromSource(decodedUrl).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(videoLink))
                 return videoLink;
         }
@@ -409,7 +409,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
         if (!decryptedJson.TrimStart().StartsWith('[') &&
             !decryptedJson.TrimStart().StartsWith('{'))
         {
-            string direct = await GetLinksFromSource(decryptedJson.Trim()).ConfigureAwait(true);
+            string direct = await GetLinksFromSource(decryptedJson.Trim()).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(direct)) return direct;
             throw new NotImplementedException("Decrypted payload is not JSON and not a valid source URL");
         }
@@ -479,7 +479,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
             if (string.IsNullOrEmpty(rawUrl)) continue;
 
             string decodedUrl = DecodeSourceUrl(rawUrl);
-            string videoLink  = await GetLinksFromSource(decodedUrl).ConfigureAwait(true);
+            string videoLink  = await GetLinksFromSource(decodedUrl).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(videoLink))
                 return videoLink;
         }
@@ -562,7 +562,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                 || host.EndsWith("." + ALLANIME_BASE, StringComparison.OrdinalIgnoreCase);
 
             if (!onAllanime)
-                return await ResolvePlayableUrlAsync(NormalizeHttpUrl(sourceUrl)).ConfigureAwait(true);
+                return await ResolvePlayableUrlAsync(NormalizeHttpUrl(sourceUrl)).ConfigureAwait(false);
 
             sourceUrl = string.Concat(absolute.PathAndQuery, absolute.Fragment);
         }
@@ -572,7 +572,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
 
         try
         {
-            string response = await _httpClient.GetStringAsync($"https://{ALLANIME_BASE}{sourceUrl}").ConfigureAwait(true);
+            string response = await _httpClient.GetStringAsync($"https://{ALLANIME_BASE}{sourceUrl}").ConfigureAwait(false);
             using JsonDocument jsonDoc = JsonDocument.Parse(response);
 
             if (jsonDoc.RootElement.TryGetProperty("links", out JsonElement links))
@@ -605,7 +605,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                 }
 
                 if (!string.IsNullOrEmpty(bestUrl))
-                    return await ResolvePlayableUrlAsync(bestUrl, response).ConfigureAwait(true);
+                    return await ResolvePlayableUrlAsync(bestUrl, response).ConfigureAwait(false);
             }
 
             return string.Empty;
@@ -625,7 +625,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
         if (url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) &&
             url.Contains("/embed", StringComparison.OrdinalIgnoreCase))
         {
-            string resolved = await ResolveMp4UploadEmbedAsync(url).ConfigureAwait(true);
+            string resolved = await ResolveMp4UploadEmbedAsync(url).ConfigureAwait(false);
             return IsDirectMediaUrl(resolved) ? resolved : string.Empty;
         }
 
@@ -646,7 +646,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
                     referer = refererMatch.Groups[1].Value;
             }
 
-            string resolved = await ResolveMasterPlaylistAsync(url, referer).ConfigureAwait(true);
+            string resolved = await ResolveMasterPlaylistAsync(url, referer).ConfigureAwait(false);
             if (IsDirectMediaUrl(resolved))
                 return resolved;
         }
@@ -658,7 +658,7 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
     {
         try
         {
-            string html = await _httpClient.GetStringAsync(embedUrl).ConfigureAwait(true);
+            string html = await _httpClient.GetStringAsync(embedUrl).ConfigureAwait(false);
             Match match = Mp4UploadSrcRegex.Match(html);
             if (!match.Success)
                 return string.Empty;
@@ -701,9 +701,9 @@ internal sealed class AllMangaScraperService : IAllMangaScraperService, IDisposa
             request.Headers.TryAddWithoutValidation("Referer", referer);
             request.Headers.TryAddWithoutValidation("Origin", ALLANIME_REFR);
 
-            using HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(true);
+            using HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            string playlist = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+            string playlist = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             if (!playlist.Contains("#EXTM3U", StringComparison.Ordinal))
                 return string.Empty;

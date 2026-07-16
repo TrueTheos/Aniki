@@ -13,7 +13,7 @@ internal sealed class NyaaService : INyaaService, IDisposable
     {
         string url = string.IsNullOrWhiteSpace(torrentSearchTerms) ? $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{animeName}")}" : $"https://nyaa.si/?page=rss&f=0&c=0_0&q={HttpUtility.UrlEncode($"{torrentSearchTerms}")}";
 
-        string rssContent = await _http.GetStringAsync(url).ConfigureAwait(true);
+        string rssContent = await _http.GetStringAsync(url).ConfigureAwait(false);
         List<NyaaTorrent> results = new();
 
         XmlDocument doc = new();

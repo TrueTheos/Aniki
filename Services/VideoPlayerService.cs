@@ -48,11 +48,11 @@ internal sealed class VideoPlayerService : IVideoPlayerService
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                await DetectWindowsPlayersAsync().ConfigureAwait(true);
+                await DetectWindowsPlayersAsync().ConfigureAwait(false);
             }
             else
             {
-                await DetectUnixPlayersAsync().ConfigureAwait(true);
+                await DetectUnixPlayersAsync().ConfigureAwait(false);
             }
 
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -73,7 +73,7 @@ internal sealed class VideoPlayerService : IVideoPlayerService
                 SelectedPlayer = AvailablePlayers.FirstOrDefault(x => x.ExecutablePath == currentPath) 
                                  ?? AvailablePlayers.FirstOrDefault();
             });
-        }).ConfigureAwait(true);
+        }).ConfigureAwait(false);
     }
 
     private async Task DetectWindowsPlayersAsync()
@@ -83,7 +83,7 @@ internal sealed class VideoPlayerService : IVideoPlayerService
 
         tasks.Add(Task.Run(DetectCommonWindowsPlayers));
 
-        await Task.WhenAll(tasks).ConfigureAwait(true);
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     private async Task DetectUnixPlayersAsync()
@@ -103,7 +103,7 @@ internal sealed class VideoPlayerService : IVideoPlayerService
             }
         }));
 
-        await Task.WhenAll(tasks).ConfigureAwait(true);
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     private void DetectCommonWindowsPlayers()

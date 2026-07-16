@@ -14,7 +14,7 @@ internal sealed class AnimeNameParser : IAnimeNameParser
     public async Task<ParseResult> ParseFile(string filename)
     {
         ParsedName parsed = FilenameParser.Parse(filename, extractEpisode: true);
-        return await Resolve(parsed).ConfigureAwait(true);
+        return await Resolve(parsed).ConfigureAwait(false);
     }
     public async Task<FolderParseResult> ParseFolder(string folderName)
     {
@@ -22,7 +22,7 @@ internal sealed class AnimeNameParser : IAnimeNameParser
         int season = parsed.Season ?? 1;
 
         int? animeId = await _absoluteEpisodeParser.GetIdForSeason(
-            parsed.Name, season, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(true);
+            parsed.Name, season, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(false);
 
         return new FolderParseResult(parsed.Name, season, parsed.Part, parsed.Year, animeId);
     }
@@ -34,7 +34,7 @@ internal sealed class AnimeNameParser : IAnimeNameParser
         if (parsed.Episode is not { } episode)
         {
             AbsoluteEpisodeParser.SeasonMapMatch? match =
-                await _absoluteEpisodeParser.ResolveSeasonEntry(parsed.Name, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(true);
+                await _absoluteEpisodeParser.ResolveSeasonEntry(parsed.Name, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(false);
 
             return new ParseResult
             {
@@ -51,7 +51,7 @@ internal sealed class AnimeNameParser : IAnimeNameParser
         if (parsed.Season is > 1 || parsed.Part > 1)
         {
             AbsoluteEpisodeParser.SeasonMapMatch? match =
-                await _absoluteEpisodeParser.ResolveSeasonEntry(parsed.Name, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(true);
+                await _absoluteEpisodeParser.ResolveSeasonEntry(parsed.Name, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(false);
 
             return new ParseResult
             {
@@ -68,9 +68,9 @@ internal sealed class AnimeNameParser : IAnimeNameParser
         // Otherwise treat the number as an absolute episode and map it onto the
         // correct season / part across the whole series
         (int season, int part, int relativeEpisode, int? animeId) =
-            await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(parsed.Name, episode, parsed.Part, parsed.Year).ConfigureAwait(true);
+            await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(parsed.Name, episode, parsed.Part, parsed.Year).ConfigureAwait(false);
 
-        animeId ??= await _absoluteEpisodeParser.GetIdForSeason(parsed.Name, season, part, parsed.Year).ConfigureAwait(true);
+        animeId ??= await _absoluteEpisodeParser.GetIdForSeason(parsed.Name, season, part, parsed.Year).ConfigureAwait(false);
 
         return new ParseResult
         {

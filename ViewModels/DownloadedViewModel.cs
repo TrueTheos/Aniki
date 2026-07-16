@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Aniki.Services.Anime;
 using Aniki.Services.Anime.Providers;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 using Aniki.Services.Parser;
 using Aniki.Views;
@@ -102,8 +103,11 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
     public override async Task Enter()
     {
         SearchText = "";
-        await _loadTask.ConfigureAwait(true);
-        await SyncListMetadataAsync().ConfigureAwait(true);
+        // RefreshAsync already syncs; only re-sync when re-entering after load finished.
+        if (!_loadTask.IsCompleted)
+            await _loadTask.ConfigureAwait(true);
+        else
+            await SyncListMetadataAsync().ConfigureAwait(true);
         ApplyFiltersAndSort();
     }
 
@@ -378,16 +382,17 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
         await _metadataLock.WaitAsync().ConfigureAwait(true);
         try
         {
+            List<AnimeDetails> watchingList = [];
             try
             {
-                await LoadWatchingListAsync().ConfigureAwait(true);
+                watchingList = await LoadWatchingListAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"LoadWatchingListAsync failed: {ex}");
             }
 
-            await LoadAiringInfoAsync().ConfigureAwait(true);
+            await LoadAiringInfoAsync(watchingList).ConfigureAwait(true);
         }
         finally
         {
@@ -395,7 +400,7 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task LoadWatchingListAsync()
+    private async Task<List<AnimeDetails>> LoadWatchingListAsync()
     {
         var watchingList = await _animeService.GetUserAnimeListAsync(AnimeStatus.Watching).ConfigureAwait(true);
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -414,25 +419,73 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
                 InsertGroupAlphabetically(group);
             }
         });
+        return watchingList;
     }
 
-    private async Task LoadAiringInfoAsync()
+    private async Task LoadAiringInfoAsync(List<AnimeDetails> watchingList)
     {
-        List<(int MalId, AnimeGroup Group)> snapshot =
-            await Dispatcher.UIThread.InvokeAsync(() => AnimeGroups.Select(g => (g.MalId, g)).ToList());
-        foreach ((int malId, AnimeGroup group) in snapshot)
+        Dictionary<int, AnimeGroup> groupsById =
+            await Dispatcher.UIThread.InvokeAsync(() => AnimeGroups.ToDictionary(g => g.MalId));
+
+        List<(int Id, AnimeGroup Group)> needAnilist = [];
+        List<(AnimeGroup Group, int Released)> localUpdates = [];
+
+        foreach (AnimeDetails anime in watchingList)
         {
-            try
+            if (!groupsById.TryGetValue(anime.Id, out AnimeGroup? group)) continue;
+
+            string? status = anime.Status;
+            int numEpisodes = anime.NumEpisodes ?? group.MaxEpisodes;
+
+            if (IsFinishedAiring(status))
+                localUpdates.Add((group, numEpisodes));
+            else if (IsCurrentlyAiring(status))
+                needAnilist.Add((anime.Id, group));
+            else
+                localUpdates.Add((group, 0));
+        }
+
+        if (localUpdates.Count > 0)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                int released = await _anilistService.GetReleasedEpisodeCountAsync(malId).ConfigureAwait(true);
-                await Dispatcher.UIThread.InvokeAsync(() => group.ReleasedEpisodes = released);
-            }
-            catch (Exception ex)
+                foreach ((AnimeGroup group, int released) in localUpdates)
+                    group.ReleasedEpisodes = released;
+            });
+        }
+
+        if (needAnilist.Count == 0) return;
+
+        // MAL has no aired-episode field; Anilist is only used for currently-airing titles.
+        try
+        {
+            bool useMalIds = AnimeService.CurrentProviderType == ILoginProvider.ProviderType.Mal;
+            var counts = await _anilistService
+                .GetReleasedEpisodeCountsAsync(needAnilist.Select(x => x.Id).ToList(), useMalIds)
+                .ConfigureAwait(true);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Console.WriteLine($"AniList airing info failed for {malId}: {ex.Message}");
-            }
+                foreach ((int id, AnimeGroup group) in needAnilist)
+                {
+                    if (counts.TryGetValue(id, out int released))
+                        group.ReleasedEpisodes = released;
+                    else if (group.MaxEpisodes > 0)
+                        group.ReleasedEpisodes = group.MaxEpisodes;
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AniList airing batch failed: {ex.Message}");
         }
     }
+
+    private static bool IsCurrentlyAiring(string? status) =>
+        status is "currently_airing" or "RELEASING";
+
+    private static bool IsFinishedAiring(string? status) =>
+        status is "finished_airing" or "FINISHED";
 
     private string GetEpisodesFolder()
     {

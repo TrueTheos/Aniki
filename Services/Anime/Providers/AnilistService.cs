@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
+using Aniki.Misc;
 using Aniki.Models.Anilist;
 using Aniki.Models.Anilist.Components;
 using Aniki.Services.Auth;
@@ -13,8 +13,9 @@ namespace Aniki.Services.Anime.Providers;
 
 internal sealed class AnilistService : IAnimeProvider, IDisposable
 {
-    private sealed record AiringInfoResponse(AiringMedia? Media);
-    private sealed record AiringMedia(int? Episodes, NextAiringEpisode? NextAiringEpisode);
+    private sealed record AiringPageResponse(AiringPage? Page);
+    private sealed record AiringPage(List<AiringMedia>? Media);
+    private sealed record AiringMedia(int? Id, int? IdMal, int? Episodes, NextAiringEpisode? NextAiringEpisode);
     private sealed record NextAiringEpisode(int Episode);
     
     private readonly GraphQLHttpClient _client;
@@ -57,7 +58,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         {
             _client.HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             IsLoggedIn = true;
-            UserData userData = await GetUserDataAsync().ConfigureAwait(true);
+            UserData userData = await GetUserDataAsync().ConfigureAwait(false);
             _currentUserId = userData.Id;
         }
         else
@@ -70,19 +71,17 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
     private async Task<GraphQLResponse<TResponse>?> TrySendQueryAsync<TResponse>(
         GraphQLRequest request, string message, CancellationToken cancellationToken = default)
     {
-        #if DEBUG
-        Debug.WriteLine($"Request: {message}");
-        #endif
-    
+        string? previous = AnilistRequestContext.Operation;
+        AnilistRequestContext.Operation = message;
         try
         {
-            var response = await _client.SendQueryAsync<TResponse>(request, cancellationToken).ConfigureAwait(true);
-       
+            var response = await _client.SendQueryAsync<TResponse>(request, cancellationToken).ConfigureAwait(false);
+
             if (response.Errors != null && response.Errors.Length > 0)
             {
                 foreach (GraphQLError error in response.Errors)
                 {
-                    Debug.WriteLine($"GraphQL Error: {error.Message}");
+                    Console.WriteLine($"[AL] GraphQL Error in {message}: {error.Message}");
                 }
                 return null;
             }
@@ -91,44 +90,76 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception in TrySendQueryAsync: {ex.Message}");
+            Console.WriteLine($"[AL] Exception in {message}: {ex.Message}");
             return null;
+        }
+        finally
+        {
+            AnilistRequestContext.Operation = previous;
         }
     }
     
     private readonly Dictionary<int, int> _releasedEpisodeCache = new();
-    
-    public async Task<int> GetReleasedEpisodeCountAsync(int malId)
+
+    // MAL has no aired-count API; Anilist is used as a sidecar for currently-airing titles.
+    public async Task<Dictionary<int, int>> GetReleasedEpisodeCountsAsync(
+        IReadOnlyList<int> ids, bool useMalIds = true)
     {
-        if (_releasedEpisodeCache.TryGetValue(malId, out int cached))
-            return cached;
+        Dictionary<int, int> results = new();
+        if (ids.Count == 0) return results;
 
-        GraphQLRequest request = new()
+        List<int> missing = [];
+        foreach (int id in ids.Distinct())
         {
-            Query = @"
-                query ($idMal: Int) {
-                    Media(idMal: $idMal, type: ANIME) {
-                        episodes
-                        nextAiringEpisode {
-                            episode
-                        }
-                    }
-                }",
-            Variables = new { idMal = malId }
-        };
-
-        var response = await TrySendQueryAsync<AiringInfoResponse>(request, $"GetReleasedEpisodeCountAsync {malId}").ConfigureAwait(true);
-
-        int released = 0;
-        if (response?.Data?.Media is { } media)
-        {
-            released = media.NextAiringEpisode?.Episode is { } next
-                ? next - 1
-                : media.Episodes ?? 0;
+            if (_releasedEpisodeCache.TryGetValue(id, out int cached))
+                results[id] = cached;
+            else
+                missing.Add(id);
         }
 
-        _releasedEpisodeCache[malId] = released;
-        return released;
+        const int pageSize = 50;
+        for (int offset = 0; offset < missing.Count; offset += pageSize)
+        {
+            List<int> chunk = missing.Skip(offset).Take(pageSize).ToList();
+            string idFilter = useMalIds ? "idMal_in" : "id_in";
+            string idField = useMalIds ? "idMal" : "id";
+
+            GraphQLRequest request = new()
+            {
+                Query = $$"""
+                    query ($ids: [Int]) {
+                        Page(page: 1, perPage: {{pageSize}}) {
+                            media({{idFilter}}: $ids, type: ANIME) {
+                                {{idField}}
+                                episodes
+                                nextAiringEpisode {
+                                    episode
+                                }
+                            }
+                        }
+                    }
+                    """,
+                Variables = new { ids = chunk }
+            };
+
+            var response = await TrySendQueryAsync<AiringPageResponse>(
+                request, $"GetReleasedEpisodeCountsAsync {chunk.Count}").ConfigureAwait(false);
+
+            foreach (AiringMedia media in response?.Data?.Page?.Media ?? [])
+            {
+                int? key = useMalIds ? media.IdMal : media.Id;
+                if (key is not { } id) continue;
+
+                int released = media.NextAiringEpisode?.Episode is { } next
+                    ? next - 1
+                    : media.Episodes ?? 0;
+
+                _releasedEpisodeCache[id] = released;
+                results[id] = released;
+            }
+        }
+
+        return results;
     }
 
     #region  IAnimeProvider
@@ -151,7 +182,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                 }"
         };
 
-        var response = await TrySendQueryAsync<ViewerResponse>(request, "GetUserDataAsync").ConfigureAwait(true);
+        var response = await TrySendQueryAsync<ViewerResponse>(request, "GetUserDataAsync").ConfigureAwait(false);
         if(response?.Data?.Viewer == null) return new UserData();
 
         return new UserData
@@ -196,7 +227,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             }
         };
 
-        var response = await TrySendQueryAsync<Anilist_MediaListCollectionResponse>(request, "GetUserAnimeListAsync").ConfigureAwait(true);
+        var response = await TrySendQueryAsync<Anilist_MediaListCollectionResponse>(request, "GetUserAnimeListAsync").ConfigureAwait(false);
         if (response?.Data?.MediaListCollection?.Lists == null) return [];
 
         List<AnimeDetails> animeList = [];
@@ -211,7 +242,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                     Score = entry.Score,
                     Status = entry.Status
                 };
-                animeList.Add(await ConvertAnilistToUnified(entry.Media, mediaListStatus).ConfigureAwait(true));
+                animeList.Add(await ConvertAnilistToUnified(entry.Media, mediaListStatus).ConfigureAwait(false));
             }
         }
         return animeList;
@@ -233,7 +264,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Variables = new { mediaId = animeId, userId = _currentUserId }
         };
 
-        var queryResponse = await TrySendQueryAsync<Anilist_MediaListResponse>(queryRequest, "RemoveFromUserListAsync").ConfigureAwait(true);
+        var queryResponse = await TrySendQueryAsync<Anilist_MediaListResponse>(queryRequest, "RemoveFromUserListAsync").ConfigureAwait(false);
         if (queryResponse?.Data?.AnilistMediaList == null) return;
 
         int entryId = queryResponse.Data.AnilistMediaList.Id;
@@ -249,22 +280,22 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Variables = new { id = entryId }
         };
 
-        await _client.SendMutationAsync<object>(deleteRequest).ConfigureAwait(true);
+        await _client.SendMutationAsync<object>(deleteRequest).ConfigureAwait(false);
     }
     
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
-        await UpdateMediaListEntry(animeId, status: status).ConfigureAwait(true);
+        await UpdateMediaListEntry(animeId, status: status).ConfigureAwait(false);
     }
 
     public async Task SetAnimeScoreAsync(int animeId, int score)
     {
-        await UpdateMediaListEntry(animeId, score: score).ConfigureAwait(true);
+        await UpdateMediaListEntry(animeId, score: score).ConfigureAwait(false);
     }
 
     public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
     {
-        await UpdateMediaListEntry(animeId, progress: episodes).ConfigureAwait(true);
+        await UpdateMediaListEntry(animeId, progress: episodes).ConfigureAwait(false);
     }
     
     public async Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields)
@@ -285,10 +316,10 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Variables = new Dictionary<string, object> { { "id", animeId } }
         };
 
-        var response = await TrySendQueryAsync<Anilist_MediaResponse>(request, $"FetchAnimeDetailsAsync {animeId} {string.Join(", ", fields)}").ConfigureAwait(true);
+        var response = await TrySendQueryAsync<Anilist_MediaResponse>(request, $"FetchAnimeDetailsAsync {animeId} {string.Join(", ", fields)}").ConfigureAwait(false);
         if (response?.Data?.Media == null) return null;
             
-        return await ConvertAnilistToUnified(response.Data.Media, response.Data.Media.MediaListEntry).ConfigureAwait(true);
+        return await ConvertAnilistToUnified(response.Data.Media, response.Data.Media.MediaListEntry).ConfigureAwait(false);
     }
     
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
@@ -310,13 +341,13 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Variables =  new Dictionary<string, object> { ["search"] = query }
         };
 
-        var response = await TrySendQueryAsync<Anilist_PageResponse>(request, "SearchAnimeAsync").ConfigureAwait(true);
+        var response = await TrySendQueryAsync<Anilist_PageResponse>(request, "SearchAnimeAsync").ConfigureAwait(false);
         if (response?.Data?.Page?.Media == null) return [];
         List<AnimeDetails> results = [];
 
         foreach (Anilist_Anime media in response.Data.Page.Media)
         {
-            results.Add(await ConvertAnilistToUnified(media, media.MediaListEntry).ConfigureAwait(true));
+            results.Add(await ConvertAnilistToUnified(media, media.MediaListEntry).ConfigureAwait(false));
         }
             
         return results;
@@ -372,7 +403,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Variables = variables
         };
 
-        var response = await TrySendQueryAsync<Anilist_PageResponse>(request, "GetTopAnimeAsync").ConfigureAwait(true);
+        var response = await TrySendQueryAsync<Anilist_PageResponse>(request, "GetTopAnimeAsync").ConfigureAwait(false);
         if (response?.Data?.Page?.Media == null) return [];
             
         List<RankingEntry> results = [];
@@ -381,7 +412,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         {
             results.Add(new RankingEntry
             {
-                Details = await ConvertAnilistToUnified(media, media.MediaListEntry).ConfigureAwait(true),
+                Details = await ConvertAnilistToUnified(media, media.MediaListEntry).ConfigureAwait(false),
             });
         }
 
@@ -398,7 +429,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         if (string.IsNullOrEmpty(imageUrl)) return null;
         try
         {
-            byte[] imageData = await _httpClient.GetByteArrayAsync(imageUrl).ConfigureAwait(true);
+            byte[] imageData = await _httpClient.GetByteArrayAsync(imageUrl).ConfigureAwait(false);
             using MemoryStream ms = new(imageData);
             Bitmap downloadedImage = new(ms);
             _saveService.SaveImage(animeId, downloadedImage);
@@ -442,7 +473,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Variables = variables
         };
 
-        await _client.SendMutationAsync<object>(request).ConfigureAwait(true);
+        await _client.SendMutationAsync<object>(request).ConfigureAwait(false);
     }
 
     private static string? GetTrailerUrl(Anilist_Trailer? trailer)
@@ -458,7 +489,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
     
     private async Task<AnimeDetails> ConvertAnilistToUnified(Anilist_Anime anime, Anilist_MediaListStatus? userStatus)
     {
-        Bitmap? picture = await LoadAnimeImageAsync(anime.Id, anime.CoverImage?.Large).ConfigureAwait(true);
+        Bitmap? picture = await LoadAnimeImageAsync(anime.Id, anime.CoverImage?.Large).ConfigureAwait(false);
         
         AnimeStatistics stats = new()
         {

@@ -16,7 +16,7 @@ internal sealed class TenraiService : IJikanService, IDisposable
 
     private async Task<HttpResponseMessage> GetAsync(string url)
     {
-        await _rateLimitLock.WaitAsync().ConfigureAwait(true);
+        await _rateLimitLock.WaitAsync().ConfigureAwait(false);
         try
         {
             DateTime now = DateTime.UtcNow;
@@ -29,7 +29,7 @@ internal sealed class TenraiService : IJikanService, IDisposable
             {
                 double timePassed = (now - _requestTimestamps.Peek()).TotalMilliseconds;
                 int wait = (int)(RATE_LIMIT_WINDOW_MS - timePassed) + 20;
-                if (wait > 0) await Task.Delay(wait).ConfigureAwait(true);
+                if (wait > 0) await Task.Delay(wait).ConfigureAwait(false);
 
                 while (_requestTimestamps.Count > 0 &&
                        (DateTime.UtcNow - _requestTimestamps.Peek()).TotalMilliseconds >= RATE_LIMIT_WINDOW_MS)
@@ -43,7 +43,7 @@ internal sealed class TenraiService : IJikanService, IDisposable
             _rateLimitLock.Release();
         }
 
-        return await _client.GetAsync(url).ConfigureAwait(true);
+        return await _client.GetAsync(url).ConfigureAwait(false);
     }
 
     public async Task<string?> GetAnimeTrailerUrlAsync(int malId)
@@ -53,12 +53,12 @@ internal sealed class TenraiService : IJikanService, IDisposable
 
         try
         {
-            HttpResponseMessage response = await GetAsync($"https://api.tenrai.org/v1/anime/{malId}/videos").ConfigureAwait(true);
+            HttpResponseMessage response = await GetAsync($"https://api.tenrai.org/v1/anime/{malId}/videos").ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            string json = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+            string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             using JsonDocument doc = JsonDocument.Parse(json);
 
             string? url = null;

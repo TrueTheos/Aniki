@@ -38,19 +38,19 @@ internal sealed class AnilistLoginProvider : ILoginProvider
             AccessToken = token,
             ExpiresIn = 31536000
         };
-        await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(true);
+        await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(false);
     }
 
     public async Task<string?> CheckExistingLoginAsync()
     {
-        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider).ConfigureAwait(true);
+        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider).ConfigureAwait(false);
         
         if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken)) return null;
 
         try
         {
-            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken).ConfigureAwait(true);
-            UserData? userData = await _animeService.GetUserDataAsync().ConfigureAwait(true);
+            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken).ConfigureAwait(false);
+            UserData? userData = await _animeService.GetUserDataAsync().ConfigureAwait(false);
             return userData?.Name;
         }
         catch (Exception)

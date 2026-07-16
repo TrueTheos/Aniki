@@ -35,7 +35,7 @@ internal sealed class TokenService : ITokenService
 
         try
         {
-            byte[] encryptedData = await File.ReadAllBytesAsync(tokenFilePath).ConfigureAwait(true);
+            byte[] encryptedData = await File.ReadAllBytesAsync(tokenFilePath).ConfigureAwait(false);
             string decryptedJson = DecryptData(encryptedData);
             StoredTokenData? storedTokenData = JsonSerializer.Deserialize<StoredTokenData>(decryptedJson);
 
@@ -71,7 +71,7 @@ internal sealed class TokenService : ITokenService
         byte[] encryptedData = EncryptData(json);
         
         string tokenFilePath = Path.Combine(SaveService.TokenDirectoryPath, $"{providerId}.dat");
-        await File.WriteAllBytesAsync(tokenFilePath, encryptedData).ConfigureAwait(true);
+        await File.WriteAllBytesAsync(tokenFilePath, encryptedData).ConfigureAwait(false);
         _cachedTokens[providerId] = tokens;
     }
 

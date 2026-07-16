@@ -63,7 +63,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
         {
             try
             {
-                await SyncToDiskAsync().ConfigureAwait(true);
+                await SyncToDiskAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -104,7 +104,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
             
             try
             {
-                string json = await File.ReadAllTextAsync(file).ConfigureAwait(true);
+                string json = await File.ReadAllTextAsync(file).ConfigureAwait(false);
                 StoredCacheEntry? stored = JsonSerializer.Deserialize<StoredCacheEntry>(json);
                 
                 if (stored?.Key == null || stored.Entry == null)
@@ -178,14 +178,14 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
             _dirtyKeys.Clear();
         }
 
-        await _diskWriteLock.WaitAsync().ConfigureAwait(true);
+        await _diskWriteLock.WaitAsync().ConfigureAwait(false);
         try
         {
             foreach (TKey key in keysToSync)
             {
                 if (_cache.TryGetValue(key, out var entry))
                 {
-                    await SaveEntryToDiskAsync(key, entry).ConfigureAwait(true);
+                    await SaveEntryToDiskAsync(key, entry).ConfigureAwait(false);
                 }
             }
         }
@@ -266,7 +266,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
             WriteIndented = true 
         });
         
-        await File.WriteAllTextAsync(baseFilePath, json).ConfigureAwait(true);
+        await File.WriteAllTextAsync(baseFilePath, json).ConfigureAwait(false);
     }
 
     private void MarkDirty(TKey key)
@@ -458,7 +458,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
 
         if (missing.Length > 0 && _fetchHandler != null)
         {
-            TEntity? fetchedData = await _fetchHandler(id, missing).ConfigureAwait(true);
+            TEntity? fetchedData = await _fetchHandler(id, missing).ConfigureAwait(false);
             if (fetchedData != null)
             {
                 Update(id, fetchedData, missing);
@@ -505,7 +505,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
         
         if (_options.EnableDiskCache && !string.IsNullOrEmpty(_options.DiskCachePath))
         {
-            await _diskWriteLock.WaitAsync().ConfigureAwait(true);
+            await _diskWriteLock.WaitAsync().ConfigureAwait(false);
             try
             {
                 if (Directory.Exists(_options.DiskCachePath))
@@ -520,7 +520,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
             }
         }
         
-        await SyncToDiskAsync().ConfigureAwait(true);
+        await SyncToDiskAsync().ConfigureAwait(false);
     }
 
     public void Dispose()

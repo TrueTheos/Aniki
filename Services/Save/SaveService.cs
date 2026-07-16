@@ -107,7 +107,7 @@ internal sealed class SaveService : ISaveService
     {
         foreach (var cache in _caches)
         {
-            await cache.Value.ClearAllAsync().ConfigureAwait(true);
+            await cache.Value.ClearAllAsync().ConfigureAwait(false);
         }
     }
 
@@ -115,7 +115,7 @@ internal sealed class SaveService : ISaveService
     {
         foreach (var cache in _caches)
         {
-            await cache.Value.SyncToDiskAsync().ConfigureAwait(true);
+            await cache.Value.SyncToDiskAsync().ConfigureAwait(false);
         }
     }
 

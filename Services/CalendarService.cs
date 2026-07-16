@@ -74,10 +74,10 @@ internal sealed class CalendarService : ICalendarService, IDisposable
 #pragma warning disable CA2000
             StringContent content = new(payload.ToString(), Encoding.UTF8, "application/json");
 #pragma warning restore CA2000
-            HttpResponseMessage response = await _client.PostAsync(GRAPH_QL_ENDPOINT, content).ConfigureAwait(true);
+            HttpResponseMessage response = await _client.PostAsync(GRAPH_QL_ENDPOINT, content).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             JObject json = JObject.Parse(body);
 
             JToken? pageNode = json["data"]?["Page"];
@@ -104,7 +104,7 @@ internal sealed class CalendarService : ICalendarService, IDisposable
         long startUnix = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)endDate).ToUnixTimeSeconds();
 
-        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix, perPage).ConfigureAwait(true);
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix, perPage).ConfigureAwait(false);
 
         HashSet<int> watchSet = new(watchingList);
 
@@ -160,7 +160,7 @@ internal sealed class CalendarService : ICalendarService, IDisposable
         long startUnix = ((DateTimeOffset)date.Date).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)date.Date.AddDays(1)).ToUnixTimeSeconds();
 
-        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix).ConfigureAwait(true);
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix).ConfigureAwait(false);
 
         List<AnimeScheduleItem> animeItems = new();
 

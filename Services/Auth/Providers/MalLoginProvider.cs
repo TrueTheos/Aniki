@@ -52,14 +52,14 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
             OpenBrowser(LoginUrl);
             progressReporter.Report("Waiting for authentication in browser...");
 
-            HttpListenerContext context = await _httpListener.GetContextAsync().ConfigureAwait(true);
+            HttpListenerContext context = await _httpListener.GetContextAsync().ConfigureAwait(false);
             string code = context.Request.QueryString["code"] ?? throw new InvalidOperationException("Failed to get code from query string.");
 
             string responseString = "<html><head><title>Auth Success</title></head><body><h1>Authentication successful!</h1><p>You can close this browser tab/window and return to Aniki.</p><script>window.close();</script></body></html>";
             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
             context.Response.ContentType = "text/html";
             context.Response.ContentLength64 = buffer.Length;
-            await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(true);
+            await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(false);
             context.Response.Close();
             _httpListener.Stop();
 
@@ -70,10 +70,10 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
             }
 
             progressReporter.Report("Exchanging code for token...");
-            bool success = await ExchangeCodeForTokenAsync(code).ConfigureAwait(true);
+            bool success = await ExchangeCodeForTokenAsync(code).ConfigureAwait(false);
             if (success)
             {
-                return await CheckExistingLoginAsync().ConfigureAwait(true); 
+                return await CheckExistingLoginAsync().ConfigureAwait(false); 
             }
             
             progressReporter.Report("Authentication failed or cancelled.");
@@ -103,19 +103,19 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
             AccessToken = token,
             ExpiresIn = 2415600
         };
-        await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(true);
+        await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(false);
     }
 
     public async Task<string?> CheckExistingLoginAsync()
     {
-        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider).ConfigureAwait(true);
+        StoredTokenData? tokenData = await _tokenService.LoadTokensAsync(Provider).ConfigureAwait(false);
 
         if (tokenData == null || string.IsNullOrEmpty(tokenData.AccessToken)) return null;
         
         try
         {
-            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken).ConfigureAwait(true);
-            UserData? userData = await _animeService.GetUserDataAsync().ConfigureAwait(true);
+            await _animeService.SetActiveProviderAsync(Provider, tokenData.AccessToken).ConfigureAwait(false);
+            UserData? userData = await _animeService.GetUserDataAsync().ConfigureAwait(false);
             return userData?.Name;
         }
         catch (Exception)
@@ -142,8 +142,8 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
                 new KeyValuePair<string, string>("redirect_uri", REDIRECT_URI)
             ]);
 
-            HttpResponseMessage response = await Client.PostAsync("https://myanimelist.net/v1/oauth2/token", content).ConfigureAwait(true);
-            string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+            HttpResponseMessage response = await Client.PostAsync("https://myanimelist.net/v1/oauth2/token", content).ConfigureAwait(false);
+            string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode) return false;
             
@@ -152,7 +152,7 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
 
             if (tokenResponse == null) return false;
             
-            await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(true);
+            await _tokenService.SaveTokensAsync(Provider, tokenResponse).ConfigureAwait(false);
             return true;
         }
         catch (Exception)

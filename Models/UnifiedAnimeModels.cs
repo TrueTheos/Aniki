@@ -80,6 +80,7 @@ internal sealed class AnimeDetails : ObservableObject
         Id = id;
         Title = title;
         MainPicture = mainPicture;
+        Status = status;
         Synopsis = synopsis;
         AlternativeTitles = alternativeTitles;
         UserStatus = userStatus;

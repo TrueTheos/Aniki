@@ -44,6 +44,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
 
     private List<AnimeDetails> _allSearchResults = [];
     private int _currentHeroIndex;
+    private Task? _categoriesLoadTask;
     
     private const int PAGE_SIZE = 20;
 
@@ -53,79 +54,91 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
         _calendarService = calendarService;
     }
 
-    public async Task InitializeAsync()
+    public override Task Enter() => InitializeAsync();
+
+    public Task InitializeAsync()
     {
-        await LoadCategoriesAsync().ConfigureAwait(true);
+        // OnAttachedToVisualTree can fire on every navigation back to Browse — load once.
+        if (_categoriesLoadTask is { IsCompletedSuccessfully: true })
+            return Task.CompletedTask;
+
+        if (_categoriesLoadTask is { IsCompleted: false })
+            return _categoriesLoadTask;
+
+        _categoriesLoadTask = LoadCategoriesAsync();
+        return _categoriesLoadTask;
     }
 
     private async Task LoadCategoriesAsync()
     {
         IsLoading = true;
-        
-        var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing).ConfigureAwait(true);
-        LoadAnimeCards(airing, PopularThisSeason);
-            
-        await LoadHeroAnimeAsync(airing).ConfigureAwait(true);
-
-        var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming).ConfigureAwait(true);
-        LoadAnimeCards(upcoming, PopularUpcoming);
-            
-        var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity).ConfigureAwait(true);
-        LoadAnimeCards(allTime, TrendingAllTime);
-
-        var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today).ConfigureAwait(true);
-        AiringToday.Clear();
-        foreach (AnimeScheduleItem anime in airingToday)
+        try
         {
-            if(anime.ProviderId.Keys.Count == 0 || anime.GetId() == null) continue;
-                
-            AiringToday.Add(new AnimeCardData
-            {
-                AnimeId    = anime.GetId()!.Value,
-                Title      = anime.Title,
-                ImageUrl   = anime.ImageUrl,
-                Score      = anime.Mean,
-                UserStatus = null
-            });
-        }
+            var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing).ConfigureAwait(true);
+            LoadAnimeCards(airing, PopularThisSeason);
 
-        IsLoading = false;
+            await LoadHeroAnimeAsync(airing).ConfigureAwait(true);
+
+            var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming).ConfigureAwait(true);
+            LoadAnimeCards(upcoming, PopularUpcoming);
+
+            var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity).ConfigureAwait(true);
+            LoadAnimeCards(allTime, TrendingAllTime);
+
+            var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today).ConfigureAwait(true);
+            AiringToday.Clear();
+            foreach (AnimeScheduleItem anime in airingToday)
+            {
+                if (anime.ProviderId.Keys.Count == 0 || anime.GetId() == null) continue;
+
+                AiringToday.Add(new AnimeCardData
+                {
+                    AnimeId    = anime.GetId()!.Value,
+                    Title      = anime.Title,
+                    ImageUrl   = anime.ImageUrl,
+                    Score      = anime.Mean,
+                    UserStatus = null
+                });
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
-    private async Task LoadHeroAnimeAsync(List<RankingEntry> animeList)
+    private Task LoadHeroAnimeAsync(List<RankingEntry> animeList)
     {
         HeroAnimeList.Clear();
-        
+
+        // Season ranking already includes videos — no per-anime FetchFields.
         foreach (RankingEntry anime in animeList)
         {
-            AnimeDetails? details = await _animeService.GetFieldsAsync(anime.Details.Id, fields: [AnimeField.Title, AnimeField.Synopsis, AnimeField.Mean, AnimeField.MyListStatus, AnimeField.Videos]).ConfigureAwait(true);
-            
-            if (details?.Videos == null || details.Videos.Length <= 0) continue;
-            
+            AnimeDetails details = anime.Details;
+            if (details.Videos is not { Length: > 0 }) continue;
+
             AnimeVideo? videoWithThumbnail = details.Videos.FirstOrDefault(x => x.Thumbnail != null);
-            if (videoWithThumbnail != null)
+            if (videoWithThumbnail == null) continue;
+
+            HeroAnimeList.Add(new HeroAnimeData
             {
-                HeroAnimeData heroData = new()
-                {
-                    AnimeId        = details.Id,
-                    Title          = details.Title!,
-                    Synopsis       = details.Synopsis!,
-                    Score          = details.Mean,
-                    Status         = details.UserStatus?.Status ?? AnimeStatus.None,
-                    VideoUrl       = videoWithThumbnail.Url,
-                    VideoThumbnail = videoWithThumbnail.Thumbnail!,
-                    IsCurrentHero  = HeroAnimeList.Count == 0
-                };
-                
-                HeroAnimeList.Add(heroData);
-            }
+                AnimeId        = details.Id,
+                Title          = details.Title ?? "",
+                Synopsis       = details.Synopsis ?? "",
+                Score          = details.Mean,
+                Status         = details.UserStatus?.Status ?? AnimeStatus.None,
+                VideoUrl       = videoWithThumbnail.Url,
+                VideoThumbnail = videoWithThumbnail.Thumbnail!,
+                IsCurrentHero  = HeroAnimeList.Count == 0
+            });
+
             if (HeroAnimeList.Count >= 5) break;
         }
-        
+
         if (HeroAnimeList.Count > 0)
-        {
             HeroAnime = HeroAnimeList[0];
-        }
+
+        return Task.CompletedTask;
     }
 
     private static void LoadAnimeCards(List<RankingEntry> animeList, ObservableCollection<AnimeCardData> collection)

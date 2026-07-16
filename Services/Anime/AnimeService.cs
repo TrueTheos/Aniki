@@ -42,7 +42,7 @@ internal sealed class AnimeService : IAnimeService
 
         _currentProvider = provider;
         CurrentProviderType = providerName;
-        await _currentProvider.InitAsync(accessToken).ConfigureAwait(true);
+        await _currentProvider.InitAsync(accessToken).ConfigureAwait(false);
 
         IsLoggedIn = _currentProvider.IsLoggedIn;
         if (!IsLoggedIn) CurrentProviderType = ILoginProvider.ProviderType.Mal; //we just use MAL as default
@@ -72,7 +72,7 @@ internal sealed class AnimeService : IAnimeService
     public async Task<AnimeDetails?> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields)
     {
         if (_currentProvider != null)
-            return await _caches[_currentProvider.Provider].GetOrFetchFieldsAsync(animeId, forceFetch, fields: fields).ConfigureAwait(true);
+            return await _caches[_currentProvider.Provider].GetOrFetchFieldsAsync(animeId, forceFetch, fields: fields).ConfigureAwait(false);
         return null;
     }
 
@@ -82,14 +82,14 @@ internal sealed class AnimeService : IAnimeService
             return await _caches[_currentProvider.Provider].GetOrFetchFieldsAsync(
                 animeId,
                 fields: Enum.GetValues<AnimeField>()
-            ).ConfigureAwait(true);
+            ).ConfigureAwait(false);
         throw new NotImplementedException("This shouldn't happen"); 
     }
 
     private async Task<AnimeDetails?> FetchFieldsFromProvider(int animeId, params AnimeField[] fields)
     {
         IAnimeProvider provider = GetCurrentProvider();
-        AnimeDetails? details = await provider.FetchAnimeDetailsAsync(animeId, fields).ConfigureAwait(true);
+        AnimeDetails? details = await provider.FetchAnimeDetailsAsync(animeId, fields).ConfigureAwait(false);
         
         if (details != null && _currentProvider != null)
         {
@@ -101,7 +101,7 @@ internal sealed class AnimeService : IAnimeService
 
     public async Task<UserData> GetUserDataAsync()
     {
-        return await GetCurrentProvider().GetUserDataAsync().ConfigureAwait(true);
+        return await GetCurrentProvider().GetUserDataAsync().ConfigureAwait(false);
     }
     
     public static readonly AnimeField[] MalNodeFieldTypes =
@@ -114,7 +114,7 @@ internal sealed class AnimeService : IAnimeService
     {
         if (_currentProvider != null)
         {
-            var animeList = await GetCurrentProvider().GetUserAnimeListAsync(status).ConfigureAwait(true);
+            var animeList = await GetCurrentProvider().GetUserAnimeListAsync(status).ConfigureAwait(false);
             
             foreach (AnimeDetails anime in animeList)
             {
@@ -134,10 +134,10 @@ internal sealed class AnimeService : IAnimeService
 
     public async Task RemoveFromUserListAsync(int animeId)
     {
-        await GetCurrentProvider().RemoveFromUserListAsync(animeId).ConfigureAwait(true);
+        await GetCurrentProvider().RemoveFromUserListAsync(animeId).ConfigureAwait(false);
         
         // Update cache to reflect removal
-        AnimeDetails anime = await GetAllFieldsAsync(animeId).ConfigureAwait(true);
+        AnimeDetails anime = await GetAllFieldsAsync(animeId).ConfigureAwait(false);
         anime.UserStatus = null;
         if (_currentProvider != null)
             _caches[_currentProvider.Provider]
@@ -146,30 +146,30 @@ internal sealed class AnimeService : IAnimeService
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
-        await GetCurrentProvider().SetAnimeStatusAsync(animeId, status).ConfigureAwait(true);
-        await AfterUserStatusChange(animeId).ConfigureAwait(true);
+        await GetCurrentProvider().SetAnimeStatusAsync(animeId, status).ConfigureAwait(false);
+        await AfterUserStatusChange(animeId).ConfigureAwait(false);
     }
     
     public async Task SetAnimeScoreAsync(int animeId, int score)
     {
-        await GetCurrentProvider().SetAnimeScoreAsync(animeId, score).ConfigureAwait(true);
-        await AfterUserStatusChange(animeId).ConfigureAwait(true);
+        await GetCurrentProvider().SetAnimeScoreAsync(animeId, score).ConfigureAwait(false);
+        await AfterUserStatusChange(animeId).ConfigureAwait(false);
     }
 
     public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
     {
-        await GetCurrentProvider().SetEpisodesWatchedAsync(animeId, episodes).ConfigureAwait(true);
-        await AfterUserStatusChange(animeId).ConfigureAwait(true);
+        await GetCurrentProvider().SetEpisodesWatchedAsync(animeId, episodes).ConfigureAwait(false);
+        await AfterUserStatusChange(animeId).ConfigureAwait(false);
     }
 
     private async Task AfterUserStatusChange(int animeId)
     {
-        await GetFieldsAsync(animeId, true, AnimeField.MyListStatus).ConfigureAwait(true);
+        await GetFieldsAsync(animeId, true, AnimeField.MyListStatus).ConfigureAwait(false);
     }
 
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
     {
-        var results = await GetCurrentProvider().SearchAnimeAsync(query).ConfigureAwait(true);
+        var results = await GetCurrentProvider().SearchAnimeAsync(query).ConfigureAwait(false);
         
         if (_currentProvider != null)
         {
@@ -188,7 +188,7 @@ internal sealed class AnimeService : IAnimeService
 
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        var rankings = await GetCurrentProvider().GetTopAnimeAsync(category).ConfigureAwait(true);
+        var rankings = await GetCurrentProvider().GetTopAnimeAsync(category).ConfigureAwait(false);
         
         // Update cache with ranking data
         if (_currentProvider != null)
