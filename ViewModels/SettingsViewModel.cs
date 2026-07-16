@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
 using Avalonia;
 using Avalonia.Controls;
@@ -29,6 +30,8 @@ internal sealed partial class SettingsViewModel : ViewModelBase
     }
 
     private readonly ISaveService _saveService;
+    private readonly IAnimeService _animeService;
+    private readonly IAbsoluteEpisodeParser _absoluteEpisodeParser;
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly IDiscordService _discordService;
 
@@ -46,9 +49,16 @@ internal sealed partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    public SettingsViewModel(ISaveService saveService, IVideoPlayerService videoPlayerService, IDiscordService discordService)
+    public SettingsViewModel(
+        ISaveService saveService,
+        IAnimeService animeService,
+        IAbsoluteEpisodeParser absoluteEpisodeParser,
+        IVideoPlayerService videoPlayerService,
+        IDiscordService discordService)
     {
         _saveService = saveService;
+        _animeService = animeService;
+        _absoluteEpisodeParser = absoluteEpisodeParser;
         _videoPlayerService = videoPlayerService;
         _discordService = discordService;
         
@@ -121,7 +131,9 @@ internal sealed partial class SettingsViewModel : ViewModelBase
         IsClearingCache = true;
         try
         {
-            await _saveService.ClearAllCaches().ConfigureAwait(true);
+            await _animeService.ClearCachesAsync().ConfigureAwait(true);
+            _absoluteEpisodeParser.ClearIndex();
+            WeakReferenceMessenger.Default.Send(new CacheClearedMessage());
         }
         finally
         {
@@ -159,3 +171,5 @@ internal sealed class SettingsConfig
 }
 
 internal sealed class SettingsChangedMessage { }
+
+internal sealed class CacheClearedMessage { }

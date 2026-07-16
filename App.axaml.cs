@@ -70,17 +70,20 @@ internal sealed class App : Application
         {
             UpdateManager mgr = new(new GithubSource("https://github.com/TrueTheos/Aniki", null, false));
 
-            UpdateInfo? newVersion = await mgr.CheckForUpdatesAsync().ConfigureAwait(true);
+            if (!mgr.IsInstalled)
+                return;
 
-            if (newVersion != null)
-            {
-                await mgr.DownloadUpdatesAsync(newVersion).ConfigureAwait(true);
-                
-                if (DependencyInjection.Instance.ServiceProvider != null)
-                    DependencyInjection.Instance.ServiceProvider.GetService<ISaveService>()?.DeleteFolders();
+            UpdateInfo? update = await mgr.CheckForUpdatesAsync().ConfigureAwait(true);
+            if (update == null)
+                return;
 
-                mgr.ApplyUpdatesAndRestart(newVersion);
-            }
+            var target = update.TargetFullRelease.Version;
+            if (mgr.CurrentVersion is { } current && target <= current)
+                return;
+
+            await mgr.DownloadUpdatesAsync(update).ConfigureAwait(true);
+
+            mgr.ApplyUpdatesAndRestart(update.TargetFullRelease);
         }
         catch (Exception ex)
         {

@@ -25,6 +25,8 @@ internal sealed class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         }
     }
 
+    public void ClearIndex() => _animeIdToMapIndex.Clear();
+
     public AbsoluteEpisodeParser(ISaveService saveService, IAnimeService animeService)
     {
         _saveService = saveService;

@@ -5,6 +5,7 @@ namespace Aniki.Models.Anilist;
 internal sealed class Anilist_Anime
 {
     public int Id { get; set; }
+    public int? IdMal { get; set; }
     public Anilist_Title? Title { get; set; }
     public Anilist_CoverImage? CoverImage { get; set; }
     public string? Status { get; set; }

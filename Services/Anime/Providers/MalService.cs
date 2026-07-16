@@ -17,8 +17,6 @@ internal sealed class MalService : IAnimeProvider, IDisposable
     private bool _isLoggedIn;
     public bool IsLoggedIn => _isLoggedIn;
 
-    private enum AnimeRankingCategory { Season, Upcoming, Alltime, Bypopularity }
-    
     private readonly JsonSerializerOptions _jso = new() { PropertyNameCaseInsensitive = true };
     private HttpClient _client = new();
 
@@ -45,7 +43,6 @@ internal sealed class MalService : IAnimeProvider, IDisposable
     private readonly string _allFields;
     private readonly string _listFields;
     private readonly string _searchFields;
-    private readonly string _seasonFields;
 
     public MalService(ISaveService saveService, IJikanService jikanService)
     {
@@ -56,21 +53,25 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         _listFields = string.Join(",", AnimeService.MalNodeFieldTypes
                                           .Select(FieldToString)
                                           .Where(f => !string.IsNullOrEmpty(f)));
-        // Search scoring needs alternative titles; season/hero needs videos.
+        // Search scoring needs alternative titles.
         _searchFields = _listFields + ",alternative_titles";
-        _seasonFields = _listFields + ",videos";
         _saveService = saveService;
+    }
+
+    public void ClearRuntimeCache()
+    {
+        _userAnimeDict = null;
+        _userListLoadTask = null;
+        _cachedUserData = null;
+        _searchCache.Clear();
+        _searchInFlight.Clear();
     }
 
     public Task InitAsync(string? accessToken)
     {
         _client.Dispose();
         _client = new();
-        _userAnimeDict = null;
-        _userListLoadTask = null;
-        _cachedUserData = null;
-        _searchCache.Clear();
-        _searchInFlight.Clear();
+        ClearRuntimeCache();
         
         if (accessToken != null)
         {
@@ -280,27 +281,44 @@ internal sealed class MalService : IAnimeProvider, IDisposable
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
-        bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Status, ConvertToMalStatus(status).ToString()).ConfigureAwait(false);
-        if (success) _userAnimeDict?[animeId]?.UserStatus?.Status = status;
+        AnimeStatusApi apiStatus = ConvertToMalStatus(status);
+        if (apiStatus == AnimeStatusApi.none)
+        {
+            await RemoveFromUserListAsync(animeId).ConfigureAwait(false);
+            return;
+        }
+
+        bool success = await SetMyListStatusField(
+            animeId, UserAnimeStatus.UserAnimeStatusField.Status, StatusEnum.ApiToString(apiStatus)).ConfigureAwait(false);
+        if (success) PatchUserListStatus(animeId, s => s.Status = status);
     }
 
     public async Task SetAnimeScoreAsync(int animeId, int score)
     {
         bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.Score, score.ToString(CultureInfo.InvariantCulture)).ConfigureAwait(false);
-        if (success) _userAnimeDict?[animeId]?.UserStatus?.Score = score;
+        if (success) PatchUserListStatus(animeId, s => s.Score = score);
     }
 
     public async Task SetEpisodesWatchedAsync(int animeId, int episodes)
     {
         bool success = await SetMyListStatusField(animeId, UserAnimeStatus.UserAnimeStatusField.EpisodesWatched, episodes.ToString(CultureInfo.InvariantCulture)).ConfigureAwait(false);
-        if (success) _userAnimeDict?[animeId]?.UserStatus?.EpisodesWatched = episodes;
+        if (success) PatchUserListStatus(animeId, s => s.EpisodesWatched = episodes);
+    }
+
+    private void PatchUserListStatus(int animeId, Action<UserAnimeStatus> patch)
+    {
+        if (_userAnimeDict == null || !_userAnimeDict.TryGetValue(animeId, out AnimeDetails? anime))
+            return;
+
+        anime.UserStatus ??= new UserAnimeStatus();
+        patch(anime.UserStatus);
     }
     
     private async Task<bool> SetMyListStatusField(int animeId, UserAnimeStatus.UserAnimeStatusField field, string value)
     {
         if (!IsLoggedIn)
         {
-            return false;
+            throw new InvalidOperationException("Not logged in to MyAnimeList");
         }
 
         string fieldName = field switch
@@ -312,20 +330,28 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         };
         
         Dictionary<string, string> formData = new() { [fieldName] = value };
-        
+
+        int id = Interlocked.Increment(ref _requestCounter);
+        Log(id, $"START  PUT my_list_status {fieldName}={value} anime={animeId}");
+        Stopwatch http = Stopwatch.StartNew();
+
 #pragma warning disable CA2000
         FormUrlEncodedContent content = new(formData);
 #pragma warning restore CA2000
-        HttpResponseMessage response = await _client.PutAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content).ConfigureAwait(false);
+        HttpResponseMessage response = await _client.PutAsync(
+            $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content).ConfigureAwait(false);
+
+        Log(id, $"DONE   PUT my_list_status http={http.ElapsedMilliseconds}ms status={(int)response.StatusCode} | {fieldName}={value} anime={animeId}");
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new NotSupportedException($"Failed to update anime: {response.StatusCode}");
+            string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            throw new NotSupportedException($"Failed to update anime: {response.StatusCode} {body}");
         }
 
         if (_userAnimeDict != null && !_userAnimeDict.ContainsKey(animeId))
         {
-            AnimeDetails? details = await FetchAnimeDetailsAsync(animeId, Enum.GetValues<AnimeField>()).ConfigureAwait(false);
+            AnimeDetails? details = await FetchAnimeDetailsAsync(animeId, AnimeService.MalNodeFieldTypes).ConfigureAwait(false);
             if (details != null) _userAnimeDict[animeId] = details;
         }
         
@@ -598,72 +624,6 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         string normalized = title.Replace("-", "", StringComparison.InvariantCulture).Replace("_", "", StringComparison.InvariantCulture).Replace(":", "", StringComparison.InvariantCulture).Trim();
         normalized = Regex.Replace(normalized, @"\s+", " ");
         return normalized.ToLowerInvariant();
-    }
-    
-    private static AnimeRankingCategory ConvertToMalRankingCategory(RankingCategory category)
-    {
-        return category switch
-        {
-            RankingCategory.Airing => AnimeRankingCategory.Season,
-            RankingCategory.Upcoming => AnimeRankingCategory.Upcoming,
-            RankingCategory.AllTime => AnimeRankingCategory.Alltime,
-            RankingCategory.ByPopularity => AnimeRankingCategory.Bypopularity,
-            _ => AnimeRankingCategory.Alltime
-        };
-    }
-
-    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
-    {
-        if (category == RankingCategory.Airing) return await GetSeasonalAnimeAsync().ConfigureAwait(false);
-    
-        string rankingType = ConvertToMalRankingCategory(category) switch
-        {
-            AnimeRankingCategory.Upcoming     => "upcoming",
-            AnimeRankingCategory.Alltime      => "all",
-            AnimeRankingCategory.Bypopularity => "bypopularity",
-            _                                 => "all"
-        };
-
-        string url = $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit=100&fields={_listFields}&nsfw=true";
-
-        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory").ConfigureAwait(false);
-    
-        if (response?.Data != null)
-        {
-            return response.Data.Select(mal => new RankingEntry
-            {
-                Details = ConvertMalToUnified(mal.Node),
-            }).ToList();
-        }
-
-        return [];
-    }
-
-    private async Task<List<RankingEntry>> GetSeasonalAnimeAsync()
-    {
-        string season = DateTime.Now.Month switch
-        {
-            1 or 2 or 3    => "winter",
-            4 or 5 or 6    => "spring",
-            7 or 8 or 9    => "summer",
-            10 or 11 or 12 => "fall",
-            _              => throw new ArgumentOutOfRangeException()
-        };
-    
-        // Include videos so browse hero can avoid per-anime FetchFields.
-        string url = $"https://api.myanimelist.net/v2/anime/season/{DateTime.Now.Year}/{season}?limit=100&fields={_seasonFields}&nsfw=true";
-
-        MalAnimeRankingResponse? response = await GetAndDeserializeAsync<MalAnimeRankingResponse>(url, "GetTopAnimeInCategory").ConfigureAwait(false);
-    
-        if (response?.Data != null)
-        {
-            return response.Data.Select(mal => new RankingEntry
-            {
-                Details = ConvertMalToUnified(mal.Node),
-            }).OrderBy(x => x.Details.Popularity).ToList();
-        }
-
-        return [];
     }
     
     private static AnimeStatusApi ConvertToMalStatus(AnimeStatus status)

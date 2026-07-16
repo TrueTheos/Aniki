@@ -103,12 +103,20 @@ internal sealed class SaveService : ISaveService
         _imageSaver.Save(fileName, image);
     }
 
+    public void RegisterCache(ICacheService cache)
+    {
+        _caches.TryAdd(Guid.NewGuid(), cache);
+    }
+
     public async Task ClearAllCaches()
     {
         foreach (var cache in _caches)
         {
             await cache.Value.ClearAllAsync().ConfigureAwait(false);
         }
+
+        DeleteFolder(ImageCacheFolder);
+        Directory.CreateDirectory(ImageCacheFolder);
     }
 
     public async Task SaveAllCaches()

@@ -101,7 +101,6 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
     
     private readonly Dictionary<int, int> _releasedEpisodeCache = new();
 
-    // MAL has no aired-count API; Anilist is used as a sidecar for currently-airing titles.
     public async Task<Dictionary<int, int>> GetReleasedEpisodeCountsAsync(
         IReadOnlyList<int> ids, bool useMalIds = true)
     {
@@ -353,18 +352,22 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         return results;
     }
     
-    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
+    public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category, bool preferMalIds = false)
     {
         (string? sort, string? status) = category switch
         {
-            RankingCategory.Airing => ("TRENDING_DESC", "RELEASING"),
+            RankingCategory.Airing => ("POPULARITY_DESC", "RELEASING"),
             RankingCategory.Upcoming => ("POPULARITY_DESC", "NOT_YET_RELEASED"),
             RankingCategory.ByPopularity => ("POPULARITY_DESC", null),
             _ => ("SCORE_DESC", null)
         };
 
-        HashSet<AnimeField> allFields = new(AnimeService.MalNodeFieldTypes);
-        var fragments = GetGraphQlFragments(allFields);
+        HashSet<AnimeField> fields =
+        [
+            ..AnimeService.MalNodeFieldTypes,
+            AnimeField.Videos
+        ];
+        var fragments = GetGraphQlFragments(fields);
 
         Dictionary<string, object> variables = new()
         {
@@ -403,16 +406,21 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Variables = variables
         };
 
-        var response = await TrySendQueryAsync<Anilist_PageResponse>(request, "GetTopAnimeAsync").ConfigureAwait(false);
+        var response = await TrySendQueryAsync<Anilist_PageResponse>(
+            request, $"GetTopAnimeAsync {category}").ConfigureAwait(false);
         if (response?.Data?.Page?.Media == null) return [];
             
         List<RankingEntry> results = [];
 
         foreach (Anilist_Anime media in response.Data.Page.Media)
         {
+            if (preferMalIds && media.IdMal is null or 0)
+                continue;
+
             results.Add(new RankingEntry
             {
-                Details = await ConvertAnilistToUnified(media, media.MediaListEntry).ConfigureAwait(false),
+                Details = await ConvertAnilistToUnified(
+                    media, media.MediaListEntry, preferMalIds, loadLocalPicture: false).ConfigureAwait(false),
             });
         }
 
@@ -487,9 +495,16 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         };
     }
     
-    private async Task<AnimeDetails> ConvertAnilistToUnified(Anilist_Anime anime, Anilist_MediaListStatus? userStatus)
+    private async Task<AnimeDetails> ConvertAnilistToUnified(
+        Anilist_Anime anime,
+        Anilist_MediaListStatus? userStatus,
+        bool preferMalId = false,
+        bool loadLocalPicture = true)
     {
-        Bitmap? picture = await LoadAnimeImageAsync(anime.Id, anime.CoverImage?.Large).ConfigureAwait(false);
+        int id = preferMalId && anime.IdMal is > 0 ? anime.IdMal.Value : anime.Id;
+        Bitmap? picture = loadLocalPicture
+            ? await LoadAnimeImageAsync(id, anime.CoverImage?.Large).ConfigureAwait(false)
+            : null;
         
         AnimeStatistics stats = new()
         {
@@ -567,7 +582,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         }
 
         return new AnimeDetails(
-            id: anime.Id,
+            id: id,
             title: anime.Title?.Romaji ?? anime.Title?.English ?? "Unknown Title",
             mainPicture: anime.CoverImage != null ? new AnimePicture
             {
@@ -617,6 +632,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         if (fields.Count > 0)
         {
             yield return "id";
+            yield return "idMal";
         }
 
         foreach (AnimeField field in fields)
@@ -782,6 +798,11 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             "ONE_SHOT" => MediaType.One_Shot,
             _ => MediaType.Unknown,
         };
+    }
+
+    public void ClearRuntimeCache()
+    {
+        _releasedEpisodeCache.Clear();
     }
 
     public void Dispose()

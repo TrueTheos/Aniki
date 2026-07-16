@@ -11,4 +11,5 @@ internal interface IAbsoluteEpisodeParser
     public Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int part, int? preferredYear = null, int? seasonHint = null);
     public Task<AnimeSeasonsMap?> GetOrCreateSeasonMap(string animeTitle, int preferredPart, int? preferredYear = null);
     public Task<AbsoluteEpisodeParser.SeasonMapMatch?> ResolveSeasonEntry(string animeTitle, int part, int? preferredYear = null, int? seasonHint = null);
+    public void ClearIndex();
 }

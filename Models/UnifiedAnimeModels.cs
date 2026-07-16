@@ -107,7 +107,7 @@ internal sealed class AnimeDetails : ObservableObject
             Title = Title,
             ImageUrl = MainPicture == null ? null : string.IsNullOrEmpty(MainPicture.Large) ? MainPicture.Medium : MainPicture.Large,
             Score = Mean,
-            UserStatus = UserStatus?.Status ?? AnimeStatus.None
+            UserStatus = UserStatus?.Status
         };
     }
 }

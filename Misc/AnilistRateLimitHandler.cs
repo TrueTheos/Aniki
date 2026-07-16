@@ -125,7 +125,6 @@ internal sealed class AnilistRateLimitHandler(HttpMessageHandler innerHandler) :
     private static string DescribeRequest(HttpRequestMessage request)
     {
         if (request.Content == null) return $"{request.Method} {request.RequestUri?.AbsolutePath}";
-        // Body usually already consumed by GraphQL client before SendAsync; fall back to path.
         return $"{request.Method} graphql";
     }
 

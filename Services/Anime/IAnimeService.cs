@@ -20,6 +20,7 @@ internal interface IAnimeService
     public Task<UserData> GetUserDataAsync();
     public Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category);
     public Task<AnimeDetails> GetAllFieldsAsync(int animeId);
+    public Task ClearCachesAsync();
     public Task RemoveFromUserListAsync(int animeId);
     public Task SetAnimeStatusAsync(int animeId, AnimeStatus status);
     public Task SetAnimeScoreAsync(int animeId, int score);

@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Aniki.Services;
 using Aniki.Services.Anime;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -23,16 +25,27 @@ internal sealed partial class AnimeListStatusButton : UserControl
         Root.PointerExited += (_, _) => RootPointerExited();
         Root.PointerEntered += (_, _) => RootPointerEnter();
         
-        Loaded += OnLoaded;
+        DataContextChanged += (_, _) => BindDataContext();
+        Loaded += (_, _) => BindDataContext();
     }
 
-    private void OnLoaded(object? sender, RoutedEventArgs e)
+    private void BindDataContext()
     {
-        if (DataContext is AnimeCardData data)
-        {
-            _data = data;
+        if (_data != null)
+            _data.PropertyChanged -= OnDataPropertyChanged;
+
+        _data = DataContext as AnimeCardData;
+
+        if (_data != null)
+            _data.PropertyChanged += OnDataPropertyChanged;
+
+        UpdateMainButtonIcon();
+    }
+
+    private void OnDataPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AnimeCardData.UserStatus))
             UpdateMainButtonIcon();
-        }
     }
     private void ShowStatusButtons()
     {
@@ -114,24 +127,34 @@ internal sealed partial class AnimeListStatusButton : UserControl
         HideStatusButtons();
     }
     
-    private void OnStatusButtonClick(object? sender, RoutedEventArgs e)
+    private async void OnStatusButtonClick(object? sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: string statusStr }) return;
         if (!Enum.TryParse(statusStr, out AnimeStatusApi status)) return;
-        
-        if (status == AnimeStatusApi.none)
-        {
-            _animeService.RemoveFromUserListAsync(_data!.AnimeId);
-        }
-        else
-        {
-            _animeService.SetAnimeStatusAsync(_data!.AnimeId, StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus());
-        }
+        if (_data == null) return;
 
-        _data!.UserStatus = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
+        AnimeStatus? previous = _data.UserStatus;
+        AnimeStatus next = StatusEnum.ToAnimeStatus(status.ToString()).TranslatedToAnimeStatus();
+
+        // Optimistic UI; revert on failure.
+        _data.UserStatus = status == AnimeStatusApi.none ? null : next;
         HideStatusButtons();
         ShowStatusButtons();
         UpdateMainButtonIcon();
+
+        try
+        {
+            if (status == AnimeStatusApi.none)
+                await _animeService.RemoveFromUserListAsync(_data.AnimeId).ConfigureAwait(true);
+            else
+                await _animeService.SetAnimeStatusAsync(_data.AnimeId, next).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _data.UserStatus = previous;
+            UpdateMainButtonIcon();
+            await ToastService.Show($"Failed to update status: {ex.Message}").ConfigureAwait(true);
+        }
     }
     
     private void UpdateMainButtonIcon()

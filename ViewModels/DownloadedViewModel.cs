@@ -103,7 +103,6 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
     public override async Task Enter()
     {
         SearchText = "";
-        // RefreshAsync already syncs; only re-sync when re-entering after load finished.
         if (!_loadTask.IsCompleted)
             await _loadTask.ConfigureAwait(true);
         else

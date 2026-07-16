@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Aniki.Misc;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Aniki.ViewModels;
 
@@ -52,13 +55,28 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
     {
         _animeService = animeService;
         _calendarService = calendarService;
+
+        WeakReferenceMessenger.Default.Register<CacheClearedMessage>(this, (_, _) =>
+        {
+            _categoriesLoadTask = null;
+            PopularThisSeason.Clear();
+            PopularUpcoming.Clear();
+            TrendingAllTime.Clear();
+            AiringToday.Clear();
+            HeroAnimeList.Clear();
+            HeroAnime = null;
+        });
+
+        WeakReferenceMessenger.Default.Register<UserListStatusChangedMessage>(this, (_, msg) =>
+        {
+            Dispatcher.UIThread.Post(() => ApplyStatusToCards(msg.AnimeId, msg.Status));
+        });
     }
 
     public override Task Enter() => InitializeAsync();
 
     public Task InitializeAsync()
     {
-        // OnAttachedToVisualTree can fire on every navigation back to Browse — load once.
         if (_categoriesLoadTask is { IsCompletedSuccessfully: true })
             return Task.CompletedTask;
 
@@ -100,6 +118,8 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
                     UserStatus = null
                 });
             }
+
+            _ = ApplyUserListStatusesAsync();
         }
         finally
         {
@@ -107,18 +127,65 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
 
+    private async Task ApplyUserListStatusesAsync()
+    {
+        if (!AnimeService.IsLoggedIn) return;
+
+        try
+        {
+            var list = await _animeService.GetUserAnimeListAsync().ConfigureAwait(true);
+            Dictionary<int, AnimeStatus?> byId = list.ToDictionary(a => a.Id, a => a.UserStatus?.Status);
+
+            foreach (AnimeCardData card in EnumerateCards())
+                card.UserStatus = byId.TryGetValue(card.AnimeId, out AnimeStatus? status) ? status : null;
+
+            foreach (HeroAnimeData hero in HeroAnimeList)
+            {
+                hero.Status = byId.TryGetValue(hero.AnimeId, out AnimeStatus? status) && status.HasValue
+                    ? status.Value
+                    : AnimeStatus.None;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to apply list statuses to browse cards: {ex.Message}");
+        }
+    }
+
+    private void ApplyStatusToCards(int animeId, AnimeStatus? status)
+    {
+        foreach (AnimeCardData card in EnumerateCards())
+        {
+            if (card.AnimeId == animeId)
+                card.UserStatus = status;
+        }
+
+        foreach (HeroAnimeData hero in HeroAnimeList)
+        {
+            if (hero.AnimeId == animeId)
+                hero.Status = status ?? AnimeStatus.None;
+        }
+
+        if (HeroAnime?.AnimeId == animeId)
+            HeroAnime.Status = status ?? AnimeStatus.None;
+    }
+
+    private IEnumerable<AnimeCardData> EnumerateCards() =>
+        PopularThisSeason
+            .Concat(PopularUpcoming)
+            .Concat(TrendingAllTime)
+            .Concat(AiringToday)
+            .Concat(SearchResults);
+
     private Task LoadHeroAnimeAsync(List<RankingEntry> animeList)
     {
         HeroAnimeList.Clear();
 
-        // Season ranking already includes videos — no per-anime FetchFields.
-        foreach (RankingEntry anime in animeList)
+        foreach (RankingEntry entry in animeList)
         {
-            AnimeDetails details = anime.Details;
-            if (details.Videos is not { Length: > 0 }) continue;
-
-            AnimeVideo? videoWithThumbnail = details.Videos.FirstOrDefault(x => x.Thumbnail != null);
-            if (videoWithThumbnail == null) continue;
+            AnimeDetails details = entry.Details;
+            AnimeVideo? video = details.Videos?.FirstOrDefault(x => !string.IsNullOrEmpty(x.Thumbnail));
+            if (video == null) continue;
 
             HeroAnimeList.Add(new HeroAnimeData
             {
@@ -127,8 +194,8 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
                 Synopsis       = details.Synopsis ?? "",
                 Score          = details.Mean,
                 Status         = details.UserStatus?.Status ?? AnimeStatus.None,
-                VideoUrl       = videoWithThumbnail.Url,
-                VideoThumbnail = videoWithThumbnail.Thumbnail!,
+                VideoUrl       = video.Url,
+                VideoThumbnail = video.Thumbnail!,
                 IsCurrentHero  = HeroAnimeList.Count == 0
             });
 

@@ -15,9 +15,9 @@ internal interface IAnimeProvider
     Task RemoveFromUserListAsync(int animeId);
     Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields);
     Task<List<AnimeDetails>> SearchAnimeAsync(string query);
-    Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category);
     Task<Bitmap?> LoadAnimeImageAsync(int animeId, string? imageUrl);
     Task SetAnimeStatusAsync(int animeId, AnimeStatus status);
     Task SetAnimeScoreAsync(int animeId, int score);
     Task SetEpisodesWatchedAsync(int animeId, int episodes);
+    void ClearRuntimeCache();
 }

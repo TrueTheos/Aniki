@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using Aniki.Services;
 using Aniki.Services.Anime;
 using Aniki.Services.Auth;
 using Avalonia;
@@ -238,12 +239,10 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     }
     
     [RelayCommand]
-    private void UpdateStatus(string status)
+    private async Task UpdateStatus(string status)
     {
         if (Details == null) return;
-    
-        SelectedStatus = status.ToAnimeStatus();
-        _ = UpdateAnimeStatus(SelectedStatus);
+        await UpdateAnimeStatus(status.ToAnimeStatus()).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -265,10 +264,21 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
 
     private async Task UpdateAnimeStatus(AnimeStatusTranslated status)
     {
-        if(Details?.UserStatus == null) return;
-        
-        await _animeService.SetAnimeStatusAsync(Details.Id, status.TranslatedToAnimeStatus()).ConfigureAwait(true);
-        Details.UserStatus?.Status = status.TranslatedToAnimeStatus();
+        if (Details == null) return;
+
+        AnimeStatus animeStatus = status.TranslatedToAnimeStatus();
+        try
+        {
+            await _animeService.SetAnimeStatusAsync(Details.Id, animeStatus).ConfigureAwait(true);
+            Details.UserStatus ??= new UserAnimeStatus();
+            Details.UserStatus.Status = animeStatus;
+            SelectedStatus = status;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to update status: {ex.Message}");
+            await ToastService.Show($"Failed to update status: {ex.Message}").ConfigureAwait(true);
+        }
     }
 
     private static void SaveToClipboard(string? data)

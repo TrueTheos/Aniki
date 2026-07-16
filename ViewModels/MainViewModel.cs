@@ -50,8 +50,6 @@ internal sealed partial class MainViewModel : ViewModelBase
         UserAnimeListViewModel = userAnimeListViewModel;
         _videoPlayerService     = videoPlayerService;
         ReadViewMode = readViewModel;
-        
-        _ = AnimeDetailsViewModel.LoadAnimeDetailsAsync(1);
     }
     
     private void RefreshNavigationAvailability()

@@ -1,7 +1,11 @@
 ﻿using System.Collections.Concurrent;
+using Aniki.Misc;
+using Aniki.Services.Anime.Providers;
 using Aniki.Services.Auth;
 using Aniki.Services.Cache;
+using Aniki.Services.Interfaces;
 using Aniki.Services.Save;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Aniki.Services.Anime;
 
@@ -9,11 +13,19 @@ internal sealed class AnimeService : IAnimeService
 {
     private readonly Dictionary<ILoginProvider.ProviderType, IAnimeProvider> _providers = new();
     private readonly ConcurrentDictionary<ILoginProvider.ProviderType, GenericCacheService<int, AnimeDetails, AnimeField>> _caches = new();
+    private readonly AnilistService _anilistService;
+    private readonly ISaveService _saveService;
 
     private IAnimeProvider? _currentProvider;
 
     public static bool IsLoggedIn;
     public static ILoginProvider.ProviderType CurrentProviderType = ILoginProvider.ProviderType.Mal;
+
+    public AnimeService(AnilistService anilistService, ISaveService saveService)
+    {
+        _anilistService = anilistService;
+        _saveService = saveService;
+    }
 
     public void RegisterProvider(ILoginProvider.ProviderType name, IAnimeProvider provider)
     {
@@ -26,11 +38,10 @@ internal sealed class AnimeService : IAnimeService
             DiskSyncInterval = TimeSpan.FromMinutes(2),
             EnableDiskCache = true
         };
-        
-        _caches[name] = new GenericCacheService<int, AnimeDetails, AnimeField>(
-            FetchFieldsFromProvider, 
-            options
-        );
+
+        GenericCacheService<int, AnimeDetails, AnimeField> cache = new(FetchFieldsFromProvider, options);
+        _caches[name] = cache;
+        _saveService.RegisterCache(cache);
     }
 
     public async Task SetActiveProviderAsync(ILoginProvider.ProviderType providerName, string? accessToken)
@@ -142,6 +153,8 @@ internal sealed class AnimeService : IAnimeService
         if (_currentProvider != null)
             _caches[_currentProvider.Provider]
                 .Update(anime.Id, anime, Enum.GetValues<AnimeField>());
+
+        WeakReferenceMessenger.Default.Send(new UserListStatusChangedMessage(animeId, null));
     }
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
@@ -164,7 +177,9 @@ internal sealed class AnimeService : IAnimeService
 
     private async Task AfterUserStatusChange(int animeId)
     {
-        await GetFieldsAsync(animeId, true, AnimeField.MyListStatus).ConfigureAwait(false);
+        AnimeDetails? details = await GetFieldsAsync(animeId, true, AnimeField.MyListStatus).ConfigureAwait(false);
+        WeakReferenceMessenger.Default.Send(
+            new UserListStatusChangedMessage(animeId, details?.UserStatus?.Status));
     }
 
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
@@ -188,21 +203,33 @@ internal sealed class AnimeService : IAnimeService
 
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        var rankings = await GetCurrentProvider().GetTopAnimeAsync(category).ConfigureAwait(false);
-        
-        // Update cache with ranking data
+        bool preferMalIds = CurrentProviderType == ILoginProvider.ProviderType.Mal;
+
+        var rankings = await _anilistService.GetTopAnimeAsync(category, preferMalIds).ConfigureAwait(false);
+
         if (_currentProvider != null)
         {
+            AnimeField[] rankingFields = [..MalNodeFieldTypes, AnimeField.Videos];
+            var cache = _caches[_currentProvider.Provider];
+
             foreach (RankingEntry entry in rankings)
             {
-                _caches[_currentProvider.Provider].UpdatePartial(
-                    entry.Details.Id,
-                    entry.Details,
-                    MalNodeFieldTypes
-                );
+                AnimeDetails? cached = cache.GetWithoutFetching(entry.Details.Id);
+                if (cached?.UserStatus != null)
+                    entry.Details.UserStatus = cached.UserStatus;
+
+                cache.UpdatePartial(entry.Details.Id, entry.Details, rankingFields);
             }
         }
 
         return rankings;
+    }
+
+    public async Task ClearCachesAsync()
+    {
+        await _saveService.ClearAllCaches().ConfigureAwait(false);
+
+        foreach (IAnimeProvider provider in _providers.Values)
+            provider.ClearRuntimeCache();
     }
 }
