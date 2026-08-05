@@ -21,7 +21,7 @@ internal static class ServiceCollectionExtensions
         collection.AddSingleton<INyaaService, NyaaService>();
         collection.AddSingleton<ISaveService, SaveService>();
         collection.AddSingleton<ITokenService, TokenService>();
-        collection.AddSingleton<IAllMangaScraperService, AllMangaScraperService>();
+        collection.AddSingleton<IAniDbScraperService, AniDbScraperService>();
         collection.AddSingleton<IVideoPlayerService, VideoPlayerService>();
 
         collection.AddSingleton<IJikanService, TenraiService>();

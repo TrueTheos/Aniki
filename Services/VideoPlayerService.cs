@@ -10,10 +10,10 @@ namespace Aniki.Services;
 
 internal sealed class VideoPlayerService : IVideoPlayerService
 {
-    private const string ALLANIME_STREAM_REFERER = "https://allmanga.to/";
+    private const string STREAM_REFERER = "https://anidb.app/";
     private const string MP4UPLOAD_STREAM_REFERER = "https://www.mp4upload.com/";
 
-    private const string ALLANIME_BROWSER_USER_AGENT =
+    private const string STREAM_USER_AGENT =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
 
     public ObservableCollection<VideoPlayerOption> AvailablePlayers { get; } = [];
@@ -398,7 +398,7 @@ internal sealed class VideoPlayerService : IVideoPlayerService
 
     private static string GetStreamReferer(string url)
     {
-        return url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) ? MP4UPLOAD_STREAM_REFERER : ALLANIME_STREAM_REFERER;
+        return url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) ? MP4UPLOAD_STREAM_REFERER : STREAM_REFERER;
     }
 
     private static Process? OpenWithSpecificPlayer(string url, string playerPath)
@@ -411,12 +411,12 @@ internal sealed class VideoPlayerService : IVideoPlayerService
             string arguments = playerName switch
             {
                 "mpv" or "mpvnet" => useStreamHeaders
-                    ? $"\"{url}\" --user-agent=\"{ALLANIME_BROWSER_USER_AGENT}\" " +
-                      $"--http-header-fields=\"Referer: {streamReferer}; Origin: https://allmanga.to\" " +
+                    ? $"\"{url}\" --user-agent=\"{STREAM_USER_AGENT}\" " +
+                      $"--http-header-fields=\"Referer: {streamReferer}; Origin: https://anidb.app\" " +
                       $"--force-window=yes --title=\"Aniki Player\""
                     : $"\"{url}\" --force-window=yes --title=\"Aniki Player\"",
                 "vlc" => useStreamHeaders
-                    ? $"--http-referrer=\"{streamReferer}\" --http-user-agent=\"{ALLANIME_BROWSER_USER_AGENT}\" " +
+                    ? $"--http-referrer=\"{streamReferer}\" --http-user-agent=\"{STREAM_USER_AGENT}\" " +
                       $"\"{url}\" --meta-title=\"Aniki Player\""
                     : $"\"{url}\" --meta-title=\"Aniki Player\"",
                 _ => $"\"{url}\""

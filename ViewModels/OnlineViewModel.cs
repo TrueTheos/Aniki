@@ -11,16 +11,16 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
 {
     [ObservableProperty] public partial string SearchQuery { get; set; } = "";
     [ObservableProperty] public partial string StatusText { get; set; } = "Search for anime to get started";
-    [ObservableProperty] public partial ObservableCollection<AllMangaSearchResult> AnimeResults { get; set; } = new();
+    [ObservableProperty] public partial ObservableCollection<AniDbSearchResult> AnimeResults { get; set; } = new();
     [ObservableProperty] public partial string? AnimeDescription { get; set; }
     [ObservableProperty] public partial string? AnimeImageUrl { get; set; }
-    [ObservableProperty] public partial ObservableCollection<AllMangaEpisode> Episodes { get; set; } = new();
+    [ObservableProperty] public partial ObservableCollection<AniDbEpisode> Episodes { get; set; } = new();
     [ObservableProperty] public partial bool IsLoading { get; set; }
     [ObservableProperty] public partial bool CanPlayVideo { get; set; }
     [ObservableProperty] public partial string WatchedEpisodesText { get; set; } = "No episodes watched yet";
     
-    private AllMangaSearchResult? _selectedAnime;
-    public AllMangaSearchResult? SelectedAnime
+    private AniDbSearchResult? _selectedAnime;
+    public AniDbSearchResult? SelectedAnime
     {
         get => _selectedAnime;
         set
@@ -34,7 +34,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
     
-    public AllMangaEpisode? SelectedEpisode
+    public AniDbEpisode? SelectedEpisode
     {
         get;
         set
@@ -86,7 +86,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
     
-    private readonly IAllMangaScraperService _scraperService;
+    private readonly IAniDbScraperService _scraperService;
     private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly IDiscordService _discordService;
@@ -99,7 +99,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         (SelectedAnime != null && !IsLoading && Episodes.Count == 0) ||
         (SelectedEpisode != null && !IsLoading && !CanPlayVideo);
 
-    public OnlineViewModel(IAllMangaScraperService scraperService, IAnimeService animeService,
+    public OnlineViewModel(IAniDbScraperService scraperService, IAnimeService animeService,
         IVideoPlayerService videoPlayerService, IDiscordService discordService)
     {
         _watchingMalId = null;
@@ -117,7 +117,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(ShowSelectionStatus));
     }
     
-    private ObservableCollection<AllMangaSearchResult>? _previousAnimeResults;
+    private ObservableCollection<AniDbSearchResult>? _previousAnimeResults;
     
     partial void OnIsLoadingChanged(bool value)
     {
@@ -128,7 +128,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
 
     partial void OnCanPlayVideoChanged(bool value) => OnPropertyChanged(nameof(ShowStreamProviderNote));
 
-    partial void OnAnimeResultsChanged(ObservableCollection<AllMangaSearchResult> value)
+    partial void OnAnimeResultsChanged(ObservableCollection<AniDbSearchResult> value)
     {
         OnPropertyChanged(nameof(SelectionStatusMessage));
         OnPropertyChanged(nameof(ShowSelectionStatus));
@@ -169,7 +169,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         {
             var results = await _scraperService.SearchAnimeAsync(query).ConfigureAwait(true);
             
-            foreach (AllMangaSearchResult result in results)
+            foreach (AniDbSearchResult result in results)
             {
                 AnimeResults.Add(result);
             }
@@ -186,21 +186,28 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task OnSelectedAnimeChanged(AllMangaSearchResult? value)
+    private async Task OnSelectedAnimeChanged(AniDbSearchResult? value)
     {
         if (value != null)
         {
             SelectedEpisode = null;
             _ = LoadEpisodesAsync(value);
 
-            AnimeDetails? animeField = await _animeService.GetFieldsAsync(value.MalId!.Value, fields: [AnimeField.MyListStatus, AnimeField.Synopsis]).ConfigureAwait(true);
+            AnimeImageUrl = value.Banner;
+            AnimeDescription = null;
+            UpdateWatchedEpisodesText(0);
 
-            if (animeField != null)
+            if (value.MalId is int malId)
             {
-                UpdateWatchedEpisodesText(animeField.UserStatus != null ? animeField.UserStatus!.EpisodesWatched : 0);
+                AnimeDetails? animeField = await _animeService.GetFieldsAsync(malId, fields: [AnimeField.MyListStatus, AnimeField.Synopsis]).ConfigureAwait(true);
 
-                AnimeDescription = animeField.Synopsis;
-                AnimeImageUrl = value.Banner;
+                if (animeField != null)
+                {
+                    UpdateWatchedEpisodesText(animeField.UserStatus != null ? animeField.UserStatus!.EpisodesWatched : 0);
+                    AnimeDescription = animeField.Synopsis;
+                    if (!string.IsNullOrEmpty(value.Banner))
+                        AnimeImageUrl = value.Banner;
+                }
             }
         }
         else
@@ -210,7 +217,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task LoadEpisodesAsync(AllMangaSearchResult anime)
+    private async Task LoadEpisodesAsync(AniDbSearchResult anime)
     {
         IsLoading = true;
         StatusText = "Loading episodes...";
@@ -220,11 +227,13 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         try
         {
             var episodes = await _scraperService.GetEpisodesAsync(anime.Url).ConfigureAwait(true);
-            
-            foreach (AllMangaEpisode episode in episodes)
+
+            foreach (AniDbEpisode episode in episodes)
             {
                 Episodes.Add(episode);
             }
+
+            anime.Episodes = episodes.Count;
 
             StatusText = episodes.Count > 0
                 ? $"Loaded {episodes.Count} episodes - Select one to watch"
@@ -240,7 +249,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async void OnSelectedEpisodeChanged(AllMangaEpisode? value)
+    private async void OnSelectedEpisodeChanged(AniDbEpisode? value)
     {
         try
         {
@@ -258,7 +267,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task PrepareVideoAsync(AllMangaEpisode episode)
+    private async Task PrepareVideoAsync(AniDbEpisode episode)
     {
         IsLoading = true;
         StatusText = "Preparing video...";
@@ -340,7 +349,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         _videoProcess = null;
     }
 
-    private async Task ConfirmEpisodeWatchedAsync(AllMangaEpisode episode)
+    private async Task ConfirmEpisodeWatchedAsync(AniDbEpisode episode)
     {
         if (Avalonia.Application.Current!.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
             return;
@@ -383,11 +392,28 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
     {
         await SearchAnimeAsync(title).ConfigureAwait(true);
 
-        AllMangaSearchResult? matchingAnime = AnimeResults.ToList().FirstOrDefault(x => x.MalId != null && x.MalId.Value == malId);
+        AniDbSearchResult? matchingAnime = AnimeResults.ToList().FirstOrDefault(x => x.MalId != null && x.MalId.Value == malId)
+            ?? AnimeResults.ToList().FirstOrDefault(x =>
+                string.Equals(
+                    NormalizeTitle(x.Title),
+                    NormalizeTitle(title),
+                    StringComparison.OrdinalIgnoreCase));
+
         if (matchingAnime != null)
         {
             SelectedAnime = matchingAnime;
         }
+    }
+
+    private static string NormalizeTitle(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        return string.Join(' ', value
+            .Replace("-", " ", StringComparison.Ordinal)
+            .Replace(":", " ", StringComparison.Ordinal)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
     public void Dispose()

@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Models;
 
-internal sealed class AllMangaSearchResult
+internal sealed class AniDbSearchResult
 {
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
@@ -10,17 +10,7 @@ internal sealed class AllMangaSearchResult
     public string? Banner { get; set; }
 }
 
-internal sealed class AllMangaAnimeDetails
-{
-    public string Id { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public int? MalId { get; set; }
-    public int? AniListId { get; set; }
-    public string? Description { get; set; }
-    public string? Thumbnail { get; set; }
-}
-
-internal sealed class AllMangaEpisode
+internal sealed class AniDbEpisode
 {
     public string Id { get; set; } = string.Empty;
     public int Number { get; set; }
