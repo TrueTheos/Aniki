@@ -106,7 +106,7 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
         if (!_loadTask.IsCompleted)
             await _loadTask.ConfigureAwait(true);
         else
-            await SyncListMetadataAsync().ConfigureAwait(true);
+            await LoadUserLibraryData().ConfigureAwait(true);
         ApplyFiltersAndSort();
     }
 
@@ -139,6 +139,9 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
         UpdateView();
     }
 
+    /// <summary>
+    /// Clears UI and scans disk for episodes
+    /// </summary>
     private async Task RefreshAsync()
     {
         await _loadLock.WaitAsync().ConfigureAwait(true);
@@ -152,7 +155,7 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
             }
 
             await LoadEpisodesFromDiskAsync().ConfigureAwait(true);
-            await SyncListMetadataAsync().ConfigureAwait(true);
+            await LoadUserLibraryData().ConfigureAwait(true);
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsLoading = false;
@@ -373,8 +376,8 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
             }
         }
     }
-
-    private async Task SyncListMetadataAsync()
+    
+    private async Task LoadUserLibraryData()
     {
         if (!AnimeService.IsLoggedIn) return;
 

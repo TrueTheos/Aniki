@@ -77,17 +77,19 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
 
     public Task InitializeAsync()
     {
-        if (_categoriesLoadTask is { IsCompletedSuccessfully: true })
-            return Task.CompletedTask;
-
-        if (_categoriesLoadTask is { IsCompleted: false })
-            return _categoriesLoadTask;
-
-        _categoriesLoadTask = LoadCategoriesAsync();
-        return _categoriesLoadTask;
+        switch (_categoriesLoadTask)
+        {
+            case { IsCompletedSuccessfully: true }:
+                return Task.CompletedTask;
+            case { IsCompleted: false }:
+                return _categoriesLoadTask;
+            default:
+                _categoriesLoadTask = LoadTopListsAsync();
+                return _categoriesLoadTask;
+        }
     }
 
-    private async Task LoadCategoriesAsync()
+    private async Task LoadTopListsAsync()
     {
         IsLoading = true;
         try
@@ -134,7 +136,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
         try
         {
             var list = await _animeService.GetUserAnimeListAsync().ConfigureAwait(true);
-            Dictionary<int, AnimeStatus?> byId = list.ToDictionary(a => a.Id, a => a.UserStatus?.Status);
+            var byId = list.ToDictionary(a => a.Id, a => a.UserStatus?.Status);
 
             foreach (AnimeCardData card in EnumerateCards())
                 card.UserStatus = byId.TryGetValue(card.AnimeId, out AnimeStatus? status) ? status : null;

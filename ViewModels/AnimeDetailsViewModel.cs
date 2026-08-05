@@ -75,7 +75,13 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         WatchAnimeViewModel = watchAnimeViewModel;
         TorrentSearchViewModel = torrentSearchViewModel;
     }
-    
+
+    public override Task Enter()
+    {
+        SelectedTabIndex = 0;
+        return base.Enter();
+    }
+
     public async Task LoadAnimeDetailsAsync(int id)
     {
         IsLoading = true;
