@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
-using Aniki.Services.Cache.CustomTypeHandlers;
 
 namespace Aniki.Services.Cache;
 
@@ -45,7 +44,6 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
     {
         public JsonElement Data { get; init; }
         public Dictionary<string, DateTime> FieldExpirations { get; init; } = new();
-        public HashSet<string> FetchedFields { get; init; } = [];
     }
     
     public GenericCacheService(Func<TKey, TFieldEnum[], Task<TEntity?>>? fetchHandler, CacheOptions? options = null)
@@ -99,9 +97,6 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
         
         foreach (string file in files)
         {
-            //skipping custom type handlers
-            if (file.Contains('_', StringComparison.InvariantCulture) && file.EndsWith(".bin", StringComparison.InvariantCulture)) continue;
-            
             try
             {
                 string json = await File.ReadAllTextAsync(file).ConfigureAwait(false);
@@ -117,50 +112,27 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
                 {
                     if (!stored.Entry.Data.TryGetProperty(prop.Key.ToString(), out JsonElement value)) continue;
                     
-                    Type propType = prop.Value.PropertyType;
-
-                    if (_options.CustomTypeHandlers.TryGetValue(propType, out ICacheTypeHandler? handler))
-                    {
-                        string? sidecarFileName = value.GetString();
-
-                        if (sidecarFileName == null || !sidecarFileName.StartsWith("file://", StringComparison.InvariantCulture)) continue;
-                        string actualFileName = sidecarFileName.Replace("file://", "", StringComparison.InvariantCulture);
-                        string sidecarPath = Path.Combine(_options.DiskCachePath!, actualFileName);
-
-                        if (!File.Exists(sidecarPath)) continue;
-                        FileStream fs = new(sidecarPath, FileMode.Open, FileAccess.Read);
-                        await using (fs.ConfigureAwait(false))
-                        {
-                            object loadedObj = handler.Deserialize(fs);
-                            prop.Value.SetValue(entry.Data, loadedObj);
-                        }
-                    }
-                    else
-                    {
-                        object? propValue = JsonSerializer.Deserialize(value.GetRawText(), propType);
-                        prop.Value.SetValue(entry.Data, propValue);
-                    }
+                    object? propValue = JsonSerializer.Deserialize(value.GetRawText(), prop.Value.PropertyType);
+                    prop.Value.SetValue(entry.Data, propValue);
                 }
 
-                List<TFieldEnum> fieldsToRestore = [];
-                foreach (string fieldName in stored.Entry.FetchedFields)
+                bool restored = false;
+                foreach ((string fieldName, DateTime expiry) in stored.Entry.FieldExpirations)
                 {
                     if (!Enum.TryParse(typeof(TFieldEnum), fieldName, out object? fieldObj) ||
                         fieldObj is not TFieldEnum field) continue;
-                    
-                    if (!stored.Entry.FieldExpirations.TryGetValue(fieldName, out DateTime expiry)) continue;
-                    
-                    if (DateTime.UtcNow <= expiry)
-                    {
-                        fieldsToRestore.Add(field);
-                    }
+
+                    TimeSpan remaining = expiry - DateTime.UtcNow;
+                    if (remaining <= TimeSpan.Zero) continue;
+
+                    entry.MarkFetched([field], remaining);
+                    restored = true;
                 }
 
-                if (fieldsToRestore.Count != 0)
-                {
-                    entry.MarkFetched(fieldsToRestore, TimeSpan.Zero);
+                if (restored)
                     _cache.TryAdd(key, entry);
-                }
+                else
+                    File.Delete(file);
             }
             catch{ /*Corrupted file*/ }
         }
@@ -198,8 +170,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
     private async Task SaveEntryToDiskAsync(TKey key, CachedEntity<TEntity, TFieldEnum> entry)
     {
         string baseFilePath = GetCacheFilePath(key);
-        string safeKey = Path.GetFileNameWithoutExtension(baseFilePath);
-        
+
         Dictionary<string, object?> dataDict = new();
         
         foreach (var prop in _propertyMap)
@@ -208,46 +179,15 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
                 continue;
             
             object? val = prop.Value.GetValue(entry.Data);
-            if (val == null) continue;
-
-            Type propType = prop.Value.PropertyType;
-            
-            if (_options.CustomTypeHandlers.TryGetValue(propType, out ICacheTypeHandler? handler))
-            {
-                string sidecarFileName = $"{safeKey}_{prop.Key}.bin";
-                string sidecarPath = Path.Combine(_options.DiskCachePath!, sidecarFileName);
-
-                FileStream fs = new(sidecarPath, FileMode.Create);
-                await using (fs.ConfigureAwait(false))
-                {
-                    handler.Serialize(val, fs);
-                }
-
-                dataDict[prop.Key.ToString()] = $"file://{sidecarFileName}";
-            }
-            else
-            {
+            if (val != null)
                 dataDict[prop.Key.ToString()] = val;
-            }
         }
 
         Dictionary<string, DateTime> fieldExpirations = new();
-        HashSet<string> fetchedFields = [];
-        
         foreach (TFieldEnum field in Enum.GetValues(typeof(TFieldEnum)))
         {
-            if (_memoryOnlyFields.Contains(field))
-                continue;
-            
-            if (entry.IsFieldFetched(field))
-            {
-                fetchedFields.Add(field.ToString());
-                var expiry = entry.GetFieldExpiration(field);
-                if (expiry.HasValue)
-                {
-                    fieldExpirations[field.ToString()] = expiry.Value;
-                }
-            }
+            if (!_memoryOnlyFields.Contains(field) && entry.GetFieldExpiration(field) is { } expiry)
+                fieldExpirations[field.ToString()] = expiry;
         }
 
         StoredCacheEntry stored = new()
@@ -256,8 +196,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
             Entry = new StoredEntityData
             {
                 Data = JsonSerializer.SerializeToElement(dataDict),
-                FieldExpirations = fieldExpirations,
-                FetchedFields = fetchedFields
+                FieldExpirations = fieldExpirations
             }
         };
 
@@ -391,11 +330,6 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
         return _cache.GetOrAdd(id, _ => new CachedEntity<TEntity, TFieldEnum>());
     }
 
-    /*public bool TryGetEntry(TKey id, [NotNullWhen(true)] out CachedEntity<TEntity, TFieldEnum>? entry)
-    {
-        return _cache.TryGetValue(id, out entry);
-    }*/
-    
     public void Update(TKey id, TEntity newData, params TFieldEnum[] fieldsFetched)
     {
         var entry = GetOrCreateEntry(id);
@@ -454,7 +388,7 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
     {
         var entry = GetOrCreateEntry(id);
 
-        var missing = forceFetch ? fields : entry.GetMissingFields(fields, _options.DefaultTimeToLive);
+        var missing = forceFetch ? fields : entry.GetMissingFields(fields);
 
         if (missing.Length > 0 && _fetchHandler != null)
         {
@@ -462,11 +396,6 @@ internal sealed class GenericCacheService<TKey, TEntity, TFieldEnum> : ICacheSer
             if (fetchedData != null)
             {
                 Update(id, fetchedData, missing);
-            }
-            else 
-            {
-                entry.MarkFetched(missing, _options.DefaultTimeToLive); 
-                MarkDirty(id);
             }
         }
 

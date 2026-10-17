@@ -15,7 +15,7 @@
 		<vm:ConfirmEpisodeViewModel/>
 	</Design.DataContext>
 
-	<Border CornerRadius="8" Padding="16" Background="#2A2A2A">
+	<Border CornerRadius="12" Padding="20" Background="{StaticResource Background0}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1">
 		<StackPanel Spacing="12">
 			<ExperimentalAcrylicBorder IsHitTestVisible="False">
 				<ExperimentalAcrylicBorder.Material>
@@ -48,7 +48,7 @@
 			<StackPanel Orientation="Horizontal"
 						HorizontalAlignment="Center"
 						Spacing="16">
-				<Button Content="Yes"
+				<Button Content="Yes" Classes="primary"
 						Width="80"
 						Click="OnYes"/>
 				<Button Content="No"

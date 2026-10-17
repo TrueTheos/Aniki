@@ -40,6 +40,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
 
     [ObservableProperty] public partial int TotalPages { get; set; } = 1;
+    [ObservableProperty] public partial int TotalResults { get; set; }
 
     [ObservableProperty] public partial bool CanGoNext { get; set; }
 
@@ -182,23 +183,34 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
     private Task LoadHeroAnimeAsync(List<RankingEntry> animeList)
     {
         HeroAnimeList.Clear();
+        _currentHeroIndex = 0;
 
         foreach (RankingEntry entry in animeList)
         {
             AnimeDetails details = entry.Details;
+            if (string.IsNullOrEmpty(details.MainPicture?.Large)) continue;
+
             AnimeVideo? video = details.Videos?.FirstOrDefault(x => !string.IsNullOrEmpty(x.Thumbnail));
-            if (video == null) continue;
+            string[] meta =
+            [
+                details.MediaType == MediaType.Unknown ? "" : details.MediaType.ToString().Replace("_", " ", StringComparison.Ordinal).ToUpperInvariant(),
+                details.NumEpisodes is > 0 ? $"{details.NumEpisodes} episodes" : "Airing",
+                details.Studios?.FirstOrDefault() ?? ""
+            ];
 
             HeroAnimeList.Add(new HeroAnimeData
             {
-                AnimeId        = details.Id,
-                Title          = details.Title ?? "",
-                Synopsis       = details.Synopsis ?? "",
-                Score          = details.Mean,
-                Status         = details.UserStatus?.Status ?? AnimeStatus.None,
-                VideoUrl       = video.Url,
-                VideoThumbnail = video.Thumbnail!,
-                IsCurrentHero  = HeroAnimeList.Count == 0
+                AnimeId       = details.Id,
+                Title         = details.Title ?? "",
+                Synopsis      = details.Synopsis ?? "",
+                Score         = details.Mean,
+                Status        = details.UserStatus?.Status ?? AnimeStatus.None,
+                VideoUrl      = video?.Url,
+                PosterUrl     = details.MainPicture.Large,
+                Backdrop      = video?.Thumbnail ?? details.MainPicture.Large,
+                Genres        = details.Genres is { Length: > 0 } g ? string.Join("  •  ", g.Take(3)) : null,
+                Meta          = string.Join("  •  ", meta.Where(m => m.Length > 0)),
+                IsCurrentHero = HeroAnimeList.Count == 0
             });
 
             if (HeroAnimeList.Count >= 5) break;
@@ -273,7 +285,8 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
 
         _allSearchResults = await _animeService.SearchAnimeAsync(query).ConfigureAwait(true);
         CurrentPage       = 1;
-        TotalPages        = (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE);
+        TotalPages        = Math.Max(1, (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE));
+        TotalResults      = _allSearchResults.Count;
             
         LoadSearchResultsPage();
         IsLoading = false;

@@ -7,9 +7,6 @@ namespace Aniki.Models;
 internal sealed partial class DaySchedule : ObservableObject
 {
     [ObservableProperty]
-    private string _name = "";
-
-    [ObservableProperty]
     private string _dayName = "";
 
     [ObservableProperty]

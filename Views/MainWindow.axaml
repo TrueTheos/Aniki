@@ -21,53 +21,77 @@
     </Design.DataContext>
 
     <Window.Styles>
-        <!--  Base Styles  -->
+        <!-- Sidebar navigation item -->
         <Style Selector="Button.MenuButton">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Padding" Value="30,5" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0,9,12,9" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Button.MenuButton /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.MenuButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Surface2}" />
+        </Style>
+        <Style Selector="Button.MenuButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SurfaceHover}" />
+        </Style>
+        <Style Selector="Button.MenuButton TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.MenuButton Image">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Opacity" Value="0.55" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.MenuButton Border.indicator">
+            <Setter Property="Width" Value="3" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="CornerRadius" Value="0,2,2,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+        <Style Selector="Button.MenuButton:pointerover TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource White}" />
+        </Style>
+        <Style Selector="Button.MenuButton:pointerover Image">
+            <Setter Property="Opacity" Value="0.9" />
+        </Style>
+        <Style Selector="Button.MenuButton.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource Surface2}" />
+        </Style>
+        <Style Selector="Button.MenuButton.selected TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource White}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.MenuButton.selected Image">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        <Style Selector="Button.MenuButton.selected Border.indicator">
+            <Setter Property="Background" Value="{StaticResource AccentRed}" />
+        </Style>
+        <Style Selector="TextBlock.nav-section">
+            <Setter Property="Margin" Value="12,18,0,6" />
         </Style>
 
-        <Style Selector="Button.Basic">
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Background" Value="{StaticResource Background1}" />
-        </Style>
-        <Style Selector="Button.Basic:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource Background0}" />
-        </Style>
-        <Style Selector="ComboBox">
-            <Setter Property="Background" Value="{StaticResource Surface3}" />
-            <Setter Property="Foreground" Value="{StaticResource White}" />
-            <Setter Property="CornerRadius" Value="4" />
-        </Style>
-        <Style Selector="TextBox">
-            <Setter Property="Background" Value="{StaticResource Background0}" />
-            <Setter Property="Foreground" Value="{StaticResource White}" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Padding" Value="8,6" />
-        </Style>
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0,4" />
-        </Style>
-        <Style Selector="TabItem">
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="Foreground" Value="{StaticResource White}" />
-        </Style>
-        <Style Selector="Panel.detailPanel TextBlock">
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-        <Style Selector="Panel.detailPanel TextBlock.label">
-            <Setter Property="Margin" Value="0,0,5,0" />
-        </Style>
-        <Style Selector="Panel.detailPanel TextBlock.value">
-            <Setter Property="Foreground" Value="White" />
-        </Style>
+        <!-- Back / forward arrows -->
         <Style Selector="Button.NavArrow">
             <Setter Property="Background" Value="#01000000" />
             <Setter Property="BorderThickness" Value="0" />
@@ -102,6 +126,19 @@
         <Style Selector="Button.NavArrow:disabled PathIcon">
             <Setter Property="Opacity" Value="0.35" />
         </Style>
+
+        <!-- Not-logged-in placeholder -->
+        <Style Selector="StackPanel.empty-state > TextBlock.title">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource White}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="StackPanel.empty-state > TextBlock.subtitle">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
     </Window.Styles>
 
     <Panel>
@@ -110,176 +147,114 @@
                 <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            
-            <Border Grid.Column="0" 
+
+            <Border Grid.Column="0"
                     Grid.ColumnSpan="2"
-                    Height="30" 
+                    Height="30"
                     VerticalAlignment="Top"
                     Background="Transparent"
                     IsHitTestVisible="True"
                     ZIndex="100"
                     PointerPressed="OnBeginDrag"/>
 
-            <!-- Left Bar -->
-            <Grid Grid.Column="0" Margin="10,35,5,10">
-                <StackPanel
-                    VerticalAlignment="Top"
-                    Orientation="Vertical"
-                    Spacing="5">
-                    <TextBlock
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Center"
-                        FontSize="18"
-                        FontWeight="Bold"
-                        TextWrapping="Wrap"
-                        Foreground="{StaticResource White}"
-                        Text="Aniki" />
+            <!-- Sidebar -->
+            <Grid Grid.Column="0" Margin="12,38,8,16" RowDefinitions="Auto,*,Auto">
 
-                    <!--  Navigation buttons  -->
-                    <TextBlock
-                        Margin="30,20,0,10"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Left"
-                        FontSize="18"
-                        FontWeight="Bold"
-                        TextWrapping="Wrap"
-                        Foreground="{StaticResource White}"
-                        Text="MENU" />
-                    <Button
-                        Name="MainPageButton"
-                        Classes="MenuButton"
-                        Background="{Binding IsMainPageNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
-                        Command="{Binding ShowAnimeBrowsePageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="Main Page"
-                                Foreground="{Binding IsMainPageNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
-                        </StackPanel>
+                <!-- Brand -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="12,0,0,10">
+                    <Image Source="avares://Aniki/Resources/icon.ico" Width="26" Height="26" VerticalAlignment="Center"/>
+                    <TextBlock Text="Aniki"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource White}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Spacing="2">
+                    <TextBlock Classes="section-label nav-section" Text="MENU" />
+                    <Button Name="MainPageButton"
+                            Classes="MenuButton"
+                            Classes.selected="{Binding IsMainPageNavSelected}"
+                            Command="{Binding ShowAnimeBrowsePageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/home_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Main Page" />
+                        </Grid>
                     </Button>
-                    <Button
-                        Name="AnimeDetailsButton"
-                        Classes="MenuButton"
-                        Background="{Binding IsAnimeDetailsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
-                        Command="{Binding ShowAnimeDetailsPageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="20" Height="20" />
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="Anime Details"
-                                Foreground="{Binding IsAnimeDetailsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
-                        </StackPanel>
+                    <Button Name="AnimeDetailsButton"
+                            Classes="MenuButton"
+                            Classes.selected="{Binding IsAnimeDetailsNavSelected}"
+                            Command="{Binding ShowAnimeDetailsPageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/info_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Anime Details" />
+                        </Grid>
                     </Button>
-                    <Button
-                        Name="WatchPageButton"
-                        Classes="MenuButton"
-                        Background="{Binding IsWatchNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
-                        Command="{Binding ShowWatchPageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="Watch"
-                                Foreground="{Binding IsWatchNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
-                        </StackPanel>
+                    <Button Name="WatchPageButton"
+                            Classes="MenuButton"
+                            Classes.selected="{Binding IsWatchNavSelected}"
+                            Command="{Binding ShowWatchPageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/play_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Watch" />
+                        </Grid>
                     </Button>
-                    <Button
-                        Name="CalendarPageButton"
-                        Classes="MenuButton"
-                        Background="{Binding IsCalendarNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
-                        Command="{Binding ShowCalendarPageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="Calendar"
-                                Foreground="{Binding IsCalendarNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
-                        </StackPanel>
+                    <Button Name="CalendarPageButton"
+                            Classes="MenuButton"
+                            Classes.selected="{Binding IsCalendarNavSelected}"
+                            Command="{Binding ShowCalendarPageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/calendar_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Calendar" />
+                        </Grid>
                     </Button>
-                    
-                    <!-- <TextBlock -->
-                    <!--     Margin="30,20,0,10" -->
-                    <!--     VerticalAlignment="Center" -->
-                    <!--     HorizontalAlignment="Left" -->
-                    <!--     FontSize="18" -->
-                    <!--     FontWeight="Bold" -->
-                    <!--     TextWrapping="Wrap" -->
-                    <!--     Foreground="{StaticResource White}" -->
-                    <!--     Text="MANGA" /> -->
-                    <!-- <Button -->
-                    <!--     Name="ReadButton" -->
-                    <!--     Classes="MenuButton" -->
-                    <!--     Command="{Binding ShowReadPageCommand}"> -->
-                    <!--     <StackPanel Orientation="Horizontal" Spacing="8"> -->
-                    <!--         <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="20" Height="20"/> -->
-                    <!--         <TextBlock VerticalAlignment="Center" Text="Read" Foreground="Gray" /> -->
-                    <!--     </StackPanel> -->
-                    <!-- </Button> -->
-                    
-                    <TextBlock
-                        Margin="30,20,0,10"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Left"
-                        FontSize="18"
-                        FontWeight="Bold"
-                        TextWrapping="Wrap"
-                        Foreground="{StaticResource White}"
-                        Text="USER" />
-                    <Button
-                        Name="StatsPageButton"
-                        Classes="MenuButton"
-                        Background="{Binding IsStatsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
-                        Command="{Binding ShowStatsPageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="20" Height="20"/>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="Profile"
-                                Foreground="{Binding IsStatsNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
-                        </StackPanel>
+
+                    <TextBlock Classes="section-label nav-section" Text="USER" />
+                    <Button Name="StatsPageButton"
+                            Classes="MenuButton"
+                            Classes.selected="{Binding IsStatsNavSelected}"
+                            Command="{Binding ShowStatsPageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/person_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Profile" />
+                        </Grid>
                     </Button>
-                    <Button
-                        Name="YourLibraryButton"
-                        Classes="MenuButton"
-                        Background="{Binding IsLibraryNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#332C2F31:Transparent}"
-                        Command="{Binding ShowUserAnimeListPageCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/book_icon.svg}" Width="20" Height="20" />
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="Your Library"
-                                Foreground="{Binding IsLibraryNavSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#E0E0E0:#999999}" />
-                        </StackPanel>
+                    <Button Name="YourLibraryButton"
+                            Classes="MenuButton"
+                            Classes.selected="{Binding IsLibraryNavSelected}"
+                            Command="{Binding ShowUserAnimeListPageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/book_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Your Library" />
+                        </Grid>
                     </Button>
-                    
-                    <TextBlock
-                        Margin="30,20,0,10"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Left"
-                        FontSize="18"
-                        FontWeight="Bold"
-                        TextWrapping="Wrap"
-                        Foreground="{StaticResource White}"
-                        Text="GENERAL" />
-                    <Button
-                        Name="SettingsPageButton"
-                        Classes="MenuButton"
-                        Command="{Binding OpenSettingsCommand}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/settings_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Settings" Foreground="{StaticResource TextSecondary}" />
-                        </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Spacing="2">
+                    <Border Height="1" Background="{StaticResource Border}" Margin="12,0,4,10" />
+                    <Button Name="SettingsPageButton"
+                            Classes="MenuButton"
+                            Command="{Binding OpenSettingsCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/settings_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Settings" />
+                        </Grid>
                     </Button>
-                    <Button
-                        Name="LogOutButton"
-                        Classes="MenuButton"
-                        Click="LogOut">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Image Source="{SvgImage /Resources/Icons/logout_icon.svg}" Width="20" Height="20" />
-                            <TextBlock VerticalAlignment="Center" Text="Log Out" Foreground="{StaticResource TextSecondary}" />
-                        </StackPanel>
+                    <Button Name="LogOutButton"
+                            Classes="MenuButton"
+                            Click="LogOut">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/logout_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Log Out" />
+                        </Grid>
                     </Button>
                 </StackPanel>
             </Grid>
@@ -287,7 +262,6 @@
             <!--  Content  -->
             <Border
                 Grid.Column="1"
-                Margin="0,0,0,0"
                 BorderBrush="{StaticResource Border}"
                 BorderThickness="1,0,0,0"
                 ClipToBounds="True"
@@ -300,18 +274,18 @@
 
                     <!--  Loading indicator  -->
                     <Grid Grid.Row="0" IsVisible="{Binding IsLoading}">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
                             <ProgressBar
-                                Width="300"
-                                Height="6"
-                                Background="{StaticResource Background0}"
-                                Foreground="{StaticResource RedColor}"
+                                Width="260"
+                                Height="4"
+                                Background="{StaticResource Surface2}"
+                                Foreground="{StaticResource AccentRed}"
                                 IsIndeterminate="True" />
                             <TextBlock
-                                Margin="0,10,0,0"
                                 HorizontalAlignment="Center"
-                                Foreground="{StaticResource White}"
-                                Text="Loading..." />
+                                FontSize="13"
+                                Foreground="{StaticResource TextSecondary}"
+                                Text="Loading…" />
                         </StackPanel>
                     </Grid>
 
@@ -334,23 +308,15 @@
                                 <DataTemplate DataType="vm:UserAnimeListViewModel">
                                     <Panel>
                                         <views:UserAnimeListView IsVisible="{x:Static anime:AnimeService.IsLoggedIn}"/>
-                                        <Grid IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}, 
-                                            Converter={x:Static BoolConverters.Not}}" 
+                                        <Grid IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn},
+                                            Converter={x:Static BoolConverters.Not}}"
                                               ClipToBounds="True">
-                                            <StackPanel VerticalAlignment="Center" 
-                                                        HorizontalAlignment="Center" 
-                                                        Spacing="20">
-                                                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
-                                                       Width="300" 
+                                            <StackPanel Classes="empty-state" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="14">
+                                                <Image Source="/Resources/nothingtoseehere_transparent_small.png"
+                                                       Width="260"
                                                        RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                                                <TextBlock Text="You are not logged in!"
-                                                           Foreground="White"
-                                                           FontSize="28"
-                                                           HorizontalAlignment="Center"/>
-                                                <TextBlock Text="Please log in to view your list!" 
-                                                           Foreground="{StaticResource TextSecondary}" 
-                                                           FontSize="22" 
-                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Classes="title" Text="You are not logged in"/>
+                                                <TextBlock Classes="subtitle" Text="Log in to view your list."/>
                                             </StackPanel>
                                         </Grid>
                                     </Panel>
@@ -358,23 +324,15 @@
                                 <DataTemplate DataType="vm:StatsViewModel">
                                     <Panel>
                                         <views:StatsView IsVisible="{x:Static anime:AnimeService.IsLoggedIn}"/>
-                                        <Grid IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn}, 
-                                            Converter={x:Static BoolConverters.Not}}" 
+                                        <Grid IsVisible="{Binding Source={x:Static anime:AnimeService.IsLoggedIn},
+                                            Converter={x:Static BoolConverters.Not}}"
                                               ClipToBounds="True">
-                                            <StackPanel VerticalAlignment="Center" 
-                                                        HorizontalAlignment="Center" 
-                                                        Spacing="20">
-                                                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
-                                                       Width="300" 
+                                            <StackPanel Classes="empty-state" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="14">
+                                                <Image Source="/Resources/nothingtoseehere_transparent_small.png"
+                                                       Width="260"
                                                        RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                                                <TextBlock Text="You are not logged in!"
-                                                           Foreground="White"
-                                                           FontSize="28"
-                                                           HorizontalAlignment="Center"/>
-                                                <TextBlock Text="Please log in to view your stats!" 
-                                                           Foreground="{StaticResource TextSecondary}" 
-                                                           FontSize="22" 
-                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Classes="title" Text="You are not logged in"/>
+                                                <TextBlock Classes="subtitle" Text="Log in to view your stats."/>
                                             </StackPanel>
                                         </Grid>
                                     </Panel>

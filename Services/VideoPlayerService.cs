@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Aniki.Services.Interfaces;
+using Aniki.Services.Parser;
 using Avalonia.Threading;
 using Microsoft.Win32;
 
@@ -10,7 +11,7 @@ namespace Aniki.Services;
 
 internal sealed class VideoPlayerService : IVideoPlayerService
 {
-    private const string STREAM_REFERER = "https://anidb.app/";
+    private readonly IAniDbScraperService _scraper;
     private const string MP4UPLOAD_STREAM_REFERER = "https://www.mp4upload.com/";
 
     private const string STREAM_USER_AGENT =
@@ -20,16 +21,17 @@ internal sealed class VideoPlayerService : IVideoPlayerService
     
     public VideoPlayerOption? SelectedPlayer { get; set; }
 
-    private readonly IReadOnlyList<string> _videoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".m3u8"];
+    private readonly IReadOnlyList<string> _videoExtensions = [..FilenameParser.VideoExtensions, ".m3u8"];
     
     private readonly ConcurrentDictionary<string, VideoPlayerOption> _scannedPlayers = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly string? _preferredPlayerPath;
 
-    public VideoPlayerService(ISaveService saveService)
+    public VideoPlayerService(ISaveService saveService, IAniDbScraperService scraper)
     {
         SettingsConfig? config = saveService.GetSettingsConfig();
         _preferredPlayerPath = config?.PreferredVideoPlayerPath;
+        _scraper = scraper;
     }
 
     public async Task ScanPlayersAsync()
@@ -337,9 +339,6 @@ internal sealed class VideoPlayerService : IVideoPlayerService
             || uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsLocalMediaPath(string url) =>
-        File.Exists(url) || Directory.Exists(url);
-
     private VideoPlayerOption? FindStreamCapablePlayer()
     {
         string[] preferredNames = ["mpv", "mpvnet", "vlc", "mpc-hc64", "mpc-hc", "mpc-be64", "mpc-be"];
@@ -396,36 +395,34 @@ internal sealed class VideoPlayerService : IVideoPlayerService
         return null;
     }
 
-    private static string GetStreamReferer(string url)
+    private string GetStreamReferer(string url)
     {
-        return url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) ? MP4UPLOAD_STREAM_REFERER : STREAM_REFERER;
+        return url.Contains("mp4upload.com", StringComparison.OrdinalIgnoreCase) ? MP4UPLOAD_STREAM_REFERER : _scraper.StreamReferer;
     }
 
-    private static Process? OpenWithSpecificPlayer(string url, string playerPath)
+    private Process? OpenWithSpecificPlayer(string url, string playerPath)
     {
         try
         {
             string playerName = Path.GetFileNameWithoutExtension(playerPath).ToLowerInvariant();
-            bool useStreamHeaders = IsRemoteStreamUrl(url) && !IsLocalMediaPath(url);
+            bool useStreamHeaders = IsRemoteStreamUrl(url);
             string streamReferer = GetStreamReferer(url);
-            string arguments = playerName switch
+            string[] arguments = playerName switch
             {
                 "mpv" or "mpvnet" => useStreamHeaders
-                    ? $"\"{url}\" --user-agent=\"{STREAM_USER_AGENT}\" " +
-                      $"--http-header-fields=\"Referer: {streamReferer}; Origin: https://anidb.app\" " +
-                      $"--force-window=yes --title=\"Aniki Player\""
-                    : $"\"{url}\" --force-window=yes --title=\"Aniki Player\"",
+                    ? [url, $"--user-agent={STREAM_USER_AGENT}",
+                       $"--http-header-fields=Referer: {streamReferer}; Origin: {streamReferer.TrimEnd('/')}",
+                       "--force-window=yes", "--title=Aniki Player"]
+                    : [url, "--force-window=yes", "--title=Aniki Player"],
                 "vlc" => useStreamHeaders
-                    ? $"--http-referrer=\"{streamReferer}\" --http-user-agent=\"{STREAM_USER_AGENT}\" " +
-                      $"\"{url}\" --meta-title=\"Aniki Player\""
-                    : $"\"{url}\" --meta-title=\"Aniki Player\"",
-                _ => $"\"{url}\""
+                    ? [$"--http-referrer={streamReferer}", $"--http-user-agent={STREAM_USER_AGENT}",
+                       url, "--meta-title=Aniki Player"]
+                    : [url, "--meta-title=Aniki Player"],
+                _ => [url]
             };
 
-            return Process.Start(new ProcessStartInfo
+            return Process.Start(new ProcessStartInfo(playerPath, arguments)
             {
-                FileName = playerPath,
-                Arguments = arguments,
                 UseShellExecute = false,
                 CreateNoWindow = true
             });

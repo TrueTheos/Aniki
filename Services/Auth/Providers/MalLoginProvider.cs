@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Aniki.Services.Anime;
@@ -8,13 +9,12 @@ using Aniki.Services.Interfaces;
 
 namespace Aniki.Services.Auth.Providers;
 
-internal sealed class MalLoginProvider : ILoginProvider, IDisposable
+internal sealed class MalLoginProvider : ILoginProvider
 {
     private static readonly HttpClient Client = new();
     private const string CLIENT_ID = "dc4a7501af14aec92b98f719b666c37c";
     private const string REDIRECT_URI = "http://localhost:8000/callback";
     private string _codeVerifier = "";
-    private readonly HttpListener _httpListener = new();
 
     private readonly ITokenService _tokenService;
     private readonly IAnimeService _animeService;
@@ -39,20 +39,20 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
     
     public async Task<string?> LoginAsync(IProgress<string> progressReporter)
     {
+        using HttpListener httpListener = new();
         try
         {
-            _codeVerifier = "this_is_a_long_string_for_pkce_but_mal_uses_plain_so_it_doesnt_matter";
+            _codeVerifier = Convert.ToHexString(RandomNumberGenerator.GetBytes(48));
 
-            _httpListener.Prefixes.Clear();
-            _httpListener.Prefixes.Add(REDIRECT_URI.EndsWith('/') ? REDIRECT_URI : REDIRECT_URI + "/");
-            _httpListener.Start();
+            httpListener.Prefixes.Add(REDIRECT_URI.EndsWith('/') ? REDIRECT_URI : REDIRECT_URI + "/");
+            httpListener.Start();
 
             progressReporter.Report("Redirecting to MyAnimeList...");
 
             OpenBrowser(LoginUrl);
             progressReporter.Report("Waiting for authentication in browser...");
 
-            HttpListenerContext context = await _httpListener.GetContextAsync().ConfigureAwait(false);
+            HttpListenerContext context = await httpListener.GetContextAsync().ConfigureAwait(false);
             string code = context.Request.QueryString["code"] ?? throw new InvalidOperationException("Failed to get code from query string.");
 
             string responseString = "<html><head><title>Auth Success</title></head><body><h1>Authentication successful!</h1><p>You can close this browser tab/window and return to Aniki.</p><script>window.close();</script></body></html>";
@@ -61,7 +61,7 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
             context.Response.ContentLength64 = buffer.Length;
             await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(false);
             context.Response.Close();
-            _httpListener.Stop();
+            httpListener.Stop();
 
             if (string.IsNullOrEmpty(code))
             {
@@ -87,12 +87,7 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
         catch (Exception ex)
         {
             progressReporter.Report($"Authentication error: {ex.Message}");
-            if (_httpListener.IsListening) _httpListener.Stop();
             return null;
-        }
-        finally
-        {
-            _httpListener?.Close();
         }
     }
     
@@ -118,9 +113,13 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
             UserData? userData = await _animeService.GetUserDataAsync().ConfigureAwait(false);
             return userData?.Name;
         }
-        catch (Exception)
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
             _tokenService.ClearTokens(Provider);
+            return null;
+        }
+        catch (Exception)
+        {
             return null;
         }
     }
@@ -164,11 +163,5 @@ internal sealed class MalLoginProvider : ILoginProvider, IDisposable
     private static void OpenBrowser(string url)
     {
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-    }
-
-    public void Dispose()
-    {
-        _httpListener.Close();
-        GC.SuppressFinalize(this);
     }
 }

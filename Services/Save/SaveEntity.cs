@@ -2,9 +2,9 @@
 
 namespace Aniki.Services.Save;
 
-internal class SaveEntity<T>
+internal sealed class SaveEntity<T>
 {
-    protected string Path { get; }
+    private string Path { get; }
 
     private readonly JsonSerializerOptions _options = new()
     {
@@ -17,14 +17,14 @@ internal class SaveEntity<T>
         Path = path;
     }
 
-    public virtual void Save(string fileName, T data)
+    public void Save(string fileName, T data)
     {
         string json = JsonSerializer.Serialize(data, _options);
         string newPath = System.IO.Path.Combine(Path, fileName);
         File.WriteAllText(newPath, json);
     }
 
-    public virtual T? Read(string fileName, T? defaultValue = default)
+    public T? Read(string fileName, T? defaultValue = default)
     {
         string newPath = System.IO.Path.Combine(Path, fileName);
         if (!File.Exists(newPath)) return defaultValue;

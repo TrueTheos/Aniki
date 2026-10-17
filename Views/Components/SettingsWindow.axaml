@@ -28,7 +28,7 @@
             <Setter Property="Margin" Value="0,4,0,8"/>
         </Style>
         <Style Selector="Border.setting-card">
-            <Setter Property="Background" Value="#FF181A1B"/>
+            <Setter Property="Background" Value="{StaticResource Background0}"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="16,12"/>
             <Setter Property="Margin" Value="0,0,0,6"/>
@@ -46,17 +46,6 @@
         <Style Selector="ToggleSwitch">
             <Setter Property="OnContent" Value=""/>
             <Setter Property="OffContent" Value=""/>
-        </Style>
-        <Style Selector="Button.action-btn">
-            <Setter Property="Background" Value="{StaticResource Background1}"/>
-            <Setter Property="Foreground" Value="{StaticResource White}"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="14,7"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Medium"/>
-        </Style>
-        <Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource Surface3}"/>
         </Style>
     </Window.Styles>
 
@@ -125,6 +114,18 @@
                             </Grid>
                         </Border>
 
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Classes="setting-label" Text="Built-in Downloader"/>
+                                    <TextBlock Classes="setting-desc" Text="Download torrents inside Aniki. Turn off to use your own torrent client"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding UseBuiltInDownloader, Mode=TwoWay}"
+                                              VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
                         <TextBlock Classes="section-header" Text="PLAYBACK" Margin="0,12,0,8"/>
 
                         <Border Classes="setting-card">
@@ -140,7 +141,7 @@
                                              FontSize="12"
                                              VerticalAlignment="Center"/>
                                     <Button Grid.Column="1"
-                                            Classes="action-btn"
+                                           
                                             Command="{Binding BrowseEpisodesFolderCommand}"
                                             Content="Browse"
                                             Margin="8,0,0,0"/>
@@ -171,7 +172,7 @@
                                     <TextBlock Classes="setting-desc" Text="Flush cached anime data and images"/>
                                 </StackPanel>
                                 <Button Grid.Column="1"
-                                        Classes="action-btn"
+                                       
                                         Command="{Binding ClearCacheCommand}"
                                         IsEnabled="{Binding !IsClearingCache}"
                                         VerticalAlignment="Center">
@@ -191,18 +192,13 @@
                 <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,16,0,0">
                     <Button Grid.Column="1"
                             Content="Cancel"
-                            Classes="action-btn"
                             Click="OnCancel"
                             Margin="0,0,8,0"/>
                     <Button Grid.Column="2"
                             Command="{Binding SaveCommand}"
                             Click="OnSave"
-                            Background="{StaticResource AccentRed}"
-                            Foreground="White"
-                            CornerRadius="6"
-                            Padding="20,8"
-                            FontWeight="SemiBold"
-                            FontSize="13">
+                            Classes="primary"
+                            Padding="20,8">
                         <TextBlock Text="Save"/>
                     </Button>
                 </Grid>

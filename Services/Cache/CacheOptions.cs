@@ -1,6 +1,4 @@
-﻿using Aniki.Services.Cache.CustomTypeHandlers;
-
-namespace Aniki.Services.Cache;
+﻿namespace Aniki.Services.Cache;
 
 internal sealed class CacheOptions
 {
@@ -8,10 +6,4 @@ internal sealed class CacheOptions
     public string? DiskCachePath { get; set; }
     public TimeSpan DiskSyncInterval { get; init; } = TimeSpan.FromMinutes(5);
     public bool EnableDiskCache { get; init; } = true;
-    public Dictionary<Type, ICacheTypeHandler> CustomTypeHandlers { get; } = new();
-
-    public void RegisterTypeHandler<T>(ICacheTypeHandler handler)
-    {
-        CustomTypeHandlers[typeof(T)] = handler;
-    }
 }

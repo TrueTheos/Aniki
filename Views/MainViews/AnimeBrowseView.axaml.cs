@@ -37,6 +37,14 @@ internal sealed partial class AnimeBrowseView : UserControl
         }
     }
     
+    private async void OpenHero(object? sender, RoutedEventArgs e)
+    {
+        if (_viewModel.HeroAnime is { } hero)
+        {
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(hero.AnimeId).ConfigureAwait(true);
+        }
+    }
+
     private const double CARD_WIDTH = 160;
     private const double CARD_SPACING = 20;
     private const double SCROLL_AMOUNT = CARD_WIDTH + CARD_SPACING;

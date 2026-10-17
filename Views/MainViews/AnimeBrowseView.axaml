@@ -22,7 +22,7 @@
                      VerticalScrollBarVisibility="Hidden"
                      HorizontalScrollBarVisibility="Disabled"
                      Background="{StaticResource BackgroundBlack}">
-            <StackPanel Spacing="40" Margin="50,20" Background="{StaticResource BackgroundBlack}">
+            <StackPanel Spacing="40" Margin="50,30,50,20" Background="{StaticResource BackgroundBlack}">
                 
                 <!-- Loading Indicator -->
                 <Border Height="4" Background="Transparent">
@@ -33,170 +33,156 @@
                                  IsVisible="{Binding IsLoading}" />
                 </Border>
 
-                <!-- Header with Search -->
-                <Grid ColumnDefinitions="Auto,*" 
-                      Margin="0,-30,0,0">
-                    
-                    <!-- Manga/Anime Tabs -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="30">
-                        <StackPanel>
-                            <Button Content="Anime" 
-                                    Foreground="White"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    FontSize="15"
-                                    FontWeight="Medium"/>
-                            <Border Height="2" Background="{StaticResource RedColor}" Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Grid>
 
                 <!-- Main View Content -->
                 <StackPanel Spacing="50" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Main}">
                     
                     <!-- Hero Section -->
-                    <Border CornerRadius="16" 
-                            Height="450"
+                    <Border CornerRadius="18"
+                            Height="400"
                             Background="{StaticResource BackgroundGray}"
                             ClipToBounds="True"
                             IsVisible="{Binding HeroAnime, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <Grid>
-                            <!-- Background Video Thumbnail -->
-                            <Image asyncImageLoader:ImageLoader.Source="{Binding HeroAnime.VideoThumbnail}"
+                            <Image asyncImageLoader:ImageLoader.Source="{Binding HeroAnime.Backdrop}"
                                    Stretch="UniformToFill">
                                 <Image.Effect>
-                                    <BlurEffect Radius="20"/>
+                                    <BlurEffect Radius="45"/>
                                 </Image.Effect>
                             </Image>
-                            
                             <Border>
                                 <Border.Background>
                                     <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                        <GradientStop Color="#DD000000" Offset="0"/>
-                                        <GradientStop Color="#00000000" Offset="0.5"/>
-                                        <GradientStop Color="#DD000000" Offset="1"/>
+                                        <GradientStop Color="#F20C0C0E" Offset="0"/>
+                                        <GradientStop Color="#B30C0C0E" Offset="0.55"/>
+                                        <GradientStop Color="#590C0C0E" Offset="1"/>
                                     </LinearGradientBrush>
                                 </Border.Background>
                             </Border>
-                            
                             <Border>
                                 <Border.Background>
                                     <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
-                                        <GradientStop Color="#00000000" Offset="0"/>
-                                        <GradientStop Color="#DD000000" Offset="1"/>
+                                        <GradientStop Color="#000C0C0E" Offset="0.45"/>
+                                        <GradientStop Color="#CC0C0C0E" Offset="1"/>
                                     </LinearGradientBrush>
                                 </Border.Background>
                             </Border>
-                            
-                            <!-- Content Overlay -->
-                            <Grid Margin="50,0,0,50" VerticalAlignment="Bottom">
-                                <StackPanel Spacing="15" MaxWidth="600" HorizontalAlignment="Left">
-                                    
-                                    <!-- Title Section -->
+
+                            <Grid ColumnDefinitions="*,Auto" Margin="48,36,48,56">
+                                <StackPanel Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Left"
+                                            MaxWidth="700"
+                                            Spacing="14">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="{StaticResource AccentRed}" CornerRadius="4" Padding="8,3" VerticalAlignment="Center">
+                                            <TextBlock Text="AIRING NOW" FontSize="10" FontWeight="Bold" Foreground="White" LetterSpacing="1.2"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HeroAnime.Meta}"
+                                                   Classes="section-label"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+
                                     <TextBlock Text="{Binding HeroAnime.Title}"
-                                              FontSize="48"
-                                              FontWeight="Bold"
-                                              Foreground="White"
-                                              TextWrapping="Wrap"
-                                              MaxLines="2"
-                                              TextTrimming="CharacterEllipsis"/>
-                                    
-                                    <!-- Tags -->
-                                    <StackPanel Orientation="Horizontal" Spacing="15">
-                                        <Border Background="#2A2A2A" 
-                                                CornerRadius="12"
-                                                Padding="14,6">
+                                               FontSize="42"
+                                               FontWeight="Bold"
+                                               Foreground="White"
+                                               LineHeight="48"
+                                               TextWrapping="Wrap"
+                                               MaxLines="2"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Background="#2EFFFFFF" CornerRadius="8" Padding="10,5" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="★" Foreground="{StaticResource RedColor}" FontSize="13"/>
-                                                <TextBlock Text="{Binding HeroAnime.Score}" Foreground="White" FontSize="13"/>
+                                                <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                                                          Width="13" Height="13" Foreground="{StaticResource Gold}"/>
+                                                <TextBlock Text="{Binding HeroAnime.Score, StringFormat='{}{0:0.0}'}" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
                                             </StackPanel>
                                         </Border>
-                                        <Border Background="#2A2A2A" 
-                                                CornerRadius="12"
-                                                Padding="14,6"
+                                        <Border Background="#2E4CAF50"
+                                                CornerRadius="8"
+                                                Padding="10,5"
+                                                VerticalAlignment="Center"
                                                 IsVisible="{Binding HeroAnime.Status, Converter={StaticResource EnumMatchConverter}, ConverterParameter=watching}">
-                                            <TextBlock Text="Watching" Foreground="#4CAF50" FontSize="13"/>
+                                            <TextBlock Text="Watching" Foreground="{StaticResource StatusWatching}" FontSize="13" FontWeight="SemiBold"/>
                                         </Border>
+                                        <TextBlock Text="{Binding HeroAnime.Genres}"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   FontSize="13"
+                                                   VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    
-                                    <!-- Description -->
+
                                     <TextBlock Text="{Binding HeroAnime.Synopsis}"
-                                              Foreground="#CCCCCC"
-                                              TextWrapping="Wrap"
-                                              FontSize="14"
-                                              LineHeight="22"
-                                              MaxLines="3"
-                                              TextTrimming="CharacterEllipsis"
-                                              MaxWidth="550"/>
+                                               Foreground="#D9D9DE"
+                                               TextWrapping="Wrap"
+                                               FontSize="14"
+                                               LineHeight="22"
+                                               MaxLines="3"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxWidth="620"
+                                               HorizontalAlignment="Left"/>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,6,0,0">
+                                        <Button Classes="primary" Padding="18,10" Click="OpenHero">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <Image Source="{SvgImage /Resources/Icons/info_icon.svg}" Width="16" Height="16"/>
+                                                <TextBlock Text="View details" FontSize="14"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Padding="18,10"
+                                                Background="#2EFFFFFF"
+                                                Command="{Binding PlayHeroVideoCommand}"
+                                                IsVisible="{Binding HeroAnime.HasVideo}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="16" Height="16"/>
+                                                <TextBlock Text="Watch trailer" FontSize="14"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
                                 </StackPanel>
+
+                                <Border Grid.Column="1"
+                                        Width="200"
+                                        Height="290"
+                                        Margin="40,0,0,0"
+                                        CornerRadius="12"
+                                        ClipToBounds="True"
+                                        BoxShadow="0 16 48 #B3000000"
+                                        VerticalAlignment="Center"
+                                        Cursor="Hand">
+                                    <Image asyncImageLoader:ImageLoader.Source="{Binding HeroAnime.PosterUrl}"
+                                           Stretch="UniformToFill"/>
+                                </Border>
                             </Grid>
-                            
-                            <!-- Navigation Arrows - Top Left -->
-                            <StackPanel Orientation="Horizontal" 
-                                       Spacing="10" 
-                                       HorizontalAlignment="Left"
-                                       VerticalAlignment="Top"
-                                       Margin="20,20,0,0">
-                                <Button 
-                                        Command="{Binding PreviousHeroCommand}"
-                                        Background="#00000000"
-                                        Foreground="White"
-                                        Width="40" Height="40"
-                                        CornerRadius="20"
-                                        BorderThickness="0"
-                                        Opacity="0.9">
-                                    <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
+
+                            <!-- Carousel controls -->
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Bottom"
+                                        Margin="44,0,0,18">
+                                <Button Classes="ghost round" Width="30" Height="30" Command="{Binding PreviousHeroCommand}">
+                                    <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="16" Height="16"/>
                                 </Button>
-                                
-                                <Button
-                                        Command="{Binding NextHeroCommand}"
-                                        Background="#00000000"
-                                        Foreground="White"
-                                        Width="40" Height="40"
-                                        CornerRadius="20"
-                                        BorderThickness="0"
-                                        Opacity="0.9">
-                                    <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
-                                </Button>
-                            </StackPanel>
-                            
-                            <!-- Play Button -->
-                            <Button Command="{Binding PlayHeroVideoCommand}"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center">
-                                <Grid>
-                                    <Ellipse Width="80" Height="80"
-                                            Fill="{StaticResource RedColor}"
-                                            Opacity="0.95"/>
-                                    <PathIcon Data="M8 5v14l11-7z"
-                                             Width="28" Height="28"
-                                             Foreground="White"
-                                             Margin="6,0,0,0"/>
-                                </Grid>
-                            </Button>
-                            
-                            <!-- Carousel Indicators -->
-                            <StackPanel Orientation="Horizontal" 
-                                       Spacing="8"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Bottom"
-                                       Margin="0,0,0,20">
-                                <ItemsControl ItemsSource="{Binding HeroAnimeList}">
+                                <ItemsControl ItemsSource="{Binding HeroAnimeList}" VerticalAlignment="Center">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" Spacing="8"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6"/>
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Width="30" Height="3"
-                                                   CornerRadius="2"
-                                                   Background="{Binding IsCurrentHero, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#FFFFFF:#666666}"/>
+                                            <Border Width="22" Height="3"
+                                                    CornerRadius="2"
+                                                    Background="{Binding IsCurrentHero, Converter={StaticResource BoolToColorConverter}, ConverterParameter=#FFFFFF:#55FFFFFF}"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                                <Button Classes="ghost round" Width="30" Height="30" Command="{Binding NextHeroCommand}">
+                                    <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="16" Height="16"/>
+                                </Button>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -213,7 +199,7 @@
                         
                         <Grid>
                             <!-- Left Navigation Arrow -->
-                            <Button Background="#00000000"
+                            <Button Classes="ghost round" Background="#00000000"
                                     Click="ScrollLeft"
                                     CommandParameter="{Binding #PopularThisSeasonScroller}"
                                     Foreground="White"
@@ -229,7 +215,7 @@
                             
                             <!-- Anime Cards -->
                             <ScrollViewer Name="PopularThisSeasonScroller"
-                                          HorizontalScrollBarVisibility="Visible"
+                                          HorizontalScrollBarVisibility="Hidden"
                                           VerticalScrollBarVisibility="Disabled">
                                 <ItemsRepeater ItemsSource="{Binding PopularThisSeason}">
                                     <ItemsRepeater.Layout>
@@ -244,7 +230,7 @@
                             </ScrollViewer>
                             
                             <!-- Right Navigation Arrow -->
-                            <Button Background="#00000000"
+                            <Button Classes="ghost round" Background="#00000000"
                                     Click="ScrollRight"
                                     CommandParameter="{Binding #PopularThisSeasonScroller}"
                                     Foreground="White"
@@ -271,7 +257,7 @@
                         </Grid>
                         
                         <Grid>
-                            <Button Background="#00000000"
+                            <Button Classes="ghost round" Background="#00000000"
                                     Click="ScrollLeft"
                                     CommandParameter="{Binding #PopularUpcomingScroller}"
                                     Foreground="White"
@@ -286,7 +272,7 @@
                             </Button>
                             
                             <ScrollViewer Name="PopularUpcomingScroller"
-                                          HorizontalScrollBarVisibility="Visible"
+                                          HorizontalScrollBarVisibility="Hidden"
                                           VerticalScrollBarVisibility="Disabled">
                                 <ItemsRepeater ItemsSource="{Binding PopularUpcoming}">
                                     <ItemsRepeater.Layout>
@@ -301,7 +287,7 @@
                             </ScrollViewer>
 
                             
-                            <Button Background="#00000000"
+                            <Button Classes="ghost round" Background="#00000000"
                                     Click="ScrollRight"
                                     CommandParameter="{Binding #PopularUpcomingScroller}"
                                     Foreground="White"
@@ -328,7 +314,7 @@
                         </Grid>
                         
                         <Grid>
-                            <Button Background="#00000000"
+                            <Button Classes="ghost round" Background="#00000000"
                                     Click="ScrollLeft"
                                     CommandParameter="{Binding #TrendingAllTimeScroller}"
                                     Foreground="White"
@@ -343,7 +329,7 @@
                             </Button>
                             
                             <ScrollViewer Name="TrendingAllTimeScroller"
-                                          HorizontalScrollBarVisibility="Visible"
+                                          HorizontalScrollBarVisibility="Hidden"
                                           VerticalScrollBarVisibility="Disabled">
                                 <ItemsRepeater ItemsSource="{Binding TrendingAllTime}">
                                     <ItemsRepeater.Layout>
@@ -358,7 +344,7 @@
                             </ScrollViewer>
 
                             
-                            <Button Background="#00000000" 
+                            <Button Classes="ghost round" Background="#00000000" 
                                     Click="ScrollRight"
                                     CommandParameter="{Binding #TrendingAllTimeScroller}"
                                     Foreground="White"
@@ -377,108 +363,96 @@
                 </StackPanel>
 
                 <!-- Search Results View -->
-                <Grid RowDefinitions="Auto,Auto,Auto" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}">
-                    
-                    <!-- Back Button -->
-                    <Button Grid.Row="0" Content="← Back to Browse"
-                            Command="{Binding GoBackCommand}"
-                            Background="Transparent"
-                            Foreground="#999999"
-                            BorderThickness="0"
-                            HorizontalAlignment="Left"
-                            FontSize="15"/>
-                    
-                    <!-- Pagination Top -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" 
-                               HorizontalAlignment="Center"
-                               Spacing="16">
-                        <Button 
-                            Command="{Binding PreviousPageCommand}"
-                            Background="#00000000"
-                            Foreground="White"
-                            Width="40" Height="40"
-                            CornerRadius="20"
-                            BorderThickness="0"
-                            Opacity="0.9">
-                            <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
-                        </Button>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                            <TextBlock Text="{Binding CurrentPage}"
-                                      FontSize="16"
-                                      Foreground="White"
-                                      FontWeight="Medium"/>
-                            <TextBlock Text="/"
-                                      FontSize="16"
-                                      Foreground="#666666"/>
-                            <TextBlock Text="{Binding TotalPages}"
-                                      FontSize="16"
-                                      Foreground="#666666"/>
-                        </StackPanel>
-                        <Button 
-                            Command="{Binding NextPageCommand}"
-                            Background="#00000000"
-                            Foreground="White"
-                            Width="40" Height="40"
-                            CornerRadius="20"
-                            BorderThickness="0"
-                            Opacity="0.9">
-                            <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
-                        </Button>
-                    </StackPanel>
+                <Grid RowDefinitions="Auto,*,Auto" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}">
+                    <Grid.Styles>
+                        <Style Selector="Border.pager">
+                            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="CornerRadius" Value="10"/>
+                            <Setter Property="Padding" Value="4"/>
+                        </Style>
+                        <Style Selector="Border.pager TextBlock">
+                            <Setter Property="FontSize" Value="13"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                    </Grid.Styles>
 
-                    <!-- Search Results Grid -->
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding SearchResults}" HorizontalAlignment="Center">
+                    <!-- Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16" Margin="0,0,0,24">
+                        <Button Grid.Column="0"
+                                Classes="ghost"
+                                Command="{Binding GoBackCommand}"
+                                Padding="10,8"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="14" Height="14"/>
+                                <TextBlock Text="Back" FontSize="13" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                            <TextBlock Classes="section-label" Text="SEARCH RESULTS"/>
+                            <TextBlock FontSize="26" FontWeight="Bold" Foreground="White" TextTrimming="CharacterEllipsis">
+                                <Run Text="{Binding SearchQuery}"/>
+                                <Run Text="{Binding TotalResults, StringFormat='· {0} titles'}" Foreground="{StaticResource TextSecondary}" FontWeight="Medium" FontSize="16"/>
+                            </TextBlock>
+                        </StackPanel>
+                        <Border Grid.Column="2" Classes="pager" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Classes="ghost round" Width="30" Height="30" Command="{Binding PreviousPageCommand}">
+                                    <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="14" Height="14"/>
+                                </Button>
+                                <TextBlock Text="{Binding CurrentPage}" Foreground="White" FontWeight="SemiBold"/>
+                                <TextBlock Text="/" Foreground="{StaticResource TextMuted}"/>
+                                <TextBlock Text="{Binding TotalPages}" Foreground="{StaticResource TextSecondary}"/>
+                                <Button Classes="ghost round" Width="30" Height="30" Command="{Binding NextPageCommand}">
+                                    <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="14" Height="14"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Results grid -->
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding SearchResults}" HorizontalAlignment="Left">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" />
+                                <WrapPanel Orientation="Horizontal" ItemSpacing="22" LineSpacing="26"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="models:AnimeCardData">
-                                <local:AnimeCard Margin="10"/>
+                                <local:AnimeCard/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Pagination Bottom -->
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" 
-                               HorizontalAlignment="Center"
-                               Spacing="16"
-                               Margin="0,20,0,0">
-                        <Button 
-                            Command="{Binding PreviousPageCommand}"
-                            Background="#00000000"
-                            Foreground="White"
-                            Width="40" Height="40"
-                            CornerRadius="20"
-                            BorderThickness="0"
-                            Opacity="0.9">
-                            <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="20" Height="20" />
-                        </Button>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                            <TextBlock Text="{Binding CurrentPage}"
-                                      FontSize="16"
-                                      Foreground="White"
-                                      FontWeight="Medium"/>
-                            <TextBlock Text="/"
-                                      FontSize="16"
-                                      Foreground="#666666"/>
-                            <TextBlock Text="{Binding TotalPages}"
-                                      FontSize="16"
-                                      Foreground="#666666"/>
-                        </StackPanel>
-                        <Button 
-                            Command="{Binding NextPageCommand}"
-                            Background="#00000000"
-                            Foreground="White"
-                            Width="40" Height="40"
-                            CornerRadius="20"
-                            BorderThickness="0"
-                            Opacity="0.9">
-                            <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="20" Height="20" />
-                        </Button>
+                    <!-- Empty state -->
+                    <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="0,60">
+                        <StackPanel.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="TotalResults" Converter="{StaticResource EqualToZeroConverter}"/>
+                                <Binding Path="!IsLoading"/>
+                            </MultiBinding>
+                        </StackPanel.IsVisible>
+                        <Image Source="/Resources/nothingtoseehere_transparent_small.png" Width="200" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                        <TextBlock Text="Nothing matched" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Try a shorter title or the Japanese name." FontSize="13" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
                     </StackPanel>
 
+                    <!-- Bottom pager -->
+                    <Border Grid.Row="2" Classes="pager" HorizontalAlignment="Center" Margin="0,28,0,0"
+                            IsVisible="{Binding TotalPages, Converter={StaticResource GreaterThanZeroConverter}}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="ghost round" Width="30" Height="30" Command="{Binding PreviousPageCommand}">
+                                <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="14" Height="14"/>
+                            </Button>
+                            <TextBlock Text="{Binding CurrentPage, StringFormat='Page {0}'}" Foreground="White" FontWeight="SemiBold" Margin="6,0"/>
+                            <TextBlock Text="{Binding TotalPages, StringFormat='of {0}'}" Foreground="{StaticResource TextSecondary}" Margin="0,0,6,0"/>
+                            <Button Classes="ghost round" Width="30" Height="30" Command="{Binding NextPageCommand}">
+                                <Image Source="{SvgImage /Resources/Icons/chevronRight_icon.svg}" Width="14" Height="14"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
                 </Grid>
 
             </StackPanel>
@@ -487,7 +461,7 @@
         <Border Grid.Column="1" 
                 Grid.Row="0"
                 Width="320"
-                Background="#0F0F0F" 
+                Background="{StaticResource BackgroundGray}" 
                 BorderBrush="{StaticResource Border}" 
                 BorderThickness="1,0,0,0"
                 Padding="20">
@@ -498,21 +472,23 @@
                     
                     <!-- Search Box -->
                     <Border
-                            Background="{StaticResource BackgroundGray}"
+                            Background="{StaticResource Surface2}"
+                            BorderBrush="{StaticResource BorderLight}"
+                            BorderThickness="1"
                             CornerRadius="12"
                             Padding="12,8"
-                            Margin="10,5"
+                            Margin="0,4,0,0"
                             Cursor="Hand">
                         <Grid ColumnDefinitions="Auto,*">
                             <PathIcon Grid.Column="0"
                                       Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
                                       Width="16" Height="16"
-                                      Foreground="#666666"
+                                      Foreground="{StaticResource TextMuted}"
                                       Margin="0,0,10,0"/>
                             <TextBox Grid.Column="1"
                                      Text="{Binding SearchQuery, Mode=TwoWay}"
                                      Watermark="Type to Search..."
-                                     Foreground="#999999"
+                                     Foreground="{StaticResource TextSecondary}"
                                      Background="Transparent"
                                      BorderThickness="0"
                                      MinWidth="200"
@@ -537,7 +513,7 @@
                         <ItemsControl ItemsSource="{Binding AiringToday}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="models:AnimeCardData">
-                                    <Border Background="{StaticResource BackgroundGray}" 
+                                    <Border Background="{StaticResource Background0}" 
                                             CornerRadius="12" 
                                             Padding="12"
                                             Margin="0,0,0,10"
@@ -547,7 +523,7 @@
                                             <Border Grid.Column="0" 
                                                     Width="60" Height="85" 
                                                     CornerRadius="8" 
-                                                    Background="#2A2A2A"
+                                                    Background="{StaticResource Surface2}"
                                                     ClipToBounds="True">
                                                 <Image asyncImageLoader:ImageLoader.Source="{Binding ImageUrl}" 
                                                        Stretch="UniformToFill"/>

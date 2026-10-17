@@ -51,7 +51,7 @@ internal sealed partial class CalendarViewModel : ViewModelBase
     }
     
     private static DateTime GetCurrentWeekStart()
-        => DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
+        => DateTime.Today.AddDays(-(((int)DateTime.Today.DayOfWeek + 6) % 7));
         
     private async Task LoadWatchingListAsync()
     {
@@ -116,7 +116,7 @@ internal sealed partial class CalendarViewModel : ViewModelBase
     [RelayCommand]
     private async Task GoToStart()
     {
-        _viewStartDate = DateTime.UtcNow.Date.AddDays(-((int)DateTime.UtcNow.Date.DayOfWeek + 6) % 7);
+        _viewStartDate = GetCurrentWeekStart();
         await FetchAndDisplayScheduleAsync().ConfigureAwait(true);
     }
 

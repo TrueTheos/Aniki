@@ -1,39 +1,47 @@
-﻿using System.Net;
+using System.Globalization;
+using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.Services;
 
-internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
+internal sealed partial class HiAnimeScraperService : IAniDbScraperService, IDisposable
 {
+    private const string BASE = "https://hianime.at";
+    private const string USER_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+    private const string PREFERRED_SERVER = "ZokoAnime";
+    private const int ENRICHED_RESULT_COUNT = 8;
+    private static readonly byte[] BlobKey = "otaku-embed-v1"u8.ToArray();
+
     private readonly HttpClient _httpClient;
 
-    private const string BASE = "https://anidb.app";
-    private const string USER_AGENT =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
+    public string StreamReferer { get; private set; } = "https://zokoanime.video/";
 
-    private static readonly Regex SearchCardRegex = new(
-        @"anime/([a-z0-9-]+-\d+)""[^>]*title=""([^""]+)""",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"<h3 class=""film-name"">\s*<a href=""[^""]*/([^""/]+)""\s*title=""([^""]+)""", RegexOptions.IgnoreCase)]
+    private static partial Regex CardNameRegex();
 
-    private static readonly Regex PosterRegex = new(
-        @"cdn\.xlsbox\.com/poster/[^""']+",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"<img[^>]*?(?:data-src|src)=""([^""]+)""[^>]*class=""film-poster-img""", RegexOptions.IgnoreCase)]
+    private static partial Regex CardPosterRegex();
 
-    private static readonly Regex MalIdRegex = new(
-        @"myanimelist\.net/anime/(\d+)",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"tick-(?:eps|sub)""[^>]*>(?:<i[^>]*></i>)?\s*(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex CardEpisodesRegex();
 
-    private static readonly Regex OgImageRegex = new(
-        @"property=[""']og:image[""']\s+content=[""']([^""']+)[""']|content=[""']([^""']+)[""']\s+property=[""']og:image[""']",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"data-number=""(\d+)""[^>]*?data-id=""(\d+)""", RegexOptions.IgnoreCase)]
+    private static partial Regex EpisodeRegex();
 
-    private static readonly Regex EmbedFileRegex = new(
-        @"file:\s*'([^']+)'",
-        RegexOptions.Compiled);
+    [GeneratedRegex(@"data-type=""(sub|dub)""[^>]*?data-server-name=""([^""]+)""[^>]*?data-hash=""([^""]+)""", RegexOptions.IgnoreCase)]
+    private static partial Regex ServerRegex();
 
-    public AniDbScraperService()
+    [GeneratedRegex(@"window\.__P=""([^""]*)""")]
+    private static partial Regex EmbedBlobRegex();
+
+    [GeneratedRegex(@"/mal/(\d+)/")]
+    private static partial Regex MalIdRegex();
+
+    public HiAnimeScraperService()
     {
 #pragma warning disable CA2000
         HttpClientHandler handler = new()
@@ -44,63 +52,57 @@ internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
         };
 #pragma warning restore CA2000
 
-        _httpClient = new HttpClient(handler);
+        _httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(20) };
         _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", USER_AGENT);
-        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Referer", BASE + "/");
-        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Origin", BASE);
-        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json,text/html,*/*");
+        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "text/html,application/json,*/*");
     }
 
     public async Task<List<AniDbSearchResult>> SearchAnimeAsync(string query)
     {
         try
         {
-            string url = $"{BASE}/browse?q={Uri.EscapeDataString(query)}";
-            string html = await _httpClient.GetStringAsync(url).ConfigureAwait(false);
+            string html = await _httpClient.GetStringAsync($"{BASE}/search?keyword={Uri.EscapeDataString(query)}").ConfigureAwait(false);
 
-            List<AniDbSearchResult> results = new();
+            int sidebar = html.IndexOf("id=\"main-sidebar\"", StringComparison.Ordinal);
+            if (sidebar > 0) html = html[..sidebar];
+
+            List<AniDbSearchResult> results = [];
             HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
 
-            foreach (Match match in SearchCardRegex.Matches(html))
+            foreach (string card in html.Split("<div class=\"flw-item", StringSplitOptions.RemoveEmptyEntries).Skip(1))
             {
-                string slug = match.Groups[1].Value;
-                if (!seen.Add(slug))
-                    continue;
+                Match name = CardNameRegex().Match(card);
+                if (!name.Success) continue;
 
-                string title = WebUtility.HtmlDecode(match.Groups[2].Value);
-                string animeUrl = $"{BASE}/anime/{slug}";
+                string slug = name.Groups[1].Value;
+                if (!seen.Add(slug)) continue;
 
-                string? banner = null;
-                int cardStart = Math.Max(0, match.Index - 50);
-                int cardEnd = Math.Min(html.Length, match.Index + 800);
-                Match poster = PosterRegex.Match(html, cardStart, cardEnd - cardStart);
-                if (poster.Success)
-                    banner = "https://" + poster.Value;
+                Match poster = CardPosterRegex().Match(card);
+                Match eps = CardEpisodesRegex().Match(card);
 
                 results.Add(new AniDbSearchResult
                 {
                     Id = ExtractNumericId(slug),
-                    Title = title,
-                    Url = animeUrl,
-                    Banner = banner,
-                    Episodes = 0,
+                    Title = WebUtility.HtmlDecode(name.Groups[2].Value),
+                    Url = $"{BASE}/{slug}",
+                    Banner = poster.Success ? poster.Groups[1].Value : null,
+                    Episodes = eps.Success ? int.Parse(eps.Groups[1].Value, CultureInfo.InvariantCulture) : 0,
                     MalId = null
                 });
             }
 
-            await EnrichMalIdsAsync(results).ConfigureAwait(false);
-
-            return results
-                .Select(x => new { Item = x, Score = CalculateAnimeScore(x, query) })
-                .OrderByDescending(x => x.Score)
-                .ThenByDescending(x => x.Item.Episodes)
-                .Select(x => x.Item)
+            List<AniDbSearchResult> sorted = results
+                .OrderByDescending(x => CalculateAnimeScore(x, query))
+                .ThenByDescending(x => x.Episodes)
                 .ToList();
+
+            await EnrichMalIdsAsync(sorted.Take(ENRICHED_RESULT_COUNT).ToList()).ConfigureAwait(false);
+            return sorted;
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return new();
+            return [];
         }
     }
 
@@ -112,38 +114,22 @@ internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
             if (string.IsNullOrEmpty(showId))
                 throw new InvalidOperationException("Could not resolve anime id");
 
-            string response = await _httpClient
-                .GetStringAsync($"{BASE}/api/frontend/anime/{showId}/episodes")
-                .ConfigureAwait(false);
+            string html = await GetHtmlFieldAsync($"{BASE}/api/theme/episode/list/{showId}").ConfigureAwait(false);
 
-            using JsonDocument jsonDoc = JsonDocument.Parse(response);
-            List<AniDbEpisode> episodes = new();
-
-            if (!jsonDoc.RootElement.TryGetProperty("episodes", out JsonElement eps) ||
-                eps.ValueKind != JsonValueKind.Array)
-                return episodes;
-
-            foreach (JsonElement ep in eps.EnumerateArray())
+            List<AniDbEpisode> episodes = [];
+            foreach (Match m in EpisodeRegex().Matches(html))
             {
-                if (!ep.TryGetProperty("id", out JsonElement idEl) ||
-                    !ep.TryGetProperty("number", out JsonElement numEl))
-                    continue;
-
-                int episodeId = idEl.GetInt32();
-                int number = numEl.ValueKind == JsonValueKind.Number
-                    ? numEl.GetInt32()
-                    : int.TryParse(numEl.GetString(), out int parsed) ? parsed : 0;
-
-                if (number <= 0)
-                    continue;
+                int number = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+                string id = m.Groups[2].Value;
+                if (number <= 0) continue;
 
                 episodes.Add(new AniDbEpisode
                 {
-                    Id = episodeId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    Id = id,
                     Number = number,
-                    Url = episodeId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    Url = id,
                     ShowId = showId,
-                    EpisodeString = number.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    EpisodeString = m.Groups[1].Value,
                     TotalEpisodes = 0
                 });
             }
@@ -168,22 +154,29 @@ internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
             if (string.IsNullOrEmpty(episodeId))
                 throw new InvalidOperationException("Could not resolve episode id");
 
-            string languagesJson = await _httpClient
-                .GetStringAsync($"{BASE}/api/frontend/episode/{episodeId}/languages")
-                .ConfigureAwait(false);
-
-            string? embedUrl = PickEmbedUrl(languagesJson);
+            string? embedUrl = await GetEmbedUrlAsync(episodeId).ConfigureAwait(false);
             if (string.IsNullOrEmpty(embedUrl))
-                throw new InvalidOperationException("No embed URL for episode");
+                throw new InvalidOperationException("No supported server for episode");
+
+            Uri embedUri = new(embedUrl);
+            StreamReferer = $"{embedUri.Scheme}://{embedUri.Host}/";
 
             string embedHtml = await _httpClient.GetStringAsync(embedUrl).ConfigureAwait(false);
-            Match fileMatch = EmbedFileRegex.Match(embedHtml);
-            if (!fileMatch.Success)
-                throw new InvalidOperationException("No stream file found in embed");
+            Match blob = EmbedBlobRegex().Match(embedHtml);
+            if (!blob.Success)
+                throw new InvalidOperationException("No player config in embed");
 
-            string masterUrl = fileMatch.Groups[1].Value;
+            string json = DeobfuscateBlob(blob.Groups[1].Value);
+            using JsonDocument doc = JsonDocument.Parse(json);
+            string? masterUrl = doc.RootElement.TryGetProperty("src", out JsonElement src) ? src.GetString() : null;
+            if (string.IsNullOrEmpty(masterUrl))
+                throw new InvalidOperationException("No stream in player config");
+
             string best = await ResolveBestPlaylistAsync(masterUrl).ConfigureAwait(false);
-            return string.IsNullOrEmpty(best) ? masterUrl : best;
+            string url = string.IsNullOrEmpty(best) ? masterUrl : best;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+                throw new InvalidOperationException("Stream URL is not http(s)");
+            return url;
         }
         catch (Exception ex)
         {
@@ -191,28 +184,41 @@ internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
         }
     }
 
+    private async Task<string?> GetEmbedUrlAsync(string episodeId)
+    {
+        string html = await GetHtmlFieldAsync($"{BASE}/api/theme/episode/servers?episodeId={episodeId}").ConfigureAwait(false);
+
+        string? sub = null, dub = null;
+        foreach (Match m in ServerRegex().Matches(html))
+        {
+            if (!m.Groups[2].Value.Equals(PREFERRED_SERVER, StringComparison.OrdinalIgnoreCase)) continue;
+
+            string embed = Encoding.UTF8.GetString(Convert.FromBase64String(m.Groups[3].Value));
+            if (m.Groups[1].Value.Equals("sub", StringComparison.OrdinalIgnoreCase)) sub ??= embed;
+            else dub ??= embed;
+        }
+
+        return sub ?? dub;
+    }
+
     private async Task EnrichMalIdsAsync(List<AniDbSearchResult> results)
     {
-        if (results.Count == 0)
-            return;
+        if (results.Count == 0) return;
 
-        using SemaphoreSlim gate = new(6);
+        using SemaphoreSlim gate = new(4);
         await Task.WhenAll(results.Select(async result =>
         {
             await gate.WaitAsync().ConfigureAwait(false);
             try
             {
-                string html = await _httpClient.GetStringAsync(result.Url).ConfigureAwait(false);
-                Match mal = MalIdRegex.Match(html);
+                string episodes = await GetHtmlFieldAsync($"{BASE}/api/theme/episode/list/{result.Id}").ConfigureAwait(false);
+                Match first = EpisodeRegex().Match(episodes);
+                if (!first.Success) return;
+
+                string? embed = await GetEmbedUrlAsync(first.Groups[2].Value).ConfigureAwait(false);
+                Match mal = embed == null ? Match.Empty : MalIdRegex().Match(embed);
                 if (mal.Success && int.TryParse(mal.Groups[1].Value, out int malId))
                     result.MalId = malId;
-
-                if (string.IsNullOrEmpty(result.Banner))
-                {
-                    Match og = OgImageRegex.Match(html);
-                    if (og.Success)
-                        result.Banner = og.Groups[1].Success ? og.Groups[1].Value : og.Groups[2].Value;
-                }
             }
             catch
             {
@@ -225,40 +231,19 @@ internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
         })).ConfigureAwait(false);
     }
 
-    private static string? PickEmbedUrl(string languagesJson)
+    private async Task<string> GetHtmlFieldAsync(string url)
     {
-        using JsonDocument doc = JsonDocument.Parse(languagesJson);
-        if (!doc.RootElement.TryGetProperty("languages", out JsonElement languages) ||
-            languages.ValueKind != JsonValueKind.Array)
-            return null;
+        string json = await _httpClient.GetStringAsync(url).ConfigureAwait(false);
+        using JsonDocument doc = JsonDocument.Parse(json);
+        return doc.RootElement.TryGetProperty("html", out JsonElement html) ? html.GetString() ?? "" : "";
+    }
 
-        string? jpn = null;
-        string? eng = null;
-        string? any = null;
-
-        foreach (JsonElement lang in languages.EnumerateArray())
-        {
-            if (!lang.TryGetProperty("embed_url", out JsonElement embedEl))
-                continue;
-
-            string? embed = embedEl.GetString();
-            if (string.IsNullOrEmpty(embed))
-                continue;
-
-            embed = embed.Replace("\\/", "/", StringComparison.Ordinal);
-            any ??= embed;
-
-            string? code = lang.TryGetProperty("code", out JsonElement codeEl)
-                ? codeEl.GetString()
-                : null;
-
-            if (string.Equals(code, "jpn", StringComparison.OrdinalIgnoreCase))
-                jpn = embed;
-            else if (string.Equals(code, "eng", StringComparison.OrdinalIgnoreCase))
-                eng = embed;
-        }
-
-        return jpn ?? eng ?? any;
+    private static string DeobfuscateBlob(string base64)
+    {
+        byte[] bytes = Convert.FromBase64String(base64);
+        for (int i = 0; i < bytes.Length; i++)
+            bytes[i] ^= BlobKey[i % BlobKey.Length];
+        return Encoding.UTF8.GetString(bytes);
     }
 
     private async Task<string> ResolveBestPlaylistAsync(string masterUrl)
@@ -266,8 +251,8 @@ internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
         try
         {
             using HttpRequestMessage request = new(HttpMethod.Get, masterUrl);
-            request.Headers.TryAddWithoutValidation("Referer", BASE + "/");
-            request.Headers.TryAddWithoutValidation("Origin", BASE);
+            request.Headers.TryAddWithoutValidation("Referer", StreamReferer);
+            request.Headers.TryAddWithoutValidation("Origin", StreamReferer.TrimEnd('/'));
 
             using HttpResponseMessage response = await _httpClient.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
@@ -299,9 +284,7 @@ internal sealed class AniDbScraperService : IAniDbScraperService, IDisposable
                 if (lastInf == null || line.StartsWith('#') || string.IsNullOrEmpty(line))
                     continue;
 
-                string streamUrl = Uri.TryCreate(baseUri, line, out Uri? resolved)
-                    ? resolved.ToString()
-                    : line;
+                string streamUrl = Uri.TryCreate(baseUri, line, out Uri? resolved) ? resolved.ToString() : line;
 
                 int bandwidth = 0;
                 Match bwMatch = Regex.Match(lastInf, @"BANDWIDTH=(\d+)", RegexOptions.IgnoreCase);

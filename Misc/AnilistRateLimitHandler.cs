@@ -85,6 +85,9 @@ internal sealed class AnilistRateLimitHandler(HttpMessageHandler innerHandler) :
                 var retryAfter = response.Headers.RetryAfter?.Delta;
                 if (retryAfter.HasValue)
                 {
+                    _remainingRequests = 0;
+                    _resetTime = DateTimeOffset.UtcNow + retryAfter.Value;
+                    response.Dispose();
                     Log(id, $"WAIT   429 retry-after {retryAfter.Value.TotalSeconds:F1}s | {op}");
                     await Task.Delay(retryAfter.Value, cancellationToken).ConfigureAwait(false);
                     http.Restart();

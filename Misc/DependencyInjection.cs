@@ -23,6 +23,7 @@ internal sealed class DependencyInjection
     public void Logout()
     {
         OnLogout?.Invoke();
+        OnLogout = null;
         
         if (ServiceProvider is ServiceProvider sp)
         {

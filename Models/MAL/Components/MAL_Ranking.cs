@@ -12,13 +12,4 @@ internal sealed class MalRankingEntry
 {
     [JsonPropertyName("node")]
     public required MAL_Anime Node { get; set; }
-    
-    [JsonPropertyName("ranking")]
-    public MalRankingInfo? Ranking { get; set; }
-}
-
-internal sealed class MalRankingInfo
-{
-    [JsonPropertyName("rank")]
-    public int Rank { get; set; }
 }

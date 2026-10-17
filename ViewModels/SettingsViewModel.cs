@@ -13,6 +13,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
 {
     [ObservableProperty] public partial bool StartMinimized { get; set; }
     [ObservableProperty] public partial bool EnableDiscordPresence { get; set; } = true;
+    [ObservableProperty] public partial bool UseBuiltInDownloader { get; set; } = true;
     [ObservableProperty] public partial string? EpisodesFolder { get; set; }
     [ObservableProperty] public partial long CacheSize { get; set; }
     [ObservableProperty] public partial bool IsClearingCache { get; set; }
@@ -74,6 +75,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
             AutoStart = false;
             StartMinimized = false;
             EnableDiscordPresence = true;
+            UseBuiltInDownloader = true;
             EpisodesFolder = _saveService.DefaultEpisodesFolder;
         }
         else
@@ -81,6 +83,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
             AutoStart = config.AutoStart;
             StartMinimized = config.StartMinimized;
             EnableDiscordPresence = config.EnableDiscordPresence;
+            UseBuiltInDownloader = config.UseBuiltInDownloader;
             EpisodesFolder = config.EpisodesFolder;
 
             if (string.IsNullOrEmpty(config.PreferredVideoPlayerPath)) return;
@@ -117,7 +120,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
         if (newValue)
         {
             string exePath = Environment.ProcessPath ?? "";
-            key?.SetValue("Aniki", $"{exePath} --background");
+            key?.SetValue("Aniki", $"\"{exePath}\" --background");
         }
         else
         {
@@ -149,6 +152,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
             AutoStart = AutoStart,
             StartMinimized = StartMinimized,
             EnableDiscordPresence = EnableDiscordPresence,
+            UseBuiltInDownloader = UseBuiltInDownloader,
             EpisodesFolder = EpisodesFolder,
             PreferredVideoPlayerPath = SelectedPlayer?.ExecutablePath
         };
@@ -166,6 +170,7 @@ internal sealed class SettingsConfig
     public bool AutoStart;
     public bool StartMinimized;
     public bool EnableDiscordPresence = true;
+    public bool UseBuiltInDownloader = true;
     public string? EpisodesFolder;
     public string? PreferredVideoPlayerPath;
 }

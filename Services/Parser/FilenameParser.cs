@@ -15,6 +15,8 @@ internal sealed record ParsedName
 
 internal static class FilenameParser
 {
+    public static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv"];
+
     private static readonly Regex[] SeasonEpisodeRegexes =
     [
         new(@"\bS(?<season>\d{1,2})\s*E(?<episode>\d{1,4})(?:\s*-\s*E?(?<episodeEnd>\d{1,4}))?\b",
@@ -38,13 +40,13 @@ internal static class FilenameParser
 
     private static readonly Regex[] EpisodeRegexes =
     [
-        new(@"\bE(?<episode>\d{1,4})(?:\s*-\s*E?(?<episodeEnd>\d{1,4}))?\b",
+        new(@"\bE(?<episode>\d{1,4})(?<special>\.\d)?(?:\s*-\s*E?(?<episodeEnd>\d{1,4}))?\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"\b(?:Episode|Ep)\.?\s*(?<episode>\d{1,4})(?:\s*-\s*(?<episodeEnd>\d{1,4}))?\b",
+        new(@"\b(?:Episode|Ep)\.?\s*(?<episode>\d{1,4})(?<special>\.\d)?(?:\s*-\s*(?<episodeEnd>\d{1,4}))?\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"-\s*(?<episode>\d{1,4})(?:v\d+)?(?:\s*-\s*E?(?<episodeEnd>\d{1,4}))?(?=\s*(?:-\s*\D.*)?$)",
+        new(@"-\s*(?<episode>\d{1,4})(?<special>\.\d)?(?:v\d+)?(?:\s*-\s*E?(?<episodeEnd>\d{1,4}))?(?=\s*(?:-\s*\D.*)?$)",
             RegexOptions.IgnoreCase | RegexOptions.Compiled),
-        new(@"\b(?<episode>\d{1,4})(?:v\d+)?\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+        new(@"(?<!\.)\b(?<episode>\d{1,4})(?<special>\.\d)?(?:v\d+)?\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled),
     ];
 
     private static readonly Regex YearRegex =
@@ -52,20 +54,20 @@ internal static class FilenameParser
 
     private static readonly Regex BracketGroupRegex = new(@"[\(\[][^\)\]]*[\)\]]", RegexOptions.Compiled);
 
-    private static readonly Regex SeparatorRegex = new(@"[._]+", RegexOptions.Compiled);
+    private static readonly Regex SeparatorRegex = new(@"_+|(?:(?<!\d)\.|\.(?!\d))+", RegexOptions.Compiled);
 
     private static readonly Regex MultiSpaceRegex = new(@"\s+", RegexOptions.Compiled);
 
     private static readonly Regex ExtensionRegex =
-        new(@"\.(?:mkv|mp4|avi|mov|wmv|flv)$",
+        new($@"(?:{string.Join('|', VideoExtensions.Select(Regex.Escape))})$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex ReleaseMetadataRegex = new(
         @"\b(?:" +
         @"\d{3,4}p|4k|8k|" +
-        @"web[\s-]?dl|web[\s-]?rip|webrip|bluray|blu[\s-]?ray|bdrip|brrip|bd|hdtv|dvdrip|dvd|remux|" +
+        @"web[\s-]?dl|web[\s-]?rip|webrip|bluray|blu[\s-]?ray|bdrip|brrip|hdtv|dvdrip|remux|" +
         @"hevc|x264|x265|h[\s.]?264|h[\s.]?265|avc|10bit|8bit|" +
-        @"aac(?:\d(?:\.\d)?)?|flac|ac3|eac3|ddp?[\s.]?\d(?:\.\d)?|dts(?:[\s-]?hd)?|opus|" +
+        @"aac(?:\d(?:\.\d)?)?|flac|ac3|eac3|ddp?[\s.]?\d(?:\.\d)?|dts(?:[\s-]?hd)?|" +
         @"hdr|sdr|dual[\s-]?audio|multi[\s-]?subs?|multi[\s-]?audio|" +
         @"uncensored|censored|\d{3,4}x\d{3,4}" +
         @")\b.*$",
@@ -79,6 +81,7 @@ internal static class FilenameParser
     {
         string text = StripExtension(raw);
         int? year = TakeYear(ref text);
+        int? bracketSeason = BracketGroupRegex.Matches(text).Select(m => ExtractSeason(m.Value)).FirstOrDefault(s => s != null);
         text = CleanNoise(text);
 
         int? season = null;
@@ -100,6 +103,8 @@ internal static class FilenameParser
             boundaries.Add(seasonMatch.Index);
         }
 
+        season ??= bracketSeason;
+
         int part = 1;
         if (TryMatch(PartRegexes, text, out Match partMatch))
         {
@@ -109,8 +114,8 @@ internal static class FilenameParser
 
         if (extractEpisode && episode is null && TryMatch(EpisodeRegexes, text, out Match episodeMatch))
         {
-            episode = ToInt(episodeMatch.Groups["episode"]);
-            episodeEnd = ToInt(episodeMatch.Groups["episodeEnd"]);
+            episode = EpisodeOf(episodeMatch);
+            episodeEnd = episode is null ? null : ToInt(episodeMatch.Groups["episodeEnd"]);
             boundaries.Add(episodeMatch.Index);
         }
 
@@ -135,9 +140,12 @@ internal static class FilenameParser
             return ToInt(combo.Groups["episode"]);
 
         return TryMatch(EpisodeRegexes, text, out Match episode)
-            ? ToInt(episode.Groups["episode"])
+            ? EpisodeOf(episode)
             : null;
     }
+
+    private static int? EpisodeOf(Match match) =>
+        match.Groups["special"].Success ? null : ToInt(match.Groups["episode"]);
 
     public static int? ExtractSeason(string text) =>
         TryMatch(SeasonRegexes, text, out Match match) ? ToInt(match.Groups["season"]) : null;
@@ -172,7 +180,7 @@ internal static class FilenameParser
         text = BracketGroupRegex.Replace(text, " ");
         text = SeparatorRegex.Replace(text, " ");
         text = ReleaseMetadataRegex.Replace(text, "");
-        return MultiSpaceRegex.Replace(text, " ").Trim();
+        return MultiSpaceRegex.Replace(text, " ").Trim().TrimEnd('.');
     }
 
     private static string ExtractName(string text, List<int> boundaries)

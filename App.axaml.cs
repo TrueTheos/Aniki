@@ -58,8 +58,7 @@ internal sealed class App : Application
         
         DependencyInjection.Instance.ServiceProvider!.GetService<ITokenService>()?.Init();
 
-        AppDomain.CurrentDomain.UnhandledException += (sender, e) => 
-            OnUnhandledException(sender, (DispatcherUnhandledExceptionEventArgs)e.ExceptionObject );
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Console.WriteLine(e.ExceptionObject);
         
         base.OnFrameworkInitializationCompleted();
     }

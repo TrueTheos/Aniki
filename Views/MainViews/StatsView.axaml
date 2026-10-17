@@ -2,219 +2,353 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     x:Class="Aniki.Views.StatsView"
     x:DataType="vm:StatsViewModel">
-    
+
     <Design.DataContext>
         <vm:StatsViewModel/>
     </Design.DataContext>
-    
-    <ScrollViewer Background="{StaticResource BackgroundBlack}" Margin="30,50,30,0">
-        <StackPanel Spacing="20" Margin="20">
-            <Grid ColumnDefinitions="*,*,*,*" >
-                <Grid.Styles>
-                    <Style Selector="Border.stat-card">
-                        <Setter Property="Background" Value="{StaticResource Background1}"/>
-                        <Setter Property="CornerRadius" Value="12"/>
-                        <Setter Property="Padding" Value="15"/>
-                        <Setter Property="Margin" Value="5"/>
-                    </Style>
-                    <Style Selector="TextBlock.stat-value">
-                        <Setter Property="FontSize" Value="24"/>
-                        <Setter Property="FontWeight" Value="Bold"/>
-                        <Setter Property="Foreground" Value="{StaticResource Green}"/>
-                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                    </Style>
-                    <Style Selector="TextBlock.stat-label">
-                        <Setter Property="FontSize" Value="12"/>
-                        <Setter Property="Foreground" Value="#B0B0B0"/>
-                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0,5,0,0"/>
-                    </Style>
-                </Grid.Styles>
 
-                <Border Grid.Column="0" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="{Binding AnimeStats.DaysWatched, StringFormat='{}{0:F1}'}" Classes="stat-value"/>
-                        <TextBlock Text="Days Watched" Classes="stat-label"/>
-                    </StackPanel>
-                </Border>
+    <UserControl.Styles>
+        <Style Selector="TextBlock.h2">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource White}"/>
+        </Style>
+        <Style Selector="TextBlock.big-stat">
+            <Setter Property="FontSize" Value="30"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="TextBlock.big-stat-label">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="LetterSpacing" Value="1"/>
+            <Setter Property="Foreground" Value="#B3FFFFFF"/>
+        </Style>
+        <Style Selector="Border.status-pill">
+            <Setter Property="Background" Value="#33000000"/>
+            <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="Padding" Value="12,6"/>
+        </Style>
+        <Style Selector="Border.status-pill Ellipse">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.status-pill TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.status-pill TextBlock.n">
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="Border.poster">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.poster:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.04)"/>
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{StaticResource Background0}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="22,18"/>
+        </Style>
+    </UserControl.Styles>
 
-                <Border Grid.Column="1" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="{Binding AnimeStats.MeanScore, StringFormat='{}{0:F1}'}" Classes="stat-value"/>
-                        <TextBlock Text="Mean Score" Classes="stat-label"/>
-                    </StackPanel>
-                </Border>
+    <ScrollViewer Margin="0,40,0,0">
+        <StackPanel Spacing="28" Margin="40,0,40,48" MaxWidth="1200">
 
-                <Border Grid.Column="2" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="{Binding AnimeStats.TotalEntries}" Classes="stat-value"/>
-                        <TextBlock Text="Total Entries" Classes="stat-label"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="3" Classes="stat-card" BorderBrush="#555555" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="{Binding AnimeStats.Episodes}" Classes="stat-value"/>
-                        <TextBlock Text="Episodes" Classes="stat-label"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <!-- Status Distribution -->
-            <Border Background="{StaticResource Background1}" BorderBrush="#555555" BorderThickness="1" CornerRadius="12" Padding="20">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="Status Distribution" 
-                               FontSize="20" 
-                               FontWeight="Bold" 
-                               Foreground="{StaticResource White}"
-                               HorizontalAlignment="Center"/>
-                    
-                    <!-- Progress Bar -->
-                    <Border Background="{StaticResource Background0}" Height="30" CornerRadius="15" Margin="0,10,0,0" ClipToBounds="True">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{Binding AnimeStats.Watching, Converter={StaticResource ValueToGridLengthConverter}}"/>
-                                <ColumnDefinition Width="{Binding AnimeStats.Completed, Converter={StaticResource ValueToGridLengthConverter}}"/>
-                                <ColumnDefinition Width="{Binding AnimeStats.OnHold, Converter={StaticResource ValueToGridLengthConverter}}"/>
-                                <ColumnDefinition Width="{Binding AnimeStats.Dropped, Converter={StaticResource ValueToGridLengthConverter}}"/>
-                                <ColumnDefinition Width="{Binding AnimeStats.PlanToWatch, Converter={StaticResource ValueToGridLengthConverter}}"/>
-                            </Grid.ColumnDefinitions>
-        
-                            <Rectangle Grid.Column="0" Fill="#4CAF50"/>
-                            <Rectangle Grid.Column="1" Fill="#2196F3"/>
-                            <Rectangle Grid.Column="2" Fill="#FF9800"/>
-                            <Rectangle Grid.Column="3" Fill="#F44336"/>
-                            <Rectangle Grid.Column="4" Fill="#9E9E9E"/>
-                        </Grid>
+            <!-- Banner -->
+            <Border CornerRadius="18" ClipToBounds="True" Height="250">
+                <Grid>
+                    <Image asyncImageLoader:ImageLoader.Source="{Binding BackdropUrl}" Stretch="UniformToFill" Opacity="0.7">
+                        <Image.Effect>
+                            <BlurEffect Radius="45"/>
+                        </Image.Effect>
+                    </Image>
+                    <Border>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                <GradientStop Color="#E60C0C0E" Offset="0"/>
+                                <GradientStop Color="#990C0C0E" Offset="0.6"/>
+                                <GradientStop Color="#590C0C0E" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
                     </Border>
-                    
-                    <Grid ColumnDefinitions="*,*,*,*,*" Margin="0,10,0,0">
-                        <Grid.Styles>
-                            <Style Selector="StackPanel.legend-item">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="Spacing" Value="5"/>
-                            </Style>
-                            <Style Selector="Border.legend-dot">
-                                <Setter Property="Width" Value="12"/>
-                                <Setter Property="Height" Value="12"/>
-                                <Setter Property="CornerRadius" Value="6"/>
-                            </Style>
-                            <Style Selector="TextBlock.legend-label">
-                                <Setter Property="FontSize" Value="11"/>
-                                <Setter Property="Foreground" Value="{StaticResource White}"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                            <Style Selector="TextBlock.legend-count">
-                                <Setter Property="FontSize" Value="14"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                        </Grid.Styles>
+                    <Border>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+                                <GradientStop Color="#000C0C0E" Offset="0.3"/>
+                                <GradientStop Color="#B30C0C0E" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
 
-                        <StackPanel Grid.Column="0" Classes="legend-item">
-                            <Border Classes="legend-dot" Background="#4CAF50"/>
-                            <TextBlock Text="Watching" Classes="legend-label"/>
-                            <TextBlock Text="{Binding AnimeStats.Watching}" Classes="legend-count"/>
+                    <Grid Margin="32,28" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="22">
+                        <Border Grid.Column="0"
+                                Width="104" Height="104"
+                                CornerRadius="52"
+                                ClipToBounds="True"
+                                Background="#33000000"
+                                BorderBrush="#80FFFFFF"
+                                BorderThickness="2"
+                                VerticalAlignment="Center">
+                            <Panel>
+                                <TextBlock Text="{Binding UserInitial}"
+                                           FontSize="42"
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           IsVisible="{Binding !HasPicture}"/>
+                                <Image asyncImageLoader:ImageLoader.Source="{Binding User.Picture}"
+                                       Stretch="UniformToFill"
+                                       IsVisible="{Binding HasPicture}"/>
+                            </Panel>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="10">
+                            <TextBlock Classes="section-label" Text="{Binding ProviderName}" Foreground="#B3FFFFFF"/>
+                            <TextBlock Text="{Binding User.Name}"
+                                       FontSize="36"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <WrapPanel ItemSpacing="8" LineSpacing="8">
+                                <Border Classes="status-pill">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Ellipse Fill="{StaticResource StatusWatching}"/>
+                                        <TextBlock Classes="n" Text="{Binding AnimeStats.Watching}"/>
+                                        <TextBlock Text="Watching"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Classes="status-pill">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Ellipse Fill="{StaticResource StatusCompleted}"/>
+                                        <TextBlock Classes="n" Text="{Binding AnimeStats.Completed}"/>
+                                        <TextBlock Text="Completed"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Classes="status-pill">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Ellipse Fill="{StaticResource StatusOnHold}"/>
+                                        <TextBlock Classes="n" Text="{Binding AnimeStats.OnHold}"/>
+                                        <TextBlock Text="On hold"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Classes="status-pill">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Ellipse Fill="{StaticResource StatusDropped}"/>
+                                        <TextBlock Classes="n" Text="{Binding AnimeStats.Dropped}"/>
+                                        <TextBlock Text="Dropped"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Classes="status-pill">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <Ellipse Fill="{StaticResource StatusPlanToWatch}"/>
+                                        <TextBlock Classes="n" Text="{Binding AnimeStats.PlanToWatch}"/>
+                                        <TextBlock Text="Plan to watch"/>
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Classes="legend-item">
-                            <Border Classes="legend-dot" Background="#2196F3"/>
-                            <TextBlock Text="Completed" Classes="legend-label"/>
-                            <TextBlock Text="{Binding AnimeStats.Completed}" Classes="legend-count"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Classes="legend-item">
-                            <Border Classes="legend-dot" Background="#FF9800"/>
-                            <TextBlock Text="On Hold" Classes="legend-label"/>
-                            <TextBlock Text="{Binding AnimeStats.OnHold}" Classes="legend-count"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="3" Classes="legend-item">
-                            <Border Classes="legend-dot" Background="#F44336"/>
-                            <TextBlock Text="Dropped" Classes="legend-label"/>
-                            <TextBlock Text="{Binding AnimeStats.Dropped}" Classes="legend-count"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="4" Classes="legend-item">
-                            <Border Classes="legend-dot" Background="#9E9E9E"/>
-                            <TextBlock Text="Plan to Watch" Classes="legend-label"/>
-                            <TextBlock Text="{Binding AnimeStats.PlanToWatch}" Classes="legend-count"/>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="28" VerticalAlignment="Bottom">
+                            <StackPanel Spacing="2">
+                                <TextBlock Classes="big-stat" Text="{Binding AnimeStats.MeanScore, StringFormat='{}{0:F1}'}"/>
+                                <TextBlock Classes="big-stat-label" Text="MEAN SCORE"/>
+                            </StackPanel>
+                            <Border Width="1" Background="#33FFFFFF" Margin="0,6"/>
+                            <StackPanel Spacing="2">
+                                <TextBlock Classes="big-stat" Text="{Binding AnimeStats.DaysWatched, StringFormat='{}{0:F0}'}"/>
+                                <TextBlock Classes="big-stat-label" Text="DAYS"/>
+                            </StackPanel>
+                            <Border Width="1" Background="#33FFFFFF" Margin="0,6"/>
+                            <StackPanel Spacing="2">
+                                <TextBlock Classes="big-stat" Text="{Binding AnimeStats.Episodes}"/>
+                                <TextBlock Classes="big-stat-label" Text="EPISODES"/>
+                            </StackPanel>
+                            <Border Width="1" Background="#33FFFFFF" Margin="0,6"/>
+                            <StackPanel Spacing="2">
+                                <TextBlock Classes="big-stat" Text="{Binding AnimeStats.TotalEntries}"/>
+                                <TextBlock Classes="big-stat-label" Text="ENTRIES"/>
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
-                </StackPanel>
+                </Grid>
             </Border>
 
-            <!-- Genre Distribution -->
-            <Border Background="{StaticResource Background1}" BorderBrush="#555555" BorderThickness="1" CornerRadius="12" Padding="20">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="Genre Distribution" 
-                               FontSize="20" 
-                               FontWeight="Bold" 
-                               Foreground="{StaticResource White}"
-                               HorizontalAlignment="Center"/>
-                    
-                    <ScrollViewer MaxHeight="500">
-                        <ItemsControl ItemsSource="{Binding GenreStats}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:GenreStats">
-                                    <Border Background="{StaticResource Background0}" 
-                                            CornerRadius="8" 
-                                            Padding="15,10" 
-                                            Margin="0,5,0,5">
-                                        <Grid ColumnDefinitions="2*,*,*,*">
-                                            <TextBlock Grid.Column="0" 
-                                                       Text="{Binding Name}" 
+            <!-- Continue watching -->
+            <StackPanel Spacing="14" IsVisible="{Binding CurrentlyWatching.Count}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="h2" Text="Continue watching"/>
+                    <TextBlock Grid.Column="1" Text="{Binding AnimeStats.Watching, StringFormat='{}{0} in progress'}" FontSize="12" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                </Grid>
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding CurrentlyWatching}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="14"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:AnimeDetails">
+                                <Border Classes="poster" Width="250" Height="120" Tapped="OnAnimeTapped" ToolTip.Tip="{Binding Title}">
+                                    <Grid ColumnDefinitions="84,*">
+                                        <Image Grid.ColumnSpan="2" asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Large}" Stretch="UniformToFill" Opacity="0.25">
+                                            <Image.Effect>
+                                                <BlurEffect Radius="30"/>
+                                            </Image.Effect>
+                                        </Image>
+                                        <Image Grid.Column="0" asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Large}" Stretch="UniformToFill"/>
+                                        <StackPanel Grid.Column="1" Margin="12,10" VerticalAlignment="Center" Spacing="8">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="13"
                                                        FontWeight="SemiBold"
-                                                       Foreground="{StaticResource White}"
-                                                       VerticalAlignment="Center"/>
-                                            
-                                            <StackPanel Grid.Column="1" 
-                                                        Orientation="Horizontal" 
-                                                        HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Count}" 
-                                                           Foreground="{StaticResource Green}"
-                                                           FontWeight="Bold"/>
-                                                <TextBlock Text=" anime" 
-                                                           Foreground="#B0B0B0"
-                                                           Margin="2,0,0,0"/>
+                                                       Foreground="White"
+                                                       TextWrapping="Wrap"
+                                                       MaxLines="2"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <ProgressBar Height="5"
+                                                         CornerRadius="3"
+                                                         Minimum="0"
+                                                         Maximum="{Binding NumEpisodes}"
+                                                         Value="{Binding UserStatus.EpisodesWatched}"
+                                                         Background="#33FFFFFF"
+                                                         Foreground="{StaticResource AccentRed}"/>
+                                            <TextBlock FontSize="11" Foreground="{StaticResource TextSecondary}">
+                                                <Run Text="{Binding UserStatus.EpisodesWatched}" Foreground="{StaticResource White}" FontWeight="SemiBold"/>
+                                                <Run Text="{Binding NumEpisodes, StringFormat='/ {0} episodes'}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+
+            <!-- Highest rated -->
+            <StackPanel Spacing="14" IsVisible="{Binding TopRated.Count}">
+                <TextBlock Classes="h2" Text="Your highest rated"/>
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding TopRated}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="14"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:AnimeDetails">
+                                <Border Classes="poster" Width="118" Height="168" Tapped="OnAnimeTapped" ToolTip.Tip="{Binding Title}">
+                                    <Grid>
+                                        <Image asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Large}" Stretch="UniformToFill"/>
+                                        <Border Background="#CC0C0C0E" CornerRadius="7" Padding="7,3" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="7">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" Width="10" Height="10" Foreground="{StaticResource Gold}"/>
+                                                <TextBlock Text="{Binding UserStatus.Score}" FontSize="12" FontWeight="Bold" Foreground="White"/>
                                             </StackPanel>
-                                            
-                                            <Border Grid.Column="2" 
-                                                    Background="#4CAF50" 
-                                                    CornerRadius="10" 
-                                                    Padding="8,4"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" 
-                                                           Foreground="#FFFFFF"
-                                                           FontSize="11"
-                                                           FontWeight="Bold"/>
-                                            </Border>
-                                            
-                                            <StackPanel Grid.Column="3" 
-                                                        HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding MeanScore, StringFormat='{}{0:F1}'}" 
-                                                           Foreground="#FFD700"
-                                                           FontWeight="Bold"
-                                                           FontSize="14"/>
-                                                <TextBlock Text="★ avg" 
-                                                           Foreground="#B0B0B0"
-                                                           FontSize="10"
-                                                           HorizontalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+
+            <!-- Score distribution + top genres -->
+            <Grid ColumnDefinitions="3*,2*" ColumnSpacing="16">
+                <Border Grid.Column="0" Classes="card">
+                    <StackPanel Spacing="18">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Classes="h2" Text="How you score"/>
+                            <TextBlock Grid.Column="1" Text="{Binding AnimeStats.MeanScore, StringFormat='mean {0:F1}'}" FontSize="12" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding ScoreDistribution}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ScoreBucket">
+                                    <Grid ColumnDefinitions="34,*,44" ColumnSpacing="12" Margin="0,0,0,9">
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                                                      Width="10" Height="10" Foreground="{StaticResource Gold}"/>
+                                            <TextBlock Text="{Binding Score}"
+                                                       FontSize="13"
+                                                       FontWeight="Bold"
+                                                       Foreground="{StaticResource White}"/>
+                                        </StackPanel>
+                                        <ProgressBar Grid.Column="1"
+                                                     Minimum="0"
+                                                     Maximum="{Binding MaxCount}"
+                                                     Value="{Binding Count}"
+                                                     Height="16"
+                                                     CornerRadius="8"
+                                                     VerticalAlignment="Center"
+                                                     Background="{StaticResource Surface2}"
+                                                     Foreground="{StaticResource AccentRed}"/>
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding Count}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </ScrollViewer>
-                </StackPanel>
-            </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Classes="card">
+                    <StackPanel Spacing="14">
+                        <TextBlock Classes="h2" Text="Top genres"/>
+                        <ItemsControl ItemsSource="{Binding TopGenres}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:GenreStats">
+                                    <StackPanel Spacing="5" Margin="0,0,0,10">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Name}"
+                                                       FontSize="13"
+                                                       FontWeight="Medium"
+                                                       Foreground="{StaticResource White}"/>
+                                            <TextBlock Grid.Column="1" FontSize="12" Foreground="{StaticResource TextSecondary}">
+                                                <Run Text="{Binding Count}" Foreground="{StaticResource White}" FontWeight="SemiBold"/>
+                                                <Run Text="{Binding MeanScore, StringFormat='· ★ {0:F1}'}"/>
+                                            </TextBlock>
+                                        </Grid>
+                                        <ProgressBar Minimum="0" Maximum="100"
+                                                     Value="{Binding Percentage}"
+                                                     Height="5"
+                                                     CornerRadius="3"
+                                                     Background="{StaticResource Surface2}"
+                                                     Foreground="{StaticResource AccentRed}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

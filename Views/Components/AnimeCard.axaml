@@ -43,7 +43,7 @@
             <Border x:Name="ImageContainer"
                     CornerRadius="8"
                     ClipToBounds="True"
-                    Background="#1E1E1E">
+                    Background="{StaticResource Surface2}">
 
                 <Grid Width="160" Height="225">
                     <Grid.ColumnDefinitions>

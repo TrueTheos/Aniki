@@ -2,5 +2,5 @@
 
 internal sealed class Anilist_MediaListResponse
 {
-    public Anilist_MediaListEntry AnilistMediaList { get; set; } = null!;
+    public Anilist_MediaListEntry? MediaList { get; set; }
 }

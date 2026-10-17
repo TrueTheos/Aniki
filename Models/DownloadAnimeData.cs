@@ -11,6 +11,7 @@ internal sealed partial class AnimeGroup : ObservableObject
     public int MaxEpisodes { get; }
     [ObservableProperty] public partial int WatchedEpisodes { get; set; }
     public int MalId { get; }
+    private readonly IAnimeService _animeService;
 
     public string EpisodesProgressText => $"{WatchedEpisodes} / {(MaxEpisodes == 0 ? "?" : $"{MaxEpisodes}")} watched";
 
@@ -115,10 +116,14 @@ internal sealed partial class AnimeGroup : ObservableObject
         MaxEpisodes = maxEp;
         WatchedEpisodes = watchedEp;
         MalId = malId;
+        _animeService = animeService;
 
         animeService.SubscribeToFieldChange(MalId, OnEpisodesCompletedCollectionChanged, AnimeField.MyListStatus);
         UpdateEpisodes();
     }
+
+    public void Unsubscribe() =>
+        _animeService.UnsubscribeFromFieldChange(MalId, OnEpisodesCompletedCollectionChanged, AnimeField.MyListStatus);
 
     private void OnEpisodesCollectionChanged()
     {
@@ -172,7 +177,6 @@ internal sealed partial class DownloadedEpisode : ObservableObject
 {
     public string FilePath { get; }
     public int EpisodeNumber { get; }
-    public int? AbsoluteEpisodeNumber { get; }
     public int Season { get; }
     public string AnimeTitle { get; }
     public int Id { get; }
@@ -183,12 +187,10 @@ internal sealed partial class DownloadedEpisode : ObservableObject
 
     public bool IsUnwatched => !Watched;
 
-    public DownloadedEpisode(string filePath, int episodeNumber, int? absoluteEpisodeNumber,
-        string animeTitle, int id, int season)
+    public DownloadedEpisode(string filePath, int episodeNumber, string animeTitle, int id, int season)
     {
         FilePath = filePath;
         EpisodeNumber = episodeNumber;
-        AbsoluteEpisodeNumber = absoluteEpisodeNumber;
         AnimeTitle = animeTitle;
         Id = id;
         Season = season;

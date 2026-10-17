@@ -58,6 +58,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     }
     
     public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString(CultureInfo.InvariantCulture);
+    public bool HasVideos => Details?.Videos is { Length: > 0 };
 
     public AnimeStatusTranslated SelectedStatus
     {
@@ -124,6 +125,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         WatchedEpisodes = details?.UserStatus?.EpisodesWatched ?? 0;
         SelectedScore = details?.UserStatus?.Score ?? 0;
         OnPropertyChanged(nameof(ScoreText));
+        OnPropertyChanged(nameof(HasVideos));
         
         SelectedStatus = details?.UserStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
         
@@ -131,7 +133,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
         
         if(details != null)
-            TorrentSearchViewModel.Update(details, WatchedEpisodes);
+            TorrentSearchViewModel.Update(details);
     }
 
     [RelayCommand]
@@ -224,7 +226,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
-        TorrentSearchViewModel.Update(Details, WatchedEpisodes);
+        TorrentSearchViewModel.Update(Details);
 
         _episodeUpdateCts?.CancelAsync();
         _episodeUpdateCts?.Dispose();

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Aniki.Services.Anime;
 using Aniki.Services.Interfaces;
@@ -6,6 +6,13 @@ using Aniki.Views;
 using Avalonia.Controls.ApplicationLifetimes;
 
 namespace Aniki.ViewModels;
+
+internal sealed class EpisodeRange
+{
+    public int Start { get; init; }
+    public int End { get; init; }
+    public string Label => Start == End ? $"Episode {Start}" : $"Episodes {Start}-{End}";
+}
 
 internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
 {
@@ -18,6 +25,45 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
     [ObservableProperty] public partial bool IsLoading { get; set; }
     [ObservableProperty] public partial bool CanPlayVideo { get; set; }
     [ObservableProperty] public partial string WatchedEpisodesText { get; set; } = "No episodes watched yet";
+    [ObservableProperty] public partial ObservableCollection<EpisodeRange> EpisodeRanges { get; set; } = new();
+    [ObservableProperty] public partial ObservableCollection<AniDbEpisode> VisibleEpisodes { get; set; } = new();
+
+    private const int RANGE_SIZE = 50;
+    private int _watchedEpisodes;
+
+    public bool HasMultipleRanges => EpisodeRanges.Count > 1;
+
+    private EpisodeRange? _selectedRange;
+    public EpisodeRange? SelectedRange
+    {
+        get => _selectedRange;
+        set
+        {
+            if (!SetProperty(ref _selectedRange, value)) return;
+            VisibleEpisodes.Clear();
+            if (value == null) return;
+            foreach (AniDbEpisode ep in Episodes.Where(e => e.Number >= value.Start && e.Number <= value.End).OrderBy(e => e.Number))
+                VisibleEpisodes.Add(ep);
+        }
+    }
+
+    private void RebuildRanges()
+    {
+        EpisodeRanges.Clear();
+        var ordered = Episodes.OrderBy(e => e.Number).ToList();
+        for (int i = 0; i < ordered.Count; i += RANGE_SIZE)
+        {
+            EpisodeRanges.Add(new EpisodeRange
+            {
+                Start = ordered[i].Number,
+                End = ordered[Math.Min(i + RANGE_SIZE, ordered.Count) - 1].Number
+            });
+        }
+
+        OnPropertyChanged(nameof(HasMultipleRanges));
+        int next = _watchedEpisodes + 1;
+        SelectedRange = EpisodeRanges.FirstOrDefault(r => r.Start <= next && next <= r.End) ?? EpisodeRanges.LastOrDefault(r => r.Start <= next) ?? EpisodeRanges.FirstOrDefault();
+    }
     
     private AniDbSearchResult? _selectedAnime;
     public AniDbSearchResult? SelectedAnime
@@ -63,7 +109,8 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<VideoPlayerOption> AvailablePlayers => _videoPlayerService.AvailablePlayers;
 
-    private int? _watchingMalId;
+    private int? _selectedAnimeId;
+    private int? _watchingAnimeId;
     
     public string SelectionStatusMessage
     {
@@ -102,7 +149,6 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
     public OnlineViewModel(IAniDbScraperService scraperService, IAnimeService animeService,
         IVideoPlayerService videoPlayerService, IDiscordService discordService)
     {
-        _watchingMalId = null;
         _scraperService = scraperService;
         _animeService = animeService;
         _videoPlayerService = videoPlayerService;
@@ -112,6 +158,8 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
 
     private void OnEpisodesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
+        if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            RebuildRanges();
         OnPropertyChanged(nameof(ShowStreamProviderNote));
         OnPropertyChanged(nameof(SelectionStatusMessage));
         OnPropertyChanged(nameof(ShowSelectionStatus));
@@ -174,7 +222,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
                 AnimeResults.Add(result);
             }
 
-            StatusText = results.Count > 0 ? $"Found {results.Count} anime" : "No results found";
+            StatusText = results.Count > 0 ? $"Found {results.Count} anime" : "No results. The streaming source may be unavailable right now.";
         }
         catch (Exception ex)
         {
@@ -196,12 +244,17 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
             AnimeImageUrl = value.Banner;
             AnimeDescription = null;
             UpdateWatchedEpisodesText(0);
+            _selectedAnimeId = null;
 
             if (value.MalId is int malId)
             {
-                AnimeDetails? animeField = await _animeService.GetFieldsAsync(malId, fields: [AnimeField.MyListStatus, AnimeField.Synopsis]).ConfigureAwait(true);
+                int? animeId = await _animeService.GetIdFromMalIdAsync(malId).ConfigureAwait(true);
+                if (value != SelectedAnime || animeId is not int id) return;
+                _selectedAnimeId = id;
 
-                if (animeField != null)
+                AnimeDetails? animeField = await _animeService.GetFieldsAsync(id, fields: [AnimeField.MyListStatus, AnimeField.Synopsis]).ConfigureAwait(true);
+
+                if (animeField != null && value == SelectedAnime)
                 {
                     UpdateWatchedEpisodesText(animeField.UserStatus != null ? animeField.UserStatus!.EpisodesWatched : 0);
                     AnimeDescription = animeField.Synopsis;
@@ -227,11 +280,13 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
         try
         {
             var episodes = await _scraperService.GetEpisodesAsync(anime.Url).ConfigureAwait(true);
+            if (anime != SelectedAnime) return;
 
             foreach (AniDbEpisode episode in episodes)
             {
                 Episodes.Add(episode);
             }
+            RebuildRanges();
 
             anime.Episodes = episodes.Count;
 
@@ -310,7 +365,7 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
             if (_videoProcess != null)
             {
                 _discordService.SetPresenceEpisode(SelectedAnime!.Title, SelectedEpisode.Number);
-                _watchingMalId = SelectedAnime!.MalId;
+                _watchingAnimeId = _selectedAnimeId;
                 _videoProcess.EnableRaisingEvents = true;
                 _videoProcess.Exited += OnVideoProcessExited;
                 
@@ -353,23 +408,30 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
     {
         if (Avalonia.Application.Current!.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
             return;
+        if (_watchingAnimeId is not int animeId)
+            return;
 
-        ConfirmEpisodeWindow dialog = new()
-        {
-            DataContext = new ConfirmEpisodeViewModel(episode.Number, episode.TotalEpisodes)
-        };
+        AnimeDetails? animeData = await _animeService.GetFieldsAsync(animeId, fields: AnimeField.MyListStatus).ConfigureAwait(true);
+        ConfirmEpisodeViewModel confirm = new(episode.Number, episode.TotalEpisodes);
+        ConfirmEpisodeWindow dialog = new() { DataContext = confirm };
 
         bool result = await dialog.ShowDialog<bool>(desktop.MainWindow!).ConfigureAwait(true);
 
-        if (result)
+        if (result && confirm.EpisodeNumber > (animeData?.UserStatus?.EpisodesWatched ?? 0))
         {
-            _ = _animeService.SetEpisodesWatchedAsync(_watchingMalId!.Value, episode.Number);
-            UpdateWatchedEpisodesText(episode.Number);
+            _ = _animeService.SetEpisodesWatchedAsync(animeId, confirm.EpisodeNumber);
+            UpdateWatchedEpisodesText(confirm.EpisodeNumber);
         }
     }
 
     private void UpdateWatchedEpisodesText(int episodes)
     {
+        _watchedEpisodes = episodes;
+        if (SelectedEpisode == null && EpisodeRanges.Count > 1)
+        {
+            int next = episodes + 1;
+            SelectedRange = EpisodeRanges.FirstOrDefault(r => r.Start <= next && next <= r.End) ?? SelectedRange;
+        }
         WatchedEpisodesText = episodes switch
         {
             0 => "No episodes watched yet",
@@ -382,17 +444,18 @@ internal sealed partial class OnlineViewModel : ViewModelBase, IDisposable
     private async Task GoToAnimeDetails()
     {
         MainViewModel vm = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
-        if (_selectedAnime != null && _selectedAnime.MalId != null)
+        if (_selectedAnimeId is int animeId)
         {
-            await vm.GoToAnime(_selectedAnime.MalId.Value).ConfigureAwait(true);
+            await vm.GoToAnime(animeId).ConfigureAwait(true);
         }
     }
 
-    public async Task GoToAnime(int malId, string title)
+    public async Task GoToAnime(int animeId, string title)
     {
         await SearchAnimeAsync(title).ConfigureAwait(true);
 
-        AniDbSearchResult? matchingAnime = AnimeResults.ToList().FirstOrDefault(x => x.MalId != null && x.MalId.Value == malId)
+        bool idsAreMal = AnimeService.CurrentProviderType == Services.Auth.ILoginProvider.ProviderType.Mal;
+        AniDbSearchResult? matchingAnime = AnimeResults.ToList().FirstOrDefault(x => idsAreMal && x.MalId == animeId)
             ?? AnimeResults.ToList().FirstOrDefault(x =>
                 string.Equals(
                     NormalizeTitle(x.Title),

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>1.7.4</Version>
+    <Version>1.7.5</Version>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -22,6 +22,7 @@
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
     <PackageReference Include="GraphQL.Client" Version="5.1.0" />
     <PackageReference Include="GraphQL.Client.Serializer.SystemTextJson" Version="5.1.0" />
+    <PackageReference Include="MonoTorrent" Version="3.0.2" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
@@ -111,6 +112,7 @@
   <EmbeddedResource Include="Resources\CLIENTID.txt" />
   </ItemGroup>
 
+
   <ItemGroup>
     <None Remove="Resources\icon.ico" />
     <AvaloniaResource Include="Resources\icon.ico" />
@@ -170,17 +172,17 @@
   </ItemGroup>
 
     <ItemGroup>
-        <Using Include="System"/>
-        <Using Include="System.Collections.Generic"/>
-        <Using Include="System.Linq"/>
-        <Using Include="System.Threading.Tasks"/>
-        <Using Include="Aniki.Misc"/>
-        <Using Include="Aniki.Models"/>
-        <Using Include="Aniki.Models.MAL"/>
-        <Using Include="Aniki.Services"/>
-        <Using Include="Aniki.ViewModels"/>
-        <Using Include="CommunityToolkit.Mvvm.ComponentModel"/>
-        <Using Include="CommunityToolkit.Mvvm.Input"/>
-        <Using Include="Microsoft.Extensions.DependencyInjection"/>
+        <Using Include="System" />
+        <Using Include="System.Collections.Generic" />
+        <Using Include="System.Linq" />
+        <Using Include="System.Threading.Tasks" />
+        <Using Include="Aniki.Misc" />
+        <Using Include="Aniki.Models" />
+        <Using Include="Aniki.Models.MAL" />
+        <Using Include="Aniki.Services" />
+        <Using Include="Aniki.ViewModels" />
+        <Using Include="CommunityToolkit.Mvvm.ComponentModel" />
+        <Using Include="CommunityToolkit.Mvvm.Input" />
+        <Using Include="Microsoft.Extensions.DependencyInjection" />
     </ItemGroup>
 </Project>

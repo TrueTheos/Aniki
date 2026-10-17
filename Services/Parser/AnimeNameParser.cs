@@ -22,7 +22,7 @@ internal sealed class AnimeNameParser : IAnimeNameParser
         int season = parsed.Season ?? 1;
 
         int? animeId = await _absoluteEpisodeParser.GetIdForSeason(
-            parsed.Name, season, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(false);
+            parsed.Name, parsed.Part, parsed.Year, parsed.Season).ConfigureAwait(false);
 
         return new FolderParseResult(parsed.Name, season, parsed.Part, parsed.Year, animeId);
     }
@@ -70,7 +70,7 @@ internal sealed class AnimeNameParser : IAnimeNameParser
         (int season, int part, int relativeEpisode, int? animeId) =
             await _absoluteEpisodeParser.GetSeasonAndEpisodeFromAbsolute(parsed.Name, episode, parsed.Part, parsed.Year).ConfigureAwait(false);
 
-        animeId ??= await _absoluteEpisodeParser.GetIdForSeason(parsed.Name, season, part, parsed.Year).ConfigureAwait(false);
+        animeId ??= await _absoluteEpisodeParser.GetIdForSeason(parsed.Name, part, parsed.Year, season).ConfigureAwait(false);
 
         return new ParseResult
         {

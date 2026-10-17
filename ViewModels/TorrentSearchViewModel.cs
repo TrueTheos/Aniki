@@ -32,13 +32,17 @@ internal sealed partial class TorrentSearchViewModel : ViewModelBase
     private TorrentSortField _activeSortField = TorrentSortField.Seeders;
     
     private readonly INyaaService _nyaaService;
+    private readonly ISaveService _saveService;
+    private readonly ITorrentDownloadService _torrentDownloads;
 
-    public TorrentSearchViewModel(INyaaService nyaaService)
+    public TorrentSearchViewModel(INyaaService nyaaService, ISaveService saveService, ITorrentDownloadService torrentDownloads)
     {
         _nyaaService = nyaaService;
+        _saveService = saveService;
+        _torrentDownloads = torrentDownloads;
     }
 
-    public void Update(AnimeDetails? details, int episodesWatched)
+    public void Update(AnimeDetails? details)
     {
         _details = details;
         TorrentSearchTerms = "";
@@ -60,17 +64,26 @@ internal sealed partial class TorrentSearchViewModel : ViewModelBase
 
         TorrentsList.Clear();
 
-        if (_details.Title != null)
+        try
         {
-            var foundTorrents = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms).ConfigureAwait(true);
-            foreach (NyaaTorrent torrent in foundTorrents)
-                TorrentFileNameFormatter.ApplyDisplayMetadata(torrent);
+            if (_details.Title != null)
+            {
+                var foundTorrents = await _nyaaService.SearchAsync(_details.Title, TorrentSearchTerms).ConfigureAwait(true);
+                foreach (NyaaTorrent torrent in foundTorrents)
+                    TorrentFileNameFormatter.ApplyDisplayMetadata(torrent);
 
-            _allTorrents = foundTorrents;
-            ApplyFilterAndSort();
+                _allTorrents = foundTorrents;
+                ApplyFilterAndSort();
+            }
         }
-
-        IsTorrentsLoading = false;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Torrent search failed: {ex.Message}");
+        }
+        finally
+        {
+            IsTorrentsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -124,9 +137,27 @@ internal sealed partial class TorrentSearchViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public static void DownloadTorrent(string magnet)
+    private async Task DownloadTorrent(string torrentLink)
     {
-        Process.Start(new ProcessStartInfo(magnet) { UseShellExecute = true });
+        if (!Uri.TryCreate(torrentLink, UriKind.Absolute, out Uri? uri) || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != "magnet"))
+            return;
+
+        bool builtIn = uri.Scheme == Uri.UriSchemeHttps && _saveService.GetSettingsConfig()?.UseBuiltInDownloader != false;
+        if (!builtIn)
+        {
+            Process.Start(new ProcessStartInfo(torrentLink) { UseShellExecute = true });
+            return;
+        }
+
+        try
+        {
+            await _torrentDownloads.StartAsync(torrentLink, _saveService.EpisodesFolder).ConfigureAwait(true);
+            _ = ToastService.Show("Downloading - progress is in the Downloaded tab");
+        }
+        catch (Exception ex)
+        {
+            _ = ToastService.Show($"Download failed: {ex.Message}");
+        }
     }
 
     public override Task Enter()

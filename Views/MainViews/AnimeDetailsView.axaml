@@ -14,6 +14,7 @@
         Background="{StaticResource BackgroundBlack}">
         <Grid>
             <TabControl x:Name="MainTabControl"
+                        IsVisible="{Binding Details, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Padding="0"
                         Margin="0"
                         TabStripPlacement="Top"
@@ -66,7 +67,7 @@
                                             </Border>
                                             
                                             <!-- Rating Badge -->
-                                            <Border Background="#1F1F1F"
+                                            <Border Background="{StaticResource Background0}"
                                                     CornerRadius="20"
                                                     Padding="16,10"
                                                     HorizontalAlignment="Center"
@@ -77,7 +78,7 @@
                                                     <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
                                                               Width="20"
                                                               Height="20"
-                                                              Foreground="#FFD700"/>
+                                                              Foreground="{StaticResource Gold}"/>
                                                     <TextBlock Text="{Binding Details.Mean, StringFormat='{}{0:0.0}'}"
                                                                FontSize="20"
                                                                FontWeight="Bold"
@@ -97,15 +98,15 @@
                                             <Grid Margin="0, 8, 0, 0">
                                                 <TextBlock HorizontalAlignment="Left"
                                                            Text="{Binding WatchedEpisodes, StringFormat='{}Watched: {0}'}"
-                                                           Foreground="#AAAAAA"
+                                                           Foreground="{StaticResource TextSecondary}"
                                                            FontSize="12"/>
                                                 <TextBlock HorizontalAlignment="Right"
                                                            Text="{Binding Details.NumEpisodes, StringFormat='{}Total: {0}'}"
-                                                           Foreground="#AAAAAA"
+                                                           Foreground="{StaticResource TextSecondary}"
                                                            FontSize="12"/>
                                             </Grid>
                                             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                                <Button
+                                                <Button Classes="ghost round"
                                                     Command="{Binding DecrementWatchedEpisodesCommand}"
                                                     Background="#00000000"
                                                     Foreground="White"
@@ -142,7 +143,7 @@
                                                         </TextBox.KeyBindings>
                                                     </TextBox>
                                                 </Panel>
-                                                <Button
+                                                <Button Classes="ghost round"
                                                     Command="{Binding IncrementWatchedEpisodesCommand}"
                                                     Background="#00000000"
                                                     Foreground="White"
@@ -170,7 +171,7 @@
                                                                HorizontalAlignment="Center"/>
                                                     <TextBlock Text="Watching"
                                                                FontSize="12"
-                                                               Foreground="#999999"
+                                                               Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                                 
@@ -183,7 +184,7 @@
                                                                HorizontalAlignment="Center"/>
                                                     <TextBlock Text="Completed"
                                                                FontSize="12"
-                                                               Foreground="#999999"
+                                                               Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
                                                 </StackPanel>
 
@@ -196,7 +197,7 @@
                                                                HorizontalAlignment="Center"/>
                                                     <TextBlock Text="Plan to Watch"
                                                                FontSize="12"
-                                                               Foreground="#999999"
+                                                               Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
                                                 </StackPanel>
 
@@ -209,7 +210,7 @@
                                                                HorizontalAlignment="Center"/>
                                                     <TextBlock Text="On Hold"
                                                                FontSize="12"
-                                                               Foreground="#999999"
+                                                               Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
                                                 </StackPanel>
 
@@ -222,7 +223,7 @@
                                                                HorizontalAlignment="Center"/>
                                                     <TextBlock Text="Dropped"
                                                                FontSize="12"
-                                                               Foreground="#999999"
+                                                               Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
                                                 </StackPanel>
 
@@ -235,7 +236,7 @@
                                                                HorizontalAlignment="Center"/>
                                                     <TextBlock Text="Favorites"
                                                                FontSize="12"
-                                                               Foreground="#999999"
+                                                               Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </UniformGrid>
@@ -258,33 +259,33 @@
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,20" Spacing="10">
                                             <TextBlock Text="{Binding Details.AlternativeTitles.Japanese}"
                                                        FontSize="14"
-                                                       Foreground="#AAAAAA"/>
+                                                       Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="•" 
                                                        FontSize="14"
-                                                       Foreground="#777777"/>
+                                                       Foreground="{StaticResource TextMuted}"/>
                                             <TextBlock Text="{Binding Details.StartDate}"
                                                        FontSize="14"
-                                                       Foreground="#AAAAAA"/>
+                                                       Foreground="{StaticResource TextSecondary}"/>
                                             <TextBlock Text="•" 
                                                        FontSize="14"
-                                                       Foreground="#777777"/>
+                                                       Foreground="{StaticResource TextMuted}"/>
                                             <TextBlock  Text="{Binding Details.NumEpisodes, StringFormat='{}{0} episodes'}"
                                                         FontSize="14"
-                                                        Foreground="#AAAAAA">
+                                                        Foreground="{StaticResource TextSecondary}">
                                             </TextBlock>
                                             <TextBlock Text="•" 
                                                        FontSize="14"
-                                                       Foreground="#777777"/>
+                                                       Foreground="{StaticResource TextMuted}"/>
                                             <TextBlock  Text="{Binding Details.MediaType}"
                                                         FontSize="14"
-                                                        Foreground="#AAAAAA">
+                                                        Foreground="{StaticResource TextSecondary}">
                                             </TextBlock>
                                         </StackPanel>
                                         
                                         <!-- Action Buttons -->
                                         <Grid Margin="0,0,0,30">
                                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left">
-                                                <Button Background="{StaticResource RedColor}" 
+                                                <Button Classes="primary" 
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13">
@@ -314,7 +315,7 @@
                                                     </StackPanel>
                                                 </Button>
                                                 
-                                                <Button Background="{StaticResource RedColor}" 
+                                                <Button Classes="primary" 
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
@@ -338,7 +339,7 @@
                                                     </StackPanel>
                                                 </Button>
                                                 
-                                                <Button Background="{StaticResource RedColor}" 
+                                                <Button Classes="primary" 
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
@@ -353,7 +354,7 @@
                                                 </Button>
                                                 
                                                 <!-- Rating Button with Dropdown -->
-                                                <Button Background="#3A3A3A"
+                                                <Button
                                                         BorderThickness="0"
                                                         CornerRadius="6"
                                                         Padding="28,13"
@@ -387,7 +388,7 @@
                                             </StackPanel>
                                             
                                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                                                <Button Background="#3A3A3A"
+                                                <Button Classes="round"
                                                         BorderThickness="0"
                                                         Width="50"
                                                         Height="50"
@@ -401,7 +402,7 @@
                                                                Height="22"/>
                                                 </Button>
                                                 
-                                                <Button Background="#3A3A3A"
+                                                <Button Classes="round"
                                                         BorderThickness="0"
                                                         Width="50"
                                                         Height="50"
@@ -414,7 +415,7 @@
                                                               ToolTip.Tip="Copy page URL to clipboard"/>
                                                 </Button>
                                                 
-                                                <Button Background="#3A3A3A"
+                                                <Button Classes="round"
                                                         BorderThickness="0"
                                                         Width="50"
                                                         Height="50"
@@ -448,20 +449,21 @@
                                             <StackPanel Grid.Column="0" Spacing="12" IsVisible="{Binding Details.TrailerUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                 <TextBlock Text="Trailer" 
                                                            FontSize="12"
-                                                           Foreground="#888888"
+                                                           Foreground="{StaticResource TextMuted}"
                                                            FontWeight="SemiBold"
                                                            LetterSpacing="1"/>
-                                                <Button Width="120" 
-                                                        Height="68" 
-                                                        CornerRadius="8"
+                                                <Button Width="168"
+                                                        Height="94"
+                                                        CornerRadius="10"
                                                         Padding="0"
-                                                        Background="{StaticResource RedColor}"
+                                                        Background="{StaticResource Surface2}"
                                                         ClipToBounds="True"
                                                         Command="{Binding OpenUrlCommand}"
                                                         CommandParameter="{Binding Details.TrailerUrl, Converter={StaticResource YoutubeEmbedUrlToWatchUrlConverter}}">
                                                     <Grid ToolTip.Tip="Play Trailer">
                                                         <Image Stretch="UniformToFill" ClipToBounds="True"
-                                                               asyncImageLoader:ImageLoader.Source="{Binding Details.Videos[0].Thumbnail}"/>
+                                                               asyncImageLoader:ImageLoader.Source="{Binding Details.TrailerUrl, Converter={StaticResource YoutubeThumbnailConverter}}"/>
+                                                        <Border Background="#40000000"/>
                                                         <Grid>
                                                             <Ellipse Width="30" Height="30"
                                                                      Fill="{StaticResource RedColor}"
@@ -479,7 +481,7 @@
                                             <StackPanel Grid.Column="2" Spacing="12">
                                                 <TextBlock Text="Studio" 
                                                            FontSize="12"
-                                                           Foreground="#888888"
+                                                           Foreground="{StaticResource TextMuted}"
                                                            FontWeight="SemiBold"
                                                            LetterSpacing="1"/>
                                                 <TextBlock Text="{Binding Details.Studios[0]}"
@@ -492,14 +494,14 @@
                                             <StackPanel Grid.Column="4" Spacing="12">
                                                 <TextBlock Text="Popularity" 
                                                            FontSize="12"
-                                                           Foreground="#888888"
+                                                           Foreground="{StaticResource TextMuted}"
                                                            FontWeight="SemiBold"
                                                            LetterSpacing="1"/>
                                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                                     <PathIcon Data="M16 17v2H2v-2s0-4 7-4 7 4 7 4m-3.5-9.5A3.5 3.5 0 1 0 9 11a3.5 3.5 0 0 0 3.5-3.5m3.44 5.5A5.32 5.32 0 0 1 18 17v2h4v-2s0-3.63-6.06-4M15 4a3.39 3.39 0 0 0-1.93.59 5 5 0 0 1 0 5.82A3.39 3.39 0 0 0 15 11a3.5 3.5 0 0 0 0-7z"
                                                               Width="18"
                                                               Height="18"
-                                                              Foreground="#FFD700"/>
+                                                              Foreground="{StaticResource Gold}"/>
                                                     <TextBlock Text="{Binding Details.Popularity, StringFormat='{}#{0}'}"
                                                                FontSize="15"
                                                                Foreground="White"
@@ -522,7 +524,7 @@
                                         <!-- Synopsis -->
                                         <TextBlock Text="{Binding Details.Synopsis}"
                                                    FontSize="15"
-                                                   Foreground="#CCCCCC"
+                                                   Foreground="{StaticResource White}"
                                                    TextWrapping="Wrap"
                                                    LineHeight="24"
                                                    Margin="0,0,0,20"/>
@@ -554,9 +556,10 @@
                                                    Foreground="White"
                                                    FontWeight="Bold"
                                                    Margin="0,0,0,20"
-                                                   IsVisible="{Binding Details.Videos[0], Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" 
-                                                      VerticalScrollBarVisibility="Disabled">
+                                                   IsVisible="{Binding HasVideos}"/>
+                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                                      VerticalScrollBarVisibility="Disabled"
+                                                      IsVisible="{Binding HasVideos}">
                                             <ItemsControl ItemsSource="{Binding Details.Videos}">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
@@ -612,7 +615,35 @@
                 </TabItem>
             </TabControl>
             
-            <TabStrip 
+            <!-- Nothing selected yet -->
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="14"
+                        IsVisible="{Binding Details, Converter={x:Static ObjectConverters.IsNull}}">
+                <Image Source="/Resources/nothingtoseehere_transparent_small.png"
+                       Width="260"
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <TextBlock Text="No anime selected"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource White}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Pick a title from Browse, your Library or the Calendar and it will open here."
+                           FontSize="14"
+                           Foreground="{StaticResource TextSecondary}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="420"
+                           HorizontalAlignment="Center"/>
+                <Button Classes="primary" Padding="20,10" HorizontalAlignment="Center" Margin="0,8,0,0" Click="GoToBrowse">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="16" Height="16"/>
+                        <TextBlock Text="Browse anime" FontSize="14"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <TabStrip IsVisible="{Binding Details, Converter={x:Static ObjectConverters.IsNotNull}}"
                 Padding="50,20,50,0" 
                 SelectedIndex="{Binding #MainTabControl.SelectedIndex, Mode=TwoWay}">
                 <TabStripItem Content="Details"/>

@@ -1,5 +1,4 @@
 ﻿using Aniki.Services.Auth;
-using Avalonia.Media.Imaging;
 
 namespace Aniki.Services.Anime;
 
@@ -15,7 +14,8 @@ internal interface IAnimeProvider
     Task RemoveFromUserListAsync(int animeId);
     Task<AnimeDetails?> FetchAnimeDetailsAsync(int animeId, params AnimeField[] fields);
     Task<List<AnimeDetails>> SearchAnimeAsync(string query);
-    Task<Bitmap?> LoadAnimeImageAsync(int animeId, string? imageUrl);
+    Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category);
+    Task<int?> GetIdFromMalIdAsync(int malId);
     Task SetAnimeStatusAsync(int animeId, AnimeStatus status);
     Task SetAnimeScoreAsync(int animeId, int score);
     Task SetEpisodesWatchedAsync(int animeId, int episodes);

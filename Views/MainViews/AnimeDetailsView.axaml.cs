@@ -9,7 +9,12 @@ namespace Aniki.Views;
 internal sealed partial class AnimeDetailsView : UserControl
 {
     private readonly AnimeDetailsViewModel _viewModel;
-    
+
+    private void GoToBrowse(object? sender, RoutedEventArgs e)
+    {
+        DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().ShowAnimeBrowsePageCommand.Execute(null);
+    }
+
     public AnimeDetailsView()
     {
         InitializeComponent();

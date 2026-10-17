@@ -7,178 +7,244 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Aniki.Views.TorrentSearchView"
              x:DataType="vm:TorrentSearchViewModel">
-    <Grid Margin="0,16,0,0" Background="Transparent">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
 
-        <!-- Search Controls -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
-            <StackPanel Orientation="Horizontal" Spacing="12">
-                <TextBox Width="500"
-                         Text="{Binding TorrentSearchTerms}" 
-                         Watermark="Custom search..."
-                         Margin="20,0,0,0"
-                         Height="38"
-                         VerticalAlignment="Center"
-                         VerticalContentAlignment="Center">
-                    <TextBox.KeyBindings>
-                        <KeyBinding Gesture="Enter" Command="{Binding SearchTorrentsCommand}" />
-                    </TextBox.KeyBindings>
-                </TextBox>
-                <ComboBox MinWidth="160"
-                          Height="38"
-                          CornerRadius="8"
-                          Background="{StaticResource Surface2}"
-                          BorderBrush="Transparent"
-                          Padding="12,0"
-                          VerticalAlignment="Center"
-                          VerticalContentAlignment="Center"
-                          ItemsSource="{Binding AvailableSubbers}"
-                          SelectedItem="{Binding SelectedSubber}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="models:KnownSubber">
-                            <TextBlock Text="{Binding Name}"
-                                       FontWeight="SemiBold"
-                                       FontSize="13"
-                                       Foreground="{Binding Color, Converter={StaticResource HexToBrushConverter}}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <Button
-                        Command="{Binding SearchTorrentsCommand}"
-                        Background="{StaticResource AccentRed}"
-                        CornerRadius="6"
-                        Padding="16,0"
-                        Height="38"
-                        VerticalAlignment="Center"
-                        VerticalContentAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                        <TextBlock Text="Search" FontWeight="SemiBold" FontSize="15" Foreground="White"/>
-                        <Image Source="{SvgImage /Resources/Icons/search_icon.svg}" Width="16" Height="16"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-            
+    <UserControl.Styles>
+        <Style Selector="Border.torrent-row">
+            <Setter Property="Background" Value="{StaticResource Background0}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.torrent-row:pointerover">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="{StaticResource Surface3}"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="7,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.badge TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource White}"/>
+        </Style>
+        <Style Selector="TextBlock.meta">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.sort">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Height" Value="34"/>
+        </Style>
+        <Style Selector="Button.sort Image">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*" Margin="0,16,0,0">
+
+        <!-- Search toolbar -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <TextBox Grid.Column="0"
+                     Classes="search-box"
+                     Text="{Binding TorrentSearchTerms}"
+                     Watermark="Refine results, e.g. 1080p or an episode number…">
+                <TextBox.InnerLeftContent>
+                    <PathIcon Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                              Width="15" Height="15"
+                              Margin="10,0,0,0"
+                              Foreground="{StaticResource TextMuted}"/>
+                </TextBox.InnerLeftContent>
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding SearchTorrentsCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+            <ComboBox Grid.Column="1"
+                      MinWidth="170"
+                      Height="38"
+                      Padding="12,0"
+                      VerticalAlignment="Center"
+                      VerticalContentAlignment="Center"
+                      ToolTip.Tip="Release group"
+                      ItemsSource="{Binding AvailableSubbers}"
+                      SelectedItem="{Binding SelectedSubber}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="models:KnownSubber">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                     Fill="{Binding Color, Converter={StaticResource HexToBrushConverter}}"/>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="2"
+                    Classes="primary"
+                    Command="{Binding SearchTorrentsCommand}"
+                    Padding="18,0"
+                    Height="38"
+                    VerticalAlignment="Center">
+                <TextBlock Text="Search" FontSize="14" VerticalAlignment="Center"/>
+            </Button>
         </Grid>
 
-        <!-- Torrent Results -->
-        <Grid Grid.Row="2" Margin="20,0,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <!-- Results header -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,18,0,10"
+              IsVisible="{Binding TorrentsList.Count, Converter={StaticResource GreaterThanZeroConverter}}">
+            <TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       FontSize="13"
+                       Foreground="{StaticResource TextSecondary}">
+                <Run Text="{Binding TorrentsList.Count}" Foreground="{StaticResource White}" FontWeight="SemiBold"/>
+                <Run Text="releases found"/>
+            </TextBlock>
 
-            <Grid Grid.Row="0" Margin="0,0,20,10" IsVisible="{Binding TorrentsList.Count, Converter={StaticResource GreaterThanZeroConverter}}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <Button Grid.Column="2" Command="{Binding SortByReleaseDateCommand}"
-                        Background="#2A2A2A"
-                        CornerRadius="6"
-                        Padding="12,8"
-                        ToolTip.Tip="Sort by Release Date">
-                    <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="16" Height="16">
+            <Button Grid.Column="1" Classes="sort" Command="{Binding SortByReleaseDateCommand}" ToolTip.Tip="Sort by release date">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Image Source="{SvgImage /Resources/Icons/calendar_icon.svg}" Width="14" Height="14"/>
+                    <TextBlock Text="Date" FontSize="12" VerticalAlignment="Center"/>
+                    <Image Source="{SvgImage /Resources/Icons/chevronDown_icon.svg}" Width="12" Height="12" RenderTransformOrigin="50%,50%">
                         <Image.RenderTransform>
-                            <RotateTransform Angle="{Binding DateSortDirection, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Descending:180;Ascending:0}" />
+                            <RotateTransform Angle="{Binding DateSortDirection, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Descending:0;Ascending:180}" />
                         </Image.RenderTransform>
                     </Image>
-                </Button>
-
-                <Button Grid.Column="3" Command="{Binding SortBySeedersCommand}"
-                        Background="#2A2A2A"
-                        CornerRadius="6"
-                        Padding="12,8"
-                        ToolTip.Tip="Sort by Seeders">
-                    <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="16" Height="16">
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="2" Classes="sort" Command="{Binding SortBySeedersCommand}" ToolTip.Tip="Sort by seeders">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Image Source="{SvgImage /Resources/Icons/person_icon.svg}" Width="14" Height="14"/>
+                    <TextBlock Text="Seeders" FontSize="12" VerticalAlignment="Center"/>
+                    <Image Source="{SvgImage /Resources/Icons/chevronDown_icon.svg}" Width="12" Height="12" RenderTransformOrigin="50%,50%">
                         <Image.RenderTransform>
-                            <RotateTransform Angle="{Binding SeedersSortDirection, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Descending:180;Ascending:0}" />
+                            <RotateTransform Angle="{Binding SeedersSortDirection, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Descending:0;Ascending:180}" />
                         </Image.RenderTransform>
                     </Image>
-                </Button>
-            </Grid>
+                </StackPanel>
+            </Button>
+        </Grid>
 
-            <ProgressBar Grid.Row="0" Grid.RowSpan="2" IsIndeterminate="True" 
-                         IsVisible="{Binding IsTorrentsLoading}" 
-                         VerticalAlignment="Top" 
-                         Background="{StaticResource Background0}"
-                         Foreground="{StaticResource RedColor}"
-                         Margin="0,20,0,0"/>
+        <!-- Results -->
+        <Grid Grid.Row="2">
+            <ProgressBar IsIndeterminate="True"
+                         IsVisible="{Binding IsTorrentsLoading}"
+                         VerticalAlignment="Top"
+                         Height="3"
+                         Background="{StaticResource Surface2}"
+                         Foreground="{StaticResource AccentRed}"
+                         Margin="0,4,0,0"/>
 
-            <ListBox Grid.Row="1" Background="Transparent" 
-                     ItemsSource="{Binding TorrentsList}"
-                     IsVisible="{Binding !IsTorrentsLoading}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="models:NyaaTorrent">
-                        <Border Background="{StaticResource BackgroundGray}" CornerRadius="8" Padding="15" Margin="0,0,0,10">
-                            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-                                <ItemsControl Grid.Column="0"
-                                              ItemsSource="{Binding FileNameSegments}"
-                                              VerticalAlignment="Center">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="models:TorrentFileNameSegment">
-                                            <TextBlock Text="{Binding Text}"
-                                                       FontSize="14"
-                                                       Foreground="{Binding Color, Converter={StaticResource HexToBrushConverter}}"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+            <ScrollViewer IsVisible="{Binding !IsTorrentsLoading}" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding TorrentsList}" Margin="0,0,8,16">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="models:NyaaTorrent">
+                            <Border Classes="torrent-row" Margin="0,0,0,8">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="16">
 
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" Margin="20,0">
-                                    <TextBlock Text="{Binding Size}" 
-                                               Foreground="#999999" 
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
+                                    <StackPanel Grid.Column="0" Spacing="7" VerticalAlignment="Center">
+                                        <ItemsControl ItemsSource="{Binding FileNameSegments}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="models:TorrentFileNameSegment">
+                                                    <TextBlock Text="{Binding Text}"
+                                                               FontSize="14"
+                                                               FontWeight="Medium"
+                                                               Foreground="{Binding Color, Converter={StaticResource HexToBrushConverter}}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
 
-                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" Margin="20,0">
-                                    <TextBlock Text="{Binding PublishDate, StringFormat='{}{0:yyyy-MM-dd}'}" 
-                                               Foreground="#999999" 
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Border Classes="badge"
+                                                    IsVisible="{Binding #Resolution.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                <TextBlock x:Name="Resolution"
+                                                           Text="{Binding FileName, Converter={StaticResource ResolutionFromFileNameConverter}}"/>
+                                            </Border>
+                                            <TextBlock Classes="meta" Text="{Binding Size}"/>
+                                            <TextBlock Classes="meta" Text="•" Foreground="{StaticResource TextMuted}"/>
+                                            <TextBlock Classes="meta" Text="{Binding PublishDate, StringFormat='{}{0:yyyy-MM-dd}'}"/>
+                                        </StackPanel>
+                                    </StackPanel>
 
-                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="5" Margin="20,0">
-                                    <PathIcon Width="16" Height="16" Foreground="#4CAF50" Data="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                    <TextBlock Text="{Binding Seeders}" 
-                                               Foreground="#4CAF50" 
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
+                                    <Border Grid.Column="1"
+                                            Background="#1A3A1F"
+                                            CornerRadius="8"
+                                            Padding="10,6"
+                                            VerticalAlignment="Center"
+                                            ToolTip.Tip="Seeders">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <PathIcon Width="12" Height="12"
+                                                      Foreground="{StaticResource Green}"
+                                                      Data="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                                            <TextBlock Text="{Binding Seeders}"
+                                                       FontSize="13"
+                                                       FontWeight="Bold"
+                                                       Foreground="{StaticResource Green}"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
 
-                                <Button Grid.Column="4" 
-                                        Command="{Binding $parent[UserControl].((vm:TorrentSearchViewModel)DataContext).DownloadTorrentCommand}"
-                                        CommandParameter="{Binding TorrentLink}"
-                                        Background="#3A3A3A"
-                                        CornerRadius="20"
-                                        Width="40" Height="40">
-                                    <Image Source="{SvgImage /Resources/Icons/download_icon.svg}" Width="20" Height="20"/>
-                                </Button>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <StackPanel Grid.Row="1" VerticalAlignment="Center" 
-                        HorizontalAlignment="Center" 
-                        IsVisible="{Binding TorrentsList.Count, Converter={StaticResource EqualToZeroConverter}}" 
-                        Spacing="20">
-                <Image Source="/Resources/nothingtoseehere_transparent_small.png" 
-                       Width="200" 
+                                    <Button Grid.Column="2"
+                                            Classes="primary"
+                                            Padding="16,8"
+                                            VerticalAlignment="Center"
+                                            Command="{Binding $parent[UserControl].((vm:TorrentSearchViewModel)DataContext).DownloadTorrentCommand}"
+                                            CommandParameter="{Binding TorrentLink}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Image Source="{SvgImage /Resources/Icons/download_icon.svg}" Width="15" Height="15"/>
+                                            <TextBlock Text="Download" FontSize="13" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <StackPanel VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Spacing="14">
+                <StackPanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="TorrentsList.Count" Converter="{StaticResource EqualToZeroConverter}"/>
+                        <Binding Path="!IsTorrentsLoading"/>
+                    </MultiBinding>
+                </StackPanel.IsVisible>
+                <Image Source="/Resources/nothingtoseehere_transparent_small.png"
+                       Width="200"
                        RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                <TextBlock Text="No torrents found. Try a different search!" 
-                           Foreground="#888888" 
-                           FontSize="16" 
+                <TextBlock Text="No releases found"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource White}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Try a different release group or loosen the search terms."
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="13"
                            HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>

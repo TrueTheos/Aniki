@@ -80,7 +80,7 @@
 
         <Style Selector="Border.anime-card">
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#2A2E30"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
             <Setter Property="Background" Value="{StaticResource Background0}"/>
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Transitions">
@@ -91,8 +91,8 @@
             </Setter>
         </Style>
         <Style Selector="Border.anime-card:pointerover">
-            <Setter Property="BorderBrush" Value="#5A5E60"/>
-            <Setter Property="Background" Value="#25292B"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}"/>
+            <Setter Property="Background" Value="{StaticResource Background1}"/>
         </Style>
 
         <Style Selector="Border.chip">
@@ -101,31 +101,6 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <Style Selector="Button.primary-action">
-            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="12,7"/>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Button.primary-action /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Button.primary-action:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FF1E4E"/>
-        </Style>
-        <Style Selector="Button.primary-action:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentRedDark}"/>
-        </Style>
 
         <Style Selector="Button.success-action">
             <Setter Property="Background" Value="#1B3A22"/>
@@ -152,7 +127,7 @@
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="ClipToBounds" Value="True"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#282B2C"/>
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
@@ -163,7 +138,7 @@
             <Setter Property="Background" Value="#2C1F1F"/>
         </Style>
         <Style Selector="Border.episode-row:pointerover">
-            <Setter Property="Background" Value="#373A3B"/>
+            <Setter Property="Background" Value="{StaticResource Surface3}"/>
         </Style>
         <Style Selector="Border.episode-row.watched:pointerover">
             <Setter Property="Background" Value="#3A2525"/>
@@ -235,106 +210,6 @@
             <Setter Property="Background" Value="{StaticResource AccentRedDark}"/>
         </Style>
 
-        <Style Selector="Button.toolbar-btn">
-            <Setter Property="Background" Value="{StaticResource Surface2}"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-        </Style>
-        <Style Selector="Button.toolbar-btn /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource Surface2}"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Button.toolbar-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource Surface3}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}"/>
-        </Style>
-        <Style Selector="Button.toolbar-btn:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceHover}"/>
-        </Style>
-
-        <Style Selector="TextBox.search-box">
-            <Setter Property="Background" Value="{StaticResource Surface2}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="4,0,4,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="TextBox.search-box /template/ Border#PART_BorderElement">
-            <Setter Property="Background" Value="{StaticResource Surface2}"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="TextBox.search-box:pointerover /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{StaticResource BorderHover}"/>
-            <Setter Property="Background" Value="{StaticResource Surface2}"/>
-        </Style>
-        <Style Selector="TextBox.search-box /template/ TextBlock#PART_Watermark">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="TextBox.search-box /template/ TextPresenter#PART_TextPresenter">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-
-        <Style Selector="Button.search-icon-btn">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="4,0,0,0"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="Button.search-icon-btn /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Button.search-icon-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#22FFFFFF"/>
-        </Style>
-        <Style Selector="Button.search-icon-btn:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#33FFFFFF"/>
-        </Style>
-        <Style Selector="Button.search-icon-btn PathIcon">
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Button.search-icon-btn:pointerover PathIcon">
-            <Setter Property="Foreground" Value="{StaticResource White}"/>
-        </Style>
-
         <Style Selector="Button.episodes-expand">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -389,7 +264,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
 
         <Border Grid.Row="0"
                 Background="Transparent"
@@ -426,7 +301,7 @@
                     </TextBox.InnerRightContent>
                 </TextBox>
 
-                <Button Grid.Column="1" Classes="toolbar-btn"
+                <Button Grid.Column="1"
                         Padding="14,0" Height="38" MinWidth="170"
                         VerticalAlignment="Center" Margin="0,0,8,0">
                     <Button.Flyout>
@@ -489,7 +364,7 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Button Grid.Column="4" Classes="toolbar-btn"
+                <Button Grid.Column="4"
                         Width="38" Height="38"
                         VerticalAlignment="Center"
                         ToolTip.Tip="Open episodes folder"
@@ -499,7 +374,33 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1">
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding ActiveDownloads}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="models:TorrentDownload">
+                    <Border Classes="anime-card" Margin="0,8,0,0" Padding="12,8">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"
+                                       Foreground="{StaticResource White}" TextTrimming="CharacterEllipsis"/>
+                            <ProgressBar Grid.Row="1" Grid.Column="0" Margin="0,6,12,0"
+                                         Minimum="0" Maximum="100" Value="{Binding Progress}"
+                                         Background="{StaticResource Background0}"
+                                         Foreground="{StaticResource RedColor}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,4,0,0" FontSize="12"
+                                       Foreground="{StaticResource White}" Text="{Binding Status}"/>
+                            <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                                    Classes="ep-icon-btn ep-delete"
+                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).CancelDownloadCommand}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip.Tip="Stop download">
+                                <Image Source="{SvgImage /Resources/Icons/delete_icon.svg}" Width="16" Height="16"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Grid.Row="2">
 
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsLoading}">
                 <ProgressBar Width="300" IsIndeterminate="True"
@@ -602,7 +503,7 @@
                                                 </StackPanel>
                                             </Button>
                                             
-                                            <Button Classes="primary-action"
+                                            <Button Classes="primary"
                                                     Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).OpenAnimeDetailsCommand}"
                                                     CommandParameter="{Binding MalId}"
                                                     ToolTip.Tip="Anime details">

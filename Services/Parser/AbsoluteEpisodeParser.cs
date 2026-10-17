@@ -109,7 +109,7 @@ internal sealed class AbsoluteEpisodeParser : IAbsoluteEpisodeParser
         public required int Id { get; init; }
     }
 
-    public async Task<int?> GetIdForSeason(string animeTitle, int seasonNumber, int part, int? preferredYear = null,
+    public async Task<int?> GetIdForSeason(string animeTitle, int part, int? preferredYear = null,
         int? seasonHint = null)
     {
         SeasonMapMatch? match = await ResolveSeasonEntry(animeTitle, part, preferredYear, seasonHint).ConfigureAwait(false);

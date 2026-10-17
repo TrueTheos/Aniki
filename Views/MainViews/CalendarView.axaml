@@ -7,17 +7,6 @@
     xmlns:anime="clr-namespace:Aniki.Services.Anime"
     x:DataType="vm:CalendarViewModel">
     <UserControl.Styles>
-        <Style Selector="Button.today-button">
-            <Setter Property="Background" Value="{StaticResource RedColor}" />
-            <Setter Property="Foreground" Value="{StaticResource White}" />
-            <Setter Property="BorderBrush" Value="{StaticResource RedColor}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="Margin" Value="4,0" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Height" Value="32" />
-        </Style>
 
         <Style Selector="ToolTip">
             <Setter Property="Background" Value="Transparent" />
@@ -42,24 +31,13 @@
             <Setter Property="Opacity" Value="0.9" />
         </Style>
 
-        <Style Selector="ScrollViewer /template/ ScrollBar">
-            <Setter Property="Width" Value="10" />
-            <Setter Property="AllowAutoHide" Value="False" />
-        </Style>
-        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb">
-            <Setter Property="Background" Value="#444444" />
-            <Setter Property="MinHeight" Value="40" />
-        </Style>
-        <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb:pointerover">
-            <Setter Property="Background" Value="#666666" />
-        </Style>
     </UserControl.Styles>
 
     <DockPanel x:Name="Root" Margin="0,50,0,0" Background="{StaticResource BackgroundGray}">
         <Border
             Padding="16,12"
             Background="{StaticResource BackgroundBlack}"
-            BorderBrush="#333333"
+            BorderBrush="{StaticResource BorderLight}"
             BorderThickness="0,0,0,1"
             DockPanel.Dock="Top">
             <Grid>
@@ -88,7 +66,7 @@
                     </Button>
 
                     <Button
-                        Classes="today-button"
+                        Classes="primary nav-button"
                         Command="{Binding GoToStartCommand}"
                         Content="Home"
                         ToolTip.Tip="Go to start" />
@@ -167,7 +145,7 @@
                                     Grid.Row="0"
                                     Padding="12,8"
                                     Background="{StaticResource BackgroundBlack}"
-                                    BorderBrush="#333333"
+                                    BorderBrush="{StaticResource BorderLight}"
                                     BorderThickness="0,0,0,1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -187,7 +165,7 @@
                                             Grid.Column="1"
                                             VerticalAlignment="Center"
                                             FontSize="12"
-                                            Foreground="#AAAAAA"
+                                            Foreground="{StaticResource TextSecondary}"
                                             Text="{Binding Date, StringFormat='MMM dd'}" />
                                     </Grid>
                                 </Border>
@@ -198,10 +176,10 @@
                                     Background="{StaticResource BackgroundGray}">
                                     <ItemsControl.Styles>
                                         <Style Selector="ContentPresenter &gt; StackPanel.calendar-anime-row">
-                                            <Setter Property="Background" Value="#1E1E1E" />
+                                            <Setter Property="Background" Value="{StaticResource Background0}" />
                                         </Style>
                                         <Style Selector="ContentPresenter:nth-child(odd) &gt; StackPanel.calendar-anime-row">
-                                            <Setter Property="Background" Value="#252525" />
+                                            <Setter Property="Background" Value="{StaticResource BackgroundGray}" />
                                         </Style>
                                     </ItemsControl.Styles>
                                     <ItemsControl.ItemsPanel>
@@ -221,7 +199,7 @@
                                                         MaxWidth="480"
                                                         MaxHeight="200"
                                                         ClipToBounds="True"
-                                                        BorderBrush="#555555"
+                                                        BorderBrush="{StaticResource BorderLight}"
                                                         BorderThickness="1.5">
                                                         <Grid ColumnDefinitions="120,*">
                                                             <Border
@@ -247,11 +225,11 @@
                                                                     <TextBlock
                                                                         Text="{Binding EpisodeInfo}"
                                                                         FontSize="12"
-                                                                        Foreground="#AAAAAA" />
+                                                                        Foreground="{StaticResource TextSecondary}" />
                                                                     <TextBlock
                                                                         Text="{Binding AiringAt, StringFormat='h:mm tt'}"
                                                                         FontSize="12"
-                                                                        Foreground="#AAAAAA" />
+                                                                        Foreground="{StaticResource TextSecondary}" />
                                                                 </StackPanel>
 
                                                                 <TextBlock
@@ -265,7 +243,7 @@
                                                                 <TextBlock
                                                                     Text="{Binding Description}"
                                                                     FontSize="12"
-                                                                    Foreground="#CCCCCC"
+                                                                    Foreground="{StaticResource White}"
                                                                     TextWrapping="Wrap"
                                                                     MaxLines="5"
                                                                     LineHeight="18"
@@ -279,7 +257,7 @@
                                                 <TextBlock
                                                     Margin="8,4,0,0"
                                                     FontSize="11"
-                                                    Foreground="#666666"
+                                                    Foreground="{StaticResource TextMuted}"
                                                     Text="{Binding AiringAt, StringFormat='h:mm tt'}" />
 
                                                 <Border
@@ -333,7 +311,7 @@
                                                             <TextBlock
                                                                 Margin="0,2,0,0"
                                                                 FontSize="11"
-                                                                Foreground="#AAAAAA"
+                                                                Foreground="{StaticResource TextSecondary}"
                                                                 Text="{Binding EpisodeInfo}" />
                                                         </StackPanel>
 

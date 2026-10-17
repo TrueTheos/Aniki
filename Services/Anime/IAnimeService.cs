@@ -19,6 +19,7 @@ internal interface IAnimeService
     public Task SetActiveProviderAsync(ILoginProvider.ProviderType providerName, string? accessToken);
     public Task<UserData> GetUserDataAsync();
     public Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category);
+    public Task<int?> GetIdFromMalIdAsync(int malId);
     public Task<AnimeDetails> GetAllFieldsAsync(int animeId);
     public Task ClearCachesAsync();
     public Task RemoveFromUserListAsync(int animeId);

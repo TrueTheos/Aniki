@@ -113,7 +113,6 @@ internal sealed class CalendarService : ICalendarService, IDisposable
         {
             daySchedules.Add(new()
             {
-                Name = date.DayOfWeek.ToString(),
                 DayName = date.ToString("dddd", CultureInfo.InvariantCulture),
                 Date = date,
                 IsToday = date.Date == DateTime.Today,
@@ -121,15 +120,13 @@ internal sealed class CalendarService : ICalendarService, IDisposable
             });
         }
 
-        var byDay = daySchedules.ToDictionary(ds => ds.Name, StringComparer.OrdinalIgnoreCase);
+        var byDay = daySchedules.ToDictionary(ds => ds.Date);
 
         foreach (JToken schedule in schedules)
         {
             AnimeScheduleItem? animeItem = ParseAnimeScheduleItem(schedule, watchSet);
             if (animeItem == null) continue;
-            string weekday = animeItem.AiringAt.ToString("dddd", CultureInfo.InvariantCulture);
-
-            if (!byDay.TryGetValue(weekday, out DaySchedule? daySchedule)) continue;
+            if (!byDay.TryGetValue(animeItem.AiringAt.Date, out DaySchedule? daySchedule)) continue;
                 
             bool isDuplicate = daySchedule.Items.Any(existing =>
                 string.Equals(existing.Title, animeItem.Title, StringComparison.OrdinalIgnoreCase) &&
@@ -236,18 +233,4 @@ internal sealed class CalendarService : ICalendarService, IDisposable
     {
         _client.Dispose();
     }
-
-    /*private async Task<Bitmap?> DownloadImageAsync(string url)
-    {
-        try
-        {
-            byte[] imageData = await _client.GetByteArrayAsync(url);
-            using MemoryStream ms = new(imageData);
-            return new Bitmap(ms);
-        }
-        catch
-        {
-            return null;
-        }
-    }*/
 }

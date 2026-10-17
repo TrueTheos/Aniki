@@ -32,10 +32,14 @@
                 <Image Source="avares://Aniki/Resources/icon.ico" 
                        Width="64" Height="64"
                        HorizontalAlignment="Center"/>
-                <TextBlock Text="Welcome to Aniki!"
-                           FontSize="20" FontWeight="Bold"
+                <TextBlock Text="Welcome to Aniki"
+                           FontSize="22" FontWeight="Bold"
+                           Foreground="{StaticResource White}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{StaticResource TextSecondary}"
+                           FontSize="13"
+                           TextAlignment="Center"
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap" />
 
@@ -43,17 +47,12 @@
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                             <Button
+                                Classes="primary"
                                 Command="{Binding $parent[Window].DataContext.LoginCommand}"
                                 CommandParameter="{Binding Provider}"
                                 HorizontalAlignment="Stretch"
-                                Padding="10,8"
-                                Margin="0,2"
-                                Background="{StaticResource RedColor}">
-                                <Button.Styles>
-                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                        <Setter Property="Background" Value="{StaticResource DarkerRedColor}"/>
-                                    </Style>
-                                </Button.Styles>
+                                Padding="10,9"
+                                Margin="0,3">
                                 <TextBlock Text="{Binding Provider, StringFormat='Login with {0}'}" HorizontalAlignment="Center"/>
                             </Button>
                         </DataTemplate>
@@ -67,10 +66,10 @@
 
                 <Button
                         Command="{Binding ContinueCommand}"
+                        Classes="primary"
                         HorizontalAlignment="Stretch"
-                        Padding="10,8"
-                        IsVisible="{Binding IsLoggedIn}"
-                        Background="{StaticResource RedColor}">
+                        Padding="10,9"
+                        IsVisible="{Binding IsLoggedIn}">
                     <TextBlock Text="{Binding Username, StringFormat='Continue as {0}'}"
                                HorizontalAlignment="Center"/>
                 </Button>

@@ -1,5 +1,4 @@
 ﻿using Aniki.Services.Cache;
-using Avalonia.Media.Imaging;
 
 namespace Aniki.Models;
 
@@ -21,7 +20,6 @@ internal enum AnimeField
     MyListStatus, 
     Episodes,
     Popularity, 
-    Picture, 
     Studios, 
     StartDate, 
     Mean, 
@@ -59,7 +57,6 @@ internal sealed class AnimeDetails : ObservableObject
 
     [CacheField(AnimeField.Episodes)] public int? NumEpisodes { get; set; }
     [CacheField(AnimeField.Popularity)] public int? Popularity { get; set; }
-    [CacheField(AnimeField.Picture)] public Bitmap? Picture { get; set; }
     [CacheField(AnimeField.Studios)] public string[]? Studios { get; set; }
     [CacheField(AnimeField.StartDate)] public string? StartDate { get; set; }
     [CacheField(AnimeField.Mean)] public float Mean { get; set; }
@@ -74,7 +71,7 @@ internal sealed class AnimeDetails : ObservableObject
     public AnimeDetails(){}
     
     public AnimeDetails(int id, string? title, AnimePicture? mainPicture, string? status, string? synopsis, AlternativeTitles? alternativeTitles,
-        UserAnimeStatus? userStatus, int? numEpisodes, int? popularity, Bitmap? picture, string[]? studios, string? startDate,
+        UserAnimeStatus? userStatus, int? numEpisodes, int? popularity, string[]? studios, string? startDate,
         float mean, string[]? genres, string? trailerUrl, int? numFavorites, AnimeVideo[]? videos, RelatedAnime[] relatedAnime, AnimeStatistics statistics, MediaType mediaType)
     {
         Id = id;
@@ -86,7 +83,6 @@ internal sealed class AnimeDetails : ObservableObject
         UserStatus = userStatus;
         NumEpisodes = numEpisodes;
         Popularity = popularity;
-        Picture = picture;
         Studios = studios;
         StartDate = startDate;
         Mean = mean;

@@ -13,7 +13,6 @@ internal sealed class AnimeService : IAnimeService
 {
     private readonly Dictionary<ILoginProvider.ProviderType, IAnimeProvider> _providers = new();
     private readonly ConcurrentDictionary<ILoginProvider.ProviderType, GenericCacheService<int, AnimeDetails, AnimeField>> _caches = new();
-    private readonly AnilistService _anilistService;
     private readonly ISaveService _saveService;
 
     private IAnimeProvider? _currentProvider;
@@ -21,9 +20,8 @@ internal sealed class AnimeService : IAnimeService
     public static bool IsLoggedIn;
     public static ILoginProvider.ProviderType CurrentProviderType = ILoginProvider.ProviderType.Mal;
 
-    public AnimeService(AnilistService anilistService, ISaveService saveService)
+    public AnimeService(ISaveService saveService)
     {
-        _anilistService = anilistService;
         _saveService = saveService;
     }
 
@@ -56,7 +54,6 @@ internal sealed class AnimeService : IAnimeService
         await _currentProvider.InitAsync(accessToken).ConfigureAwait(false);
 
         IsLoggedIn = _currentProvider.IsLoggedIn;
-        if (!IsLoggedIn) CurrentProviderType = ILoginProvider.ProviderType.Mal; //we just use MAL as default
     }
 
     private IAnimeProvider GetCurrentProvider()
@@ -99,15 +96,7 @@ internal sealed class AnimeService : IAnimeService
 
     private async Task<AnimeDetails?> FetchFieldsFromProvider(int animeId, params AnimeField[] fields)
     {
-        IAnimeProvider provider = GetCurrentProvider();
-        AnimeDetails? details = await provider.FetchAnimeDetailsAsync(animeId, fields).ConfigureAwait(false);
-        
-        if (details != null && _currentProvider != null)
-        {
-            _caches[_currentProvider.Provider].Update(animeId, details, fields);
-        }
-        
-        return details;
+        return await GetCurrentProvider().FetchAnimeDetailsAsync(animeId, fields).ConfigureAwait(false);
     }
 
     public async Task<UserData> GetUserDataAsync()
@@ -120,6 +109,8 @@ internal sealed class AnimeService : IAnimeService
         AnimeField.Id, AnimeField.MyListStatus, AnimeField.Status, AnimeField.Genres, AnimeField.Synopsis, AnimeField.MainPicture,
         AnimeField.Mean, AnimeField.Popularity, AnimeField.StartDate, AnimeField.Studios, AnimeField.Title, AnimeField.Episodes, AnimeField.MediaType
     ];
+
+    private static readonly AnimeField[] SearchFieldTypes = MalNodeFieldTypes.Where(f => f != AnimeField.MyListStatus).ToArray();
 
     public async Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None)
     {
@@ -146,13 +137,9 @@ internal sealed class AnimeService : IAnimeService
     public async Task RemoveFromUserListAsync(int animeId)
     {
         await GetCurrentProvider().RemoveFromUserListAsync(animeId).ConfigureAwait(false);
-        
-        // Update cache to reflect removal
-        AnimeDetails anime = await GetAllFieldsAsync(animeId).ConfigureAwait(false);
-        anime.UserStatus = null;
+
         if (_currentProvider != null)
-            _caches[_currentProvider.Provider]
-                .Update(anime.Id, anime, Enum.GetValues<AnimeField>());
+            _caches[_currentProvider.Provider].Update(animeId, new AnimeDetails(), AnimeField.MyListStatus);
 
         WeakReferenceMessenger.Default.Send(new UserListStatusChangedMessage(animeId, null));
     }
@@ -177,9 +164,16 @@ internal sealed class AnimeService : IAnimeService
 
     private async Task AfterUserStatusChange(int animeId)
     {
-        AnimeDetails? details = await GetFieldsAsync(animeId, true, AnimeField.MyListStatus).ConfigureAwait(false);
-        WeakReferenceMessenger.Default.Send(
-            new UserListStatusChangedMessage(animeId, details?.UserStatus?.Status));
+        try
+        {
+            AnimeDetails? details = await GetFieldsAsync(animeId, true, AnimeField.MyListStatus).ConfigureAwait(false);
+            WeakReferenceMessenger.Default.Send(
+                new UserListStatusChangedMessage(animeId, details?.UserStatus?.Status));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Saved, but failed to refresh list status for {animeId}: {ex.Message}");
+        }
     }
 
     public async Task<List<AnimeDetails>> SearchAnimeAsync(string query)
@@ -188,28 +182,28 @@ internal sealed class AnimeService : IAnimeService
         
         if (_currentProvider != null)
         {
+            var cache = _caches[_currentProvider.Provider];
             foreach (AnimeDetails result in results)
             {
-                _caches[_currentProvider.Provider].UpdatePartial(
-                    result.Id,
-                    result,
-                    MalNodeFieldTypes
-                );
+                if (cache.GetWithoutFetching(result.Id)?.UserStatus is { } status)
+                    result.UserStatus = status;
+
+                cache.UpdatePartial(result.Id, result, SearchFieldTypes);
             }
         }
         
         return results;
     }
 
+    public Task<int?> GetIdFromMalIdAsync(int malId) => GetCurrentProvider().GetIdFromMalIdAsync(malId);
+
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        bool preferMalIds = CurrentProviderType == ILoginProvider.ProviderType.Mal;
-
-        var rankings = await _anilistService.GetTopAnimeAsync(category, preferMalIds).ConfigureAwait(false);
+        var rankings = await GetCurrentProvider().GetTopAnimeAsync(category).ConfigureAwait(false);
 
         if (_currentProvider != null)
         {
-            AnimeField[] rankingFields = [..MalNodeFieldTypes, AnimeField.Videos];
+            AnimeField[] rankingFields = MalNodeFieldTypes;
             var cache = _caches[_currentProvider.Provider];
 
             foreach (RankingEntry entry in rankings)
