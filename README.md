@@ -15,11 +15,14 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 ## Features
 
 - **MyAnimeList/AniList Integration**: OAuth login to fetch and sync your anime list.
-- **Watching Epidoes In-App**: You can browse, download and watch episodes in Aniki!
+- **Watching Episodes In-App**: Browse, download and watch episodes directly in Aniki.
 - **Anime List Management**: View, filter, and search your anime.
 - **Automatic Episode Tracking**: automatically detects the anime videos you watch on your computer and synchronizes your progress.
-- **Episode Search**: Search for episodes and watch them.
-- [WIP] **Notification System**: Be automatically notified whenever a new anime or episode releases.
+- **Episode Search**: Search for episodes and watch them without leaving the app.
+- **Airing Calendar**: See when the anime you follow airs next.
+- **Stats**: Overview of your watching statistics.
+- **Discord Rich Presence**: Show what you are watching on Discord.
+- [Planned] **Notification System**: Be automatically notified whenever a new anime or episode releases.
 
 ## Usage
 
@@ -29,7 +32,7 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 
 ### Prerequisites
 
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download) or later
 - Git
 
 ### Clone the Repository
@@ -47,13 +50,13 @@ cd Aniki
 3. Select `App Type` `other`
 4. Inside `App Redirect URL` type `http://localhost:8000/callback` (you can later change it)
 5. Copy the generated ClientID.
-6. Replace `ClientId` inside `MalLoginProvider.cs`
+6. Replace `CLIENT_ID` inside `Services/Auth/Providers/MalLoginProvider.cs`
 
 #### Anilist:
 1. Go to https://anilist.co/settings/developer
 2. Create new client
 3. Copy ID
-4.  Replace `ClientId` inside `AnilistLoginProvider.cs`
+4. Replace `CLIENT_ID` inside `Services/Auth/Providers/AnilistLoginProvider.cs`
 
 ### Build and Run
 
@@ -67,7 +70,7 @@ cd Aniki
    ```
 3. Run the application:
    ```bash
-   dotnet run --project Aniki/Aniki.csproj
+   dotnet run --project Aniki.csproj
    ```
    
 ## Contributing
@@ -97,7 +100,7 @@ Contributions are welcome! Please fork the repository and create a pull request 
 ## Troubleshooting
 
 If something doesn't work after updating to newer version, it's most likely cache issue. You can wipe cache manually by going into app installation directory. Most likely `C:\Users\[user]\AppData\Local\Aniki`.
-Delete folders `tokens` `cache` and `ImageCache`.
+Delete folders `tokens`, `cache` and `ImageCache`. Note that `cache` and `ImageCache` are wiped automatically after every update.
 
 ## Acknowledgments
 
