@@ -13,4 +13,7 @@ internal sealed class MAL_MyListStatus
 
     [JsonPropertyName("num_episodes_watched")]
     public int NumEpisodesWatched { get; set; }
+
+    [JsonPropertyName("num_chapters_read")]
+    public int NumChaptersRead { get; set; }
 }

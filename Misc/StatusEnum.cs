@@ -1,6 +1,6 @@
 ﻿namespace Aniki.Misc;
 
-internal enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none }
+internal enum AnimeStatusApi { watching, completed, on_hold, dropped, plan_to_watch, none, reading, plan_to_read }
 internal enum AnimeStatusTranslated { Watching, Completed, OnHold, Dropped, PlanToWatch, All }
 
 internal static class StatusEnum
@@ -88,6 +88,8 @@ internal static class StatusEnum
             AnimeStatusApi.dropped => "dropped",
             AnimeStatusApi.plan_to_watch => "plan_to_watch",
             AnimeStatusApi.none => "none",
+            AnimeStatusApi.reading => "reading",
+            AnimeStatusApi.plan_to_read => "plan_to_read",
             _ => throw new ArgumentOutOfRangeException(nameof(api), api, null)
         };
     }

@@ -23,6 +23,11 @@ internal sealed partial class MainWindow : Window
         
         _viewModel.LogoutRequested += OnLogoutRequested;
         _viewModel.SettingsRequested += OnSettingsRequested;
+        _viewModel.ReadViewMode.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ReadViewModel.IsFullscreen))
+                ApplyReaderFullscreen(_viewModel.ReadViewMode.IsFullscreen);
+        };
 
         DataContext = _viewModel;
 
@@ -39,6 +44,23 @@ internal sealed partial class MainWindow : Window
         }
 
         WindowState = WindowState.Maximized;
+    }
+
+    private WindowState _stateBeforeFullscreen = WindowState.Maximized;
+
+    private void ApplyReaderFullscreen(bool on)
+    {
+        Grid sidebar = this.FindControl<Grid>("Sidebar")!;
+        Border content = this.FindControl<Border>("ContentHost")!;
+        StackPanel arrows = this.FindControl<StackPanel>("NavArrows")!;
+        arrows.Opacity = on ? 0 : 1;
+        arrows.IsHitTestVisible = !on;
+
+        if (on) _stateBeforeFullscreen = WindowState;
+        WindowState = on ? WindowState.FullScreen : _stateBeforeFullscreen;
+        sidebar.IsVisible = !on;
+        ((Grid)sidebar.Parent!).ColumnDefinitions[0].Width = new GridLength(on ? 0 : 220);
+        content.BorderThickness = new Thickness(on ? 0 : 1, 0, 0, 0);
     }
 
     private void InitializeComponent()

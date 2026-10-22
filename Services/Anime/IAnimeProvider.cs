@@ -8,6 +8,7 @@ internal interface IAnimeProvider
     bool IsLoggedIn { get; }
     
     Task InitAsync(string? accessToken);
+    IAnimeProvider ForManga();
     
     Task<UserData> GetUserDataAsync();
     Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None);

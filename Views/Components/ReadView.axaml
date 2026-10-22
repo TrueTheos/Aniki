@@ -3,60 +3,184 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:services="clr-namespace:Aniki.Services"
+    xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
-    xmlns:anime="clr-namespace:Aniki.Services.Anime"
-    x:DataType="vm:ReadViewModel">
-    
+    x:DataType="vm:ReadViewModel"
+    Focusable="True">
+
     <UserControl.Styles>
         <Style Selector="Button">
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
-        <Style Selector="Button:disabled">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="#666666"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        
-        <Style Selector="TextBox">
-            <Setter Property="Background" Value="#1E1E1E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
-            <Setter Property="BorderThickness" Value="1"/>
+        <Style Selector="Button.tool">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="Foreground" Value="{StaticResource White}"/>
             <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
         </Style>
-        <Style Selector="TextBox:focus">
-            <Setter Property="BorderBrush" Value="#007ACC"/>
-        </Style>
-        
-        <Style Selector="ListBox">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-        </Style>
-        
-        <Style Selector="Ellipse.PlayButton:pointerover">
-            <Setter Property="Fill" Value="{StaticResource DarkerRedColor}"/>
-        </Style>
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Margin" Value="4,2"/>
-        </Style>
-        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2D2D30"/>
-        </Style>
-        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#007ACC"/>
-        </Style>
-        
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="ScrollViewer#PagesScroller">
+            <Setter Property="Grid.Row" Value="1"/>
+        </Style>
+        <Style Selector="Grid#Toolbar">
+            <Setter Property="Margin" Value="30,36,30,12"/>
+        </Style>
+
+        <Style Selector="Grid.fullscreen > ScrollViewer#PagesScroller">
+            <Setter Property="Grid.Row" Value="0"/>
+            <Setter Property="Grid.RowSpan" Value="2"/>
+        </Style>
+        <Style Selector="Grid.fullscreen > Grid#Toolbar">
+            <Setter Property="Margin" Value="0,10,24,0"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="ZIndex" Value="1"/>
+            <Setter Property="Opacity" Value="0.25"/>
+        </Style>
+        <Style Selector="Grid.fullscreen > Grid#Toolbar:pointerover">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="Grid.fullscreen TextBlock#ReaderTitle">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Button.cover">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
         </Style>
     </UserControl.Styles>
-    
-   
+
+    <Grid RowDefinitions="Auto,*" Classes.fullscreen="{Binding IsFullscreen}">
+        <Grid x:Name="Toolbar" Grid.Row="0" ColumnDefinitions="*,Auto" IsVisible="{Binding !ShowEmpty}">
+            <TextBlock x:Name="ReaderTitle" Text="{Binding Manga.Title}"
+                       FontSize="22" FontWeight="Bold" Foreground="{StaticResource White}"
+                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="{Binding PageIndicator}" VerticalAlignment="Center" Margin="0,0,6,0"
+                           FontSize="13" Foreground="{StaticResource TextSecondary}"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Chapters.Count}">
+                    <Button Classes="tool" Content="◀" Command="{Binding PreviousChapterCommand}" ToolTip.Tip="Previous chapter"/>
+                    <ComboBox ItemsSource="{Binding Chapters}" SelectedItem="{Binding SelectedChapter}" Width="320">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="services:MangaChapter">
+                                <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Classes="tool" Content="▶" Command="{Binding NextChapterCommand}" ToolTip.Tip="Mark read and go to the next chapter"/>
+                    <Button Classes="primary" Content="{Binding MarkReadText}" Command="{Binding MarkReadClickedCommand}" Padding="16,8"/>
+                </StackPanel>
+                <Button Classes="tool" Command="{Binding OpenExternalCommand}" IsVisible="{Binding ShowWebReader}"
+                        ToolTip.Tip="{Binding OpenExternalText}">
+                    <Image Source="{SvgImage /Resources/Icons/globe_icon.svg}" Width="16" Height="16"/>
+                </Button>
+                <Button Classes="tool" Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="Fullscreen (F)">
+                    <Panel>
+                        <PathIcon Width="16" Height="16" IsVisible="{Binding !IsFullscreen}"
+                                  Data="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                        <PathIcon Width="16" Height="16" IsVisible="{Binding IsFullscreen}"
+                                  Data="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+                    </Panel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Row="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsLoadingPages}">
+            <ProgressBar Width="260" Height="4" IsIndeterminate="True"
+                         Foreground="{StaticResource AccentRed}" Background="{StaticResource Surface2}"/>
+            <TextBlock Text="Loading pages…" FontSize="13" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsLoading}">
+            <ProgressBar Width="260" Height="4" IsIndeterminate="True"
+                         Foreground="{StaticResource AccentRed}" Background="{StaticResource Surface2}"/>
+            <TextBlock Text="Finding chapters on MangaDex…" FontSize="13" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <Panel Grid.Row="1" x:Name="WebHost" IsVisible="False"/>
+
+        <ScrollViewer x:Name="PagesScroller" IsVisible="{Binding Pages.Count}">
+            <StackPanel x:Name="PagesPanel">
+                <ItemsControl x:Name="PagesItems" ItemsSource="{Binding Pages}" HorizontalAlignment="Center" MaxWidth="900">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Image asyncImageLoader:ImageLoader.Source="{Binding}" Stretch="Uniform" MinHeight="200"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Classes="primary" Content="Next chapter" HorizontalAlignment="Center" Margin="0,24,0,40"
+                        Padding="28,13" Command="{Binding NextChapterCommand}"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Classes="empty-state" Spacing="14" MaxWidth="560"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding ShowProblem}">
+            <Image Source="/Resources/nothingtoseehere_transparent_small.png" Width="240"
+                   RenderOptions.BitmapInterpolationMode="HighQuality"/>
+            <TextBlock Classes="title" Text="{Binding ProblemTitle}"/>
+            <TextBlock Classes="subtitle" Text="{Binding ProblemText}" TextWrapping="Wrap" TextAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,8,0,0">
+                <Button Classes="primary" Padding="20,10" Content="{Binding OpenExternalText}" Command="{Binding OpenExternalCommand}"
+                        IsVisible="{Binding ShowOpenExternal}"/>
+                <Button Classes="primary" Padding="20,10" Content="Next chapter" Command="{Binding SkipChapterCommand}"
+                        IsVisible="{Binding ShowSkip}"/>
+                <Button Classes="primary" Padding="20,10" Content="Search MangaDex" Command="{Binding SearchMangaDexCommand}"
+                        IsVisible="{Binding ShowSearch}"/>
+                <Button Classes="tool" Padding="20,10" Content="Back to details" Command="{Binding BackToDetailsCommand}"/>
+            </StackPanel>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="0" Grid.RowSpan="2" IsVisible="{Binding ShowEmpty}">
+            <Grid MinHeight="{Binding $parent[ScrollViewer].Viewport.Height}">
+            <StackPanel Spacing="40" Margin="50,40,50,40" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="1100">
+                <StackPanel Classes="empty-state" Spacing="14" HorizontalAlignment="Center">
+                    <Image Source="/Resources/nothingtoseehere_transparent_small.png" Width="240"
+                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                    <TextBlock Classes="title" Text="Nothing open yet"/>
+                    <TextBlock Classes="subtitle" Text="Open a manga and press Read! to start. What you're reading shows up here."
+                               TextWrapping="Wrap" TextAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,8,0,0">
+                        <Button Classes="primary" Padding="20,10" Content="Browse manga" Command="{Binding BrowseMangaCommand}"/>
+                        <Button Classes="tool" Padding="20,10" Content="Explore by genre" Command="{Binding ExploreCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Spacing="16" IsVisible="{Binding ContinueReading.Count}">
+                    <TextBlock Text="Continue reading" FontSize="18" FontWeight="Bold" Foreground="{StaticResource White}"/>
+                    <ItemsControl ItemsSource="{Binding ContinueReading}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:AnimeDetails">
+                                <Button Classes="cover" Margin="0,0,18,18" Width="140"
+                                        Command="{Binding $parent[ItemsControl].((vm:ReadViewModel)DataContext).OpenCommand}"
+                                        CommandParameter="{Binding}">
+                                    <StackPanel Spacing="6">
+                                        <Border CornerRadius="8" ClipToBounds="True" Height="200" Background="{StaticResource Surface2}">
+                                            <Image asyncImageLoader:ImageLoader.Source="{Binding MainPicture.Large}" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding Title}" FontSize="13" Foreground="{StaticResource White}"
+                                                   TextTrimming="CharacterEllipsis" MaxLines="2" TextWrapping="Wrap"/>
+                                        <TextBlock FontSize="12" Foreground="{StaticResource TextMuted}"
+                                                   Text="{Binding UserStatus.EpisodesWatched, StringFormat='Read: {0} ch'}"/>
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

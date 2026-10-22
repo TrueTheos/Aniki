@@ -7,6 +7,7 @@
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:anime="clr-namespace:Aniki.Services.Anime"
+    xmlns:misc="clr-namespace:Aniki.Misc"
     x:DataType="vm:AnimeDetailsViewModel">
     <Border
         x:Name="Root"
@@ -92,16 +93,18 @@
                                             <ProgressBar Height="8"
                                                          Value="{Binding WatchedEpisodes}"
                                                          Maximum="{Binding Details.NumEpisodes}"
+                                                         IsVisible="{Binding Details.NumEpisodes, Converter={StaticResource GreaterThanZeroConverter}}"
                                                          Background="#333333"
                                                          Foreground="{StaticResource RedColor}"
                                                          CornerRadius="4"/>
                                             <Grid Margin="0, 8, 0, 0">
                                                 <TextBlock HorizontalAlignment="Left"
-                                                           Text="{Binding WatchedEpisodes, StringFormat='{}Watched: {0}'}"
                                                            Foreground="{StaticResource TextSecondary}"
-                                                           FontSize="12"/>
+                                                           FontSize="12">
+                                                    <Run Text="{Binding Watched, Source={x:Static misc:MediaMode.Instance}}"/><Run Text="{Binding WatchedEpisodes, StringFormat=': {0}'}"/>
+                                                </TextBlock>
                                                 <TextBlock HorizontalAlignment="Right"
-                                                           Text="{Binding Details.NumEpisodes, StringFormat='{}Total: {0}'}"
+                                                           Text="{Binding Details.NumEpisodes, Converter={x:Static misc:MediaMode.TotalText}}"
                                                            Foreground="{StaticResource TextSecondary}"
                                                            FontSize="12"/>
                                             </Grid>
@@ -169,7 +172,7 @@
                                                                FontWeight="Bold"
                                                                Foreground="White"
                                                                HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Watching"
+                                                    <TextBlock Text="{Binding Watching, Source={x:Static misc:MediaMode.Instance}}"
                                                                FontSize="12"
                                                                Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
@@ -195,7 +198,7 @@
                                                                FontWeight="Bold"
                                                                Foreground="White"
                                                                HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Plan to Watch"
+                                                    <TextBlock Text="{Binding PlanTo, Source={x:Static misc:MediaMode.Instance}}"
                                                                FontSize="12"
                                                                Foreground="{StaticResource TextSecondary}"
                                                                HorizontalAlignment="Center"/>
@@ -269,9 +272,9 @@
                                             <TextBlock Text="•" 
                                                        FontSize="14"
                                                        Foreground="{StaticResource TextMuted}"/>
-                                            <TextBlock  Text="{Binding Details.NumEpisodes, StringFormat='{}{0} episodes'}"
-                                                        FontSize="14"
-                                                        Foreground="{StaticResource TextSecondary}">
+                                            <TextBlock FontSize="14"
+                                                       Foreground="{StaticResource TextSecondary}">
+                                                <Run Text="{Binding Details.NumEpisodes, Converter={x:Static misc:MediaMode.UnitCount}}"/>
                                             </TextBlock>
                                             <TextBlock Text="•" 
                                                        FontSize="14"
@@ -299,15 +302,15 @@
                                                     
                                                     <Button.Flyout>
                                                         <MenuFlyout Placement="Bottom">
-                                                            <MenuItem Header="Watching" Command="{Binding UpdateStatusCommand}" CommandParameter="Watching"/>
+                                                            <MenuItem Header="{Binding Watching, Source={x:Static misc:MediaMode.Instance}}" Command="{Binding UpdateStatusCommand}" CommandParameter="Watching"/>
                                                             <MenuItem Header="Completed" Command="{Binding UpdateStatusCommand}" CommandParameter="Completed"/>
                                                             <MenuItem Header="On Hold" Command="{Binding UpdateStatusCommand}" CommandParameter="OnHold"/>
                                                             <MenuItem Header="Dropped" Command="{Binding UpdateStatusCommand}" CommandParameter="Dropped"/>
-                                                            <MenuItem Header="Plan to Watch" Command="{Binding UpdateStatusCommand}" CommandParameter="PlanToWatch"/>
+                                                            <MenuItem Header="{Binding PlanTo, Source={x:Static misc:MediaMode.Instance}}" Command="{Binding UpdateStatusCommand}" CommandParameter="PlanToWatch"/>
                                                         </MenuFlyout>
                                                     </Button.Flyout>
                                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                                        <TextBlock Text="{Binding SelectedStatus}" 
+                                                        <TextBlock Text="{Binding SelectedStatus, Converter={x:Static misc:MediaMode.StatusText}}" 
                                                                    FontSize="15"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="White"/>
@@ -346,7 +349,23 @@
                                                         Command="{Binding GoToWatchPageCommand}">
                                                     <StackPanel Orientation="Horizontal" Spacing="5">
                                                         <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="22" Height="22"/>
-                                                        <TextBlock Text="Watch!" 
+                                                        <TextBlock Text="{Binding Go, Source={x:Static misc:MediaMode.Instance}}" 
+                                                                   FontSize="15"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="White"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                
+                                                <Button Classes="primary" 
+                                                        BorderThickness="0"
+                                                        CornerRadius="6"
+                                                        Padding="28,13"
+                                                        ToolTip.Tip="Open the manga this anime is based on"
+                                                        IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"
+                                                        Command="{Binding OpenMangaCommand}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Image Source="{SvgImage /Resources/Icons/book_icon.svg}" Width="20" Height="20"/>
+                                                        <TextBlock Text="Manga" 
                                                                    FontSize="15"
                                                                    FontWeight="SemiBold"
                                                                    Foreground="White"/>
@@ -479,7 +498,7 @@
                                             
                                             <!-- Studio -->
                                             <StackPanel Grid.Column="2" Spacing="12">
-                                                <TextBlock Text="Studio" 
+                                                <TextBlock Text="{Binding Creator, Source={x:Static misc:MediaMode.Instance}}" 
                                                            FontSize="12"
                                                            Foreground="{StaticResource TextMuted}"
                                                            FontWeight="SemiBold"
@@ -623,12 +642,12 @@
                 <Image Source="/Resources/nothingtoseehere_transparent_small.png"
                        Width="260"
                        RenderOptions.BitmapInterpolationMode="HighQuality"/>
-                <TextBlock Text="No anime selected"
+                <TextBlock Text="{Binding NounLower, Source={x:Static misc:MediaMode.Instance}, StringFormat='No {0} selected'}"
                            FontSize="26"
                            FontWeight="Bold"
                            Foreground="{StaticResource White}"
                            HorizontalAlignment="Center"/>
-                <TextBlock Text="Pick a title from Browse, your Library or the Calendar and it will open here."
+                <TextBlock Text="{Binding EmptyHint, Source={x:Static misc:MediaMode.Instance}}"
                            FontSize="14"
                            Foreground="{StaticResource TextSecondary}"
                            TextAlignment="Center"
@@ -638,7 +657,7 @@
                 <Button Classes="primary" Padding="20,10" HorizontalAlignment="Center" Margin="0,8,0,0" Click="GoToBrowse">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Image Source="{SvgImage /Resources/Icons/home_icon.svg}" Width="16" Height="16"/>
-                        <TextBlock Text="Browse anime" FontSize="14"/>
+                        <TextBlock Text="{Binding NounLower, Source={x:Static misc:MediaMode.Instance}, StringFormat='Browse {0}'}" FontSize="14"/>
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -647,7 +666,7 @@
                 Padding="50,20,50,0" 
                 SelectedIndex="{Binding #MainTabControl.SelectedIndex, Mode=TwoWay}">
                 <TabStripItem Content="Details"/>
-                <TabStripItem Content="Torrents"/>
+                <TabStripItem Content="Torrents" IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"/>
             </TabStrip>
         </Grid>
     </Border>

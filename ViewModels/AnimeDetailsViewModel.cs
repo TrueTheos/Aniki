@@ -29,7 +29,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     public partial string EpisodesInput { get; set; } = string.Empty;
 
-    public bool CanIncreaseEpisodeCount => WatchedEpisodes < (Details?.NumEpisodes ?? 0);
+    public bool CanIncreaseEpisodeCount => Details?.NumEpisodes is not > 0 || WatchedEpisodes < Details.NumEpisodes;
     public bool CanDecreaseEpisodeCount => WatchedEpisodes > 0;
 
     [ObservableProperty]
@@ -42,6 +42,8 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     public partial TorrentSearchViewModel TorrentSearchViewModel { get; set; }
 
     private readonly IAnimeService _animeService;
+    private IAnimeService _service;
+    private bool IsManga => !ReferenceEquals(_service, _animeService);
 
 
     private int SelectedScore
@@ -73,8 +75,14 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     public AnimeDetailsViewModel(IAnimeService animeService, WatchAnimeViewModel watchAnimeViewModel, TorrentSearchViewModel torrentSearchViewModel) 
     { 
         _animeService = animeService;
+        _service = animeService;
         WatchAnimeViewModel = watchAnimeViewModel;
         TorrentSearchViewModel = torrentSearchViewModel;
+
+        MediaMode.Instance.PropertyChanged += (_, _) =>
+        {
+            if (IsManga != MediaMode.Instance.IsManga) Details = null;
+        };
     }
 
     public override Task Enter()
@@ -89,7 +97,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         
         ManageSubscriptions(id);
 
-        AnimeDetails? details = await _animeService.GetAllFieldsAsync(id).ConfigureAwait(true);
+        AnimeDetails? details = await _service.GetAllFieldsAsync(id).ConfigureAwait(true);
         LoadDetails(details);
 
         IsLoading = false;
@@ -97,13 +105,14 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
 
     private void ManageSubscriptions(int newId)
     {
-        if (_currentSubscribedId.HasValue && _currentSubscribedId != newId)
+        if (_currentSubscribedId.HasValue)
         {
-            _animeService.UnsubscribeFromFieldChange(_currentSubscribedId.Value, OnAnimeDataChanged, AnimeField.MyListStatus);
+            _service.UnsubscribeFromFieldChange(_currentSubscribedId.Value, OnAnimeDataChanged, AnimeField.MyListStatus);
         }
 
+        _service = _animeService.Current;
         _currentSubscribedId = newId;
-        _animeService.SubscribeToFieldChange(newId, OnAnimeDataChanged, AnimeField.MyListStatus);
+        _service.SubscribeToFieldChange(newId, OnAnimeDataChanged, AnimeField.MyListStatus);
     }
 
     private void OnAnimeDataChanged(AnimeDetails updatedEntity)
@@ -132,7 +141,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(CanIncreaseEpisodeCount));
         OnPropertyChanged(nameof(CanDecreaseEpisodeCount));
         
-        if(details != null)
+        if(details != null && !IsManga)
             TorrentSearchViewModel.Update(details);
     }
 
@@ -197,7 +206,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     {
         if (Details == null) return;
 
-        await _animeService.RemoveFromUserListAsync(Details.Id).ConfigureAwait(true);
+        await _service.RemoveFromUserListAsync(Details.Id).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -206,7 +215,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         if (Details == null) return;
         if (Details.UserStatus == null || Details.UserStatus.Status == AnimeStatus.None)
         {
-            await _animeService.SetAnimeStatusAsync(Details.Id, AnimeStatus.PlanToWatch).ConfigureAwait(true);
+            await _service.SetAnimeStatusAsync(Details.Id, AnimeStatus.PlanToWatch).ConfigureAwait(true);
         }
     }
 
@@ -235,7 +244,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         try
         {
             await Task.Delay(2000, _episodeUpdateCts.Token).ConfigureAwait(true);
-            await _animeService.SetEpisodesWatchedAsync(Details.Id, newCount).ConfigureAwait(true);
+            await _service.SetEpisodesWatchedAsync(Details.Id, newCount).ConfigureAwait(true);
         }
         catch (TaskCanceledException)
         {
@@ -266,7 +275,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     {
         if (Details?.UserStatus == null) return;
 
-        await _animeService.SetAnimeScoreAsync(Details.Id, score).ConfigureAwait(true);
+        await _service.SetAnimeScoreAsync(Details.Id, score).ConfigureAwait(true);
         Details.UserStatus.Score = score;
     }
 
@@ -277,7 +286,7 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         AnimeStatus animeStatus = status.TranslatedToAnimeStatus();
         try
         {
-            await _animeService.SetAnimeStatusAsync(Details.Id, animeStatus).ConfigureAwait(true);
+            await _service.SetAnimeStatusAsync(Details.Id, animeStatus).ConfigureAwait(true);
             Details.UserStatus ??= new UserAnimeStatus();
             Details.UserStatus.Status = animeStatus;
             SelectedStatus = status;
@@ -304,39 +313,24 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void OpenMalPage()
     {
-        if (Details == null) return;
-        string url = "";
-        switch (AnimeService.CurrentProviderType)
-        {
-            case ILoginProvider.ProviderType.Mal:
-                url = $"https://myanimelist.net/anime/{Details.Id}";
-                break;
-            case ILoginProvider.ProviderType.AniList:
-                url = $"https://anilist.com/anime/{Details.Id}";
-                break;
-            default:
-                //todo do something
-                break;
-        }
-
+        string? url = GetPageUrl();
         if (string.IsNullOrEmpty(url)) return;
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
     
     [RelayCommand]
-    private void CopyPageUrl()
-    {
-        if (Details == null) return;
+    private void CopyPageUrl() => SaveToClipboard(GetPageUrl());
 
-        switch (AnimeService.CurrentProviderType)
+    private string? GetPageUrl()
+    {
+        if (Details == null) return null;
+        string type = IsManga ? "manga" : "anime";
+        return AnimeService.CurrentProviderType switch
         {
-            case ILoginProvider.ProviderType.Mal:
-                SaveToClipboard($"https://myanimelist.net/anime/{Details.Id}");
-                break;
-            case ILoginProvider.ProviderType.AniList:
-                SaveToClipboard($"https://anilist.com/anime/{Details.Id}");
-                break;
-        }
+            ILoginProvider.ProviderType.Mal => $"https://myanimelist.net/{type}/{Details.Id}",
+            ILoginProvider.ProviderType.AniList => $"https://anilist.co/{type}/{Details.Id}",
+            _ => null
+        };
     }
     
     [RelayCommand]
@@ -355,11 +349,24 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private async Task OpenManga()
+    {
+        if (Details == null) return;
+        MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+        await mainViewModel.OpenSourceManga(Details).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
     private void GoToWatchPage()
     {
         if(Details?.Title == null) return;
         
         MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+        if (IsManga)
+        {
+            _ = mainViewModel.OpenInReader(Details);
+            return;
+        }
         WatchAnimeViewModel.GoToAnimeInOnlineView(Details.Id, Details.Title);
         _ = mainViewModel.ShowWatchPage();
     }

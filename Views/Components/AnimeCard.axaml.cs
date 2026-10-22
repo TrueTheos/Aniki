@@ -38,6 +38,6 @@ internal sealed partial class AnimeCard : UserControl
     private async void OnTapped(object? sender, TappedEventArgs e)
     {
         if (_data is null) return;
-        await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(_data.AnimeId).ConfigureAwait(true);
+        await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToMedia(_data.AnimeId).ConfigureAwait(true);
     }
 }

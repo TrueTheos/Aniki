@@ -16,6 +16,8 @@ internal sealed class MAL_Anime
     public MAL_MyListStatus? MyListStatus { get; set; }
 
     [JsonPropertyName("num_episodes")] public int? NumEpisodes { get; set; }
+    [JsonPropertyName("num_chapters")] public int? NumChapters { get; set; }
+    public MAL_Author[]? Authors { get; set; }
     public int? Popularity { get; set; }
     public MAL_Studio[]? Studios { get; set; } 
     [JsonPropertyName("start_date")] public string? StartDate { get; set; }
@@ -29,6 +31,7 @@ internal sealed class MAL_Anime
 
     public MAL_Genre[]? Genres { get; set; }
     [JsonPropertyName("related_anime")] public MAL_RelatedAnime[]? RelatedAnime { get; set; }
+    [JsonPropertyName("related_manga")] public MAL_RelatedAnime[]? RelatedManga { get; set; }
     [JsonPropertyName("num_favorites")] public int? NumFavorites { get; set; }
     public MAL_Statistics? Statistics { get; set; }
     public string? TrailerUrl { get; set; }

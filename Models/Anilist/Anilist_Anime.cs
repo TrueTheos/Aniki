@@ -11,6 +11,9 @@ internal sealed class Anilist_Anime
     public string? Status { get; set; }
     public string? Description { get; set; }
     public int? Episodes { get; set; }
+    public int? Chapters { get; set; }
+    public string? Type { get; set; }
+    public Anilist_Staff? Staff { get; set; }
     public int? MeanScore { get; set; }
     public int? Popularity { get; set; }
     public Anilist_Studios? Studios { get; set; }

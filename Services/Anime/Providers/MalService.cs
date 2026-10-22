@@ -13,6 +13,9 @@ namespace Aniki.Services.Anime.Providers;
 internal sealed class MalService : IAnimeProvider, IDisposable
 {
     public ILoginProvider.ProviderType Provider => ILoginProvider.ProviderType.Mal;
+    public MediaKind Kind { get; }
+    private bool IsManga => Kind == MediaKind.Manga;
+    private string Type => IsManga ? "manga" : "anime";
     private bool _isLoggedIn;
     public bool IsLoggedIn => _isLoggedIn;
 
@@ -42,9 +45,10 @@ internal sealed class MalService : IAnimeProvider, IDisposable
     private readonly string _listFields;
     private readonly string _searchFields;
 
-    public MalService(IJikanService jikanService)
+    public MalService(IJikanService jikanService, MediaKind kind = MediaKind.Anime)
     {
         _jikanService = jikanService;
+        Kind = kind;
         _allFields = string.Join(",", Enum.GetValues<AnimeField>()
                                           .Select(FieldToString)
                                           .Where(f => !string.IsNullOrEmpty(f)));
@@ -54,6 +58,8 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         // Search scoring needs alternative titles.
         _searchFields = _listFields + ",alternative_titles";
     }
+
+    public IAnimeProvider ForManga() => new MalService(_jikanService, MediaKind.Manga);
 
     public void ClearRuntimeCache()
     {
@@ -205,6 +211,8 @@ internal sealed class MalService : IAnimeProvider, IDisposable
             AnimeStatusApi.on_hold => AnimeStatus.OnHold,
             AnimeStatusApi.dropped => AnimeStatus.Dropped,
             AnimeStatusApi.plan_to_watch => AnimeStatus.PlanToWatch,
+            AnimeStatusApi.reading => AnimeStatus.Watching,
+            AnimeStatusApi.plan_to_read => AnimeStatus.PlanToWatch,
             _ => AnimeStatus.None
         };
     }
@@ -217,7 +225,8 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         {
             Status = ConvertFromMalStatus(malStatus.Status),
             Score = malStatus.Score,
-            EpisodesWatched = malStatus.NumEpisodesWatched
+            // only one of these is set, depending on anime or manga
+            EpisodesWatched = Math.Max(malStatus.NumEpisodesWatched, malStatus.NumChaptersRead)
         };
     }
 
@@ -259,7 +268,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         try
         {
             string? nextPageUrl =
-                $"https://api.myanimelist.net/v2/users/@me/animelist?fields={_listFields}&limit=1000&nsfw=true";
+                $"https://api.myanimelist.net/v2/users/@me/{Type}list?fields={_listFields}&limit=1000&nsfw=true";
 
             List<AnimeDetails> fetchedList = [];
             while (nextPageUrl != null)
@@ -285,7 +294,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
     {
-        AnimeStatusApi apiStatus = ConvertToMalStatus(status);
+        AnimeStatusApi apiStatus = ConvertToMalStatus(status, IsManga);
         if (apiStatus == AnimeStatusApi.none)
         {
             await RemoveFromUserListAsync(animeId).ConfigureAwait(false);
@@ -332,7 +341,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         {
             UserAnimeStatus.UserAnimeStatusField.Status => "status",
             UserAnimeStatus.UserAnimeStatusField.Score => "score",
-            UserAnimeStatus.UserAnimeStatusField.EpisodesWatched => "num_watched_episodes",
+            UserAnimeStatus.UserAnimeStatusField.EpisodesWatched => IsManga ? "num_chapters_read" : "num_watched_episodes",
             _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
         };
         
@@ -346,7 +355,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         FormUrlEncodedContent content = new(formData);
 #pragma warning restore CA2000
         HttpResponseMessage response = await _client.PutAsync(
-            $"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status", content).ConfigureAwait(false);
+            $"https://api.myanimelist.net/v2/{Type}/{animeId}/my_list_status", content).ConfigureAwait(false);
 
         Log(id, $"DONE   PUT my_list_status http={http.ElapsedMilliseconds}ms status={(int)response.StatusCode} | {fieldName}={value} anime={animeId}");
 
@@ -372,7 +381,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
     {
         if(!IsLoggedIn) return;
         
-        HttpResponseMessage response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/anime/{animeId}/my_list_status").ConfigureAwait(false);
+        HttpResponseMessage response = await _client.DeleteAsync($"https://api.myanimelist.net/v2/{Type}/{animeId}/my_list_status").ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
         {
@@ -395,7 +404,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
             }
         }
         
-        string url = $"https://api.myanimelist.net/v2/anime/{id}?fields={urlFields}&nsfw=true";
+        string url = $"https://api.myanimelist.net/v2/{Type}/{id}?fields={urlFields}&nsfw=true";
         
         MAL_Anime? animeResponse = await GetAndDeserializeAsync<MAL_Anime>(url, $"FetchFields {id} {urlFields}").ConfigureAwait(false);
 
@@ -403,7 +412,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         {
             animeResponse.Id = id;
             
-            if(fields.Contains(AnimeField.TrailerUrl)) animeResponse.TrailerUrl = await _jikanService.GetAnimeTrailerUrlAsync(animeResponse.Id).ConfigureAwait(false);
+            if(fields.Contains(AnimeField.TrailerUrl) && !IsManga) animeResponse.TrailerUrl = await _jikanService.GetAnimeTrailerUrlAsync(animeResponse.Id).ConfigureAwait(false);
 
             return ConvertMalToUnified(animeResponse);
         }
@@ -413,6 +422,17 @@ internal sealed class MalService : IAnimeProvider, IDisposable
 
     private string FieldToString(AnimeField field)
     {
+        if (IsManga)
+        {
+            switch (field)
+            {
+                case AnimeField.Episodes: return "num_chapters";
+                case AnimeField.Studios: return "authors{first_name,last_name}";
+                case AnimeField.RelatedAnime: return "related_manga{id,title,num_chapters,media_type,synopsis,status,alternative_titles}";
+                case AnimeField.Videos or AnimeField.Stats: return "";
+            }
+        }
+
         return field switch
         {
             AnimeField.Title => "title",
@@ -461,7 +481,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
     private async Task<List<AnimeDetails>> SearchAnimeCoreAsync(string query)
     {
         string url =
-            $"https://api.myanimelist.net/v2/anime?q={Uri.EscapeDataString(query)}&limit=20&fields={_searchFields}&nsfw=true";
+            $"https://api.myanimelist.net/v2/{Type}?q={Uri.EscapeDataString(query)}&limit=20&fields={_searchFields}&nsfw=true";
 
         MAL_AnimeSearchListResponse? responseData =
             await GetAndDeserializeAsync<MAL_AnimeSearchListResponse>(url, $"SearchAnimeOrdered {query}")
@@ -480,7 +500,13 @@ internal sealed class MalService : IAnimeProvider, IDisposable
 
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        string rankingType = category switch
+        string rankingType = IsManga ? category switch
+        {
+            RankingCategory.Airing => "manga",
+            RankingCategory.Upcoming => "manhwa",
+            RankingCategory.ByPopularity => "bypopularity",
+            _ => "all"
+        } : category switch
         {
             RankingCategory.Airing => "airing",
             RankingCategory.Upcoming => "upcoming",
@@ -489,7 +515,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         };
 
         string url =
-            $"https://api.myanimelist.net/v2/anime/ranking?ranking_type={rankingType}&limit=100&fields={_listFields},videos&nsfw=true";
+            $"https://api.myanimelist.net/v2/{Type}/ranking?ranking_type={rankingType}&limit=100&fields={_listFields},videos&nsfw=true";
 
         try
         {
@@ -600,10 +626,12 @@ internal sealed class MalService : IAnimeProvider, IDisposable
         return normalized.ToLowerInvariant();
     }
     
-    private static AnimeStatusApi ConvertToMalStatus(AnimeStatus status)
+    private static AnimeStatusApi ConvertToMalStatus(AnimeStatus status, bool manga)
     {
         return status switch
         {
+            AnimeStatus.Watching when manga => AnimeStatusApi.reading,
+            AnimeStatus.PlanToWatch when manga => AnimeStatusApi.plan_to_read,
             AnimeStatus.Watching => AnimeStatusApi.watching,
             AnimeStatus.Completed => AnimeStatusApi.completed,
             AnimeStatus.OnHold => AnimeStatusApi.on_hold,
@@ -648,9 +676,9 @@ internal sealed class MalService : IAnimeProvider, IDisposable
                     Japanese = mal.AlternativeTitles.Ja
                 } : null,
             userStatus: ConvertMalListStatus(mal.MyListStatus),
-            numEpisodes: mal.NumEpisodes,
+            numEpisodes: mal.NumEpisodes ?? mal.NumChapters,
             popularity: mal.Popularity,
-            studios: mal.Studios?.Select(s => s.Name).ToArray(),
+            studios: mal.Studios?.Select(s => s.Name).ToArray() ?? mal.Authors?.Select(a => a.Node?.Name ?? "").ToArray(),
             startDate: mal.StartDate,
             mean: mal.Mean,
             genres: mal.Genres?.Select(g => g.Name).ToArray(),
@@ -659,7 +687,7 @@ internal sealed class MalService : IAnimeProvider, IDisposable
             videos: mal.Videos,
             statistics: mal.Statistics?.ToAnimeStatistics() ?? new AnimeStatistics(),
             mediaType: mal.MediaType ?? MediaType.Unknown,
-            relatedAnime: mal.RelatedAnime?
+            relatedAnime: (mal.RelatedAnime ?? mal.RelatedManga)?
                 .Select(r => new RelatedAnime
                 {
                     Details = r.Node != null ? ConvertMalToUnified(r.Node) : null,

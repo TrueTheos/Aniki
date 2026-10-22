@@ -1,0 +1,112 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Aniki.ViewModels"
+             xmlns:local="clr-namespace:Aniki.Views"
+             xmlns:models="clr-namespace:Aniki.Models"
+             xmlns:misc="clr-namespace:Aniki.Misc"
+             x:Class="Aniki.Views.ExploreView"
+             x:DataType="vm:ExploreViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="ToggleButton.chip">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="ToggleButton.chip:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{StaticResource Surface2}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderLight}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="MinWidth" Value="160"/>
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="LetterSpacing" Value="1.2"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer Background="{StaticResource BackgroundBlack}">
+        <StackPanel Spacing="24" Margin="50,40,50,40">
+            <TextBlock FontSize="28" FontWeight="Bold" Foreground="{StaticResource White}"
+                       Text="{Binding Noun, Source={x:Static misc:MediaMode.Instance}, StringFormat='{}Explore {0}'}"/>
+
+            <WrapPanel>
+                <ComboBox ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" Margin="0,0,10,10"/>
+                <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" Margin="0,0,10,10"/>
+                <ComboBox ItemsSource="{Binding Sorts}" SelectedItem="{Binding SelectedSort}" Margin="0,0,10,10"/>
+                <Button Content="Clear filters" Command="{Binding ClearFiltersCommand}" Margin="0,0,0,10"
+                        Background="Transparent" Foreground="{StaticResource TextSecondary}" Cursor="Hand"/>
+            </WrapPanel>
+
+            <StackPanel Spacing="10">
+                <TextBlock Classes="label" Text="GENRES"/>
+                <ItemsControl ItemsSource="{Binding Genres}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:GenreViewModel">
+                            <ToggleButton Classes="chip" Content="{Binding Name}" IsChecked="{Binding IsSelected}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <StackPanel Spacing="10">
+                <TextBlock Classes="label" Text="TAGS"/>
+                <WrapPanel>
+                    <AutoCompleteBox ItemsSource="{Binding AllTags}" Text="{Binding TagQuery}" SelectedItem="{Binding PickedTag}"
+                                     FilterMode="Contains" MinimumPrefixLength="1" Watermark="Add a tag (e.g. Isekai, Time Skip, Revenge)…"
+                                     Width="320" Margin="0,0,12,8"/>
+                    <ItemsControl ItemsSource="{Binding SelectedTags}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button Classes="primary" CornerRadius="16" Padding="14,6" Margin="0,0,8,8" FontSize="13"
+                                        ToolTip.Tip="Remove tag"
+                                        Command="{Binding $parent[ItemsControl].((vm:ExploreViewModel)DataContext).RemoveTagCommand}"
+                                        CommandParameter="{Binding}">
+                                    <TextBlock Text="{Binding StringFormat='{}{0}  ✕'}"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </WrapPanel>
+            </StackPanel>
+
+            <ProgressBar Height="4" IsIndeterminate="True" IsVisible="{Binding IsLoading}"
+                         Foreground="{StaticResource AccentRed}" Background="Transparent"/>
+
+            <TextBlock Text="Nothing matches all of these filters. Try removing a genre or tag."
+                       IsVisible="{Binding HasNoResults}" FontSize="15" Foreground="{StaticResource TextSecondary}"/>
+
+            <ItemsControl ItemsSource="{Binding Results}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:AnimeCardData">
+                        <local:AnimeCard Margin="0,0,20,24"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Classes="primary" Content="Load more" HorizontalAlignment="Center" Padding="28,12"
+                    Command="{Binding LoadMoreCommand}" IsVisible="{Binding HasMore}" IsEnabled="{Binding !IsLoading}"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

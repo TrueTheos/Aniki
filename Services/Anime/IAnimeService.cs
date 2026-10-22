@@ -5,6 +5,9 @@ namespace Aniki.Services.Anime;
 
 internal interface IAnimeService
 {
+    public IAnimeService Current { get; }
+    public IAnimeService Manga { get; }
+
     public Task<List<AnimeDetails>> GetUserAnimeListAsync(AnimeStatus status = AnimeStatus.None);
     public Task<AnimeDetails?> GetFieldsAsync(int animeId, bool forceFetch = false, params AnimeField[] fields);
     public void RegisterProvider(ILoginProvider.ProviderType name, IAnimeProvider provider);

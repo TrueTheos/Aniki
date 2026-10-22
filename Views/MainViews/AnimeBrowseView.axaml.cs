@@ -33,7 +33,7 @@ internal sealed partial class AnimeBrowseView : UserControl
     {
         if (sender is Border { DataContext: AnimeCardData anime })
         {
-            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.AnimeId).ConfigureAwait(true);
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToMedia(anime.AnimeId).ConfigureAwait(true);
         }
     }
     
@@ -41,7 +41,7 @@ internal sealed partial class AnimeBrowseView : UserControl
     {
         if (_viewModel.HeroAnime is { } hero)
         {
-            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(hero.AnimeId).ConfigureAwait(true);
+            await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToMedia(hero.AnimeId).ConfigureAwait(true);
         }
     }
 

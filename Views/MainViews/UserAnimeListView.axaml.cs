@@ -17,7 +17,7 @@ internal sealed partial class UserAnimeListView : UserControl
         {
             if (sender is Button { DataContext: AnimeDetails anime })
             {
-                await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id).ConfigureAwait(true);
+                await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToMedia(anime.Id).ConfigureAwait(true);
             }
         }
         catch (Exception e)

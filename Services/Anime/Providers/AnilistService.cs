@@ -1,4 +1,6 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using Aniki.Misc;
 using Aniki.Models.Anilist;
 using Aniki.Models.Anilist.Components;
@@ -15,6 +17,14 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
     private sealed record AiringPage(List<AiringMedia>? Media);
     private sealed record AiringMedia(int? Id, int? IdMal, int? Episodes, NextAiringEpisode? NextAiringEpisode);
     private sealed record NextAiringEpisode(int Episode);
+
+    private sealed record DiscoverPageResponse(DiscoverPage? Page);
+    private sealed record DiscoverPage(DiscoverPageInfo? PageInfo, List<Anilist_Anime>? Media);
+    private sealed record DiscoverPageInfo(bool HasNextPage);
+    private sealed record TagCollectionResponse(List<TagItem>? MediaTagCollection);
+    private sealed record TagItem(string Name, bool IsAdult);
+
+    private List<string>? _tags;
     
     private readonly GraphQLHttpClient _client;
 
@@ -24,8 +34,13 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
 
     private int? _currentUserId;
 
-    public AnilistService()
+    private readonly MediaKind _kind;
+    private bool IsManga => _kind == MediaKind.Manga;
+    private string Type => IsManga ? "MANGA" : "ANIME";
+
+    public AnilistService(MediaKind kind = MediaKind.Anime)
     {
+        _kind = kind;
 #pragma warning disable CA2000
         AnilistRateLimitHandler rateLimitHandler = new(new HttpClientHandler());
 #pragma warning restore CA2000
@@ -45,6 +60,8 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         _client = new GraphQLHttpClient(options, new SystemTextJsonSerializer(), graphQlHttpClient);
     }
     
+    public IAnimeProvider ForManga() => new AnilistService(MediaKind.Manga);
+
     public async Task InitAsync(string? accessToken)
     {
         if (!string.IsNullOrEmpty(accessToken))
@@ -149,6 +166,70 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         return results;
     }
 
+    public async Task<int?> GetSourceMangaIdAsync(int animeId, bool useMalId)
+    {
+        string idArg = useMalId ? "idMal" : "id";
+        GraphQLRequest request = new()
+        {
+            Query = $"query ($id: Int) {{ Media({idArg}: $id, type: ANIME) {{ relations {{ edges {{ relationType node {{ id idMal type format }} }} }} }} }}",
+            Variables = new { id = animeId }
+        };
+
+        var response = await TrySendQueryAsync<Anilist_MediaResponse>(request, $"GetSourceMangaIdAsync {animeId}").ConfigureAwait(false);
+        Anilist_RelationEdge? edge = response?.Data?.Media?.Relations?.Edges?
+            .Where(e => e.Node?.Type == "MANGA" && (!useMalId || e.Node.IdMal != null))
+            .OrderBy(e => e.Node!.Format switch { "MANGA" => 0, "NOVEL" => 2, _ => 1 })
+            .FirstOrDefault();
+        return useMalId ? edge?.Node?.IdMal : edge?.Node?.Id;
+    }
+
+    public async Task<(List<Anilist_Anime> Items, bool HasMore)> DiscoverAsync(
+        MediaKind kind, IReadOnlyList<string> genres, IReadOnlyList<string> tags,
+        string? format, string? country, string? status, string sort, int page)
+    {
+        Dictionary<string, object> variables = new()
+        {
+            ["page"] = page,
+            ["type"] = kind == MediaKind.Manga ? "MANGA" : "ANIME",
+            ["sort"] = sort
+        };
+        if (genres.Count > 0) variables["genres"] = genres;
+        if (tags.Count > 0) variables["tags"] = tags;
+        if (format != null) variables["format"] = format;
+        if (country != null) variables["country"] = country;
+        if (status != null) variables["status"] = status;
+
+        GraphQLRequest request = new()
+        {
+            Query = @"
+                query ($page: Int, $type: MediaType, $genres: [String], $tags: [String], $format: MediaFormat,
+                       $country: CountryCode, $status: MediaStatus, $sort: [MediaSort]) {
+                    Page(page: $page, perPage: 30) {
+                        pageInfo { hasNextPage }
+                        media(type: $type, genre_in: $genres, tag_in: $tags, format: $format, countryOfOrigin: $country,
+                              status: $status, sort: $sort, isAdult: false) {
+                            id idMal title { romaji english } coverImage { large medium } meanScore
+                        }
+                    }
+                }",
+            Variables = variables
+        };
+
+        var response = await TrySendQueryAsync<DiscoverPageResponse>(request, $"DiscoverAsync page {page}").ConfigureAwait(false);
+        return (response?.Data?.Page?.Media ?? [], response?.Data?.Page?.PageInfo?.HasNextPage ?? false);
+    }
+
+    public async Task<List<string>> GetTagsAsync()
+    {
+        if (_tags != null) return _tags;
+
+        GraphQLRequest request = new() { Query = "query { MediaTagCollection { name isAdult } }" };
+        var response = await TrySendQueryAsync<TagCollectionResponse>(request, "GetTagsAsync").ConfigureAwait(false);
+        List<string> tags = response?.Data?.MediaTagCollection?.Where(t => !t.IsAdult).Select(t => t.Name).Order().ToList() ?? [];
+        if (tags.Count > 0) _tags = tags;
+        return tags;
+    }
+
     #region  IAnimeProvider
 
     public async Task<UserData> GetUserDataAsync()
@@ -199,7 +280,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         {
             Query = @"
                 query ($userId: Int) {
-                    MediaListCollection(userId: $userId, type: ANIME" + statusText + @") {
+                    MediaListCollection(userId: $userId, type: " + Type + statusText + @") {
                         lists {
                             isCustomList
                             entries {
@@ -298,7 +379,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
 
         string query = $@"
             query ($id: Int) {{
-                Media(id: $id, type: ANIME) {{
+                Media(id: $id, type: {Type}) {{
                     {string.Join("\n", fragments)}
                 }}
             }}";
@@ -324,7 +405,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             Query = $@"
                 query ($search: String) {{
                     Page(page: 1, perPage: 20) {{
-                        media(search: $search, type: ANIME) {{
+                        media(search: $search, type: {Type}) {{
                             {innerQuery}
                         }}
                     }}
@@ -340,7 +421,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
     {
         GraphQLRequest request = new()
         {
-            Query = "query ($idMal: Int) { Media(idMal: $idMal, type: ANIME) { id } }",
+            Query = $"query ($idMal: Int) {{ Media(idMal: $idMal, type: {Type}) {{ id }} }}",
             Variables = new { idMal = malId }
         };
 
@@ -350,13 +431,20 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
 
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        (string? sort, string? status) = category switch
+        (string sort, string? status, string? country) ranking = IsManga ? category switch
         {
-            RankingCategory.Airing => ("POPULARITY_DESC", "RELEASING"),
-            RankingCategory.Upcoming => ("POPULARITY_DESC", "NOT_YET_RELEASED"),
-            RankingCategory.ByPopularity => ("POPULARITY_DESC", null),
-            _ => ("SCORE_DESC", null)
+            RankingCategory.Airing => ("SCORE_DESC", null, "JP"),
+            RankingCategory.Upcoming => ("SCORE_DESC", null, "KR"),
+            RankingCategory.ByPopularity => ("POPULARITY_DESC", null, null),
+            _ => ("SCORE_DESC", null, null)
+        } : category switch
+        {
+            RankingCategory.Airing => ("POPULARITY_DESC", "RELEASING", null),
+            RankingCategory.Upcoming => ("POPULARITY_DESC", "NOT_YET_RELEASED", null),
+            RankingCategory.ByPopularity => ("POPULARITY_DESC", null, null),
+            _ => ("SCORE_DESC", null, null)
         };
+        (string sort, string? status, string? country) = ranking;
 
         HashSet<AnimeField> fields =
         [
@@ -381,12 +469,21 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         {
             queryVariables += ", $status: MediaStatus";
         }
+        if (country != null)
+        {
+            variables["country"] = country;
+            queryVariables += ", $country: CountryCode";
+        }
         queryVariables += ")";
         
-        string mediaArgs = "type: ANIME, sort: $sort";
+        string mediaArgs = $"type: {Type}, sort: $sort";
         if (status != null)
         {
             mediaArgs += ", status: $status";
+        }
+        if (country != null)
+        {
+            mediaArgs += ", countryOfOrigin: $country";
         }
 
         GraphQLRequest request = new()
@@ -452,7 +549,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         };
     }
     
-    private static AnimeDetails ConvertAnilistToUnified(Anilist_Anime anime, Anilist_MediaListStatus? userStatus)
+    private AnimeDetails ConvertAnilistToUnified(Anilist_Anime anime, Anilist_MediaListStatus? userStatus)
     {
         AnimeStatistics stats = new()
         {
@@ -480,7 +577,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         {
             foreach (Anilist_RelationEdge edge in anime.Relations.Edges)
             {
-                if (edge.Node == null) continue;
+                if (edge.Node == null || (edge.Node.Type != null && edge.Node.Type != Type)) continue;
                 
                 relatedList.Add(new RelatedAnime
                 {
@@ -494,7 +591,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                             Medium = edge.Node.CoverImage?.Medium ?? "",
                             Large = edge.Node.CoverImage?.Large ?? ""
                         },
-                        NumEpisodes = edge.Node.Episodes,
+                        NumEpisodes = edge.Node.Episodes ?? edge.Node.Chapters,
                         Status = edge.Node.Status,
                         Mean = (edge.Node.MeanScore ?? 0) / 10f,
                         MediaType = ConvertStringToMediaType(edge.Node.Format)
@@ -538,7 +635,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                 Large = anime.CoverImage.Large ?? ""
             } : null,
             status: anime.Status,
-            synopsis: anime.Description,
+            synopsis: StripHtml(anime.Description),
             alternativeTitles: new AlternativeTitles
             {
                 English = anime.Title?.English,
@@ -546,9 +643,10 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                 Synonyms = null 
             },
             userStatus: userAnimeStatus,
-            numEpisodes: anime.Episodes ?? 0,
+            numEpisodes: anime.Episodes ?? anime.Chapters ?? 0,
             popularity: anime.Popularity,
-            studios: anime.Studios?.Nodes?.Select(s => s.Name).ToArray() ?? [],
+            studios: anime.Studios?.Nodes?.Select(s => s.Name).ToArray()
+                     ?? anime.Staff?.Nodes?.Select(s => s.Name?.Full ?? "").ToArray() ?? [],
             startDate: anime.StartDate == null ? null : $"{anime.StartDate.Year:D4}-{anime.StartDate.Month:D2}-{anime.StartDate.Day:D2}",
             mean: (anime.MeanScore ?? 0) / 10f,
             genres: anime.Genres?.ToArray(),
@@ -561,6 +659,9 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         );
     }
     
+    private static string? StripHtml(string? html) => html == null ? null :
+        WebUtility.HtmlDecode(Regex.Replace(Regex.Replace(html, @"<br\s*/?>\s*", "\n", RegexOptions.IgnoreCase), "<[^>]+>", "")).Trim();
+
     private static RelatedAnime.RelationType ConvertRelationType(string? type)
     {
         if (string.IsNullOrEmpty(type)) return RelatedAnime.RelationType.Other;
@@ -574,7 +675,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         };
     }
     
-    private static IEnumerable<string> GetGraphQlFragments(HashSet<AnimeField> fields)
+    private IEnumerable<string> GetGraphQlFragments(HashSet<AnimeField> fields)
     {
         if (fields.Count > 0)
         {
@@ -613,7 +714,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                     break;
 
                 case AnimeField.Episodes:
-                    yield return "episodes";
+                    yield return IsManga ? "chapters" : "episodes";
                     break;
 
                 case AnimeField.Popularity:
@@ -648,10 +749,17 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                                     }";
                     break;
 
+                case AnimeField.Studios when IsManga:
+                    yield return "staff(perPage: 2, sort: RELEVANCE) { nodes { name { full } } }";
+                    break;
+
                 case AnimeField.Studios:
                     yield return @"studios(isMain: true) {
                                 nodes { id name }
                             }";
+                    break;
+
+                case AnimeField.Videos or AnimeField.TrailerUrl when IsManga:
                     break;
 
                 case AnimeField.Videos:
@@ -679,7 +787,9 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
                                         id
                                         title { romaji english }
                                         coverImage { medium }
+                                        type
                                         episodes
+                                        chapters
                                         status
                                         meanScore,
                                         format

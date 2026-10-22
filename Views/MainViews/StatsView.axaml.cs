@@ -20,7 +20,7 @@ internal sealed partial class StatsView : UserControl
         try
         {
             if (sender is Control { DataContext: AnimeDetails anime })
-                await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToAnime(anime.Id).ConfigureAwait(true);
+                await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().GoToMedia(anime.Id).ConfigureAwait(true);
         }
         catch (Exception ex)
         {

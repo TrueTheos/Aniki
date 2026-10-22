@@ -17,22 +17,35 @@ internal sealed class AnimeService : IAnimeService
 
     private IAnimeProvider? _currentProvider;
 
+    private readonly MediaKind _kind;
+    private readonly AnimeService? _manga;
+
     public static bool IsLoggedIn;
     public static ILoginProvider.ProviderType CurrentProviderType = ILoginProvider.ProviderType.Mal;
 
-    public AnimeService(ISaveService saveService)
+    public AnimeService(ISaveService saveService) : this(saveService, MediaKind.Anime)
+    {
+        _manga = new AnimeService(saveService, MediaKind.Manga);
+    }
+
+    private AnimeService(ISaveService saveService, MediaKind kind)
     {
         _saveService = saveService;
+        _kind = kind;
     }
+
+    public IAnimeService Current => MediaMode.Instance.IsManga ? Manga : this;
+    public IAnimeService Manga => _manga ?? this;
 
     public void RegisterProvider(ILoginProvider.ProviderType name, IAnimeProvider provider)
     {
         _providers[name] = provider;
+        _manga?.RegisterProvider(name, provider.ForManga());
         
         CacheOptions options = new()
         {
             DefaultTimeToLive = TimeSpan.FromHours(8),
-            DiskCachePath = $"{SaveService.CachePath}/{name}",
+            DiskCachePath = _kind == MediaKind.Manga ? $"{SaveService.CachePath}/{name}_Manga" : $"{SaveService.CachePath}/{name}",
             DiskSyncInterval = TimeSpan.FromMinutes(2),
             EnableDiskCache = true
         };
@@ -52,6 +65,7 @@ internal sealed class AnimeService : IAnimeService
         _currentProvider = provider;
         CurrentProviderType = providerName;
         await _currentProvider.InitAsync(accessToken).ConfigureAwait(false);
+        if (_manga != null) await _manga.SetActiveProviderAsync(providerName, accessToken).ConfigureAwait(false);
 
         IsLoggedIn = _currentProvider.IsLoggedIn;
     }
@@ -141,7 +155,7 @@ internal sealed class AnimeService : IAnimeService
         if (_currentProvider != null)
             _caches[_currentProvider.Provider].Update(animeId, new AnimeDetails(), AnimeField.MyListStatus);
 
-        WeakReferenceMessenger.Default.Send(new UserListStatusChangedMessage(animeId, null));
+        WeakReferenceMessenger.Default.Send(new UserListStatusChangedMessage(animeId, null, _kind));
     }
 
     public async Task SetAnimeStatusAsync(int animeId, AnimeStatus status)
@@ -168,7 +182,7 @@ internal sealed class AnimeService : IAnimeService
         {
             AnimeDetails? details = await GetFieldsAsync(animeId, true, AnimeField.MyListStatus).ConfigureAwait(false);
             WeakReferenceMessenger.Default.Send(
-                new UserListStatusChangedMessage(animeId, details?.UserStatus?.Status));
+                new UserListStatusChangedMessage(animeId, details?.UserStatus?.Status, _kind));
         }
         catch (Exception ex)
         {
@@ -223,7 +237,8 @@ internal sealed class AnimeService : IAnimeService
     {
         await _saveService.ClearAllCaches().ConfigureAwait(false);
 
-        foreach (IAnimeProvider provider in _providers.Values)
+        IEnumerable<IAnimeProvider> providers = _manga == null ? _providers.Values : _providers.Values.Concat(_manga._providers.Values);
+        foreach (IAnimeProvider provider in providers)
             provider.ClearRuntimeCache();
     }
 }

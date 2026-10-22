@@ -5,6 +5,7 @@
     xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:misc="clr-namespace:Aniki.Misc"
     x:DataType="vm:UserAnimeListViewModel">
     
     <Border Background="{StaticResource BackgroundBlack}" Padding="0">
@@ -18,7 +19,7 @@
                     <!-- Title and Stats -->
                     <Grid Grid.Row="0" Margin="0,0,0,25">   
                         <StackPanel Spacing="10">
-                            <TextBlock Text="My Anime List"
+                            <TextBlock Text="{Binding Noun, Source={x:Static misc:MediaMode.Instance}, StringFormat='{}My {0} List'}"
                                        FontSize="34"
                                        FontWeight="Bold"
                                        Foreground="White"/>
@@ -88,11 +89,11 @@
                                 <Button.Flyout>
                                     <MenuFlyout Placement="Bottom">
                                         <MenuItem Header="All" Command="{Binding SetStatusFilterCommand}" CommandParameter="All"/>
-                                        <MenuItem Header="Watching" Command="{Binding SetStatusFilterCommand}" CommandParameter="Watching"/>
+                                        <MenuItem Header="{Binding Watching, Source={x:Static misc:MediaMode.Instance}}" Command="{Binding SetStatusFilterCommand}" CommandParameter="Watching"/>
                                         <MenuItem Header="Completed" Command="{Binding SetStatusFilterCommand}" CommandParameter="Completed"/>
                                         <MenuItem Header="On Hold" Command="{Binding SetStatusFilterCommand}" CommandParameter="OnHold"/>
                                         <MenuItem Header="Dropped" Command="{Binding SetStatusFilterCommand}" CommandParameter="Dropped"/>
-                                        <MenuItem Header="Plan to Watch" Command="{Binding SetStatusFilterCommand}" CommandParameter="PlanToWatch"/>
+                                        <MenuItem Header="{Binding PlanTo, Source={x:Static misc:MediaMode.Instance}}" Command="{Binding SetStatusFilterCommand}" CommandParameter="PlanToWatch"/>
                                     </MenuFlyout>
                                 </Button.Flyout>
                                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -270,7 +271,7 @@
                                                         VerticalAlignment="Bottom"
                                                         Margin="10"
                                                         IsVisible="{Binding UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                    <TextBlock Text="{Binding UserStatus.Status}"
+                                                    <TextBlock Text="{Binding UserStatus.Status, Converter={x:Static misc:MediaMode.StatusText}}"
                                                                FontSize="11"
                                                                FontWeight="Bold"
                                                                Foreground="White"/>
@@ -296,9 +297,10 @@
                                             <TextBlock Text="•" 
                                                        FontSize="13"
                                                        Foreground="{StaticResource TextMuted}"/>
-                                            <TextBlock Text="{Binding NumEpisodes, StringFormat='{}{0} eps'}"
-                                                       FontSize="13"
-                                                       Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock FontSize="13"
+                                                       Foreground="{StaticResource TextSecondary}">
+                                                <Run Text="{Binding NumEpisodes, Converter={x:Static misc:MediaMode.UnitCountShort}}"/>
+                                            </TextBlock>
                                         </StackPanel>
                                     </StackPanel>
                                 </Button>
@@ -421,9 +423,10 @@
                                                            FontSize="13"
                                                            Foreground="{StaticResource TextSecondary}"/>
                                                 <TextBlock Text="•" FontSize="13" Foreground="{StaticResource TextMuted}"/>
-                                                <TextBlock Text="{Binding NumEpisodes, StringFormat='{}{0} episodes'}"
-                                                           FontSize="13"
-                                                           Foreground="{StaticResource TextSecondary}"/>
+                                                <TextBlock FontSize="13"
+                                                           Foreground="{StaticResource TextSecondary}">
+                                                    <Run Text="{Binding NumEpisodes, Converter={x:Static misc:MediaMode.UnitCount}}"/>
+                                                </TextBlock>
                                                 <TextBlock Text="•" FontSize="13" Foreground="{StaticResource TextMuted}"
                                                            IsVisible="{Binding Studios[0], Converter={x:Static ObjectConverters.IsNotNull}}"/>
                                                 <TextBlock Text="{Binding Studios[0]}"
@@ -462,7 +465,7 @@
                                                     Padding="14,8"
                                                     HorizontalAlignment="Right"
                                                     IsVisible="{Binding UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                <TextBlock Text="{Binding UserStatus.Status}"
+                                                <TextBlock Text="{Binding UserStatus.Status, Converter={x:Static misc:MediaMode.StatusText}}"
                                                            FontSize="12"
                                                            FontWeight="Bold"
                                                            Foreground="White"/>

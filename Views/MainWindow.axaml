@@ -7,6 +7,7 @@
     xmlns:views="clr-namespace:Aniki.Views;assembly=Aniki"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
     xmlns:anime="clr-namespace:Aniki.Services.Anime"
+    xmlns:misc="clr-namespace:Aniki.Misc"
     Title="Aniki - Anime Client"
     d:DesignHeight="720"
     d:DesignWidth="1080"
@@ -87,6 +88,21 @@
         <Style Selector="Button.MenuButton.selected Border.indicator">
             <Setter Property="Background" Value="{StaticResource AccentRed}" />
         </Style>
+        <Style Selector="Button.ModeButton">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="0,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.ModeButton.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentRed}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
         <Style Selector="TextBlock.nav-section">
             <Setter Property="Margin" Value="12,18,0,6" />
         </Style>
@@ -158,7 +174,7 @@
                     PointerPressed="OnBeginDrag"/>
 
             <!-- Sidebar -->
-            <Grid Grid.Column="0" Margin="12,38,8,16" RowDefinitions="Auto,*,Auto">
+            <Grid x:Name="Sidebar" Grid.Column="0" Margin="12,38,8,16" RowDefinitions="Auto,*,Auto">
 
                 <!-- Brand -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="12,0,0,10">
@@ -171,6 +187,16 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="2">
+                    <Border Background="{StaticResource Surface2}" CornerRadius="8" Padding="3" Margin="8,4,4,6">
+                        <Grid ColumnDefinitions="*,*">
+                            <Button Classes="ModeButton" Content="Anime"
+                                    Classes.selected="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"
+                                    Command="{Binding SetMediaKindCommand}" CommandParameter="Anime"/>
+                            <Button Grid.Column="1" Classes="ModeButton" Content="Manga"
+                                    Classes.selected="{Binding IsManga, Source={x:Static misc:MediaMode.Instance}}"
+                                    Command="{Binding SetMediaKindCommand}" CommandParameter="Manga"/>
+                        </Grid>
+                    </Border>
                     <TextBlock Classes="section-label nav-section" Text="MENU" />
                     <Button Name="MainPageButton"
                             Classes="MenuButton"
@@ -189,12 +215,13 @@
                         <Grid ColumnDefinitions="3,10,Auto,10,*">
                             <Border Classes="indicator" />
                             <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/info_icon.svg}" />
-                            <TextBlock Grid.Column="4" Text="Anime Details" />
+                            <TextBlock Grid.Column="4" Text="{Binding Noun, Source={x:Static misc:MediaMode.Instance}, StringFormat='{}{0} Details'}" />
                         </Grid>
                     </Button>
                     <Button Name="WatchPageButton"
                             Classes="MenuButton"
                             Classes.selected="{Binding IsWatchNavSelected}"
+                            IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"
                             Command="{Binding ShowWatchPageCommand}">
                         <Grid ColumnDefinitions="3,10,Auto,10,*">
                             <Border Classes="indicator" />
@@ -205,11 +232,31 @@
                     <Button Name="CalendarPageButton"
                             Classes="MenuButton"
                             Classes.selected="{Binding IsCalendarNavSelected}"
+                            IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"
                             Command="{Binding ShowCalendarPageCommand}">
                         <Grid ColumnDefinitions="3,10,Auto,10,*">
                             <Border Classes="indicator" />
                             <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/calendar_icon.svg}" />
                             <TextBlock Grid.Column="4" Text="Calendar" />
+                        </Grid>
+                    </Button>
+                    <Button Name="ExplorePageButton"
+                            Classes="MenuButton"
+                            Command="{Binding ShowExplorePageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/search_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Explore" />
+                        </Grid>
+                    </Button>
+                    <Button Name="ReadPageButton"
+                            Classes="MenuButton"
+                            IsVisible="{Binding IsManga, Source={x:Static misc:MediaMode.Instance}}"
+                            Command="{Binding ShowReadPageCommand}">
+                        <Grid ColumnDefinitions="3,10,Auto,10,*">
+                            <Border Classes="indicator" />
+                            <Image Grid.Column="2" Source="{SvgImage /Resources/Icons/book_icon.svg}" />
+                            <TextBlock Grid.Column="4" Text="Read" />
                         </Grid>
                     </Button>
 
@@ -261,6 +308,7 @@
 
             <!--  Content  -->
             <Border
+                x:Name="ContentHost"
                 Grid.Column="1"
                 BorderBrush="{StaticResource Border}"
                 BorderThickness="1,0,0,0"
@@ -301,6 +349,12 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:CalendarViewModel">
                                     <views:CalendarView />
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:ExploreViewModel">
+                                    <views:ExploreView />
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:ReadViewModel">
+                                    <views:ReadView />
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:AnimeBrowseViewModel">
                                     <views:AnimeBrowseView />
@@ -346,6 +400,7 @@
             </Border>
 
             <StackPanel
+                x:Name="NavArrows"
                 Grid.Column="1"
                 Margin="-7,5,0,0"
                 HorizontalAlignment="Left"

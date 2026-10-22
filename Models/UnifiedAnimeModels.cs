@@ -201,7 +201,12 @@ internal enum MediaType
     Manga,
     Novel,
     One_Shot,
-    CM
+    CM,
+    Doujinshi,
+    Manhwa,
+    Manhua,
+    OEL,
+    Light_Novel
 }
 
 internal sealed class AnimeVideo

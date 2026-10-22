@@ -49,6 +49,9 @@ internal sealed partial class AnimeListStatusButton : UserControl
     }
     private void ShowStatusButtons()
     {
+        ToolTip.SetTip(PlannedToWatchButton, $"Add to {MediaMode.Instance.PlanTo}");
+        ToolTip.SetTip(WatchingButton, $"Add to {MediaMode.Instance.Watching}");
+
         PlannedToWatchButton.Classes.Add("visible");
         WatchingButton.Classes.Add("visible");
         CompletedButton.Classes.Add("visible");
@@ -145,9 +148,9 @@ internal sealed partial class AnimeListStatusButton : UserControl
         try
         {
             if (status == AnimeStatusApi.none)
-                await _animeService.RemoveFromUserListAsync(_data.AnimeId).ConfigureAwait(true);
+                await _animeService.Current.RemoveFromUserListAsync(_data.AnimeId).ConfigureAwait(true);
             else
-                await _animeService.SetAnimeStatusAsync(_data.AnimeId, next).ConfigureAwait(true);
+                await _animeService.Current.SetAnimeStatusAsync(_data.AnimeId, next).ConfigureAwait(true);
         }
         catch (Exception ex)
         {
@@ -163,8 +166,8 @@ internal sealed partial class AnimeListStatusButton : UserControl
         {
             null                    => ("add_icon", "Not in list"),
             AnimeStatus.None        => ("add_icon", "Not in list"),
-            AnimeStatus.PlanToWatch => ("calendarAdd_icon", "Plan to Watch"),
-            AnimeStatus.Watching    => ("play_icon", "Watching"),
+            AnimeStatus.PlanToWatch => ("calendarAdd_icon", MediaMode.Instance.PlanTo),
+            AnimeStatus.Watching    => ("play_icon", MediaMode.Instance.Watching),
             AnimeStatus.Completed   => ("check_icon", "Completed"),
             AnimeStatus.Dropped     => ("delete_icon", "Dropped"),
             AnimeStatus.OnHold      => ("add_icon", "On Hold"),

@@ -24,6 +24,7 @@ internal static class ServiceCollectionExtensions
         collection.AddSingleton<IAniDbScraperService, HiAnimeScraperService>();
         collection.AddSingleton<IVideoPlayerService, VideoPlayerService>();
         collection.AddSingleton<ITorrentDownloadService, TorrentDownloadService>();
+        collection.AddSingleton<MangaDexService>();
 
         collection.AddSingleton<IJikanService, TenraiService>();
         collection.AddSingleton<AnilistService>();
@@ -42,6 +43,7 @@ internal static class ServiceCollectionExtensions
         collection.AddSingleton<StatsViewModel>();
         collection.AddSingleton<TorrentSearchViewModel>();
         collection.AddSingleton<ReadViewModel>();
+        collection.AddSingleton<ExploreViewModel>();
         collection.AddSingleton<WatchAnimeViewModel>();
         collection.AddSingleton<AnimeBrowseViewModel>();
         collection.AddSingleton<DownloadedViewModel>();

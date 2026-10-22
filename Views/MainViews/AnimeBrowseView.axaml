@@ -5,26 +5,62 @@
              xmlns:vm="clr-namespace:Aniki.ViewModels"
              xmlns:local="clr-namespace:Aniki.Views"
              xmlns:models="clr-namespace:Aniki.Models"
+             xmlns:misc="clr-namespace:Aniki.Misc"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
              x:Class="Aniki.Views.AnimeBrowseView"
              x:DataType="vm:AnimeBrowseViewModel">
     
+    <UserControl.Resources>
+        <DataTemplate x:Key="SearchBox" x:DataType="vm:AnimeBrowseViewModel">
+        <Border
+                Background="{StaticResource Surface2}"
+                BorderBrush="{StaticResource BorderLight}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="12,8"
+                Margin="0,4,0,0"
+                Cursor="Hand">
+            <Grid ColumnDefinitions="Auto,*">
+                <PathIcon Grid.Column="0"
+                          Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                          Width="16" Height="16"
+                          Foreground="{StaticResource TextMuted}"
+                          Margin="0,0,10,0"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding SearchQuery, Mode=TwoWay}"
+                         Watermark="Type to Search..."
+                         Foreground="{StaticResource TextSecondary}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         MinWidth="200"
+                         VerticalContentAlignment="Center">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding PerformSearchCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+            </Grid>
+        </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
     <Grid Margin="0,0,0,0" Background="{StaticResource BackgroundBlack}" RowDefinitions="*">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         
-        <!-- Main Content Area -->
         <ScrollViewer Grid.Column="0" 
                      Grid.Row="0"
                      VerticalScrollBarVisibility="Hidden"
                      HorizontalScrollBarVisibility="Disabled"
                      Background="{StaticResource BackgroundBlack}">
             <StackPanel Spacing="40" Margin="50,30,50,20" Background="{StaticResource BackgroundBlack}">
+
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SearchBox}"
+                                HorizontalAlignment="Right" Width="420" Margin="0,0,0,-20"
+                                IsVisible="{Binding IsManga, Source={x:Static misc:MediaMode.Instance}}"/>
                 
-                <!-- Loading Indicator -->
                 <Border Height="4" Background="Transparent">
                     <ProgressBar Height="4"
                                  Background="Transparent"
@@ -34,10 +70,8 @@
                 </Border>
 
 
-                <!-- Main View Content -->
                 <StackPanel Spacing="50" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Main}">
                     
-                    <!-- Hero Section -->
                     <Border CornerRadius="18"
                             Height="400"
                             Background="{StaticResource BackgroundGray}"
@@ -76,7 +110,7 @@
                                             Spacing="14">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <Border Background="{StaticResource AccentRed}" CornerRadius="4" Padding="8,3" VerticalAlignment="Center">
-                                            <TextBlock Text="AIRING NOW" FontSize="10" FontWeight="Bold" Foreground="White" LetterSpacing="1.2"/>
+                                            <TextBlock Text="{Binding HeroBadge, Source={x:Static misc:MediaMode.Instance}}" FontSize="10" FontWeight="Bold" Foreground="White" LetterSpacing="1.2"/>
                                         </Border>
                                         <TextBlock Text="{Binding HeroAnime.Meta}"
                                                    Classes="section-label"
@@ -106,7 +140,7 @@
                                                 Padding="10,5"
                                                 VerticalAlignment="Center"
                                                 IsVisible="{Binding HeroAnime.Status, Converter={StaticResource EnumMatchConverter}, ConverterParameter=watching}">
-                                            <TextBlock Text="Watching" Foreground="{StaticResource StatusWatching}" FontSize="13" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Watching, Source={x:Static misc:MediaMode.Instance}}" Foreground="{StaticResource StatusWatching}" FontSize="13" FontWeight="SemiBold"/>
                                         </Border>
                                         <TextBlock Text="{Binding HeroAnime.Genres}"
                                                    Foreground="{StaticResource TextSecondary}"
@@ -157,7 +191,6 @@
                                 </Border>
                             </Grid>
 
-                            <!-- Carousel controls -->
                             <StackPanel Orientation="Horizontal"
                                         Spacing="8"
                                         HorizontalAlignment="Left"
@@ -187,18 +220,33 @@
                         </Grid>
                     </Border>
 
-                    <!-- Popular This Season -->
+                    <StackPanel Spacing="15" IsVisible="{Binding IsManga, Source={x:Static misc:MediaMode.Instance}}">
+                        <TextBlock Text="Browse by genre" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                        <ItemsControl ItemsSource="{Binding GenreChips}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Button Content="{Binding}" CornerRadius="16" Padding="16,7" Margin="0,0,8,8" FontSize="13"
+                                            Background="{StaticResource Surface2}" Foreground="{StaticResource White}" Cursor="Hand"
+                                            Command="{Binding $parent[ItemsControl].((vm:AnimeBrowseViewModel)DataContext).OpenGenreCommand}"
+                                            CommandParameter="{Binding}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
                     <StackPanel Spacing="25" IsVisible="{Binding PopularThisSeason.Count}">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Grid.Column="0"
-                                      Text="Popular This Season"
+                                      Text="{Binding TopSection, Source={x:Static misc:MediaMode.Instance}}"
                                       FontSize="26"
                                       FontWeight="Bold"
                                       Foreground="White"/>
                         </Grid>
                         
                         <Grid>
-                            <!-- Left Navigation Arrow -->
                             <Button Classes="ghost round" Background="#00000000"
                                     Click="ScrollLeft"
                                     CommandParameter="{Binding #PopularThisSeasonScroller}"
@@ -213,7 +261,6 @@
                                 <Image Source="{SvgImage /Resources/Icons/chevronLeft_icon.svg}" Width="30" Height="30" />
                             </Button>
                             
-                            <!-- Anime Cards -->
                             <ScrollViewer Name="PopularThisSeasonScroller"
                                           HorizontalScrollBarVisibility="Hidden"
                                           VerticalScrollBarVisibility="Disabled">
@@ -229,7 +276,6 @@
                                 </ItemsRepeater>
                             </ScrollViewer>
                             
-                            <!-- Right Navigation Arrow -->
                             <Button Classes="ghost round" Background="#00000000"
                                     Click="ScrollRight"
                                     CommandParameter="{Binding #PopularThisSeasonScroller}"
@@ -246,11 +292,10 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Popular Upcoming -->
                     <StackPanel Spacing="25" IsVisible="{Binding PopularUpcoming.Count}">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Grid.Column="0"
-                                      Text="Popular Upcoming"
+                                      Text="{Binding SecondSection, Source={x:Static misc:MediaMode.Instance}}"
                                       FontSize="26"
                                       FontWeight="Bold"
                                       Foreground="White"/>
@@ -303,11 +348,10 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Trending All Time -->
                     <StackPanel Spacing="25" IsVisible="{Binding TrendingAllTime.Count}">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Grid.Column="0"
-                                      Text="Trending All Time"
+                                      Text="{Binding Noun, Source={x:Static misc:MediaMode.Instance}, StringFormat='{}Most Popular {0}'}"
                                       FontSize="26"
                                       FontWeight="Bold"
                                       Foreground="White"/>
@@ -362,7 +406,6 @@
 
                 </StackPanel>
 
-                <!-- Search Results View -->
                 <Grid RowDefinitions="Auto,*,Auto" IsVisible="{Binding ViewMode, Converter={StaticResource EnumMatchConverter}, ConverterParameter=Search}">
                     <Grid.Styles>
                         <Style Selector="Border.pager">
@@ -378,7 +421,6 @@
                         </Style>
                     </Grid.Styles>
 
-                    <!-- Header -->
                     <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16" Margin="0,0,0,24">
                         <Button Grid.Column="0"
                                 Classes="ghost"
@@ -412,7 +454,6 @@
                         </Border>
                     </Grid>
 
-                    <!-- Results grid -->
                     <ItemsControl Grid.Row="1" ItemsSource="{Binding SearchResults}" HorizontalAlignment="Left">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -426,7 +467,6 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Empty state -->
                     <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="0,60">
                         <StackPanel.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -439,7 +479,6 @@
                         <TextBlock Text="Try a shorter title or the Japanese name." FontSize="13" Foreground="{StaticResource TextSecondary}" HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Bottom pager -->
                     <Border Grid.Row="2" Classes="pager" HorizontalAlignment="Center" Margin="0,28,0,0"
                             IsVisible="{Binding TotalPages, Converter={StaticResource GreaterThanZeroConverter}}">
                         <StackPanel Orientation="Horizontal" Spacing="4">
@@ -461,6 +500,7 @@
         <Border Grid.Column="1" 
                 Grid.Row="0"
                 Width="320"
+                IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"
                 Background="{StaticResource BackgroundGray}" 
                 BorderBrush="{StaticResource Border}" 
                 BorderThickness="1,0,0,0"
@@ -470,38 +510,9 @@
                          Margin="0,20,0,0">
                 <StackPanel Spacing="35">
                     
-                    <!-- Search Box -->
-                    <Border
-                            Background="{StaticResource Surface2}"
-                            BorderBrush="{StaticResource BorderLight}"
-                            BorderThickness="1"
-                            CornerRadius="12"
-                            Padding="12,8"
-                            Margin="0,4,0,0"
-                            Cursor="Hand">
-                        <Grid ColumnDefinitions="Auto,*">
-                            <PathIcon Grid.Column="0"
-                                      Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
-                                      Width="16" Height="16"
-                                      Foreground="{StaticResource TextMuted}"
-                                      Margin="0,0,10,0"/>
-                            <TextBox Grid.Column="1"
-                                     Text="{Binding SearchQuery, Mode=TwoWay}"
-                                     Watermark="Type to Search..."
-                                     Foreground="{StaticResource TextSecondary}"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     MinWidth="200"
-                                     VerticalContentAlignment="Center">
-                                <TextBox.KeyBindings>
-                                    <KeyBinding Gesture="Enter" Command="{Binding PerformSearchCommand}" />
-                                </TextBox.KeyBindings>
-                            </TextBox>
-                        </Grid>
-                    </Border>
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SearchBox}"/>
                     
-                    <!-- Airing Today Sidebar -->
-                    <StackPanel Spacing="15">
+                    <StackPanel Spacing="15" IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Grid.Column="0"
                                       Text="Airing Today"

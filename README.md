@@ -1,20 +1,23 @@
 <h1 align="center">ANIKI</h1>
 
-<p align="center"><i>Streamline your anime experience, effortlessly and beautifully.</i></p>
+<p align="center"><i>Streamline your anime and manga experience, effortlessly and beautifully.</i></p>
 
-Aniki is a cross-platform desktop application built with Avalonia UI and .NET for managing and watching your favorite anime. Featuring MyAnimeList and AniList integration and a clean, lightweight design, Aniki helps you keep track of and explore anime with ease.
+Aniki is a cross-platform desktop application built with Avalonia UI and .NET for managing, watching and reading your favorite anime and manga. Featuring MyAnimeList and AniList integration and a clean, lightweight design, Aniki helps you keep track of and explore both with ease.
 
 <details open>
   <summary><b>Show preview</b></summary>
 
 ![UI Preview](https://i.imgur.com/LwbPosb.png)
 ![UI Preview](https://i.imgur.com/Xdv1ckr.png)
+![Manga main page](docs/screenshots/manga-browse.jpg)
+![Explore manga by genre](docs/screenshots/manga-explore.jpg)
+![Manga reader](docs/screenshots/manga-reader.jpg)
 
 </details>
 
 ## Features
 
-- **MyAnimeList/AniList Integration**: OAuth login to fetch and sync your anime list.
+- **MyAnimeList/AniList Integration**: OAuth login to fetch and sync your anime and manga lists.
 - **Watching Episodes In-App**: Browse, download and watch episodes directly in Aniki.
 - **Anime List Management**: View, filter, and search your anime.
 - **Automatic Episode Tracking**: automatically detects the anime videos you watch on your computer and synchronizes your progress.
@@ -23,6 +26,15 @@ Aniki is a cross-platform desktop application built with Avalonia UI and .NET fo
 - **Stats**: Overview of your watching statistics.
 - **Discord Rich Presence**: Show what you are watching on Discord.
 - [Planned] **Notification System**: Be automatically notified whenever a new anime or episode releases.
+
+### Manga
+
+- **Anime/Manga Switch**: One toggle in the sidebar turns the main page, details, library and profile into their manga versions (chapters instead of episodes, Reading / Plan to Read).
+- **Manga List Management**: Track status, score and chapters read on MyAnimeList or AniList.
+- **Reading In-App**: Read English chapters from [MangaDex](https://mangadex.org) with a page counter, arrow-key page turning and a fullscreen mode. Progress is saved to your list as you go.
+- **Official Chapters**: Licensed series whose chapters are published on official sites (like Manga UP!) open in the publisher's own reader, embedded in Aniki.
+- **Explore**: Browse manga by genre, tag, format (manga, manhwa, manhua, one-shot, light novel), status and popularity.
+- **From Anime to Manga**: Jump from an anime straight to the manga it was adapted from.
 
 ## Usage
 
@@ -105,6 +117,7 @@ Delete folders `tokens`, `cache` and `ImageCache`. Note that `cache` and `ImageC
 ## Acknowledgments
 
 - Built with [Avalonia UI](https://avaloniaui.net/).
+- Manga chapters via the [MangaDex API](https://api.mangadex.org/docs/); genre and tag browsing via the [AniList API](https://docs.anilist.co/).
 
 ## Disclaimer
 

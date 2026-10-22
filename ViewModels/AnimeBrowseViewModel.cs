@@ -52,26 +52,41 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
     
     private const int PAGE_SIZE = 20;
 
+    public IReadOnlyList<string> GenreChips { get; } =
+    [
+        "Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mystery", "Psychological",
+        "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural", "Thriller"
+    ];
+
     public AnimeBrowseViewModel(IAnimeService animeService, ICalendarService calendarService)
     {
         _animeService = animeService;
         _calendarService = calendarService;
 
-        WeakReferenceMessenger.Default.Register<CacheClearedMessage>(this, (_, _) =>
-        {
-            _categoriesLoadTask = null;
-            PopularThisSeason.Clear();
-            PopularUpcoming.Clear();
-            TrendingAllTime.Clear();
-            AiringToday.Clear();
-            HeroAnimeList.Clear();
-            HeroAnime = null;
-        });
+        WeakReferenceMessenger.Default.Register<CacheClearedMessage>(this, (_, _) => ResetTopLists());
 
         WeakReferenceMessenger.Default.Register<UserListStatusChangedMessage>(this, (_, msg) =>
         {
-            Dispatcher.UIThread.Post(() => ApplyStatusToCards(msg.AnimeId, msg.Status));
+            if (msg.Kind == MediaMode.Instance.Kind)
+                Dispatcher.UIThread.Post(() => ApplyStatusToCards(msg.AnimeId, msg.Status));
         });
+
+        MediaMode.Instance.PropertyChanged += (_, _) =>
+        {
+            ResetTopLists();
+            ExitSearchMode();
+        };
+    }
+
+    private void ResetTopLists()
+    {
+        _categoriesLoadTask = null;
+        PopularThisSeason.Clear();
+        PopularUpcoming.Clear();
+        TrendingAllTime.Clear();
+        AiringToday.Clear();
+        HeroAnimeList.Clear();
+        HeroAnime = null;
     }
 
     public override Task Enter() => InitializeAsync();
@@ -93,18 +108,37 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
     private async Task LoadTopListsAsync()
     {
         IsLoading = true;
+        MediaKind kind = MediaMode.Instance.Kind;
+        IAnimeService service = _animeService.Current;
         try
         {
-            var airing = await _animeService.GetTopAnimeAsync(RankingCategory.Airing).ConfigureAwait(true);
+            var airing = await service.GetTopAnimeAsync(RankingCategory.Airing).ConfigureAwait(true);
+            if (kind != MediaMode.Instance.Kind) return;
             LoadAnimeCards(airing, PopularThisSeason);
 
-            await LoadHeroAnimeAsync(airing).ConfigureAwait(true);
+            if (kind == MediaKind.Anime)
+                await LoadHeroAnimeAsync(airing).ConfigureAwait(true);
 
-            var upcoming = await _animeService.GetTopAnimeAsync(RankingCategory.Upcoming).ConfigureAwait(true);
+            var upcoming = await service.GetTopAnimeAsync(RankingCategory.Upcoming).ConfigureAwait(true);
+            if (kind != MediaMode.Instance.Kind) return;
             LoadAnimeCards(upcoming, PopularUpcoming);
 
-            var allTime = await _animeService.GetTopAnimeAsync(RankingCategory.ByPopularity).ConfigureAwait(true);
+            var allTime = await service.GetTopAnimeAsync(RankingCategory.ByPopularity).ConfigureAwait(true);
+            if (kind != MediaMode.Instance.Kind) return;
             LoadAnimeCards(allTime, TrendingAllTime);
+
+            if (kind == MediaKind.Manga)
+            {
+                List<RankingEntry> featured = airing.Concat(upcoming).Concat(allTime)
+                    .DistinctBy(e => e.Details.Id)
+#pragma warning disable CA5394
+                    .OrderBy(_ => Random.Shared.Next())
+#pragma warning restore CA5394
+                    .ToList();
+                await LoadHeroAnimeAsync(featured).ConfigureAwait(true);
+                _ = ApplyUserListStatusesAsync();
+                return;
+            }
 
             var airingToday = await _calendarService.GetAnimeScheduleForDayAsync(DateTime.Today).ConfigureAwait(true);
             AiringToday.Clear();
@@ -136,7 +170,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
 
         try
         {
-            var list = await _animeService.GetUserAnimeListAsync().ConfigureAwait(true);
+            var list = await _animeService.Current.GetUserAnimeListAsync().ConfigureAwait(true);
             var byId = list.ToDictionary(a => a.Id, a => a.UserStatus?.Status);
 
             foreach (AnimeCardData card in EnumerateCards())
@@ -194,7 +228,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
             string[] meta =
             [
                 details.MediaType == MediaType.Unknown ? "" : details.MediaType.ToString().Replace("_", " ", StringComparison.Ordinal).ToUpperInvariant(),
-                details.NumEpisodes is > 0 ? $"{details.NumEpisodes} episodes" : "Airing",
+                details.NumEpisodes is > 0 ? $"{details.NumEpisodes} {MediaMode.Instance.Units}" : MediaMode.Instance.Ongoing,
                 details.Studios?.FirstOrDefault() ?? ""
             ];
 
@@ -231,6 +265,12 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
         }
     }
     
+    [RelayCommand]
+    private static async Task OpenGenre(string genre)
+    {
+        await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().ShowExploreGenre(genre).ConfigureAwait(true);
+    }
+
     [RelayCommand]
     private void PlayHeroVideo()
     {
@@ -283,7 +323,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
         IsLoading = true;
         ViewMode  = AnimeBrowseViewMode.Search;
 
-        _allSearchResults = await _animeService.SearchAnimeAsync(query).ConfigureAwait(true);
+        _allSearchResults = await _animeService.Current.SearchAnimeAsync(query).ConfigureAwait(true);
         CurrentPage       = 1;
         TotalPages        = Math.Max(1, (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE));
         TotalResults      = _allSearchResults.Count;

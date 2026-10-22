@@ -2,6 +2,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:Aniki.ViewModels;assembly=Aniki"
+    xmlns:misc="clr-namespace:Aniki.Misc"
     xmlns:models="clr-namespace:Aniki.Models;assembly=Aniki"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     x:Class="Aniki.Views.StatsView"
@@ -137,7 +138,7 @@
                                     <StackPanel Orientation="Horizontal" Spacing="7">
                                         <Ellipse Fill="{StaticResource StatusWatching}"/>
                                         <TextBlock Classes="n" Text="{Binding AnimeStats.Watching}"/>
-                                        <TextBlock Text="Watching"/>
+                                        <TextBlock Text="{Binding Watching, Source={x:Static misc:MediaMode.Instance}}"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Classes="status-pill">
@@ -165,7 +166,7 @@
                                     <StackPanel Orientation="Horizontal" Spacing="7">
                                         <Ellipse Fill="{StaticResource StatusPlanToWatch}"/>
                                         <TextBlock Classes="n" Text="{Binding AnimeStats.PlanToWatch}"/>
-                                        <TextBlock Text="Plan to watch"/>
+                                        <TextBlock Text="{Binding PlanTo, Source={x:Static misc:MediaMode.Instance}}"/>
                                     </StackPanel>
                                 </Border>
                             </WrapPanel>
@@ -176,15 +177,15 @@
                                 <TextBlock Classes="big-stat" Text="{Binding AnimeStats.MeanScore, StringFormat='{}{0:F1}'}"/>
                                 <TextBlock Classes="big-stat-label" Text="MEAN SCORE"/>
                             </StackPanel>
-                            <Border Width="1" Background="#33FFFFFF" Margin="0,6"/>
-                            <StackPanel Spacing="2">
+                            <Border Width="1" Background="#33FFFFFF" Margin="0,6" IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"/>
+                            <StackPanel Spacing="2" IsVisible="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}">
                                 <TextBlock Classes="big-stat" Text="{Binding AnimeStats.DaysWatched, StringFormat='{}{0:F0}'}"/>
                                 <TextBlock Classes="big-stat-label" Text="DAYS"/>
                             </StackPanel>
                             <Border Width="1" Background="#33FFFFFF" Margin="0,6"/>
                             <StackPanel Spacing="2">
                                 <TextBlock Classes="big-stat" Text="{Binding AnimeStats.Episodes}"/>
-                                <TextBlock Classes="big-stat-label" Text="EPISODES"/>
+                                <TextBlock Classes="big-stat-label" Text="{Binding UnitsLabel, Source={x:Static misc:MediaMode.Instance}}"/>
                             </StackPanel>
                             <Border Width="1" Background="#33FFFFFF" Margin="0,6"/>
                             <StackPanel Spacing="2">
@@ -199,7 +200,7 @@
             <!-- Continue watching -->
             <StackPanel Spacing="14" IsVisible="{Binding CurrentlyWatching.Count}">
                 <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Classes="h2" Text="Continue watching"/>
+                    <TextBlock Classes="h2" Text="{Binding Watching, Source={x:Static misc:MediaMode.Instance}, StringFormat='{}Continue {0}'}"/>
                     <TextBlock Grid.Column="1" Text="{Binding AnimeStats.Watching, StringFormat='{}{0} in progress'}" FontSize="12" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
                 </Grid>
                 <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
@@ -231,12 +232,13 @@
                                                          CornerRadius="3"
                                                          Minimum="0"
                                                          Maximum="{Binding NumEpisodes}"
+                                                         IsVisible="{Binding NumEpisodes, Converter={StaticResource GreaterThanZeroConverter}}"
                                                          Value="{Binding UserStatus.EpisodesWatched}"
                                                          Background="#33FFFFFF"
                                                          Foreground="{StaticResource AccentRed}"/>
                                             <TextBlock FontSize="11" Foreground="{StaticResource TextSecondary}">
                                                 <Run Text="{Binding UserStatus.EpisodesWatched}" Foreground="{StaticResource White}" FontWeight="SemiBold"/>
-                                                <Run Text="{Binding NumEpisodes, StringFormat='/ {0} episodes'}"/>
+                                                <Run Text="{Binding NumEpisodes, Converter={x:Static misc:MediaMode.OfTotal}}"/>
                                             </TextBlock>
                                         </StackPanel>
                                     </Grid>

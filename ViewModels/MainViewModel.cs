@@ -1,4 +1,6 @@
 using Aniki.Services.Anime;
+using Aniki.Services.Anime.Providers;
+using Aniki.Services.Auth;
 using Aniki.Services.Interfaces;
 
 namespace Aniki.ViewModels;
@@ -24,6 +26,7 @@ internal sealed partial class MainViewModel : ViewModelBase
     [ObservableProperty] public partial AnimeBrowseViewModel AnimeBrowseViewModel { get; set; }
     [ObservableProperty] public partial UserAnimeListViewModel UserAnimeListViewModel { get; set; }
     [ObservableProperty] public partial ReadViewModel ReadViewMode { get; set; }
+    [ObservableProperty] public partial ExploreViewModel ExploreViewModel { get; set; }
     
     [ObservableProperty] public partial bool CanNavigateBack { get; set; }
     [ObservableProperty] public partial bool CanNavigateForward { get; set; }
@@ -33,14 +36,18 @@ internal sealed partial class MainViewModel : ViewModelBase
     
     private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
+    private readonly AnilistService _anilistService;
 
     private readonly Stack<ViewModelBase> _navigationBackStack = new();
     private readonly Stack<ViewModelBase> _navigationForwardStack = new();
 
     public MainViewModel(IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
-        UserAnimeListViewModel userAnimeListViewModel, ReadViewModel readViewModel, IVideoPlayerService videoPlayerService) 
+        UserAnimeListViewModel userAnimeListViewModel, ReadViewModel readViewModel, IVideoPlayerService videoPlayerService,
+        ExploreViewModel exploreViewModel, AnilistService anilistService) 
     {
+        ExploreViewModel = exploreViewModel;
+        _anilistService = anilistService;
         _animeService           = animeService;
         AnimeDetailsViewModel = animeDetailsViewModel;
         WatchViewModel = watchViewModel;
@@ -52,6 +59,11 @@ internal sealed partial class MainViewModel : ViewModelBase
         ReadViewMode = readViewModel;
     }
     
+    partial void OnCurrentViewModelChanged(ViewModelBase? value)
+    {
+        if (value != ReadViewMode && ReadViewMode is { IsFullscreen: true }) ReadViewMode.IsFullscreen = false;
+    }
+
     private void RefreshNavigationAvailability()
     {
         CanNavigateBack = _navigationBackStack.Count > 0;
@@ -149,14 +161,76 @@ internal sealed partial class MainViewModel : ViewModelBase
         await NavigateToViewAsync(ReadViewMode).ConfigureAwait(true);
     }
 
+    public async Task OpenInReader(AnimeDetails manga)
+    {
+        await NavigateToViewAsync(ReadViewMode).ConfigureAwait(true);
+        await ReadViewMode.OpenAsync(manga).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
+    private async Task SetMediaKind(string kindName)
+    {
+        MediaKind kind = Enum.Parse<MediaKind>(kindName);
+        if (MediaMode.Instance.Kind == kind) return;
+        SwitchKind(kind);
+
+        ViewModelBase target = CurrentViewModel == UserAnimeListViewModel || CurrentViewModel == StatsViewModel || CurrentViewModel == ExploreViewModel
+            ? CurrentViewModel
+            : AnimeBrowseViewModel;
+        CurrentViewModel = null;
+        await NavigateToViewAsync(target).ConfigureAwait(true);
+    }
+
+    private void SwitchKind(MediaKind kind)
+    {
+        MediaMode.Instance.Kind = kind;
+        _navigationBackStack.Clear();
+        _navigationForwardStack.Clear();
+        RefreshNavigationAvailability();
+    }
+
+    [RelayCommand]
+    private async Task ShowExplorePage()
+    {
+        await NavigateToViewAsync(ExploreViewModel).ConfigureAwait(true);
+    }
+
+    public async Task ShowExploreGenre(string genre)
+    {
+        ExploreViewModel.PresetGenre(genre);
+        await NavigateToViewAsync(ExploreViewModel).ConfigureAwait(true);
+    }
+
+    public async Task OpenSourceManga(AnimeDetails anime)
+    {
+        int? mangaId = await _anilistService.GetSourceMangaIdAsync(anime.Id, AnimeService.CurrentProviderType == ILoginProvider.ProviderType.Mal).ConfigureAwait(true);
+        if (mangaId == null && anime.Title != null)
+            mangaId = (await _animeService.Manga.SearchAnimeAsync(anime.Title).ConfigureAwait(true)).FirstOrDefault()?.Id;
+        if (mangaId == null)
+        {
+            await ToastService.Show($"Couldn't find a manga for {anime.Title}").ConfigureAwait(true);
+            return;
+        }
+
+        SwitchKind(MediaKind.Manga);
+        await SearchForAnime(mangaId.Value).ConfigureAwait(true);
+    }
+
     public async Task GoToAnime(string title)
     {
+        MediaMode.Instance.Kind = MediaKind.Anime;
         await SearchForAnime(title.Replace('-', ' ')).ConfigureAwait(true);
     }
 
     public async Task GoToAnime(int malId)
     {
-       await SearchForAnime(malId).ConfigureAwait(true);
+        MediaMode.Instance.Kind = MediaKind.Anime;
+        await SearchForAnime(malId).ConfigureAwait(true);
+    }
+
+    public async Task GoToMedia(int id)
+    {
+       await SearchForAnime(id).ConfigureAwait(true);
     }
 
     public async Task InitializeAsync()

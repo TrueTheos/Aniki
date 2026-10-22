@@ -37,10 +37,21 @@ internal sealed partial class StatsViewModel : ViewModelBase
 
     private readonly IAnimeService _malService;
 
+    private MediaKind? _loadedKind;
+
     public StatsViewModel(IAnimeService malService)
     {
         _malService = malService;
-        LoadStats();
+    }
+
+    public override Task Enter()
+    {
+        if (_loadedKind != MediaMode.Instance.Kind)
+        {
+            _loadedKind = MediaMode.Instance.Kind;
+            LoadStats();
+        }
+        return base.Enter();
     }
 
     private async void LoadStats()
@@ -48,6 +59,11 @@ internal sealed partial class StatsViewModel : ViewModelBase
         try
         {
             if(!AnimeService.IsLoggedIn) return;
+            AnimeStats = null;
+            GenreStats = TopGenres = null;
+            ScoreDistribution = null;
+            CurrentlyWatching = TopRated = null;
+            BackdropUrl = null;
             ProviderName = AnimeService.CurrentProviderType == ILoginProvider.ProviderType.AniList ? "AniList" : "MyAnimeList";
 
             try
@@ -61,7 +77,7 @@ internal sealed partial class StatsViewModel : ViewModelBase
                 Debug.WriteLine(e);
             }
 
-            var animeList = await _malService.GetUserAnimeListAsync().ConfigureAwait(true);
+            var animeList = await _malService.Current.GetUserAnimeListAsync().ConfigureAwait(true);
             if (animeList.Count == 0)
                 return;
 

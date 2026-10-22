@@ -46,6 +46,7 @@ internal sealed partial class UserAnimeListViewModel : ViewModelBase
     public override Task Enter()
     {
         _ = LoadAnimeListAsync();
+        OnPropertyChanged(nameof(StatusFilterText));
         return base.Enter();
     }
 
@@ -138,11 +139,15 @@ internal sealed partial class UserAnimeListViewModel : ViewModelBase
     
     private async Task LoadAnimeListAsync()
     {
-        var list = await _animeService.GetUserAnimeListAsync().ConfigureAwait(true);
+        MediaKind kind = MediaMode.Instance.Kind;
+        IAnimeService service = _animeService.Current;
+        var list = await service.GetUserAnimeListAsync().ConfigureAwait(true);
+        if (kind != MediaMode.Instance.Kind) return;
         AnimeList.Clear();
         foreach (AnimeDetails element in list)
         {
-            AnimeDetails? details = await _animeService.GetFieldsAsync(element.Id, fields: AnimeService.MalNodeFieldTypes).ConfigureAwait(true);
+            AnimeDetails? details = await service.GetFieldsAsync(element.Id, fields: AnimeService.MalNodeFieldTypes).ConfigureAwait(true);
+            if (kind != MediaMode.Instance.Kind) return;
             if (details != null) AnimeList.Add(details);
         }
         
@@ -202,11 +207,11 @@ internal sealed partial class UserAnimeListViewModel : ViewModelBase
     {
         return status switch
         {
-            "Watching" => "Watching",
+            "Watching" => MediaMode.Instance.Watching,
             "Completed" => "Completed",
             "OnHold" => "On Hold",
             "Dropped" => "Dropped",
-            "PlanToWatch" => "Plan to Watch",
+            "PlanToWatch" => MediaMode.Instance.PlanTo,
             _ => status
         };
     }
