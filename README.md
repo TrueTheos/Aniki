@@ -2,6 +2,11 @@
 
 <p align="center"><i>Streamline your anime and manga experience, effortlessly and beautifully.</i></p>
 
+<p align="center">
+  <a href="https://github.com/TrueTheos/Aniki/releases/latest"><img alt="Installer downloads, all releases" src="https://img.shields.io/github/downloads/TrueTheos/Aniki/Aniki-win-Setup.exe?label=installer%20downloads"></a>
+  <a href="https://github.com/TrueTheos/Aniki/releases/latest"><img alt="Portable downloads, all releases" src="https://img.shields.io/github/downloads/TrueTheos/Aniki/Aniki-win-Portable.zip?label=portable%20downloads"></a>
+</p>
+
 Aniki is a cross-platform desktop application built with Avalonia UI and .NET for managing, watching and reading your favorite anime and manga. Featuring MyAnimeList and AniList integration and a clean, lightweight design, Aniki helps you keep track of and explore both with ease.
 
 <details open>
