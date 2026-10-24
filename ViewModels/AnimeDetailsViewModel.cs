@@ -62,6 +62,29 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     public string ScoreText => SelectedScore == 0 ? "Rate" : SelectedScore.ToString(CultureInfo.InvariantCulture);
     public bool HasVideos => Details?.Videos is { Length: > 0 };
 
+    public RelatedEntry[] Related => Details?.RelatedAnime?
+        .Where(r => r.Details != null)
+        .OrderBy(r => r.Relation switch
+        {
+            RelatedAnime.RelationType.Prequel => 0,
+            RelatedAnime.RelationType.Sequel => 1,
+            RelatedAnime.RelationType.Other => 3,
+            _ => 2
+        })
+        .Select(r => new RelatedEntry(RelationLabel(r.Relation), r.Details!.ToCardData()))
+        .ToArray() ?? [];
+
+    public bool HasRelated => Related.Length > 0;
+
+    private static string RelationLabel(RelatedAnime.RelationType type) => type switch
+    {
+        RelatedAnime.RelationType.FullStory => "Full Story",
+        RelatedAnime.RelationType.SideStory => "Side Story",
+        RelatedAnime.RelationType.SpinOff => "Spin-off",
+        RelatedAnime.RelationType.ParentStory => "Parent Story",
+        _ => type.ToString()
+    };
+
     public AnimeStatusTranslated SelectedStatus
     {
         get;
@@ -135,6 +158,8 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         SelectedScore = details?.UserStatus?.Score ?? 0;
         OnPropertyChanged(nameof(ScoreText));
         OnPropertyChanged(nameof(HasVideos));
+        OnPropertyChanged(nameof(Related));
+        OnPropertyChanged(nameof(HasRelated));
         
         SelectedStatus = details?.UserStatus?.Status.ApiToTranslated() ?? AnimeStatusTranslated.Watching;
         
@@ -349,6 +374,13 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private static async Task OpenRelated(int id)
+    {
+        MainViewModel mainViewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+        await mainViewModel.GoToMedia(id).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
     private async Task OpenManga()
     {
         if (Details == null) return;
@@ -376,3 +408,5 @@ internal sealed partial class AnimeDetailsViewModel : ViewModelBase, IDisposable
         _episodeUpdateCts?.Dispose();
     }
 }
+
+internal sealed record RelatedEntry(string Label, AnimeCardData Card);

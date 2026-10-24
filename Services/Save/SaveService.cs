@@ -9,7 +9,7 @@ namespace Aniki.Services.Save;
 
 internal sealed class SaveService : ISaveService
 {
-    private static readonly string MainDirectory = Path.Combine(
+    public static readonly string MainDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Aniki");
 

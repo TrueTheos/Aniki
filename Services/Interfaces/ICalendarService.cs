@@ -9,4 +9,6 @@ internal interface ICalendarService
         int perPage = 150);
 
     public Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date);
+
+    public Task<List<AnimeScheduleItem>> GetAiredAsync(IEnumerable<int> ids, DateTime since, DateTime until);
 }

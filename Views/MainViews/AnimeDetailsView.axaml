@@ -31,7 +31,7 @@
                 
                 <!-- Details Tab -->
                 <TabItem>
-                    <ScrollViewer Padding="0" Margin="0">
+                    <ScrollViewer x:Name="DetailsScroll" Padding="0" Margin="0">
                         <Grid RowDefinitions="Auto,Auto">
                             <Grid Row="0" Height="600" Margin="0">
                                 <!-- Blurred Background Image -->
@@ -53,198 +53,6 @@
                                         <ColumnDefinition Width="330"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    
-                                    <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto" Margin="0,50,0,0">
-                                        <Grid Grid.Row="0" Height="495">
-                                            <!-- Poster -->
-                                            <Border CornerRadius="12"
-                                                    BoxShadow="0 10 40 #80000000"
-                                                    Width="330"
-                                                    Height="495"
-                                                    ClipToBounds="True"
-                                                    VerticalAlignment="Top">
-                                                <Image asyncImageLoader:ImageLoader.Source="{Binding Details.MainPicture.Large}"
-                                                       Stretch="UniformToFill"/>
-                                            </Border>
-                                            
-                                            <!-- Rating Badge -->
-                                            <Border Background="{StaticResource Background0}"
-                                                    CornerRadius="20"
-                                                    Padding="16,10"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Bottom"
-                                                    Margin="0,0,0,-20"
-                                                    BoxShadow="0 4 12 #40000000">
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-                                                              Width="20"
-                                                              Height="20"
-                                                              Foreground="{StaticResource Gold}"/>
-                                                    <TextBlock Text="{Binding Details.Mean, StringFormat='{}{0:0.0}'}"
-                                                               FontSize="20"
-                                                               FontWeight="Bold"
-                                                               Foreground="White"
-                                                               VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </Grid>
-                                        
-                                        <StackPanel Grid.Row="1" Margin="0,50,0,0" IsVisible="{Binding Details.UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                            <ProgressBar Height="8"
-                                                         Value="{Binding WatchedEpisodes}"
-                                                         Maximum="{Binding Details.NumEpisodes}"
-                                                         IsVisible="{Binding Details.NumEpisodes, Converter={StaticResource GreaterThanZeroConverter}}"
-                                                         Background="#333333"
-                                                         Foreground="{StaticResource RedColor}"
-                                                         CornerRadius="4"/>
-                                            <Grid Margin="0, 8, 0, 0">
-                                                <TextBlock HorizontalAlignment="Left"
-                                                           Foreground="{StaticResource TextSecondary}"
-                                                           FontSize="12">
-                                                    <Run Text="{Binding Watched, Source={x:Static misc:MediaMode.Instance}}"/><Run Text="{Binding WatchedEpisodes, StringFormat=': {0}'}"/>
-                                                </TextBlock>
-                                                <TextBlock HorizontalAlignment="Right"
-                                                           Text="{Binding Details.NumEpisodes, Converter={x:Static misc:MediaMode.TotalText}}"
-                                                           Foreground="{StaticResource TextSecondary}"
-                                                           FontSize="12"/>
-                                            </Grid>
-                                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                                <Button Classes="ghost round"
-                                                    Command="{Binding DecrementWatchedEpisodesCommand}"
-                                                    Background="#00000000"
-                                                    Foreground="White"
-                                                    Width="40" Height="40"
-                                                    CornerRadius="20"
-                                                    BorderThickness="0">
-                                                    <Image Source="{SvgImage /Resources/Icons/minus_icon.svg}" Width="20" Height="20" />
-                                                </Button>
-                                                <Panel VerticalAlignment="Center" Margin="8,0" MinWidth="40">
-                                                    <Button Command="{Binding StartEditingEpisodesCommand}"
-                                                            IsVisible="{Binding !IsEditingEpisodes}"
-                                                            Background="Transparent"
-                                                            BorderThickness="0"
-                                                            Padding="6,2"
-                                                            Cursor="Hand"
-                                                            HorizontalAlignment="Stretch"
-                                                            HorizontalContentAlignment="Center"
-                                                            ToolTip.Tip="Click to edit">
-                                                        <TextBlock Text="{Binding WatchedEpisodes}"
-                                                                   Foreground="White"
-                                                                   HorizontalAlignment="Center"/>
-                                                    </Button>
-                                                    <TextBox x:Name="EpisodesInputBox"
-                                                             IsVisible="{Binding IsEditingEpisodes}"
-                                                             Text="{Binding EpisodesInput, Mode=TwoWay}"
-                                                             MinWidth="40"
-                                                             Padding="4,2"
-                                                             VerticalAlignment="Center"
-                                                             HorizontalContentAlignment="Center"
-                                                             LostFocus="OnEpisodesInputLostFocus">
-                                                        <TextBox.KeyBindings>
-                                                            <KeyBinding Gesture="Enter" Command="{Binding CommitEpisodesInputCommand}"/>
-                                                            <KeyBinding Gesture="Escape" Command="{Binding CancelEditingEpisodesCommand}"/>
-                                                        </TextBox.KeyBindings>
-                                                    </TextBox>
-                                                </Panel>
-                                                <Button Classes="ghost round"
-                                                    Command="{Binding IncrementWatchedEpisodesCommand}"
-                                                    Background="#00000000"
-                                                    Foreground="White"
-                                                    Width="40" Height="40"
-                                                    CornerRadius="20"
-                                                    BorderThickness="0">
-                                                    <Image Source="{SvgImage /Resources/Icons/add_icon.svg}" Width="20" Height="20" />
-                                                </Button>
-                                            </StackPanel>
-                                        </StackPanel>
-                                        
-                                        <!-- Anime Stats -->
-                                        <Border Grid.Row="2"
-                                                Margin="0, 10, 0, 0"
-                                                Background="Transparent"
-                                                CornerRadius="8"
-                                                Padding="15">
-                                            <UniformGrid Columns="3" Rows="2" HorizontalAlignment="Center" RowSpacing="20">
-                                                <!-- Watching -->
-                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Watching}"
-                                                               FontSize="16"
-                                                               FontWeight="Bold"
-                                                               Foreground="White"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Watching, Source={x:Static misc:MediaMode.Instance}}"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource TextSecondary}"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
-                                                
-                                                <!-- Completed -->
-                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Completed}"
-                                                               FontSize="16"
-                                                               FontWeight="Bold"
-                                                               Foreground="White"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Completed"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource TextSecondary}"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
-
-                                                <!-- Plan to Watch -->
-                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.PlanToWatch}"
-                                                               FontSize="16"
-                                                               FontWeight="Bold"
-                                                               Foreground="White"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding PlanTo, Source={x:Static misc:MediaMode.Instance}}"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource TextSecondary}"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
-
-                                                <!-- On Hold -->
-                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.OnHold}"
-                                                               FontSize="16"
-                                                               FontWeight="Bold"
-                                                               Foreground="White"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="On Hold"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource TextSecondary}"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
-
-                                                <!-- Dropped -->
-                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Dropped}"
-                                                               FontSize="16"
-                                                               FontWeight="Bold"
-                                                               Foreground="White"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Dropped"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource TextSecondary}"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
-
-                                                <!-- Favorites -->
-                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
-                                                    <TextBlock Text="{Binding Details.NumFavorites}"
-                                                               FontSize="16"
-                                                               FontWeight="Bold"
-                                                               Foreground="White"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Favorites"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource TextSecondary}"
-                                                               HorizontalAlignment="Center"/>
-                                                </StackPanel>
-                                            </UniformGrid>
-                                        </Border>
-                                    </Grid>
                                     
                                     <StackPanel Grid.Column="1" Margin="40,0,0,50" Spacing="0" VerticalAlignment="Bottom">
                                         <!-- Title -->
@@ -539,6 +347,239 @@
                                         <ColumnDefinition Width="330"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
+                                    <!-- Left column: sits in row 1 with a negative margin so it overlaps the hero but still counts toward scroll height -->
+                                    <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,-460,0,0" VerticalAlignment="Top">
+                                        <Grid Grid.Row="0" Height="495">
+                                            <!-- Poster -->
+                                            <Border CornerRadius="12"
+                                                    BoxShadow="0 10 40 #80000000"
+                                                    Width="330"
+                                                    Height="495"
+                                                    ClipToBounds="True"
+                                                    VerticalAlignment="Top">
+                                                <Image asyncImageLoader:ImageLoader.Source="{Binding Details.MainPicture.Large}"
+                                                       Stretch="UniformToFill"/>
+                                            </Border>
+                                            
+                                            <!-- Rating Badge -->
+                                            <Border Background="{StaticResource Background0}"
+                                                    CornerRadius="20"
+                                                    Padding="16,10"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Bottom"
+                                                    Margin="0,0,0,-20"
+                                                    BoxShadow="0 4 12 #40000000">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <PathIcon Data="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                                                              Width="20"
+                                                              Height="20"
+                                                              Foreground="{StaticResource Gold}"/>
+                                                    <TextBlock Text="{Binding Details.Mean, StringFormat='{}{0:0.0}'}"
+                                                               FontSize="20"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                        
+                                        <StackPanel Grid.Row="1" Margin="0,50,0,0" IsVisible="{Binding Details.UserStatus, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                            <ProgressBar Height="8"
+                                                         Value="{Binding WatchedEpisodes}"
+                                                         Maximum="{Binding Details.NumEpisodes}"
+                                                         IsVisible="{Binding Details.NumEpisodes, Converter={StaticResource GreaterThanZeroConverter}}"
+                                                         Background="#333333"
+                                                         Foreground="{StaticResource RedColor}"
+                                                         CornerRadius="4"/>
+                                            <Grid Margin="0, 8, 0, 0">
+                                                <TextBlock HorizontalAlignment="Left"
+                                                           Foreground="{StaticResource TextSecondary}"
+                                                           FontSize="12">
+                                                    <Run Text="{Binding Watched, Source={x:Static misc:MediaMode.Instance}}"/><Run Text="{Binding WatchedEpisodes, StringFormat=': {0}'}"/>
+                                                </TextBlock>
+                                                <TextBlock HorizontalAlignment="Right"
+                                                           Text="{Binding Details.NumEpisodes, Converter={x:Static misc:MediaMode.TotalText}}"
+                                                           Foreground="{StaticResource TextSecondary}"
+                                                           FontSize="12"/>
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                                <Button Classes="ghost round"
+                                                    Command="{Binding DecrementWatchedEpisodesCommand}"
+                                                    Background="#00000000"
+                                                    Foreground="White"
+                                                    Width="40" Height="40"
+                                                    CornerRadius="20"
+                                                    BorderThickness="0">
+                                                    <Image Source="{SvgImage /Resources/Icons/minus_icon.svg}" Width="20" Height="20" />
+                                                </Button>
+                                                <Panel VerticalAlignment="Center" Margin="8,0" MinWidth="40">
+                                                    <Button Command="{Binding StartEditingEpisodesCommand}"
+                                                            IsVisible="{Binding !IsEditingEpisodes}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Padding="6,2"
+                                                            Cursor="Hand"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Center"
+                                                            ToolTip.Tip="Click to edit">
+                                                        <TextBlock Text="{Binding WatchedEpisodes}"
+                                                                   Foreground="White"
+                                                                   HorizontalAlignment="Center"/>
+                                                    </Button>
+                                                    <TextBox x:Name="EpisodesInputBox"
+                                                             IsVisible="{Binding IsEditingEpisodes}"
+                                                             Text="{Binding EpisodesInput, Mode=TwoWay}"
+                                                             MinWidth="40"
+                                                             Padding="4,2"
+                                                             VerticalAlignment="Center"
+                                                             HorizontalContentAlignment="Center"
+                                                             LostFocus="OnEpisodesInputLostFocus">
+                                                        <TextBox.KeyBindings>
+                                                            <KeyBinding Gesture="Enter" Command="{Binding CommitEpisodesInputCommand}"/>
+                                                            <KeyBinding Gesture="Escape" Command="{Binding CancelEditingEpisodesCommand}"/>
+                                                        </TextBox.KeyBindings>
+                                                    </TextBox>
+                                                </Panel>
+                                                <Button Classes="ghost round"
+                                                    Command="{Binding IncrementWatchedEpisodesCommand}"
+                                                    Background="#00000000"
+                                                    Foreground="White"
+                                                    Width="40" Height="40"
+                                                    CornerRadius="20"
+                                                    BorderThickness="0">
+                                                    <Image Source="{SvgImage /Resources/Icons/add_icon.svg}" Width="20" Height="20" />
+                                                </Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        
+                                        <!-- Anime Stats -->
+                                        <Border Grid.Row="2"
+                                                Margin="0, 10, 0, 0"
+                                                Background="Transparent"
+                                                CornerRadius="8"
+                                                Padding="15">
+                                            <UniformGrid Columns="3" Rows="2" HorizontalAlignment="Center" RowSpacing="20">
+                                                <!-- Watching -->
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Watching}"
+                                                               FontSize="16"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Watching, Source={x:Static misc:MediaMode.Instance}}"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Completed -->
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Completed}"
+                                                               FontSize="16"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Completed"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <!-- Plan to Watch -->
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.PlanToWatch}"
+                                                               FontSize="16"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding PlanTo, Source={x:Static misc:MediaMode.Instance}}"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <!-- On Hold -->
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.OnHold}"
+                                                               FontSize="16"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="On Hold"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <!-- Dropped -->
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                                    <TextBlock Text="{Binding Details.Statistics.StatusStats.Dropped}"
+                                                               FontSize="16"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Dropped"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <!-- Favorites -->
+                                                <StackPanel Spacing="4" HorizontalAlignment="Center" Margin="10,0">
+                                                    <TextBlock Text="{Binding Details.NumFavorites}"
+                                                               FontSize="16"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Favorites"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource TextSecondary}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </UniformGrid>
+                                        </Border>
+                                        <!-- Related -->
+                                        <StackPanel Grid.Row="3" Margin="0,30,0,0" Spacing="12" IsVisible="{Binding HasRelated}">
+                                            <TextBlock Text="Related" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                                            <ItemsControl ItemsSource="{Binding Related}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Spacing="8"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="vm:RelatedEntry">
+                                                        <Button Classes="ghost"
+                                                                Background="{StaticResource Surface2}"
+                                                                CornerRadius="8"
+                                                                Padding="8"
+                                                                Cursor="Hand"
+                                                                HorizontalAlignment="Stretch"
+                                                                HorizontalContentAlignment="Stretch"
+                                                                Command="{Binding $parent[UserControl].((vm:AnimeDetailsViewModel)DataContext).OpenRelatedCommand}"
+                                                                CommandParameter="{Binding Card.AnimeId}">
+                                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                                                <Border Width="48" Height="68" CornerRadius="6" ClipToBounds="True" Background="{StaticResource Background1}">
+                                                                    <Image asyncImageLoader:ImageLoader.Source="{Binding Card.ImageUrl}" Stretch="UniformToFill"/>
+                                                                </Border>
+                                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                                                    <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold" Foreground="#FF6B8E"/>
+                                                                    <TextBlock Text="{Binding Card.Title}"
+                                                                               FontSize="13"
+                                                                               FontWeight="Medium"
+                                                                               Foreground="White"
+                                                                               TextWrapping="Wrap"
+                                                                               MaxLines="2"
+                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Grid>
+
                                     <StackPanel Grid.Column="1" Margin="40, 0, 0, 0">
                                         <!-- Synopsis -->
                                         <TextBlock Text="{Binding Details.Synopsis}"
@@ -621,6 +662,7 @@
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
                                         </ScrollViewer>
+
                                     </StackPanel>
                                 </Grid>
                             </Grid>

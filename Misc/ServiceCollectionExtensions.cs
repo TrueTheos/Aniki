@@ -16,6 +16,7 @@ internal static class ServiceCollectionExtensions
         collection.AddSingleton<IAbsoluteEpisodeParser, AbsoluteEpisodeParser>();
         collection.AddSingleton<IAnimeNameParser, AnimeNameParser>();
         collection.AddSingleton<ICalendarService, CalendarService>();
+        collection.AddSingleton<EpisodeNotifier>();
         collection.AddSingleton<IDiscordService, DiscordService>();
         collection.AddSingleton<IAnimeService, AnimeService>();
         collection.AddSingleton<INyaaService, NyaaService>();

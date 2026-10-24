@@ -671,6 +671,9 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
             "SEQUEL"  => RelatedAnime.RelationType.Sequel,
             "SUMMARY" =>  RelatedAnime.RelationType.Summary,
             "PARENT"  => RelatedAnime.RelationType.FullStory,
+            "SIDE_STORY"  => RelatedAnime.RelationType.SideStory,
+            "SPIN_OFF"    => RelatedAnime.RelationType.SpinOff,
+            "ALTERNATIVE" => RelatedAnime.RelationType.Alternative,
             _         => RelatedAnime.RelationType.Other
         };
     }

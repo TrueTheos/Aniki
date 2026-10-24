@@ -26,6 +26,8 @@ internal sealed partial class AnimeGroup : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasUnseenReleased))]
     public partial int ReleasedEpisodes { get; set; }
 
+    [ObservableProperty] public partial bool IsAiring { get; set; }
+
     public int UnseenReleasedCount => Math.Max(0, ReleasedEpisodes - WatchedEpisodes);
     public bool HasUnseenReleased => UnseenReleasedCount > 0;
 

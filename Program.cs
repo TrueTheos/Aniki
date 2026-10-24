@@ -12,6 +12,9 @@ internal sealed class Program
         VelopackApp builder = VelopackApp.Build();
         if (OperatingSystem.IsWindows())
             builder = builder.OnAfterUpdateFastCallback(_ => ClearCachesAfterUpdate());
+#if WINDOWS
+        builder = builder.OnBeforeUninstallFastCallback(_ => Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.Uninstall());
+#endif
         builder.Run();
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

@@ -117,6 +117,18 @@
                         <Border Classes="setting-card">
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel Grid.Column="0">
+                                    <TextBlock Classes="setting-label" Text="Episode Notifications"/>
+                                    <TextBlock Classes="setting-desc" Text="Get a Windows notification when a new episode from your Watching or Plan to Watch list airs"/>
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1"
+                                              IsChecked="{Binding EnableEpisodeNotifications, Mode=TwoWay}"
+                                              VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Classes="setting-card">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0">
                                     <TextBlock Classes="setting-label" Text="Built-in Downloader"/>
                                     <TextBlock Classes="setting-desc" Text="Download torrents inside Aniki. Turn off to use your own torrent client"/>
                                 </StackPanel>

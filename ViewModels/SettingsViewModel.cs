@@ -13,6 +13,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
 {
     [ObservableProperty] public partial bool StartMinimized { get; set; }
     [ObservableProperty] public partial bool EnableDiscordPresence { get; set; } = true;
+    [ObservableProperty] public partial bool EnableEpisodeNotifications { get; set; } = true;
     [ObservableProperty] public partial bool UseBuiltInDownloader { get; set; } = true;
     [ObservableProperty] public partial string? EpisodesFolder { get; set; }
     [ObservableProperty] public partial long CacheSize { get; set; }
@@ -75,6 +76,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
             AutoStart = false;
             StartMinimized = false;
             EnableDiscordPresence = true;
+            EnableEpisodeNotifications = true;
             UseBuiltInDownloader = true;
             EpisodesFolder = _saveService.DefaultEpisodesFolder;
         }
@@ -83,6 +85,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
             AutoStart = config.AutoStart;
             StartMinimized = config.StartMinimized;
             EnableDiscordPresence = config.EnableDiscordPresence;
+            EnableEpisodeNotifications = config.EnableEpisodeNotifications;
             UseBuiltInDownloader = config.UseBuiltInDownloader;
             EpisodesFolder = config.EpisodesFolder;
 
@@ -152,6 +155,7 @@ internal sealed partial class SettingsViewModel : ViewModelBase
             AutoStart = AutoStart,
             StartMinimized = StartMinimized,
             EnableDiscordPresence = EnableDiscordPresence,
+            EnableEpisodeNotifications = EnableEpisodeNotifications,
             UseBuiltInDownloader = UseBuiltInDownloader,
             EpisodesFolder = EpisodesFolder,
             PreferredVideoPlayerPath = SelectedPlayer?.ExecutablePath
@@ -170,6 +174,7 @@ internal sealed class SettingsConfig
     public bool AutoStart;
     public bool StartMinimized;
     public bool EnableDiscordPresence = true;
+    public bool EnableEpisodeNotifications = true;
     public bool UseBuiltInDownloader = true;
     public string? EpisodesFolder;
     public string? PreferredVideoPlayerPath;

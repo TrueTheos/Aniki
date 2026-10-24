@@ -173,6 +173,20 @@ internal sealed class CalendarService : ICalendarService, IDisposable
         return animeItems;
     }
 
+    public async Task<List<AnimeScheduleItem>> GetAiredAsync(IEnumerable<int> ids, DateTime since, DateTime until)
+    {
+        long startUnix = ((DateTimeOffset)since).ToUnixTimeSeconds();
+        long endUnix = ((DateTimeOffset)until).ToUnixTimeSeconds();
+
+        JArray schedules = await FetchAiringSchedulesAsync(startUnix, endUnix).ConfigureAwait(false);
+
+        HashSet<int> idSet = new(ids);
+        return schedules
+            .Select(s => ParseAnimeScheduleItem(s, new()))
+            .Where(item => item?.GetId() is { } id && idSet.Contains(id))
+            .ToList()!;
+    }
+
     private static AnimeScheduleItem? ParseAnimeScheduleItem(JToken schedule, HashSet<int> watchSet)
     {
         JToken? media = schedule["media"];

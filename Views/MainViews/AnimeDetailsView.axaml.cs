@@ -9,6 +9,7 @@ namespace Aniki.Views;
 internal sealed partial class AnimeDetailsView : UserControl
 {
     private readonly AnimeDetailsViewModel _viewModel;
+    private int? _shownId;
 
     private void GoToBrowse(object? sender, RoutedEventArgs e)
     {
@@ -20,6 +21,13 @@ internal sealed partial class AnimeDetailsView : UserControl
         InitializeComponent();
         
         _viewModel = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<AnimeDetailsViewModel>();
+
+        _viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName != nameof(AnimeDetailsViewModel.Details) || _viewModel.Details?.Id == _shownId) return;
+            _shownId = _viewModel.Details?.Id;
+            this.FindControl<ScrollViewer>("DetailsScroll")!.Offset = default;
+        };
 
         TextBox? episodesInputBox = this.FindControl<TextBox>("EpisodesInputBox");
         episodesInputBox?.GetObservable(IsVisibleProperty).Subscribe(visible =>

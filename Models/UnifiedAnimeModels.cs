@@ -142,7 +142,11 @@ internal sealed class RelatedAnime
         Sequel,
         Summary,
         FullStory,
-        Other
+        Other,
+        SideStory,
+        SpinOff,
+        Alternative,
+        ParentStory
     };
     public AnimeDetails? Details { get; set; }
     public required RelationType Relation { get; set; }

@@ -37,6 +37,7 @@ internal sealed partial class MainViewModel : ViewModelBase
     private readonly IAnimeService _animeService;
     private readonly IVideoPlayerService _videoPlayerService;
     private readonly AnilistService _anilistService;
+    private readonly EpisodeNotifier _episodeNotifier;
 
     private readonly Stack<ViewModelBase> _navigationBackStack = new();
     private readonly Stack<ViewModelBase> _navigationForwardStack = new();
@@ -44,8 +45,9 @@ internal sealed partial class MainViewModel : ViewModelBase
     public MainViewModel(IAnimeService animeService, AnimeDetailsViewModel animeDetailsViewModel,
         WatchAnimeViewModel watchViewModel, CalendarViewModel calendarViewModel, StatsViewModel statsViewModel, AnimeBrowseViewModel animeBrowseViewModel,
         UserAnimeListViewModel userAnimeListViewModel, ReadViewModel readViewModel, IVideoPlayerService videoPlayerService,
-        ExploreViewModel exploreViewModel, AnilistService anilistService) 
+        ExploreViewModel exploreViewModel, AnilistService anilistService, EpisodeNotifier episodeNotifier) 
     {
+        _episodeNotifier = episodeNotifier;
         ExploreViewModel = exploreViewModel;
         _anilistService = anilistService;
         _animeService           = animeService;
@@ -236,6 +238,7 @@ internal sealed partial class MainViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         await LoadUserDataAsync().ConfigureAwait(true);
+        _ = _episodeNotifier.RunAsync();
         await _videoPlayerService.ScanPlayersAsync().ConfigureAwait(true);
     }
 

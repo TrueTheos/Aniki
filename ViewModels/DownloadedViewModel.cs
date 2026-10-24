@@ -56,6 +56,8 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<TorrentDownload> ActiveDownloads => _torrentDownloads.Downloads;
 
+    public int NewEpisodesCount => AnimeGroups.Count(g => g.IsAiring && g.CanDownloadNext);
+
     private FileSystemWatcher? _fileWatcher;
     private System.Timers.Timer? _debounceTimer;
     private readonly Lock _debounceLock = new();
@@ -104,6 +106,8 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
             SetupFileWatcher();
             _loadTask = RefreshAsync();
         });
+
+        WeakReferenceMessenger.Default.Register<NewEpisodesAiredMessage>(this, (_, _) => _ = LoadUserLibraryData());
     }
     
     public override async Task Enter()
@@ -196,6 +200,7 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
                 foreach (AnimeGroup group in AnimeGroups)
                     group.Unsubscribe();
                 AnimeGroups.Clear();
+                OnPropertyChanged(nameof(NewEpisodesCount));
                 FilteredAnimeGroups = [];
                 ProcessingProgress  = "";
             });
@@ -494,7 +499,6 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
 
         if (needAnilist.Count == 0) return;
 
-        // MAL has no aired-episode field; Anilist is only used for currently-airing titles.
         try
         {
             bool useMalIds = AnimeService.CurrentProviderType == ILoginProvider.ProviderType.Mal;
@@ -507,7 +511,10 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
                 foreach ((int id, AnimeGroup group) in needAnilist)
                 {
                     if (counts.TryGetValue(id, out int released))
+                    {
                         group.ReleasedEpisodes = released;
+                        group.IsAiring = true;
+                    }
                     else if (group.MaxEpisodes > 0)
                         group.ReleasedEpisodes = group.MaxEpisodes;
                 }
@@ -623,6 +630,11 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
         }
 
         AnimeGroups.Insert(insertIndex, newGroup);
+        newGroup.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(AnimeGroup.CanDownloadNext) or nameof(AnimeGroup.IsAiring))
+                OnPropertyChanged(nameof(NewEpisodesCount));
+        };
     }
 
     private static void InsertEpisodeInSortedOrder(ObservableCollection<DownloadedEpisode> episodes,
@@ -854,6 +866,7 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
     public void Dispose()
     {
         WeakReferenceMessenger.Default.Unregister<SettingsChangedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<NewEpisodesAiredMessage>(this);
         _fileWatcher?.Dispose();
         _debounceTimer?.Dispose();
         _loadLock.Dispose();

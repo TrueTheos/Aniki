@@ -651,6 +651,10 @@ internal sealed class MalService : IAnimeProvider, IDisposable
             "sequel"     => RelatedAnime.RelationType.Sequel,
             "summary"    =>  RelatedAnime.RelationType.Summary,
             "full_story" => RelatedAnime.RelationType.FullStory,
+            "side_story" => RelatedAnime.RelationType.SideStory,
+            "spin_off"   => RelatedAnime.RelationType.SpinOff,
+            "parent_story" => RelatedAnime.RelationType.ParentStory,
+            "alternative_version" or "alternative_setting" => RelatedAnime.RelationType.Alternative,
             _            => RelatedAnime.RelationType.Other
         };
     }
