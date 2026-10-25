@@ -22,6 +22,8 @@ internal sealed partial class AnimeBrowseView : UserControl
             base.OnAttachedToVisualTree(e);
         
             await _viewModel.InitializeAsync().ConfigureAwait(true);
+            if (MediaMode.Instance.IsAnime && (TopLevel.GetTopLevel(this) as Window)?.FindControl<Control>("ModeToggle") is { } toggle)
+                await TipService.Show("manga-mode", "Aniki does manga too: switch to Manga here to browse and read it.", toggle).ConfigureAwait(true);
         }
         catch (Exception error)
         {

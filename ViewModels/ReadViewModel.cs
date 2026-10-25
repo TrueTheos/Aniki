@@ -43,6 +43,10 @@ internal sealed partial class ReadViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ShowProblem), nameof(ProblemTitle), nameof(ProblemText), nameof(ShowSkip), nameof(ShowSearch))]
     public partial string? PageError { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProblemTitle), nameof(ProblemText))]
+    public partial int RemovedChapters { get; set; }
+
     [ObservableProperty] public partial bool IsFullscreen { get; set; }
     [ObservableProperty] public partial ObservableCollection<AnimeDetails> ContinueReading { get; set; } = [];
 
@@ -60,11 +64,14 @@ internal sealed partial class ReadViewModel : ViewModelBase
 
     public string ProblemTitle => IsExternal ? $"Chapter {SelectedChapter!.Number} is on {SelectedChapter.Source}"
         : PageError != null ? "This chapter isn't available"
+        : RemovedChapters > 0 ? "English chapters were taken down"
         : "No English chapters on MangaDex";
 
     public string ProblemText => IsExternal
         ? "The publisher hosts this chapter officially, so MangaDex can't show its pages here. It opens in your browser."
-        : PageError ?? Error ?? "MangaDex has no English chapters for this title. You can still track your progress from the details page.";
+        : PageError ?? Error ?? (RemovedChapters > 0
+            ? $"MangaDex had {RemovedChapters} English chapters, but they were removed, usually because the series is officially licensed. Search MangaDex for another upload, or keep tracking your progress from the details page."
+            : "MangaDex has no English chapters for this title. You can still track your progress from the details page.");
 
     private int ChaptersRead => Manga?.UserStatus?.EpisodesWatched ?? 0;
     public string MarkReadText => SelectedChapter != null && (int)SelectedChapter.NumberValue is var n && n > 0 && n <= ChaptersRead
@@ -112,13 +119,15 @@ internal sealed partial class ReadViewModel : ViewModelBase
         SelectedChapter = null;
         Error = null;
         PageError = null;
+        RemovedChapters = 0;
         IsLoading = true;
         try
         {
             string? id = await _mangaDex.FindMangaIdAsync(manga.Id, AnimeService.CurrentProviderType, manga.Title ?? "").ConfigureAwait(true);
-            List<MangaChapter> chapters = id == null ? [] : await _mangaDex.GetChaptersAsync(id).ConfigureAwait(true);
+            (List<MangaChapter> chapters, int removed) = id == null ? ([], 0) : await _mangaDex.GetChaptersAsync(id).ConfigureAwait(true);
             if (Manga != manga) return;
 
+            RemovedChapters = removed;
             Chapters = new ObservableCollection<MangaChapter>(chapters);
             if (chapters.Count > 0)
                 SelectedChapter = chapters.FirstOrDefault(c => c.NumberValue > ChaptersRead) ?? chapters[0];
@@ -136,6 +145,7 @@ internal sealed partial class ReadViewModel : ViewModelBase
     async partial void OnSelectedChapterChanged(MangaChapter? value)
     {
         Pages.Clear();
+        ChapterPageLoader.Instance.ReleaseChapter();
         PageError = null;
         CurrentPage = 1;
         if (value == null || value.IsExternal) return;

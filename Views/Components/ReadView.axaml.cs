@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Aniki.Services.Anime;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -34,6 +35,12 @@ internal sealed partial class ReadView : UserControl
         if (DataContext is not ReadViewModel vm) return;
         double line = PagesScroller.Offset.Y + PagesScroller.Viewport.Height / 3;
         vm.CurrentPage = Math.Max(1, PageTops().FindLastIndex(t => t <= line) + 1);
+
+        double scrollable = PagesScroller.Extent.Height - PagesScroller.Viewport.Height;
+        ChapterProgress.Value = scrollable > 0 ? PagesScroller.Offset.Y / scrollable : 0;
+
+        if (vm.Pages.Count > 1 && vm.CurrentPage == vm.Pages.Count && AnimeService.IsLoggedIn)
+            _ = TipService.Show("reader-next-marks-read", "Going to the next chapter (▶ or the button below) also marks this one as read on your list.", NextChapterButton);
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -59,7 +66,12 @@ internal sealed partial class ReadView : UserControl
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ReadViewModel.Pages))
+        {
             PagesScroller.Offset = default;
+            _ = TipService.Show("reader-keys", "Use the ← and → arrow keys to flip pages, and F for fullscreen.", PageIndicatorText);
+        }
+        if (e.PropertyName == nameof(ReadViewModel.IsFullscreen) && sender is ReadViewModel { IsFullscreen: true })
+            _ = TipService.Show("reader-fullscreen", "Press Esc to leave fullscreen. The toolbar fades out; hover the top-right corner to bring it back.", FullscreenButton);
         if (e.PropertyName == nameof(ReadViewModel.SelectedChapter) && sender is ReadViewModel vm)
             UpdateWebReader(vm);
     }

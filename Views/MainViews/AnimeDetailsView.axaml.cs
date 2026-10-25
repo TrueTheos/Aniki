@@ -27,6 +27,8 @@ internal sealed partial class AnimeDetailsView : UserControl
             if (e.PropertyName != nameof(AnimeDetailsViewModel.Details) || _viewModel.Details?.Id == _shownId) return;
             _shownId = _viewModel.Details?.Id;
             this.FindControl<ScrollViewer>("DetailsScroll")!.Offset = default;
+            if (_shownId != null && this.FindControl<TextBlock>("TitleText") is { } title)
+                _ = TipService.Show("details-copy-title", "Click the title to copy it to your clipboard.", title);
         };
 
         TextBox? episodesInputBox = this.FindControl<TextBox>("EpisodesInputBox");

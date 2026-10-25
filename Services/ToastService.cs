@@ -11,7 +11,9 @@ namespace Aniki.Services;
 
 internal static class ToastService
 {
-    public static async Task Show(string message, int durationMs = 2200)
+    public static Task Show(string message, int durationMs = 2200) => Show(new ToastView(message), durationMs);
+
+    public static async Task Show(Control toast, int durationMs)
     {
         Window? host = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
             ?.MainWindow;
@@ -22,11 +24,11 @@ internal static class ToastService
         AdornerLayer? adornerLayer = visual is not null ? AdornerLayer.GetAdornerLayer(visual) : null;
         if (adornerLayer is null) return;
 
-        ToastView toast = new(message);
         AdornerLayer.SetAdornedElement(toast, host);
         adornerLayer.Children.Add(toast);
 
         await Task.Delay(durationMs).ConfigureAwait(true);
+        if (toast.Parent is null) return;
 
         // Fade out
         Animation fadeOut = new()

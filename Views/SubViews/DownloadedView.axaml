@@ -421,7 +421,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="models:AnimeGroup">
 
-                            <Border Classes="anime-card" Margin="0,0,0,12" ClipToBounds="True" DoubleTapped="OnDoubleTapAnime" Cursor="Hand">
+                            <Border Classes="anime-card" Margin="0,0,0,12" ClipToBounds="True" DoubleTapped="OnDoubleTapAnime" Cursor="Hand" PointerEntered="OnCardPointerEntered">
                                 <StackPanel>
 
                                     <Grid ColumnDefinitions="Auto,*,Auto">

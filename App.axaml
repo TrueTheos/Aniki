@@ -32,6 +32,7 @@
     </Application.Resources>
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml"/>
 
         <Style Selector="Button">
             <Setter Property="Cursor" Value="Hand"/>

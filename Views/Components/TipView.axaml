@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Aniki.Views.TipView">
+    <Canvas>
+        <Border x:Name="Highlight" IsHitTestVisible="False" CornerRadius="8" BorderThickness="2"
+                BorderBrush="{StaticResource AccentRed}" BoxShadow="0 0 14 2 #88DC143C"/>
+        <Border x:Name="Card" MaxWidth="340"
+                Background="{StaticResource Surface2}" BorderBrush="{StaticResource BorderLight}" BorderThickness="1"
+                CornerRadius="10" Padding="16,12" BoxShadow="0 6 24 0 #66000000">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="TIP" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentRed}"/>
+                    <TextBlock x:Name="TipText" FontSize="13" Foreground="{StaticResource White}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Button Grid.Column="1" Classes="primary" Content="Got it" Padding="12,6" Margin="14,0,0,0"
+                        VerticalAlignment="Center" Cursor="Hand" Click="Dismiss"/>
+            </Grid>
+        </Border>
+    </Canvas>
+</UserControl>

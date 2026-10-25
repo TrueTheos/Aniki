@@ -56,7 +56,7 @@
                                     
                                     <StackPanel Grid.Column="1" Margin="40,0,0,50" Spacing="0" VerticalAlignment="Bottom">
                                         <!-- Title -->
-                                        <TextBlock Text="{Binding Details.Title}"
+                                        <TextBlock x:Name="TitleText" Text="{Binding Details.Title}"
                                                    FontSize="56"
                                                    FontWeight="Bold"
                                                    Foreground="White"

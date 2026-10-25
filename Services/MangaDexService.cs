@@ -36,7 +36,7 @@ internal sealed class MangaDexService : IDisposable
         string id = providerId.ToString(CultureInfo.InvariantCulture);
 
         using JsonDocument doc = await GetJsonAsync(
-            $"{API}/manga?title={Uri.EscapeDataString(title)}&limit=10" +
+            $"{API}/manga?title={Uri.EscapeDataString(title)}&limit=10&order[relevance]=desc" +
             "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica").ConfigureAwait(false);
 
         string? first = null;
@@ -53,14 +53,14 @@ internal sealed class MangaDexService : IDisposable
         return first;
     }
 
-    public async Task<List<MangaChapter>> GetChaptersAsync(string mangaId)
+    public async Task<(List<MangaChapter> Chapters, int Removed)> GetChaptersAsync(string mangaId)
     {
         Dictionary<string, MangaChapter> byNumber = new();
-        int offset = 0, total;
+        int offset = 0, total, removed = 0;
         do
         {
             using JsonDocument doc = await GetJsonAsync(
-                $"{API}/manga/{mangaId}/feed?translatedLanguage[]=en&order[chapter]=asc&limit=500&offset={offset}&includes[]=scanlation_group" +
+                $"{API}/manga/{mangaId}/feed?translatedLanguage[]=en&order[chapter]=asc&limit=500&offset={offset}&includes[]=scanlation_group&includeUnavailable=1" +
                 "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica").ConfigureAwait(false);
             total = doc.RootElement.GetProperty("total").GetInt32();
             JsonElement data = doc.RootElement.GetProperty("data");
@@ -70,6 +70,11 @@ internal sealed class MangaDexService : IDisposable
             foreach (JsonElement chapter in data.EnumerateArray())
             {
                 JsonElement a = chapter.GetProperty("attributes");
+                if (a.TryGetProperty("isUnavailable", out JsonElement unavailable) && unavailable.GetBoolean())
+                {
+                    removed++;
+                    continue;
+                }
                 string? externalUrl = a.GetProperty("externalUrl").GetString();
                 int pages = a.GetProperty("pages").GetInt32();
                 if (externalUrl == null && pages == 0) continue;
@@ -84,7 +89,7 @@ internal sealed class MangaDexService : IDisposable
             }
         } while (offset < total && offset < 10_000); 
 
-        return byNumber.Values.OrderBy(c => c.NumberValue).ToList();
+        return (byNumber.Values.OrderBy(c => c.NumberValue).ToList(), removed);
     }
 
     private static string? GroupName(JsonElement chapter) =>
@@ -99,8 +104,8 @@ internal sealed class MangaDexService : IDisposable
         string baseUrl = doc.RootElement.GetProperty("baseUrl").GetString()!;
         JsonElement chapter = doc.RootElement.GetProperty("chapter");
         string hash = chapter.GetProperty("hash").GetString()!;
-        return chapter.GetProperty("data").EnumerateArray()
-                      .Select(f => $"{baseUrl}/data/{hash}/{f.GetString()}")
+        return chapter.GetProperty("dataSaver").EnumerateArray()
+                      .Select(f => $"{baseUrl}/data-saver/{hash}/{f.GetString()}")
                       .ToList();
     }
 

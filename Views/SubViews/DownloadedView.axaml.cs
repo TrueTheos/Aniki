@@ -39,6 +39,12 @@ internal sealed partial class DownloadedView : UserControl
         }
     }
     
+    private void OnCardPointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (sender is Control card)
+            _ = TipService.Show("downloaded-double-click", "Double-click an episode to play it, or double-click a show's card to open its details.", card);
+    }
+
     private void OnDoubleTapIgnore(object? sender, TappedEventArgs e)
     {
         e.Handled = true;

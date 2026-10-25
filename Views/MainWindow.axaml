@@ -187,7 +187,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="2">
-                    <Border Background="{StaticResource Surface2}" CornerRadius="8" Padding="3" Margin="8,4,4,6">
+                    <Border x:Name="ModeToggle" Background="{StaticResource Surface2}" CornerRadius="8" Padding="3" Margin="8,4,4,6">
                         <Grid ColumnDefinitions="*,*">
                             <Button Classes="ModeButton" Content="Anime"
                                     Classes.selected="{Binding IsAnime, Source={x:Static misc:MediaMode.Instance}}"
