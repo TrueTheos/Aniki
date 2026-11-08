@@ -9,4 +9,5 @@ internal sealed partial class TorrentDownload(TorrentManager manager) : Observab
 
     [ObservableProperty] public partial double Progress { get; set; }
     [ObservableProperty] public partial string Status { get; set; } = "Starting";
+    [ObservableProperty] public partial bool IsPaused { get; set; }
 }

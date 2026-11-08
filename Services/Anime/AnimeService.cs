@@ -13,6 +13,7 @@ internal sealed class AnimeService : IAnimeService
 {
     private readonly Dictionary<ILoginProvider.ProviderType, IAnimeProvider> _providers = new();
     private readonly ConcurrentDictionary<ILoginProvider.ProviderType, GenericCacheService<int, AnimeDetails, AnimeField>> _caches = new();
+    private readonly ConcurrentDictionary<ILoginProvider.ProviderType, GenericCacheService<string, RankingIds, RankingIds.Field>> _rankingCaches = new();
     private readonly ISaveService _saveService;
 
     private IAnimeProvider? _currentProvider;
@@ -42,10 +43,11 @@ internal sealed class AnimeService : IAnimeService
         _providers[name] = provider;
         _manga?.RegisterProvider(name, provider.ForManga());
         
+        string cachePath = _kind == MediaKind.Manga ? $"{SaveService.CachePath}/{name}_Manga" : $"{SaveService.CachePath}/{name}";
         CacheOptions options = new()
         {
             DefaultTimeToLive = TimeSpan.FromHours(8),
-            DiskCachePath = _kind == MediaKind.Manga ? $"{SaveService.CachePath}/{name}_Manga" : $"{SaveService.CachePath}/{name}",
+            DiskCachePath = cachePath,
             DiskSyncInterval = TimeSpan.FromMinutes(2),
             EnableDiskCache = true
         };
@@ -53,6 +55,15 @@ internal sealed class AnimeService : IAnimeService
         GenericCacheService<int, AnimeDetails, AnimeField> cache = new(FetchFieldsFromProvider, options);
         _caches[name] = cache;
         _saveService.RegisterCache(cache);
+
+        GenericCacheService<string, RankingIds, RankingIds.Field> rankingCache = new(FetchRankingFromProvider, new CacheOptions
+        {
+            DefaultTimeToLive = TimeSpan.FromHours(8),
+            DiskCachePath = $"{cachePath}_Rankings",
+            DiskSyncInterval = TimeSpan.FromMinutes(2)
+        });
+        _rankingCaches[name] = rankingCache;
+        _saveService.RegisterCache(rankingCache);
     }
 
     public async Task SetActiveProviderAsync(ILoginProvider.ProviderType providerName, string? accessToken)
@@ -211,26 +222,44 @@ internal sealed class AnimeService : IAnimeService
 
     public Task<int?> GetIdFromMalIdAsync(int malId) => GetCurrentProvider().GetIdFromMalIdAsync(malId);
 
+    private static readonly AnimeField[] RankingFieldTypesWithVideos = [..MalNodeFieldTypes, AnimeField.Videos];
+
     public async Task<List<RankingEntry>> GetTopAnimeAsync(RankingCategory category)
     {
-        var rankings = await GetCurrentProvider().GetTopAnimeAsync(category).ConfigureAwait(false);
+        IAnimeProvider provider = GetCurrentProvider();
+        var rankingCache = _rankingCaches[provider.Provider];
+        var cache = _caches[provider.Provider];
+        string key = category.ToString();
 
-        if (_currentProvider != null)
+        RankingIds ranking = await rankingCache.GetOrFetchFieldsAsync(key, fields: RankingIds.Field.Ids).ConfigureAwait(false);
+        List<AnimeDetails?> details = ranking.Ids.Select(cache.GetWithoutFetching).ToList();
+        if (details.Contains(null))
         {
-            AnimeField[] rankingFields = MalNodeFieldTypes;
-            var cache = _caches[_currentProvider.Provider];
-
-            foreach (RankingEntry entry in rankings)
-            {
-                AnimeDetails? cached = cache.GetWithoutFetching(entry.Details.Id);
-                if (cached?.UserStatus != null)
-                    entry.Details.UserStatus = cached.UserStatus;
-
-                cache.UpdatePartial(entry.Details.Id, entry.Details, rankingFields);
-            }
+            ranking = await rankingCache.GetOrFetchFieldsAsync(key, true, RankingIds.Field.Ids).ConfigureAwait(false);
+            details = ranking.Ids.Select(cache.GetWithoutFetching).ToList();
         }
 
-        return rankings;
+        return details.OfType<AnimeDetails>().Select(d => new RankingEntry { Details = d }).ToList();
+    }
+
+    private async Task<RankingIds?> FetchRankingFromProvider(string category, RankingIds.Field[] _)
+    {
+        IAnimeProvider provider = GetCurrentProvider();
+        var rankings = await provider.GetTopAnimeAsync(Enum.Parse<RankingCategory>(category)).ConfigureAwait(false);
+        if (rankings.Count == 0) return null;
+
+        var cache = _caches[provider.Provider];
+        foreach (RankingEntry entry in rankings)
+        {
+            AnimeDetails? cached = cache.GetWithoutFetching(entry.Details.Id);
+            if (cached?.UserStatus != null)
+                entry.Details.UserStatus = cached.UserStatus;
+
+            cache.UpdatePartial(entry.Details.Id, entry.Details,
+                entry.Details.Videos is { Length: > 0 } ? RankingFieldTypesWithVideos : MalNodeFieldTypes);
+        }
+
+        return new RankingIds { Ids = rankings.Select(r => r.Details.Id).ToList() };
     }
 
     public async Task ClearCachesAsync()

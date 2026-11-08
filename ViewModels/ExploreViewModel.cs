@@ -37,6 +37,7 @@ internal sealed partial class ExploreViewModel : ViewModelBase
     [ObservableProperty] public partial List<string> AllTags { get; set; } = [];
     [ObservableProperty] public partial string? PickedTag { get; set; }
     [ObservableProperty] public partial string? TagQuery { get; set; }
+    [ObservableProperty] public partial string SearchText { get; set; } = "";
 
     [ObservableProperty] public partial Option[] Formats { get; set; } = MangaFormats;
     [ObservableProperty] public partial Option SelectedFormat { get; set; } = MangaFormats[0];
@@ -94,11 +95,12 @@ internal sealed partial class ExploreViewModel : ViewModelBase
         }
     }
 
-    public void PresetGenre(string genre)
+    public void Preset(string? genre = null, string search = "")
     {
         _suspendSearch = true;
         foreach (GenreViewModel g in Genres) g.IsSelected = g.Name == genre;
         SelectedTags.Clear();
+        SearchText = search;
         _suspendSearch = false;
         _loadedKind = null;
     }
@@ -124,6 +126,7 @@ internal sealed partial class ExploreViewModel : ViewModelBase
         _suspendSearch = true;
         foreach (GenreViewModel g in Genres) g.IsSelected = false;
         SelectedTags.Clear();
+        SearchText = "";
         SelectedFormat = Formats[0];
         SelectedStatus = Statuses[0];
         _suspendSearch = false;
@@ -131,8 +134,16 @@ internal sealed partial class ExploreViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private Task ClearSearch()
+    {
+        SearchText = "";
+        return SearchAsync();
+    }
+
+    [RelayCommand]
     private Task LoadMore() => LoadPageAsync(_page + 1, _searchVersion);
 
+    [RelayCommand]
     private Task SearchAsync()
     {
         if (_suspendSearch || _loadedKind == null) return Task.CompletedTask;
@@ -150,7 +161,7 @@ internal sealed partial class ExploreViewModel : ViewModelBase
                 Genres.Where(g => g.IsSelected).Select(g => g.Name).ToList(),
                 SelectedTags.ToList(),
                 SelectedFormat.Format, SelectedFormat.Country, SelectedStatus.Value,
-                SelectedSort.Value!, page).ConfigureAwait(true);
+                SelectedSort.Value!, page, SearchText).ConfigureAwait(true);
             if (version != _searchVersion) return; // a newer search started meanwhile
 
             Dictionary<int, AnimeStatus?> statuses = await GetListStatusesAsync().ConfigureAwait(true);

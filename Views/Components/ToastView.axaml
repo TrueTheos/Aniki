@@ -13,7 +13,7 @@
     </UserControl.Styles>
     
     <Panel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,32">
-        <Border Classes="toast">
+        <Border x:Name="ToastBorder" Classes="toast">
             <TextBlock x:Name="ToastText" FontSize="13" FontWeight="Medium" Foreground="White"/>
         </Border>
     </Panel>

@@ -378,7 +378,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="models:TorrentDownload">
                     <Border Classes="anime-card" Margin="0,8,0,0" Padding="12,8">
-                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                        <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"
                                        Foreground="{StaticResource White}" TextTrimming="CharacterEllipsis"/>
                             <ProgressBar Grid.Row="1" Grid.Column="0" Margin="0,6,12,0"
@@ -387,7 +387,17 @@
                                          Foreground="{StaticResource RedColor}"/>
                             <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,4,0,0" FontSize="12"
                                        Foreground="{StaticResource White}" Text="{Binding Status}"/>
-                            <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                            <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Margin="0,0,8,0"
+                                    Classes="ep-icon-btn ep-play"
+                                    Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).TogglePauseDownloadCommand}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip.Tip="Pause / resume">
+                                <Panel>
+                                    <Image Source="{SvgImage /Resources/Icons/play_icon.svg}" Width="20" Height="20" IsVisible="{Binding IsPaused}"/>
+                                    <PathIcon Data="M6 19h4V5H6v14zm8-14v14h4V5h-4z" Width="16" Height="16" Foreground="White" IsVisible="{Binding !IsPaused}"/>
+                                </Panel>
+                            </Button>
+                            <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="2"
                                     Classes="ep-icon-btn ep-delete"
                                     Command="{Binding $parent[UserControl].((vm:DownloadedViewModel)DataContext).CancelDownloadCommand}"
                                     CommandParameter="{Binding}"

@@ -805,6 +805,9 @@ internal sealed partial class DownloadedViewModel : ViewModelBase, IDisposable
     private Task CancelDownload(TorrentDownload download) => _torrentDownloads.CancelAsync(download);
 
     [RelayCommand]
+    private Task TogglePauseDownload(TorrentDownload download) => _torrentDownloads.TogglePauseAsync(download);
+
+    [RelayCommand]
     private void OpenEpisodesFolder()
     {
         string episodesFolder = GetEpisodesFolder();

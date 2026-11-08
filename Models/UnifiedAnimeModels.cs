@@ -172,6 +172,13 @@ internal sealed class RankingEntry
     public required AnimeDetails Details { get; set; }
 }
 
+internal sealed class RankingIds
+{
+    internal enum Field { Ids }
+
+    [CacheField(Field.Ids)] public List<int> Ids { get; set; } = [];
+}
+
 internal enum AnimeStatus
 {
     None,

@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Aniki.Services.Auth;
+using Aniki.Services.Cache;
 using Aniki.Services.Interfaces;
 using Newtonsoft.Json.Linq;
 
@@ -50,6 +51,20 @@ internal sealed class CalendarService : ICalendarService, IDisposable
             ";
 
     private readonly HttpClient _client = new();
+
+    private sealed class CachedDay
+    {
+        internal enum Field { Items }
+
+        [CacheField(Field.Items)] public List<AnimeScheduleItem> Items { get; set; } = [];
+    }
+
+    private readonly GenericCacheService<string, CachedDay, CachedDay.Field> _dayCache;
+
+    public CalendarService()
+    {
+        _dayCache = new(FetchDayAsync, new CacheOptions { DefaultTimeToLive = TimeSpan.FromHours(1), EnableDiskCache = false });
+    }
 
     private async Task<JArray> FetchAiringSchedulesAsync(long startUnix, long endUnix, int perPage = 50)
     {
@@ -154,6 +169,13 @@ internal sealed class CalendarService : ICalendarService, IDisposable
 
     public async Task<List<AnimeScheduleItem>> GetAnimeScheduleForDayAsync(DateTime date)
     {
+        string key = date.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        return (await _dayCache.GetOrFetchFieldsAsync(key, fields: CachedDay.Field.Items).ConfigureAwait(false)).Items;
+    }
+
+    private async Task<CachedDay?> FetchDayAsync(string key, CachedDay.Field[] _)
+    {
+        DateTime date = DateTime.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);
         long startUnix = ((DateTimeOffset)date.Date).ToUnixTimeSeconds();
         long endUnix = ((DateTimeOffset)date.Date.AddDays(1)).ToUnixTimeSeconds();
 
@@ -170,7 +192,7 @@ internal sealed class CalendarService : ICalendarService, IDisposable
             }
         }
 
-        return animeItems;
+        return animeItems.Count > 0 ? new CachedDay { Items = animeItems } : null;
     }
 
     public async Task<List<AnimeScheduleItem>> GetAiredAsync(IEnumerable<int> ids, DateTime since, DateTime until)
@@ -246,5 +268,6 @@ internal sealed class CalendarService : ICalendarService, IDisposable
     public void Dispose()
     {
         _client.Dispose();
+        _dayCache.Dispose();
     }
 }

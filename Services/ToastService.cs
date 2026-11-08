@@ -13,6 +13,8 @@ internal static class ToastService
 {
     public static Task Show(string message, int durationMs = 2200) => Show(new ToastView(message), durationMs);
 
+    public static Task Show(string message, Action onClick) => Show(new ToastView(message, onClick), 5000);
+
     public static async Task Show(Control toast, int durationMs)
     {
         Window? host = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)

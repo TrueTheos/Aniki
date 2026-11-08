@@ -185,7 +185,7 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
 
     public async Task<(List<Anilist_Anime> Items, bool HasMore)> DiscoverAsync(
         MediaKind kind, IReadOnlyList<string> genres, IReadOnlyList<string> tags,
-        string? format, string? country, string? status, string sort, int page)
+        string? format, string? country, string? status, string sort, int page, string? search = null)
     {
         Dictionary<string, object> variables = new()
         {
@@ -198,16 +198,17 @@ internal sealed class AnilistService : IAnimeProvider, IDisposable
         if (format != null) variables["format"] = format;
         if (country != null) variables["country"] = country;
         if (status != null) variables["status"] = status;
+        if (!string.IsNullOrWhiteSpace(search)) variables["search"] = search.Trim();
 
         GraphQLRequest request = new()
         {
             Query = @"
                 query ($page: Int, $type: MediaType, $genres: [String], $tags: [String], $format: MediaFormat,
-                       $country: CountryCode, $status: MediaStatus, $sort: [MediaSort]) {
+                       $country: CountryCode, $status: MediaStatus, $sort: [MediaSort], $search: String) {
                     Page(page: $page, perPage: 30) {
                         pageInfo { hasNextPage }
                         media(type: $type, genre_in: $genres, tag_in: $tags, format: $format, countryOfOrigin: $country,
-                              status: $status, sort: $sort, isAdult: false) {
+                              status: $status, sort: $sort, search: $search, isAdult: false) {
                             id idMal title { romaji english } coverImage { large medium } meanScore
                         }
                     }

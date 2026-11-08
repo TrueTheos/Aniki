@@ -199,7 +199,13 @@ internal sealed partial class MainViewModel : ViewModelBase
 
     public async Task ShowExploreGenre(string genre)
     {
-        ExploreViewModel.PresetGenre(genre);
+        ExploreViewModel.Preset(genre);
+        await NavigateToViewAsync(ExploreViewModel).ConfigureAwait(true);
+    }
+
+    public async Task ShowExploreSearch(string query)
+    {
+        ExploreViewModel.Preset(search: query);
         await NavigateToViewAsync(ExploreViewModel).ConfigureAwait(true);
     }
 
@@ -221,7 +227,7 @@ internal sealed partial class MainViewModel : ViewModelBase
     public async Task GoToAnime(string title)
     {
         MediaMode.Instance.Kind = MediaKind.Anime;
-        await SearchForAnime(title.Replace('-', ' ')).ConfigureAwait(true);
+        await ShowExploreSearch(title.Replace('-', ' ')).ConfigureAwait(true);
     }
 
     public async Task GoToAnime(int malId)
@@ -259,16 +265,6 @@ internal sealed partial class MainViewModel : ViewModelBase
     private void Logout()
     {
         LogoutRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private async Task SearchForAnime(string searchQuery)
-    {
-        IsLoading = true;
-
-        await ShowAnimeBrowsePage().ConfigureAwait(true);
-
-        await AnimeBrowseViewModel.SearchAnimeByTitle(searchQuery).ConfigureAwait(true);
-        IsLoading = false;
     }
 
     private async Task SearchForAnime(int malId)

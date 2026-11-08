@@ -20,8 +20,6 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
 
     [ObservableProperty] public partial ObservableCollection<AnimeCardData> TrendingAllTime { get; set; } = [];
 
-    [ObservableProperty] public partial ObservableCollection<AnimeCardData> SearchResults { get; set; } = [];
-
     [ObservableProperty] public partial ObservableCollection<AnimeCardData> AiringToday { get; set; } = [];
 
     [ObservableProperty] public partial ObservableCollection<HeroAnimeData> HeroAnimeList { get; set; } = [];
@@ -31,26 +29,10 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
 
     [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
 
-    internal enum AnimeBrowseViewMode {Main, Search}
-
-    [ObservableProperty] public partial AnimeBrowseViewMode ViewMode { get; set; }
-
     [ObservableProperty] public partial bool IsLoading { get; set; }
 
-    [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
-
-    [ObservableProperty] public partial int TotalPages { get; set; } = 1;
-    [ObservableProperty] public partial int TotalResults { get; set; }
-
-    [ObservableProperty] public partial bool CanGoNext { get; set; }
-
-    [ObservableProperty] public partial bool CanGoPrevious { get; set; }
-
-    private List<AnimeDetails> _allSearchResults = [];
     private int _currentHeroIndex;
     private Task? _categoriesLoadTask;
-    
-    private const int PAGE_SIZE = 20;
 
     public IReadOnlyList<string> GenreChips { get; } =
     [
@@ -71,11 +53,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
                 Dispatcher.UIThread.Post(() => ApplyStatusToCards(msg.AnimeId, msg.Status));
         });
 
-        MediaMode.Instance.PropertyChanged += (_, _) =>
-        {
-            ResetTopLists();
-            ExitSearchMode();
-        };
+        MediaMode.Instance.PropertyChanged += (_, _) => ResetTopLists();
     }
 
     private void ResetTopLists()
@@ -211,8 +189,7 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
         PopularThisSeason
             .Concat(PopularUpcoming)
             .Concat(TrendingAllTime)
-            .Concat(AiringToday)
-            .Concat(SearchResults);
+            .Concat(AiringToday);
 
     private Task LoadHeroAnimeAsync(List<RankingEntry> animeList)
     {
@@ -315,74 +292,8 @@ internal sealed partial class AnimeBrowseViewModel : ViewModelBase
     [RelayCommand]
     private async Task PerformSearchAsync()
     {
-        await SearchAnimeByTitle(SearchQuery).ConfigureAwait(true);
-    }
-
-    public async Task SearchAnimeByTitle(string query)
-    {
-        IsLoading = true;
-        ViewMode  = AnimeBrowseViewMode.Search;
-
-        _allSearchResults = await _animeService.Current.SearchAnimeAsync(query).ConfigureAwait(true);
-        CurrentPage       = 1;
-        TotalPages        = Math.Max(1, (int)Math.Ceiling(_allSearchResults.Count / (double)PAGE_SIZE));
-        TotalResults      = _allSearchResults.Count;
-            
-        LoadSearchResultsPage();
-        IsLoading = false;
-    }
-    
-    private void LoadSearchResultsPage()
-    {
-        SearchResults.Clear();
-        
-        var pageResults = _allSearchResults
-                          .Skip((CurrentPage - 1) * PAGE_SIZE)
-                          .Take(PAGE_SIZE);
-
-        foreach (AnimeDetails result in pageResults)
-        {
-            SearchResults.Add(result.ToCardData());
-        }
-
-        UpdatePaginationState();
-    }
-    
-    private void UpdatePaginationState()
-    {
-        CanGoPrevious = CurrentPage > 1;
-        CanGoNext = CurrentPage < TotalPages;
-    }
-
-    [RelayCommand]
-    private void NextPage()
-    {
-        if (!CanGoNext) return;
-        
-        CurrentPage++;
-        LoadSearchResultsPage();
-    }
-
-    [RelayCommand]
-    private void PreviousPage()
-    {
-        if (!CanGoPrevious) return;
-        
-        CurrentPage--;
-        LoadSearchResultsPage();
-    }
-
-    [RelayCommand]
-    private void GoBack()
-    {
+        string query = SearchQuery;
         SearchQuery = string.Empty;
-        ExitSearchMode();
-    }
-
-    private void ExitSearchMode()
-    {
-        ViewMode = AnimeBrowseViewMode.Main;
-        SearchResults.Clear();
-        _allSearchResults.Clear();
+        await DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>().ShowExploreSearch(query).ConfigureAwait(true);
     }
 }

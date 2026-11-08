@@ -152,7 +152,12 @@ internal sealed partial class TorrentSearchViewModel : ViewModelBase
         try
         {
             await _torrentDownloads.StartAsync(torrentLink, _saveService.EpisodesFolder).ConfigureAwait(true);
-            _ = ToastService.Show("Downloading - progress is in the Downloaded tab");
+            _ = ToastService.Show("Downloading - click to see progress on the Watch page", () =>
+            {
+                MainViewModel main = DependencyInjection.Instance.ServiceProvider!.GetRequiredService<MainViewModel>();
+                main.WatchViewModel.SelectedTabIndex = 0;
+                _ = main.ShowWatchPage();
+            });
         }
         catch (Exception ex)
         {

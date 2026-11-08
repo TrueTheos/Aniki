@@ -48,6 +48,14 @@ internal sealed class TorrentDownloadService : ITorrentDownloadService, IDisposa
             manager.Complete ? RemoveMode.CacheDataOnly : RemoveMode.CacheDataAndDownloadedData).ConfigureAwait(true);
     }
 
+    public async Task TogglePauseAsync(TorrentDownload download)
+    {
+        TorrentManager manager = download.Manager;
+        if (manager.State == TorrentState.Paused) await manager.StartAsync().ConfigureAwait(true);
+        else await manager.PauseAsync().ConfigureAwait(true);
+        await RefreshAsync().ConfigureAwait(true);
+    }
+
     private async Task RefreshAsync()
     {
         try
@@ -56,10 +64,12 @@ internal sealed class TorrentDownloadService : ITorrentDownloadService, IDisposa
             {
                 TorrentManager manager = download.Manager;
                 download.Progress = manager.Progress;
+                download.IsPaused = manager.State == TorrentState.Paused;
                 download.Status = manager.State switch
                 {
                     TorrentState.Downloading => string.Create(CultureInfo.InvariantCulture,
-                        $"{manager.Progress:F0}% · {manager.Monitor.DownloadRate / 1048576.0:F1} MB/s"),
+                        $"{manager.Progress:F0}% · {manager.Monitor.DownloadRate / 1048576.0:F1} MB/s · {manager.Peers.Seeds} seeders · {manager.Peers.Leechs} leechers"),
+                    TorrentState.Paused => string.Create(CultureInfo.InvariantCulture, $"Paused · {manager.Progress:F0}%"),
                     TorrentState.Seeding => "Done · sharing back to other users",
                     _ => manager.State.ToString()
                 };
